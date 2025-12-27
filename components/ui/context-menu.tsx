@@ -1,4 +1,4 @@
-import { Pressable, ScrollView, View, StyleSheet, Text } from "react-native";
+import { Pressable, ScrollView, View, StyleSheet, Text, Dimensions } from "react-native";
 import * as Haptics from "expo-haptics";
 import { useState } from "react";
 import { useThemeColor } from "@/hooks/use-theme-color";
@@ -7,12 +7,14 @@ export interface IContextMenuProps {
   options: string[];
   selectedOption: string;
   onSelectOption: (option: string) => void;
+  onDismiss?: () => void;
 }
 
 const ContextMenu: React.FC<IContextMenuProps> = ({
   options,
   selectedOption,
   onSelectOption,
+  onDismiss,
 }) => {
   // Colori del tema per il context menu
   const menuBackground = useThemeColor(
@@ -48,33 +50,49 @@ const ContextMenu: React.FC<IContextMenuProps> = ({
   };
 
   return (
-    <View style={dynamicStyles.menu}>
-      <ScrollView>
-        {options?.map((option) => (
-          <Pressable
-            style={styles.menuItem}
-            key={option}
-            onPress={() => handleSelect(option)}
-          >
-            <Text
-              style={{
-                ...dynamicStyles.menuItem,
-                backgroundColor:
-                  selectedOption === option
-                    ? selectedBackground
-                    : "transparent",
-              }}
+    <>
+      {/* Overlay trasparente per catturare i tap al di fuori */}
+      <Pressable 
+        style={styles.overlay} 
+        onPress={onDismiss}
+      />
+      <View style={dynamicStyles.menu}>
+        <ScrollView>
+          {options?.map((option) => (
+            <Pressable
+              style={styles.menuItem}
+              key={option}
+              onPress={() => handleSelect(option)}
             >
-              {option}
-            </Text>
-          </Pressable>
-        ))}
-      </ScrollView>
-    </View>
+              <Text
+                style={{
+                  ...dynamicStyles.menuItem,
+                  backgroundColor:
+                    selectedOption === option
+                      ? selectedBackground
+                      : "transparent",
+                }}
+              >
+                {option}
+              </Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+      </View>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
+  overlay: {
+    position: "absolute",
+    top: -1000,
+    left: -1000,
+    width: Dimensions.get('window').width + 2000,
+    height: Dimensions.get('window').height + 2000,
+    zIndex: 399,
+    backgroundColor: "transparent",
+  },
   menu: {
     height: 200,
     width: 150,

@@ -93,6 +93,7 @@ const ChipButton: React.FC<IChipButtonProps> = ({
           options={options || []}
           selectedOption={selectedOption}
           onSelectOption={handleSelectOption}
+          onDismiss={handleDismissMenu}
         />
       )}
       <Pressable

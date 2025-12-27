@@ -20,7 +20,7 @@ const BalanceCard: React.FC<ICardProps> = ({
   const themeColor= useThemeColor({}, "cardColor");
   const styles = StyleSheet.create({
     //Card
-    Card: {
+    card: {
       backgroundColor: backgroundColor ?? themeBackground,
       color: color ?? themeColor,
       borderRadius: 30,
@@ -28,7 +28,8 @@ const BalanceCard: React.FC<ICardProps> = ({
       paddingVertical: 15,
       marginBottom: 20,
       boxShadow: "0px 1px 5px 1px #00000029",
-      flexGrow:2
+      flexGrow:2,
+      minHeight:100,
     },
 
     cardLabel: {
@@ -47,7 +48,7 @@ const BalanceCard: React.FC<ICardProps> = ({
           <Text style={styles.cardLabel}>{label}</Text>
         </View>
       )}
-      <View style={styles.Card}>{children}</View>
+      <View style={styles.card}>{children}</View>
     </View>
   );
 };

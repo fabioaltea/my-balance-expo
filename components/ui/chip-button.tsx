@@ -77,6 +77,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     backgroundColor: "#a8a8a8ff",
     borderRadius: 20,
+    display: "flex",
+    flexGrow:1
   },
   active: {
     backgroundColor: "#000",
@@ -85,6 +87,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 18,
     fontWeight: "500",
+    textAlign: "center",
   },
   menu: {
     height: 200,

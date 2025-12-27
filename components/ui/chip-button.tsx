@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, Pressable, ScrollView } from "react-native";
 import * as Haptics from "expo-haptics";
 import { useEffect, useState } from "react";
+import ContextMenu from "./context-menu";
 
 export interface IChipButtonProps {
   text: string;
@@ -49,27 +50,15 @@ const ChipButton: React.FC<IChipButtonProps> = ({text, active, onPress, options}
         setMenuVisible(false);
       }
 
+      const handleSelectOption = (option: string) => {
+        setSelectedOption(option);
+        handleDismissMenu();
+      }
+
   return (
     <>
       {menuVisible && (
-        <View style={styles.menu}>
-            <ScrollView>
-                {options?.map((option)=>(
-                    <Pressable style={styles.menuItem} key={option} onPress={() => {
-                        setSelectedOption(option);
-                        try {
-                          Haptics.selectionAsync();
-                        } catch (error) {
-                          console.error("Haptic feedback error:", error);
-                        }
-                        handleDismissMenu();
-                    }}>
-                        <Text style={{padding:10, fontSize:16, borderRadius:15, backgroundColor: selectedOption === option ? "#ccc" : "transparent"}}>{option}</Text>
-                    </Pressable>
-                ))}
-            </ScrollView>
-          
-        </View>
+        <ContextMenu options={options || []} selectedOption={selectedOption} onSelectOption={handleSelectOption}/>
       )}
       <Pressable
         onLongPress={handleOpenMenu}

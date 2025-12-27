@@ -9,12 +9,22 @@ export interface IContextMenuProps {
   onSelectOption: (option: string) => void;
 }
 
-const ContextMenu: React.FC<IContextMenuProps> = ({options, selectedOption, onSelectOption}) => {
+const ContextMenu: React.FC<IContextMenuProps> = ({
+  options,
+  selectedOption,
+  onSelectOption,
+}) => {
   // Colori del tema per il context menu
-  const menuBackground = useThemeColor({ light: "#edededee", dark: "#2a2a2a" }, "cardBackground");
+  const menuBackground = useThemeColor(
+    { light: "#edededee", dark: "#2a2a2a" },
+    "cardBackground"
+  );
   const borderColor = useThemeColor({ light: "#ccc", dark: "#555" }, "border");
   const textColor = useThemeColor({}, "text");
-  const selectedBackground = useThemeColor({ light: "#ccc", dark: "#444" }, "tabIconDefault");
+  const selectedBackground = useThemeColor(
+    { light: "#ccc", dark: "#444" },
+    "tabIconDefault"
+  );
 
   const dynamicStyles = StyleSheet.create({
     menu: {
@@ -28,27 +38,41 @@ const ContextMenu: React.FC<IContextMenuProps> = ({options, selectedOption, onSe
     },
   });
 
-  const handleSelect=(option: string) => {
+  const handleSelect = (option: string) => {
     try {
       Haptics.selectionAsync();
     } catch (error) {
       console.error("Haptic feedback error:", error);
     }
     onSelectOption(option);
-  }
-  
-    return (
+  };
+
+  return (
     <View style={dynamicStyles.menu}>
-                <ScrollView>
-                    {options?.map((option)=>(
-                        <Pressable style={styles.menuItem} key={option} onPress={() => handleSelect(option)}>
-                            <Text style={{...dynamicStyles.menuItem, backgroundColor: selectedOption === option ? selectedBackground : "transparent"}}>{option}</Text>
-                        </Pressable>
-                    ))}
-                </ScrollView>
-              
-            </View>);
-}
+      <ScrollView>
+        {options?.map((option) => (
+          <Pressable
+            style={styles.menuItem}
+            key={option}
+            onPress={() => handleSelect(option)}
+          >
+            <Text
+              style={{
+                ...dynamicStyles.menuItem,
+                backgroundColor:
+                  selectedOption === option
+                    ? selectedBackground
+                    : "transparent",
+              }}
+            >
+              {option}
+            </Text>
+          </Pressable>
+        ))}
+      </ScrollView>
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   menu: {

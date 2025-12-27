@@ -34,7 +34,10 @@ const FinancialSummaryCard: React.FC<Props> = ({
   const textColor = useThemeColor({}, "text");
   const subtleTextColor = useThemeColor({}, "tabIconDefault");
   const cardBackground = useThemeColor({}, "cardBackground");
-  const selectedBackground = useThemeColor({ light: "#e0e0e05a", dark: "#ffffff15" }, "background");
+  const selectedBackground = useThemeColor(
+    { light: "#e0e0e05a", dark: "#ffffff15" },
+    "background"
+  );
 
   // Animazioni per la selezione
   const incomeScaleAnim = React.useRef(
@@ -165,7 +168,7 @@ const FinancialSummaryCard: React.FC<Props> = ({
             }}
             style={[
               styles.detailRow,
-              selectedFilter === "income" && { 
+              selectedFilter === "income" && {
                 backgroundColor: selectedBackground,
                 padding: 8,
                 borderRadius: 12,
@@ -177,11 +180,17 @@ const FinancialSummaryCard: React.FC<Props> = ({
               <View
                 style={[styles.colorIndicator, { backgroundColor: "#4CAF50" }]}
               />
-              <Text style={[styles.detailText, { color: textColor }]}>Incomes</Text>
+              <Text style={[styles.detailText, { color: textColor }]}>
+                Incomes
+              </Text>
             </View>
             <View style={styles.detailValue}>
-              <Text style={[styles.detailAmount, { color: textColor }]}>{formatAmount(income)}</Text>
-              <Text style={[styles.detailPercentage, { color: subtleTextColor }]}>
+              <Text style={[styles.detailAmount, { color: textColor }]}>
+                {formatAmount(income)}
+              </Text>
+              <Text
+                style={[styles.detailPercentage, { color: subtleTextColor }]}
+              >
                 {incomePercentage.toFixed(1)}%
               </Text>
             </View>
@@ -201,7 +210,7 @@ const FinancialSummaryCard: React.FC<Props> = ({
             }}
             style={[
               styles.detailRow,
-              selectedFilter === "expense" && { 
+              selectedFilter === "expense" && {
                 backgroundColor: selectedBackground,
                 padding: 8,
                 borderRadius: 12,
@@ -213,11 +222,17 @@ const FinancialSummaryCard: React.FC<Props> = ({
               <View
                 style={[styles.colorIndicator, { backgroundColor: "#F44336" }]}
               />
-              <Text style={[styles.detailText, { color: textColor }]}>Outcomes</Text>
+              <Text style={[styles.detailText, { color: textColor }]}>
+                Outcomes
+              </Text>
             </View>
             <View style={styles.detailValue}>
-              <Text style={[styles.detailAmount, { color: textColor }]}>{formatAmount(expense)}</Text>
-              <Text style={[styles.detailPercentage, { color: subtleTextColor }]}>
+              <Text style={[styles.detailAmount, { color: textColor }]}>
+                {formatAmount(expense)}
+              </Text>
+              <Text
+                style={[styles.detailPercentage, { color: subtleTextColor }]}
+              >
                 {expensePercentage.toFixed(1)}%
               </Text>
             </View>

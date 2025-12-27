@@ -82,8 +82,14 @@ const styles = StyleSheet.create({
 
 const MovementsCard: React.FC = () => {
   // Colori del tema per la movements card
-  const borderColor = useThemeColor({ light: "#F0F0F0", dark: "#333333" }, "border");
-  const positiveAmountColor = useThemeColor({ light: "#107c2bff", dark: "#34C759" }, "tint");
+  const borderColor = useThemeColor(
+    { light: "#F0F0F0", dark: "#333333" },
+    "border"
+  );
+  const positiveAmountColor = useThemeColor(
+    { light: "#107c2bff", dark: "#34C759" },
+    "tint"
+  );
 
   const dynamicStyles = StyleSheet.create({
     movementItem: {

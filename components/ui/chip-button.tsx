@@ -11,71 +11,89 @@ export interface IChipButtonProps {
   options?: string[];
 }
 
-const ChipButton: React.FC<IChipButtonProps> = ({text, active, onPress, options}) => {
-    const [menuVisible, setMenuVisible] = useState(false);
-    const [selectedOption, setSelectedOption] = useState("");
+const ChipButton: React.FC<IChipButtonProps> = ({
+  text,
+  active,
+  onPress,
+  options,
+}) => {
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [selectedOption, setSelectedOption] = useState("");
 
-    // Colori del tema
-    const inactiveBackground = useThemeColor({ light: "#a8a8a8ff", dark: "#4a4a4a" }, "tabIconDefault");
-    const activeBackground = useThemeColor({ light: "#000", dark: "#fff" }, "text");
-    const textColor = useThemeColor({ light: "#fff", dark: active ? "#000" : "#fff" }, "background");
+  // Colori del tema
+  const inactiveBackground = useThemeColor(
+    { light: "#a8a8a8ff", dark: "#4a4a4a" },
+    "tabIconDefault"
+  );
+  const activeBackground = useThemeColor(
+    { light: "#000", dark: "#fff" },
+    "text"
+  );
+  const textColor = useThemeColor(
+    { light: "#fff", dark: active ? "#000" : "#fff" },
+    "background"
+  );
 
-    const dynamicStyles = StyleSheet.create({
-      chipButton: {
-        ...styles.chipButton,
-        backgroundColor: active ? activeBackground : inactiveBackground,
-      },
-      chipText: {
-        ...styles.chipText,
-        color: textColor,
-      },
-    });
+  const dynamicStyles = StyleSheet.create({
+    chipButton: {
+      ...styles.chipButton,
+      backgroundColor: active ? activeBackground : inactiveBackground,
+    },
+    chipText: {
+      ...styles.chipText,
+      color: textColor,
+    },
+  });
 
-    useEffect(() => {
-      if (!active) {
-        setMenuVisible(false);
-      }
-    }, [active]);
+  useEffect(() => {
+    if (!active) {
+      setMenuVisible(false);
+    }
+  }, [active]);
 
-    useEffect(() => {
-      if (options && options.length > 0) {
-        setSelectedOption(options[0]);
-      }
-    }, [options]);
-    
-    const handlePress = async () => {
-        if (onPress) {
-          try {
-            await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-          } catch (error) {
-            console.error("Haptic feedback error:", error);
-          }
+  useEffect(() => {
+    if (options && options.length > 0) {
+      setSelectedOption(options[0]);
+    }
+  }, [options]);
 
-          onPress();
-        }
-      };
-
-      const handleOpenMenu = async () => { 
-        try {
-          await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-        } catch (error) {
-          console.error("Haptic feedback error:", error);
-        }
-        setMenuVisible(!menuVisible);
-      }
-        const handleDismissMenu = () => {
-        setMenuVisible(false);
+  const handlePress = async () => {
+    if (onPress) {
+      try {
+        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      } catch (error) {
+        console.error("Haptic feedback error:", error);
       }
 
-      const handleSelectOption = (option: string) => {
-        setSelectedOption(option);
-        handleDismissMenu();
-      }
+      onPress();
+    }
+  };
+
+  const handleOpenMenu = async () => {
+    try {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    } catch (error) {
+      console.error("Haptic feedback error:", error);
+    }
+    setMenuVisible(!menuVisible);
+  };
+  const handleDismissMenu = () => {
+    setMenuVisible(false);
+  };
+
+  const handleSelectOption = (option: string) => {
+    setSelectedOption(option);
+    handleDismissMenu();
+  };
 
   return (
     <>
       {menuVisible && (
-        <ContextMenu options={options || []} selectedOption={selectedOption} onSelectOption={handleSelectOption}/>
+        <ContextMenu
+          options={options || []}
+          selectedOption={selectedOption}
+          onSelectOption={handleSelectOption}
+        />
       )}
       <Pressable
         onLongPress={handleOpenMenu}
@@ -86,7 +104,7 @@ const ChipButton: React.FC<IChipButtonProps> = ({text, active, onPress, options}
       </Pressable>
     </>
   );
-}
+};
 
 const styles = StyleSheet.create({
   chipButton: {
@@ -94,7 +112,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 20,
     display: "flex",
-    flexGrow: 1
+    flexGrow: 1,
   },
   chipText: {
     fontSize: 18,
@@ -114,12 +132,10 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   menuItem: {
-    padding:5,
+    padding: 5,
     borderRadius: 20,
   },
-  menuItemSelected:{
-
-  }
+  menuItemSelected: {},
 });
 
 export default ChipButton;

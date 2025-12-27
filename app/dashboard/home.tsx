@@ -23,12 +23,9 @@ export default function Home() {
   
   return (
     <ScreenView>
-      <View style={styles.header}>
-        
-        <GlassButton onPress={handleButtonPress}></GlassButton>
+      <View style={styles.header}><View>
       </View>
-      <View>
-        <Chips/>
+        <GlassButton onPress={handleButtonPress}></GlassButton>
       </View>
       <HomeView />
     </ScreenView>

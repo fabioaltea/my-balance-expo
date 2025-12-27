@@ -3,6 +3,7 @@ import { TouchableOpacity, StyleSheet, View } from "react-native";
 import { IconSymbol } from "../ui/icon-symbol.ios";
 import { useState } from "react";
 import Card from "../card";
+import { useThemeColor } from "@/hooks/use-theme-color";
 
 const RECENT_MOVEMENTS = [
   {
@@ -38,7 +39,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: "#F0F0F0",
     color: "inherit",
   },
   lastMovementItem: {
@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   positiveAmount: {
-    color: "#107c2bff",
+    // Color will be set dynamically
   },
   negativeAmount: {
     color: "inherit",
@@ -81,6 +81,20 @@ const styles = StyleSheet.create({
 });
 
 const MovementsCard: React.FC = () => {
+  // Colori del tema per la movements card
+  const borderColor = useThemeColor({ light: "#F0F0F0", dark: "#333333" }, "border");
+  const positiveAmountColor = useThemeColor({ light: "#107c2bff", dark: "#34C759" }, "tint");
+
+  const dynamicStyles = StyleSheet.create({
+    movementItem: {
+      ...styles.movementItem,
+      borderBottomColor: borderColor,
+    },
+    positiveAmount: {
+      ...styles.positiveAmount,
+      color: positiveAmountColor,
+    },
+  });
 
   return (
     <Card label="Recent Movements">
@@ -88,7 +102,7 @@ const MovementsCard: React.FC = () => {
         <TouchableOpacity
           key={movement.id}
           style={[
-            styles.movementItem,
+            dynamicStyles.movementItem,
             index === RECENT_MOVEMENTS.length - 1 && styles.lastMovementItem,
           ]}
         >
@@ -111,7 +125,7 @@ const MovementsCard: React.FC = () => {
             style={[
               styles.movementAmount,
               movement.amount > 0
-                ? styles.positiveAmount
+                ? dynamicStyles.positiveAmount
                 : styles.negativeAmount,
             ]}
           >

@@ -1,6 +1,7 @@
 import { Pressable, ScrollView, View, StyleSheet, Text } from "react-native";
 import * as Haptics from "expo-haptics";
 import { useState } from "react";
+import { useThemeColor } from "@/hooks/use-theme-color";
 
 export interface IContextMenuProps {
   options: string[];
@@ -9,6 +10,24 @@ export interface IContextMenuProps {
 }
 
 const ContextMenu: React.FC<IContextMenuProps> = ({options, selectedOption, onSelectOption}) => {
+  // Colori del tema per il context menu
+  const menuBackground = useThemeColor({ light: "#edededee", dark: "#2a2a2a" }, "cardBackground");
+  const borderColor = useThemeColor({ light: "#ccc", dark: "#555" }, "border");
+  const textColor = useThemeColor({}, "text");
+  const selectedBackground = useThemeColor({ light: "#ccc", dark: "#444" }, "tabIconDefault");
+
+  const dynamicStyles = StyleSheet.create({
+    menu: {
+      ...styles.menu,
+      backgroundColor: menuBackground,
+      borderColor: borderColor,
+    },
+    menuItem: {
+      ...styles.menuItem,
+      color: textColor,
+    },
+  });
+
   const handleSelect=(option: string) => {
     try {
       Haptics.selectionAsync();
@@ -19,11 +38,11 @@ const ContextMenu: React.FC<IContextMenuProps> = ({options, selectedOption, onSe
   }
   
     return (
-    <View style={styles.menu}>
+    <View style={dynamicStyles.menu}>
                 <ScrollView>
                     {options?.map((option)=>(
                         <Pressable style={styles.menuItem} key={option} onPress={() => handleSelect(option)}>
-                            <Text style={{...styles.menuItem, backgroundColor: selectedOption === option ? "#ccc" : "transparent"}}>{option}</Text>
+                            <Text style={{...dynamicStyles.menuItem, backgroundColor: selectedOption === option ? selectedBackground : "transparent"}}>{option}</Text>
                         </Pressable>
                     ))}
                 </ScrollView>
@@ -35,13 +54,11 @@ const styles = StyleSheet.create({
   menu: {
     height: 200,
     width: 150,
-    backgroundColor: "#edededee",
     position: "absolute",
     top: 40,
     left: 0,
     zIndex: 400,
     borderWidth: 1,
-    borderColor: "#ccc",
     borderRadius: 20,
   },
   menuItem: {

@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, Pressable, ScrollView } from "react-native";
 import * as Haptics from "expo-haptics";
 import { useEffect, useState } from "react";
 import ContextMenu from "./context-menu";
+import { useThemeColor } from "@/hooks/use-theme-color";
 
 export interface IChipButtonProps {
   text: string;
@@ -13,6 +14,22 @@ export interface IChipButtonProps {
 const ChipButton: React.FC<IChipButtonProps> = ({text, active, onPress, options}) => {
     const [menuVisible, setMenuVisible] = useState(false);
     const [selectedOption, setSelectedOption] = useState("");
+
+    // Colori del tema
+    const inactiveBackground = useThemeColor({ light: "#a8a8a8ff", dark: "#4a4a4a" }, "tabIconDefault");
+    const activeBackground = useThemeColor({ light: "#000", dark: "#fff" }, "text");
+    const textColor = useThemeColor({ light: "#fff", dark: active ? "#000" : "#fff" }, "background");
+
+    const dynamicStyles = StyleSheet.create({
+      chipButton: {
+        ...styles.chipButton,
+        backgroundColor: active ? activeBackground : inactiveBackground,
+      },
+      chipText: {
+        ...styles.chipText,
+        color: textColor,
+      },
+    });
 
     useEffect(() => {
       if (!active) {
@@ -63,9 +80,9 @@ const ChipButton: React.FC<IChipButtonProps> = ({text, active, onPress, options}
       <Pressable
         onLongPress={handleOpenMenu}
         onPress={handlePress}
-        style={[styles.chipButton, active ? styles.active : {}]}
+        style={dynamicStyles.chipButton}
       >
-        <Text style={styles.chipText}>{selectedOption || text}</Text>
+        <Text style={dynamicStyles.chipText}>{selectedOption || text}</Text>
       </Pressable>
     </>
   );
@@ -75,16 +92,11 @@ const styles = StyleSheet.create({
   chipButton: {
     padding: 8,
     paddingHorizontal: 20,
-    backgroundColor: "#a8a8a8ff",
     borderRadius: 20,
     display: "flex",
-    flexGrow:1
-  },
-  active: {
-    backgroundColor: "#000",
+    flexGrow: 1
   },
   chipText: {
-    color: "#fff",
     fontSize: 18,
     fontWeight: "500",
     textAlign: "center",

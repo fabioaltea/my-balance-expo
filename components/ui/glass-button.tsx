@@ -14,7 +14,7 @@ import * as Haptics from "expo-haptics";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useThemeColor } from "@/hooks/use-theme-color";
 
-type GlassButtonType = "add" | "search";
+type GlassButtonType = "add" | "search" | "confirm" | "dismiss";
 
 type Props = {
   onPress: () => void;
@@ -71,7 +71,15 @@ const GlassButton = ({
         accessibilityRole="button"
         accessibilityLabel={
           accessibilityLabel ??
-          (text ? text : type === "search" ? "Search" : "Add")
+          (text
+            ? text
+            : type === "search"
+            ? "Search"
+            : type === "confirm"
+            ? "Confirm"
+            : type === "dismiss"
+            ? "Dismiss"
+            : "Add")
         }
       >
         {isLiquidGlassAvailable() ? (
@@ -103,7 +111,15 @@ const GlassButton = ({
           </Text>
         ) : (
           <Ionicons
-            name={type === "search" ? "search" : "add"}
+            name={
+              type === "search"
+                ? "search"
+                : type === "confirm"
+                ? "checkmark"
+                : type === "dismiss"
+                ? "close"
+                : "add"
+            }
             size={size}
             color={iconColor}
           />

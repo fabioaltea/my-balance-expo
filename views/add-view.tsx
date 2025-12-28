@@ -17,6 +17,8 @@ import TextBox from "@/components/ui/text-box";
 import Card from "@/components/card";
 import List from "@/components/ui/list";
 import InputGroup from "@/components/ui/input-group";
+import DatePicker from "@/components/ui/date-picker";
+import ListPicker from "@/components/ui/list-picker";
 
 const AddView: React.FC = () => {
   const [description, setDescription] = useState("");
@@ -133,16 +135,24 @@ const AddView: React.FC = () => {
                 onChange={setDescription}
                 label="Description"
               />
-              <TextBox
+              <ListPicker
                 value={selectedCategory}
                 onChange={setSelectedCategory}
+                items={categories.map((category) => ({
+                  label: category,
+                  value: category,
+                }))}
                 label="Category"
               />
-              <TextBox
-                value={selectedDate.toLocaleDateString("it-IT")}
+
+              <DatePicker
+                value={selectedDate}
                 onChange={setSelectedDate}
                 label="Date"
               />
+          </InputGroup>
+          <InputGroup label="Transactions">
+          <></>
           </InputGroup>
         {/* Transactions Section */}
         {/* <View style={styles.section}>

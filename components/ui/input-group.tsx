@@ -2,6 +2,7 @@ import { useThemeColor } from "@/hooks/use-theme-color";
 import { useTheme } from "@react-navigation/native";
 import { use } from "react";
 import { StyleSheet, View, Text } from "react-native";
+import List from "./list";
 
 interface ICardProps {
   backgroundColor?: string;
@@ -10,7 +11,7 @@ interface ICardProps {
   children: React.ReactNode;
 }
 
-const Card: React.FC<ICardProps> = ({
+const InputGroup: React.FC<ICardProps> = ({
   backgroundColor,
   color,
   label,
@@ -24,11 +25,8 @@ const Card: React.FC<ICardProps> = ({
       backgroundColor: backgroundColor ?? themeBackground,
       color: color ?? themeColor,
       borderRadius: 30,
-      paddingHorizontal: 24,
-      paddingVertical: 15,
       marginBottom: 20,
       flexGrow:2,
-      minHeight:100,
     },
 
     cardLabel: {
@@ -47,9 +45,12 @@ const Card: React.FC<ICardProps> = ({
           <Text style={styles.cardLabel}>{label}</Text>
         </View>
       )}
-      <View style={styles.card}>{children}</View>
+      <View style={styles.card}>
+                    <List>
+{children}</List>
+      </View>
     </View>
   );
 };
 
-export default Card;
+export default InputGroup;

@@ -30,6 +30,86 @@ const RECENT_MOVEMENTS = [
     icon: "cart.fill",
     color: "#FFD60A",
   },
+  {
+    id: 4,
+    date: "13/12/2025",
+    description: "pellet",
+    amount: -22.96,
+    icon: "calendar",
+    color: "#FF9500",
+  },
+  {
+    id: 5,
+    date: "13/12/2025",
+    description: "spesa conad",
+    amount: -40.62,
+    icon: "cart.fill",
+    color: "#FFD60A",
+  },
+  {
+    id: 6,
+    date: "13/12/2025",
+    description: "pellet",
+    amount: -22.96,
+    icon: "calendar",
+    color: "#FF9500",
+  },
+  {
+    id: 7,
+    date: "13/12/2025",
+    description: "spesa conad",
+    amount: -40.62,
+    icon: "cart.fill",
+    color: "#FFD60A",
+  },
+  {
+    id: 8,
+    date: "13/12/2025",
+    description: "pellet",
+    amount: -22.96,
+    icon: "calendar",
+    color: "#FF9500",
+  },
+  {
+    id: 9,
+    date: "13/12/2025",
+    description: "spesa conad",
+    amount: -40.62,
+    icon: "cart.fill",
+    color: "#FFD60A",
+  },
+  {
+    id: 10,
+    date: "13/12/2025",
+    description: "pellet",
+    amount: -22.96,
+    icon: "calendar",
+    color: "#FF9500",
+  },
+  {
+    id: 11,
+    date: "13/12/2025",
+    description: "spesa conad",
+    amount: -40.62,
+    icon: "cart.fill",
+    color: "#FFD60A",
+  },
+  {
+    id: 12,
+    date: "13/12/2025",
+    description: "pellet",
+    amount: -22.96,
+    icon: "calendar",
+    color: "#FF9500",
+  },
+  {
+    id: 13,
+    date: "13/12/2025",
+    description: "spesa conad",
+    amount: -40.62,
+    icon: "cart.fill",
+    color: "#FFD60A",
+  },
 ];
 
 const styles = StyleSheet.create({
@@ -103,7 +183,7 @@ const MovementsCard: React.FC = () => {
   });
 
   return (
-    <Card label="Recent Movements">
+    <Card label="">
       {RECENT_MOVEMENTS.map((movement, index) => (
         <TouchableOpacity
           key={movement.id}

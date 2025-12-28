@@ -15,16 +15,21 @@ import HomeView from '@/views/home-view';
 import React from 'react';
 import GlassButton from '@/components/ui/glass-button';
 import Chips from '@/components/ui/chips';
+import AccountPicker from '@/components/ui/account-picker';
 
 export default function Home() {
+
+
+  const [selectedAccount, setSelectedAccount] = React.useState("Account 1");
+
   const handleButtonPress = () => {
     router.push('/add');
   };
   
   return (
     <ScreenView>
-      <View style={styles.header}><View>
-      </View>
+      <View style={styles.header}>
+        <AccountPicker accounts={["Account 1", "Account 2"]} selectedAccount={selectedAccount} setSelectedAccount={setSelectedAccount} ></AccountPicker>
         <GlassButton onPress={handleButtonPress}></GlassButton>
       </View>
       <HomeView />

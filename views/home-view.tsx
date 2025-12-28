@@ -5,8 +5,9 @@ import FinancialSummaryCard from "@/components/cards/financial-summary-card";
 import ChipButton from "@/components/ui/chip-button";
 import PeriodPicker from "@/components/ui/period-chips-picker";
 import ScreenView from "@/layout/screen-view";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, ScrollView } from "react-native";
 import { useState } from "react";
+import { ThemedText } from "@/components/themed-text";
 
 const HomeView: React.FC = () => {
   const [movementFilter, setMovementFilter] = useState<
@@ -15,15 +16,23 @@ const HomeView: React.FC = () => {
 
   return (
     <View>
+        
       <BalanceCard />
-      <PeriodPicker></PeriodPicker>
-      <FinancialSummaryCard
-        income={4084.41}
-        expense={1369.57}
-        selectedFilter={movementFilter}
-        onFilterChange={setMovementFilter}
-      />
-      <MovementsCard />
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        <PeriodPicker></PeriodPicker>
+        <FinancialSummaryCard
+          income={4084.41}
+          expense={1369.57}
+          selectedFilter={movementFilter}
+          onFilterChange={setMovementFilter}
+        />
+        <MovementsCard />
+        {/* Aggiungo spacer per consentire visualizzazione completa */}
+        <View style={{ height: 150 }}></View>
+      </ScrollView>
     </View>
   );
 };
@@ -37,5 +46,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 10,
     marginBottom: 20,
+  },
+  scrollContainer: {
+    paddingBottom: 100,
+    flexGrow: 1,
   },
 });

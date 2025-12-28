@@ -16,6 +16,7 @@ import React from 'react';
 export default function Movements() {
   return (
    <ScreenView>
+    <ThemedText type='title'>Movements</ThemedText>
      <MovementsView />
    </ScreenView>
   );

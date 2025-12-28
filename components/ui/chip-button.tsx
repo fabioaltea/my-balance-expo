@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, Pressable, ScrollView } from "react-native";
 import * as Haptics from "expo-haptics";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import ContextMenu from "./context-menu";
 import { useThemeColor } from "@/hooks/use-theme-color";
 
@@ -19,6 +19,13 @@ const ChipButton: React.FC<IChipButtonProps> = ({
 }) => {
   const [menuVisible, setMenuVisible] = useState(false);
   const [selectedOption, setSelectedOption] = useState("");
+  const [buttonPosition, setButtonPosition] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }>();
+  const buttonRef = useRef<View>(null);
 
   // Colori del tema
   const inactiveBackground = useThemeColor(
@@ -70,6 +77,11 @@ const ChipButton: React.FC<IChipButtonProps> = ({
   };
 
   const handleOpenMenu = async () => {
+    // Misura la posizione del button prima di aprire il menu
+    buttonRef.current?.measure((x, y, width, height, pageX, pageY) => {
+      setButtonPosition({ x: pageX, y: pageY, width, height });
+    });
+
     try {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     } catch (error) {
@@ -83,20 +95,21 @@ const ChipButton: React.FC<IChipButtonProps> = ({
 
   const handleSelectOption = (option: string) => {
     setSelectedOption(option);
-    handleDismissMenu();
   };
 
   return (
     <>
-      {menuVisible && (
+      {menuVisible && buttonPosition && (
         <ContextMenu
           options={options || []}
           selectedOption={selectedOption}
           onSelectOption={handleSelectOption}
           onDismiss={handleDismissMenu}
+          buttonPosition={buttonPosition}
         />
       )}
       <Pressable
+        ref={buttonRef}
         onLongPress={handleOpenMenu}
         onPress={handlePress}
         style={dynamicStyles.chipButton}
@@ -125,7 +138,7 @@ const styles = StyleSheet.create({
     width: 150,
     backgroundColor: "#edededee",
     position: "absolute",
-    top: 40,
+    top: 0,
     left: 0,
     zIndex: 400,
     borderWidth: 1,

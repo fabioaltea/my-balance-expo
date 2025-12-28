@@ -10,7 +10,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    flex: 1
+    flex: 1,
   },
   balanceAmount: {
     color: "#FFFFFF",
@@ -30,9 +30,7 @@ const BalanceCard: React.FC = () => {
   return (
     <Card backgroundColor="#2F4F3F" color="#FFFFFF">
       <View style={styles.balanceContent}>
-        <Text
-          style={styles.balanceAmount}
-        >
+        <Text style={styles.balanceAmount}>
           {isBalanceVisible ? "€ 27024,27" : "€ ****,**"}
         </Text>
         <TouchableOpacity

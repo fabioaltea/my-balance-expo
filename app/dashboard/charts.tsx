@@ -15,6 +15,7 @@ import ScreenView from '@/layout/screen-view';
 export default function Charts() {
   return (
     <ScreenView>
+      <ThemedText type='title'>Charts</ThemedText>
       <ChartsView />
     </ScreenView>
   );

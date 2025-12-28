@@ -1,0 +1,56 @@
+import { ThemedText } from "../themed-text";
+import { View, StyleSheet, TextInput } from "react-native";
+import { useThemeColor } from "@/hooks/use-theme-color";
+import DateTimePicker from "@react-native-community/datetimepicker";
+
+interface ITextBoxProps {
+  value: string;
+  onChange: (text: string) => void;
+  label?: string;
+}
+
+const DatePicker: React.FC<ITextBoxProps> = ({ value, onChange, label }) => {
+  return (
+    <View style={styles.container}>
+      {label && (
+        <ThemedText type="default" style={styles.label}>
+          {label}
+        </ThemedText>
+      )}
+      <TextInput
+        style={[styles.textInput]}
+        value={value}
+        onChangeText={onChange}
+      />
+      
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    display: "flex",
+    flexDirection: "row",
+    paddingHorizontal: 0,
+    paddingVertical: 5,
+    alignItems: "center",
+    flex: 1,
+  },
+  label: {
+    flex: 0,
+    flexShrink: 0,
+    marginRight: 12,
+    minWidth: 80,
+    maxWidth: 120,
+  },
+  textInput: {
+    display: "flex",
+    flex: 1,
+    textAlign: "right",
+    fontSize: 18,
+    paddingHorizontal: 10,
+    minWidth: 0, // Prevents text from overflowing
+  },
+});
+
+export default DatePicker;

@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
     minWidth: 80,
   },
   contentContainer: {
-    paddingBottom:30,
+    paddingBottom: 30,
     paddingHorizontal: 20,
   },
 });

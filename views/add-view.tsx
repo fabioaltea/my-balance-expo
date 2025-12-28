@@ -5,6 +5,7 @@ import {
   TextInput,
   Pressable,
   Alert,
+  Dimensions,
 } from "react-native";
 import { useState } from "react";
 import { ThemedText } from "@/components/themed-text";
@@ -19,13 +20,23 @@ import List from "@/components/ui/list";
 import InputGroup from "@/components/ui/input-group";
 import DatePicker from "@/components/ui/date-picker";
 import ListPicker from "@/components/ui/list-picker";
+import Transactions, { ITransaction } from "@/components/ui/transactions";
+import TransactionPicker, {
+  ITransactionData,
+} from "@/components/ui/transaction-picker";
+import ModalPanel from "@/components/ui/modal-panel";
+
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 const AddView: React.FC = () => {
   const [description, setDescription] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("Categoria");
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [transactions, setTransactions] = useState([{ id: 1, amount: 0 }]);
+  const [transactions, setTransactions] = useState<ITransaction[]>([]);
   const [location, setLocation] = useState("sestu");
+  const [showTransactionPicker, setShowTransactionPicker] = useState(false);
+  const [editingTransaction, setEditingTransaction] =
+    useState<ITransaction | null>(null);
 
   // Theme colors
   const backgroundColor = useThemeColor(
@@ -47,47 +58,58 @@ const AddView: React.FC = () => {
   );
 
   const categories = [
-    "Spesa",
-    "Trasporti",
-    "Ristoranti",
-    "Shopping",
-    "Salute",
-    "Sport",
-    "Viaggi",
-    "Casa",
-    "Altro",
+    { label: "Spesa", value: "spesa" },
+    { label: "Trasporti", value: "trasporti" },
+    { label: "Ristoranti", value: "ristoranti" },
+    { label: "Shopping", value: "shopping" },
+    { label: "Salute", value: "salute" },
+    { label: "Sport", value: "sport" },
+    { label: "Viaggi", value: "viaggi" },
+    { label: "Casa", value: "casa" },
+    { label: "Altro", value: "altro" },
   ];
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString("it-IT", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
+  const accounts = [
+    { label: "Trade Republic", value: "Trade Republic" },
+    { label: "Intesa San Paolo", value: "Intesa San Paolo" },
+    { label: "Carta di Credito", value: "Carta di Credito" },
+    { label: "Cash", value: "Cash" },
+  ];
+
+  const handleTransactionPress = (transaction: ITransaction) => {
+    setEditingTransaction(transaction);
+    setShowTransactionPicker(true);
   };
 
-  const addTransaction = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const newId = Math.max(...transactions.map((t) => t.id)) + 1;
-    setTransactions([...transactions, { id: newId, amount: 0 }]);
+  const handleAddTransaction = () => {
+    setEditingTransaction(null);
+    setShowTransactionPicker(true);
   };
 
-  const updateTransactionAmount = (id: number, amount: string) => {
-    const numAmount = parseFloat(amount.replace(",", ".")) || 0;
-    setTransactions(
-      transactions.map((t) => (t.id === id ? { ...t, amount: numAmount } : t))
-    );
-  };
-
-  const removeTransaction = (id: number) => {
-    if (transactions.length > 1) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      setTransactions(transactions.filter((t) => t.id !== id));
+  const handleTransactionSave = (data: ITransactionData) => {
+    if (editingTransaction) {
+      // Update existing transaction
+      setTransactions(
+        transactions.map((t) =>
+          t.id === editingTransaction.id ? { ...t, ...data } : t
+        )
+      );
+    } else {
+      // Add new transaction
+      const newTransaction: ITransaction = {
+        id: Math.max(...transactions.map((t) => t.id), 0) + 1,
+        ...data,
+      };
+      setTransactions([...transactions, newTransaction]);
     }
+    setShowTransactionPicker(false);
+    setEditingTransaction(null);
   };
 
   const getTotalAmount = () => {
-    return transactions.reduce((sum, t) => sum + t.amount, 0);
+    return transactions.reduce((sum, t) => {
+      return sum + (t.type === "income" ? t.amount : -t.amount);
+    }, 0);
   };
 
   const handleSubmit = () => {
@@ -129,117 +151,78 @@ const AddView: React.FC = () => {
         <ThemedText type="title" style={styles.title}>
           Inserisci Movimento
         </ThemedText>
-          <InputGroup>
-              <TextBox
-                value={description}
-                onChange={setDescription}
-                label="Description"
-              />
-              <ListPicker
-                value={selectedCategory}
-                onChange={setSelectedCategory}
-                items={categories.map((category) => ({
-                  label: category,
-                  value: category,
-                }))}
-                label="Category"
-              />
+        <InputGroup>
+          <TextBox
+            value={description}
+            onChange={setDescription}
+            label="Description"
+          />
+          <ListPicker
+            value={selectedCategory}
+            onChange={setSelectedCategory}
+            items={categories}
+            label="Category"
+            placeholder="Seleziona categoria..."
+          />
 
-              <DatePicker
-                value={selectedDate}
-                onChange={setSelectedDate}
-                label="Date"
-              />
-          </InputGroup>
-          <InputGroup label="Transactions">
-          <></>
-          </InputGroup>
-        {/* Transactions Section */}
-        {/* <View style={styles.section}>
-          <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
-            Transazioni
-          </ThemedText>
+          <DatePicker
+            value={selectedDate}
+            onChange={setSelectedDate}
+            label="Date"
+          />
+        </InputGroup>
 
-          {transactions.map((transaction, index) => (
-            <View
-              key={transaction.id}
-              style={[styles.transactionRow, dynamicStyles.inputCard]}
-            >
-              <View style={styles.transactionContent}>
-                <TextInput
-                  style={[styles.amountInput, dynamicStyles.input]}
-                  value={
-                    transaction.amount === 0
-                      ? ""
-                      : transaction.amount.toFixed(2).replace(".", ",")
-                  }
-                  onChangeText={(text) =>
-                    updateTransactionAmount(transaction.id, text)
-                  }
-                  placeholder="0,00"
-                  placeholderTextColor={placeholderColor}
-                  keyboardType="numeric"
-                />
-                <ThemedText>€</ThemedText>
-              </View>
-              {transactions.length > 1 && (
-                <Pressable
-                  onPress={() => removeTransaction(transaction.id)}
-                  style={styles.removeButton}
-                >
-                  <IconSymbol
-                    name="minus.circle.fill"
-                    size={20}
-                    color="#ff4444"
-                  />
-                </Pressable>
-              )}
-              {index === transactions.length - 1 && (
-                <Pressable onPress={addTransaction} style={styles.addButton}>
-                  <IconSymbol
-                    name="chevron.right"
-                    size={20}
-                    color={placeholderColor}
-                  />
-                </Pressable>
-              )}
-            </View>
-          ))}
-
-          <Pressable
-            onPress={addTransaction}
-            style={styles.addTransactionButton}
-          >
-            <IconSymbol name="plus" size={24} color="#fff" />
-          </Pressable>
-        </View> */}
-
-        {/* Location Section */}
-        {/* <View style={[styles.inputCard, dynamicStyles.inputCard]}>
-          <ThemedText style={styles.label}>Location</ThemedText>
-          <ThemedText style={styles.locationText}>{location}</ThemedText>
-          <View style={styles.mapPlaceholder}>
-            <ThemedText style={styles.mapText}>Mappa - {location}</ThemedText>
-            <ThemedText style={styles.mapSubtext}>
-              Visualizza mappa più grande
-            </ThemedText>
-          </View>
-        </View> */}
+        {/* Transactions Component */}
+        <Transactions
+          transactions={transactions}
+          onTransactionPress={handleTransactionPress}
+          onAddPress={handleAddTransaction}
+        />
       </ScrollView>
 
+      {/* Transaction Picker Modal */}
+      <ModalPanel
+        isVisible={showTransactionPicker}
+        onClose={() => setShowTransactionPicker(false)}
+        onConfirm={() => {}}
+        title={
+          editingTransaction ? "Modifica Transazione" : "Nuova Transazione"
+        }
+        showConfirmButton={false}
+        showCancelButton={true}
+        cancelText="Chiudi"
+        maxHeight={SCREEN_HEIGHT * 0.85}
+      >
+        <TransactionPicker
+          initialData={
+            editingTransaction
+              ? {
+                  accountName: editingTransaction.accountName,
+                  amount: editingTransaction.amount,
+                  type: editingTransaction.type,
+                }
+              : undefined
+          }
+          accounts={accounts}
+          onSave={handleTransactionSave}
+        />
+      </ModalPanel>
+
       {/* Bottom Total and Submit */}
-      {/* <View style={[styles.bottomSection, dynamicStyles.totalContainer]}>
-        <ThemedText style={styles.totalLabel}>Importo totale:</ThemedText>
-        <ThemedText style={styles.totalAmount}>
-          {getTotalAmount().toFixed(2).replace(".", ",")}€
-        </ThemedText>
-        <Pressable
-          onPress={handleSubmit}
-          style={[styles.submitButton, dynamicStyles.submitButton]}
-        >
-          <ThemedText style={styles.submitText}>Inserisci</ThemedText>
-        </Pressable>
-      </View> */}
+      {transactions.length > 0 && (
+        <View style={[styles.bottomSection, dynamicStyles.totalContainer]}>
+          <ThemedText style={styles.totalLabel}>Importo totale:</ThemedText>
+          <ThemedText style={styles.totalAmount}>
+            {getTotalAmount().toFixed(2).replace(".", ",")}€
+          </ThemedText>
+          <Pressable
+            onPress={handleSubmit}
+            style={[styles.submitButton, dynamicStyles.submitButton]}
+          >
+            <ThemedText style={styles.submitText}>Inserisci</ThemedText>
+          </Pressable>
+        </View>
+      )}
     </View>
   );
 };

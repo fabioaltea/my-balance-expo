@@ -16,7 +16,7 @@ const TextBox: React.FC<ITextBoxProps> = ({ value, onChange, label }) => {
         </ThemedText>
       )}
       <TextInput
-        style={[styles.textInput]}
+        style={[styles.textInput, { color: useThemeColor({ light: "#000", dark: "#fff" }, "text") }]}
         value={value}
         onChangeText={onChange}
       />

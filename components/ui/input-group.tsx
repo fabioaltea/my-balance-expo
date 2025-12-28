@@ -27,6 +27,8 @@ const InputGroup: React.FC<ICardProps> = ({
       borderRadius: 30,
       marginBottom: 20,
       flexGrow:2,
+      paddingHorizontal:5,
+      paddingVertical:5,
     },
 
     cardLabel: {

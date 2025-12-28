@@ -3,6 +3,7 @@ import { ThemedText } from "../themed-text";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { IconSymbol } from "./icon-symbol.ios";
 import * as Haptics from "expo-haptics";
+import Card from "../card";
 
 export interface ITransaction {
   id: number;
@@ -46,10 +47,12 @@ const Transactions: React.FC<ITransactionsProps> = ({
   };
 
   return (
+    
+
     <View style={styles.container}>
-      <ThemedText type="defaultSemiBold" style={styles.title}>
+      {/* <ThemedText type="defaultSemiBold" style={styles.title}>
         Transazioni
-      </ThemedText>
+      </ThemedText> */}
 
       {/* Transaction List */}
       {transactions.map((transaction) => (
@@ -92,7 +95,7 @@ const Transactions: React.FC<ITransactionsProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 16,
+    marginVertical: 5,
   },
   title: {
     fontSize: 18,
@@ -101,7 +104,7 @@ const styles = StyleSheet.create({
   transactionRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 16,
+    paddingVertical: 12,
     paddingHorizontal: 0,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },

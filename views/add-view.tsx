@@ -5,7 +5,6 @@ import {
   TextInput,
   Pressable,
   Alert,
-  Dimensions,
 } from "react-native";
 import { useState } from "react";
 import { ThemedText } from "@/components/themed-text";
@@ -21,12 +20,9 @@ import InputGroup from "@/components/ui/input-group";
 import DatePicker from "@/components/ui/date-picker";
 import ListPicker from "@/components/ui/list-picker";
 import Transactions, { ITransaction } from "@/components/ui/transactions";
-import TransactionPicker, {
+import TransactionModal, {
   ITransactionData,
-} from "@/components/ui/transaction-picker";
-import ModalPanel from "@/components/ui/modal-panel";
-
-const { height: SCREEN_HEIGHT } = Dimensions.get("window");
+} from "@/components/ui/transaction-modal";
 
 const AddView: React.FC = () => {
   const [description, setDescription] = useState("");
@@ -87,6 +83,14 @@ const AddView: React.FC = () => {
   };
 
   const handleTransactionSave = (data: ITransactionData) => {
+    console.log("Saving transaction:", data);
+    
+    // Validate data
+    if (!data.accountName || data.amount <= 0) {
+      Alert.alert("Error, please complete all fields with valid data");
+      return;
+    }
+
     if (editingTransaction) {
       // Update existing transaction
       setTransactions(
@@ -94,6 +98,7 @@ const AddView: React.FC = () => {
           t.id === editingTransaction.id ? { ...t, ...data } : t
         )
       );
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } else {
       // Add new transaction
       const newTransaction: ITransaction = {
@@ -101,7 +106,10 @@ const AddView: React.FC = () => {
         ...data,
       };
       setTransactions([...transactions, newTransaction]);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
+    
+    // Close modal and reset editing state
     setShowTransactionPicker(false);
     setEditingTransaction(null);
   };
@@ -162,7 +170,7 @@ const AddView: React.FC = () => {
             onChange={setSelectedCategory}
             items={categories}
             label="Category"
-            placeholder="Seleziona categoria..."
+            placeholder="Select category"
           />
 
           <DatePicker
@@ -173,43 +181,30 @@ const AddView: React.FC = () => {
         </InputGroup>
 
         {/* Transactions Component */}
-        <Transactions
-          transactions={transactions}
-          onTransactionPress={handleTransactionPress}
-          onAddPress={handleAddTransaction}
-        />
+        <InputGroup label="Transactions">
+          <Transactions
+            transactions={transactions}
+            onTransactionPress={handleTransactionPress}
+            onAddPress={handleAddTransaction}
+          />
+        </InputGroup>
       </ScrollView>
 
-      {/* Transaction Picker Modal */}
-      <ModalPanel
+      {/* Transaction Modal */}
+      <TransactionModal
         isVisible={showTransactionPicker}
-        onClose={() => setShowTransactionPicker(false)}
-        onConfirm={() => {}}
-        title={
-          editingTransaction ? "Modifica Transazione" : "Nuova Transazione"
-        }
-        showConfirmButton={false}
-        showCancelButton={true}
-        cancelText="Chiudi"
-        maxHeight={SCREEN_HEIGHT * 0.85}
-      >
-        <TransactionPicker
-          initialData={
-            editingTransaction
-              ? {
-                  accountName: editingTransaction.accountName,
-                  amount: editingTransaction.amount,
-                  type: editingTransaction.type,
-                }
-              : undefined
-          }
-          accounts={accounts}
-          onSave={handleTransactionSave}
-        />
-      </ModalPanel>
+        onClose={() => {
+          setShowTransactionPicker(false);
+          setEditingTransaction(null);
+        }}
+        title={editingTransaction ? "Edit Transaction" : "Add Transaction"}
+        initialData={editingTransaction}
+        accounts={accounts}
+        onSave={handleTransactionSave}
+      />
 
       {/* Bottom Total and Submit */}
-      {transactions.length > 0 && (
+      {/* {transactions.length > 0 && (
         <View style={[styles.bottomSection, dynamicStyles.totalContainer]}>
           <ThemedText style={styles.totalLabel}>Importo totale:</ThemedText>
           <ThemedText style={styles.totalAmount}>
@@ -222,7 +217,7 @@ const AddView: React.FC = () => {
             <ThemedText style={styles.submitText}>Inserisci</ThemedText>
           </Pressable>
         </View>
-      )}
+      )} */}
     </View>
   );
 };

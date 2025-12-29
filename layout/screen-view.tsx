@@ -15,6 +15,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 16,
+    paddingVertical:16
     // backgroundColor is provided via theme at runtime
   },
 });

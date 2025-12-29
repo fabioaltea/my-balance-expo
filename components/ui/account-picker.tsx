@@ -25,7 +25,7 @@ const handleDismissMenu = () => {
 }
 
     return (
-    <View style={styles.container}>
+    <View>
       <Pressable onPress={handleOpenMenu}>
         <ThemedText type="title">{selectedAccount || "Select Account"} ▼</ThemedText>
       </Pressable>
@@ -33,11 +33,5 @@ const handleDismissMenu = () => {
     </View>
   );
 };
-
-const styles=StyleSheet.create({
-    container:{
-        marginVertical: 16,
-    }
-});
 
 export default AccountPicker;

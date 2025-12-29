@@ -23,6 +23,7 @@ import Transactions, { ITransaction } from "@/components/ui/transactions";
 import TransactionModal, {
   ITransactionData,
 } from "@/components/ui/transaction-modal";
+import ScreenView from "@/layout/screen-view";
 
 const AddView: React.FC = () => {
   const [description, setDescription] = useState("");
@@ -147,6 +148,11 @@ const AddView: React.FC = () => {
     },
     totalContainer: {
       backgroundColor: "#2F4F3F",
+      height: 180,
+      paddingTop: 20,
+      paddingBottom: 40,
+      paddingHorizontal: 20,
+      
     },
     submitButton: {
       backgroundColor: "#4a4a4a",
@@ -154,11 +160,11 @@ const AddView: React.FC = () => {
   });
 
   return (
-    <View>
+    <ScreenView>
+      <ThemedText type="title" style={styles.title}>
+        Inserisci Movimento
+      </ThemedText>
       <ScrollView showsVerticalScrollIndicator={false}>
-        <ThemedText type="title" style={styles.title}>
-          Inserisci Movimento
-        </ThemedText>
         <InputGroup>
           <TextBox
             value={description}
@@ -204,12 +210,15 @@ const AddView: React.FC = () => {
       />
 
       {/* Bottom Total and Submit */}
-      {/* {transactions.length > 0 && (
+      {
         <View style={[styles.bottomSection, dynamicStyles.totalContainer]}>
-          <ThemedText style={styles.totalLabel}>Importo totale:</ThemedText>
-          <ThemedText style={styles.totalAmount}>
-            {getTotalAmount().toFixed(2).replace(".", ",")}€
-          </ThemedText>
+          <View style={{ alignItems: "center", display: "flex", flexDirection:"row", justifyContent:"space-between", width:"100%" }}>
+            <ThemedText style={styles.totalLabel}>Importo totale:</ThemedText>
+            <ThemedText style={styles.totalAmount}>
+              {getTotalAmount().toFixed(2).replace(".", ",")}€
+            </ThemedText>
+          </View>
+
           <Pressable
             onPress={handleSubmit}
             style={[styles.submitButton, dynamicStyles.submitButton]}
@@ -217,8 +226,8 @@ const AddView: React.FC = () => {
             <ThemedText style={styles.submitText}>Inserisci</ThemedText>
           </Pressable>
         </View>
-      )} */}
-    </View>
+      }
+    </ScreenView>
   );
 };
 
@@ -338,7 +347,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   totalAmount: {
-    fontSize: 32,
+    fontSize: 22,
     fontWeight: "bold",
     color: "#fff",
     marginVertical: 8,

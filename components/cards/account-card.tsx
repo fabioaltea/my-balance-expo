@@ -34,7 +34,10 @@ const AccountCard: React.FC<IAccountCardProps> = ({ account, onPress }) => {
   };
 
   return (
-    <Pressable onPress={handlePress} style={[styles.container, { borderColor }]}>
+    <Pressable
+      onPress={handlePress}
+      style={[styles.container, { borderColor }]}
+    >
       {/* Account Header */}
       <View style={styles.header}>
         <View
@@ -42,7 +45,8 @@ const AccountCard: React.FC<IAccountCardProps> = ({ account, onPress }) => {
             styles.colorIndicator,
             {
               backgroundColor: account.color,
-              borderColor: account.color === "#ffffff" ? borderColor : "transparent",
+              borderColor:
+                account.color === "#ffffff" ? borderColor : "transparent",
               borderWidth: account.color === "#ffffff" ? 1 : 0,
             },
           ]}
@@ -84,16 +88,14 @@ const AccountCard: React.FC<IAccountCardProps> = ({ account, onPress }) => {
             styles.colorSample,
             {
               backgroundColor: account.color,
-              borderColor: account.color === "#ffffff" ? borderColor : "transparent",
+              borderColor:
+                account.color === "#ffffff" ? borderColor : "transparent",
               borderWidth: account.color === "#ffffff" ? 1 : 0,
             },
           ]}
         >
           <ThemedText
-            style={[
-              styles.colorSampleText,
-              { color: account.textColor },
-            ]}
+            style={[styles.colorSampleText, { color: account.textColor }]}
           >
             Aa
           </ThemedText>

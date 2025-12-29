@@ -4,35 +4,46 @@ import { ThemedText } from "../themed-text";
 import ContextMenu from "./context-menu";
 import { IAccount } from "@/models/Account";
 
-
-
 export interface IAccountPickerProps {
-    accounts: IAccount[];
-    selectedAccount: string;
-    setSelectedAccount: (account: string) => void;
+  accounts: IAccount[];
+  selectedAccount: string;
+  setSelectedAccount: (account: string) => void;
 }
 
-const AccountPicker: React.FC<IAccountPickerProps> = ({accounts, selectedAccount, setSelectedAccount}) => {
-const [menuOpen, setMenuOpen] = React.useState(false);
+const AccountPicker: React.FC<IAccountPickerProps> = ({
+  accounts,
+  selectedAccount,
+  setSelectedAccount,
+}) => {
+  const [menuOpen, setMenuOpen] = React.useState(false);
 
-const handleSelectOption = (option: string) => {
+  const handleSelectOption = (option: string) => {
     setSelectedAccount(option);
-}
+  };
 
-const handleOpenMenu = () => {
+  const handleOpenMenu = () => {
     setMenuOpen(true);
-};
+  };
 
-const handleDismissMenu = () => {
+  const handleDismissMenu = () => {
     setMenuOpen(false);
-}
+  };
 
-    return (
+  return (
     <View>
       <Pressable onPress={handleOpenMenu}>
-        <ThemedText type="title">{selectedAccount || "Select Account"} ▼</ThemedText>
+        <ThemedText type="title">
+          {selectedAccount || "Select Account"} ▼
+        </ThemedText>
       </Pressable>
-      {menuOpen && <ContextMenu options={accounts.map(a=>a.name) || []} onSelectOption={(option) => handleSelectOption(option)} onDismiss={handleDismissMenu} selectedOption={selectedAccount} />}
+      {menuOpen && (
+        <ContextMenu
+          options={accounts.map((a) => a.name) || []}
+          onSelectOption={(option) => handleSelectOption(option)}
+          onDismiss={handleDismissMenu}
+          selectedOption={selectedAccount}
+        />
+      )}
     </View>
   );
 };

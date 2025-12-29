@@ -11,30 +11,38 @@ interface IAccountsListProps {
   showTotal?: boolean;
 }
 
-const AccountsList: React.FC<IAccountsListProps> = ({ 
+const AccountsList: React.FC<IAccountsListProps> = ({
   accounts = MOCK_ACCOUNTS,
-  showTotal = true 
+  showTotal = true,
 }) => {
   const [selectedAccount, setSelectedAccount] = useState<IAccount | null>(null);
-  
+
   const backgroundColor = useThemeColor(
     { light: "#f5f5f5", dark: "#1a1a1a" },
     "background"
   );
   const textColor = useThemeColor({ light: "#000", dark: "#fff" }, "text");
 
-  const totalBalance = accounts.reduce((sum, account) => sum + account.balance, 0);
-  const activeAccountsCount = accounts.filter(account => account.balance > 0).length;
+  const totalBalance = accounts.reduce(
+    (sum, account) => sum + account.balance,
+    0
+  );
+  const activeAccountsCount = accounts.filter(
+    (account) => account.balance > 0
+  ).length;
 
   const handleAccountPress = (account: IAccount) => {
     setSelectedAccount(account);
     Alert.alert(
       account.name,
-      `Balance: €${account.balance.toFixed(2)}\\nTransactions: ${account.transactions || 0}`,
+      `Balance: €${account.balance.toFixed(2)}\\nTransactions: ${
+        account.transactions || 0
+      }`,
       [
         {
           text: "View Details",
-          onPress: () => console.log("Navigate to account details:", account.id),
+          onPress: () =>
+            console.log("Navigate to account details:", account.id),
         },
         { text: "Cancel", style: "cancel" },
       ]
@@ -55,11 +63,7 @@ const AccountsList: React.FC<IAccountsListProps> = ({
             {activeAccountsCount} active • {accounts.length} total
           </ThemedText>
         </View>
-        <IconSymbol
-          name="plus.circle.fill"
-          size={28}
-          color="#2F4F3F"
-        />
+        <IconSymbol name="plus.circle.fill" size={28} color="#2F4F3F" />
       </View>
 
       {/* Total Balance Card */}
@@ -94,7 +98,7 @@ const AccountsList: React.FC<IAccountsListProps> = ({
       )}
 
       {/* Accounts List */}
-      <ScrollView 
+      <ScrollView
         showsVerticalScrollIndicator={false}
         style={styles.accountsList}
       >
@@ -107,7 +111,7 @@ const AccountsList: React.FC<IAccountsListProps> = ({
               onPress={handleAccountPress}
             />
           ))}
-        
+
         {/* Spacer for bottom navigation */}
         <View style={styles.bottomSpacer} />
       </ScrollView>

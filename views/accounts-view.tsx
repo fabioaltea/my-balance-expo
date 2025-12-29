@@ -6,10 +6,7 @@ import { MOCK_ACCOUNTS } from "@/models/Account";
 const AccountsView: React.FC = () => {
   return (
     <ScreenView>
-      <AccountsList 
-        accounts={MOCK_ACCOUNTS} 
-        showTotal={true}
-      />
+      <AccountsList accounts={MOCK_ACCOUNTS} showTotal={true} />
     </ScreenView>
   );
 };

@@ -11,18 +11,28 @@ import { ThemedText } from "@/components/themed-text";
 import Pager from "@/components/ui/pager";
 import { IAccount } from "@/models/Account";
 
-const HomeView: React.FC<{accounts: IAccount[], selectedAccount: string, setSelectedAccount: (account: string) => void}> = ({accounts, selectedAccount, setSelectedAccount}) => {
+const HomeView: React.FC<{
+  accounts: IAccount[];
+  selectedAccount: string;
+  setSelectedAccount: (account: string) => void;
+}> = ({ accounts, selectedAccount, setSelectedAccount }) => {
   const [movementFilter, setMovementFilter] = useState<
     "all" | "income" | "expense"
   >("all");
 
   return (
-    <View style={styles.container}>
-      <Pager selectedPage={accounts.findIndex((a)=>{return a.name===selectedAccount})} onPageSelected={(index)=>setSelectedAccount(accounts[index]?.name)}>
+    <View>
+      <Pager
+        selectedPage={accounts.findIndex((a) => {
+          return a.name === selectedAccount;
+        })}
+        onPageSelected={(index) => setSelectedAccount(accounts[index]?.name)}
+      >
         {accounts.map((account) => (
           <BalanceCard key={account.name} account={account} />
         ))}
       </Pager>
+
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
@@ -35,8 +45,6 @@ const HomeView: React.FC<{accounts: IAccount[], selectedAccount: string, setSele
           onFilterChange={setMovementFilter}
         />
         <MovementsCard />
-        {/* Aggiungo spacer per consentire visualizzazione completa */}
-        <View style={{ height: 150 }}></View>
       </ScrollView>
     </View>
   );
@@ -48,16 +56,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  chipsWrapper: {
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 10,
-    marginBottom: 20,
-  },
   scrollContainer: {
-    paddingHorizontal:16,
-    paddingBottom: 100,
-    flexGrow: 1,
+    paddingHorizontal: 16,
+    paddingBottom: 100, // Match movements-view padding
+    flexGrow: 1, // Allow content to grow and scroll properly
   },
 });

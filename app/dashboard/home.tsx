@@ -25,8 +25,6 @@ export const ACCOUNTS: IAccount[] = MOCK_ACCOUNTS;
 
 
 export default function Home() {
-
-
   const [selectedAccount, setSelectedAccount] = React.useState("Intesa San Paolo");
 
   const handleButtonPress = () => {

@@ -3,7 +3,8 @@ import AddView from '@/views/add-view';
 
 export default function Add() {
   return (
-      <AddView/>
+      // <AddView/>
+      <></>
   );
 }
 

@@ -12,7 +12,6 @@ const HomeView: React.FC = () => {
         <PeriodPicker></PeriodPicker>
         <MovementsCard />
         {/* Aggiungo spacer per consentire visualizzazione completa */}
-        <View style={{ height: 75 }}></View>
       </ScrollView>
     </View>
   );

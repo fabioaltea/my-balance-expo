@@ -6,18 +6,23 @@ import ChipButton from "@/components/ui/chip-button";
 import PeriodPicker from "@/components/ui/period-chips-picker";
 import ScreenView from "@/layout/screen-view";
 import { View, StyleSheet, ScrollView } from "react-native";
-import { useState } from "react";
+import React, { useState } from "react";
 import { ThemedText } from "@/components/themed-text";
+import Pager from "@/components/ui/pager";
+import { IAccount } from "@/models/Account";
 
-const HomeView: React.FC = () => {
+const HomeView: React.FC<{accounts: IAccount[], selectedAccount: string, setSelectedAccount: (account: string) => void}> = ({accounts, selectedAccount, setSelectedAccount}) => {
   const [movementFilter, setMovementFilter] = useState<
     "all" | "income" | "expense"
   >("all");
 
   return (
-    <View>
-        
-      <BalanceCard />
+    <View style={styles.container}>
+      <Pager selectedPage={accounts.findIndex((a)=>{return a.name===selectedAccount})} onPageSelected={(index)=>setSelectedAccount(accounts[index]?.name)}>
+        {accounts.map((account) => (
+          <BalanceCard key={account.name} account={account} />
+        ))}
+      </Pager>
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
@@ -40,6 +45,9 @@ const HomeView: React.FC = () => {
 export default HomeView;
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
   chipsWrapper: {
     display: "flex",
     flexDirection: "row",
@@ -48,6 +56,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   scrollContainer: {
+    paddingHorizontal:16,
     paddingBottom: 100,
     flexGrow: 1,
   },

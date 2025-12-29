@@ -15,22 +15,22 @@ import React from 'react';
 
 export default function Movements() {
   return (
-   <ScreenView>
-    <ThemedText type='title'>Movements</ThemedText>
-     <MovementsView />
-   </ScreenView>
+    <ScreenView>
+      <View style={styles.header}>
+        <ThemedText type="title">Movements</ThemedText>
+      </View>
+      <MovementsView />
+    </ScreenView>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  header: {
+    paddingHorizontal: 16,
+    marginBottom: 20,
   },
   titleContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 8,
   },
 });

@@ -15,21 +15,21 @@ import ScreenView from '@/layout/screen-view';
 export default function Charts() {
   return (
     <ScreenView>
-      <ThemedText type='title'>Charts</ThemedText>
+      <View style={styles.header}>
+        <ThemedText type="title">Charts</ThemedText>
+      </View>
       <ChartsView />
     </ScreenView>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  header: {
+    paddingHorizontal: 16,
+    marginBottom: 20,
   },
   titleContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 8,
   },
 });

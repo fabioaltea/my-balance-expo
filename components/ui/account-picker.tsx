@@ -2,9 +2,12 @@ import { View, StyleSheet, Pressable } from "react-native";
 import React from "react";
 import { ThemedText } from "../themed-text";
 import ContextMenu from "./context-menu";
+import { IAccount } from "@/models/Account";
+
+
 
 export interface IAccountPickerProps {
-    accounts: string[];
+    accounts: IAccount[];
     selectedAccount: string;
     setSelectedAccount: (account: string) => void;
 }
@@ -29,7 +32,7 @@ const handleDismissMenu = () => {
       <Pressable onPress={handleOpenMenu}>
         <ThemedText type="title">{selectedAccount || "Select Account"} ▼</ThemedText>
       </Pressable>
-      {menuOpen && <ContextMenu options={accounts || []} onSelectOption={(option) => handleSelectOption(option)} onDismiss={handleDismissMenu} selectedOption={selectedAccount} />}
+      {menuOpen && <ContextMenu options={accounts.map(a=>a.name) || []} onSelectOption={(option) => handleSelectOption(option)} onDismiss={handleDismissMenu} selectedOption={selectedAccount} />}
     </View>
   );
 };

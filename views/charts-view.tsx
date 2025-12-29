@@ -1,15 +1,19 @@
-import Home from "@/app/dashboard/home";
-import BalanceCard from "@/components/cards/balance-card";
-import MovementsCard from "@/components/cards/movements-card";
+import AccountsList from "@/components/cards/accounts-list";
 import ScreenView from "@/layout/screen-view";
-import { View, Text } from "react-native";
+import { View, StyleSheet } from "react-native";
 
-const HomeView: React.FC = () => {
+const ChartsView: React.FC = () => {
   return (
-    <View>
-    </View>
+    <ScreenView>
+      <AccountsList showTotal={true} />
+    </ScreenView>
   );
 };
 
-export default HomeView;
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});
 
+export default ChartsView;

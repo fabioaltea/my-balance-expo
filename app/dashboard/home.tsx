@@ -16,11 +16,18 @@ import React from 'react';
 import GlassButton from '@/components/ui/glass-button';
 import Chips from '@/components/ui/chips';
 import AccountPicker from '@/components/ui/account-picker';
+import { IAccount, MOCK_ACCOUNTS } from '@/models/Account';
+
+
+
+
+export const ACCOUNTS: IAccount[] = MOCK_ACCOUNTS;
+
 
 export default function Home() {
 
 
-  const [selectedAccount, setSelectedAccount] = React.useState("Account 1");
+  const [selectedAccount, setSelectedAccount] = React.useState("Intesa San Paolo");
 
   const handleButtonPress = () => {
     router.push('/add');
@@ -29,16 +36,17 @@ export default function Home() {
   return (
     <ScreenView>
       <View style={styles.header}>
-        <AccountPicker accounts={["Account 1", "Account 2"]} selectedAccount={selectedAccount} setSelectedAccount={setSelectedAccount} ></AccountPicker>
+        <AccountPicker accounts={ACCOUNTS} selectedAccount={selectedAccount} setSelectedAccount={setSelectedAccount} ></AccountPicker>
         <GlassButton onPress={handleButtonPress}></GlassButton>
       </View>
-      <HomeView />
+      <HomeView accounts={ACCOUNTS} selectedAccount={selectedAccount} setSelectedAccount={setSelectedAccount} />
     </ScreenView>
   );
 }
 
 const styles = StyleSheet.create({
   header: {
+    paddingHorizontal:16,
     marginBottom:20,
     display:'flex',
     flexDirection:'row',

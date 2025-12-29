@@ -162,10 +162,10 @@ const ContextMenu: React.FC<IContextMenuProps> = ({
         ]}
       >
         <ScrollView showsVerticalScrollIndicator={false}>
-          {options?.map((option) => (
+          {options?.map((option, key) => (
             <Pressable
               style={styles.menuItem}
-              key={option}
+              key={key}
               onPress={() => handleSelect(option)}
             >
               <Text

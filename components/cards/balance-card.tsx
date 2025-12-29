@@ -4,6 +4,34 @@ import { IconSymbol } from "../ui/icon-symbol.ios";
 import { useState } from "react";
 import Card from "../card";
 import GlassButton from "../ui/glass-button";
+import { IAccount } from "@/models/Account";
+
+interface IBalanceCardProps {
+  account?: IAccount;
+}
+
+const BalanceCard: React.FC<IBalanceCardProps> = ({ account }) => {
+  const [isBalanceVisible, setIsBalanceVisible] = useState(true);
+
+  return (
+    <Card backgroundColor={account?.color || "#2F4F3F"} color={account?.textColor || "#FFFFFF"}>
+      <View style={styles.balanceContent}>
+        <Text style={styles.balanceAmount}>
+          {isBalanceVisible ? `€ ${account?.balance.toFixed(2)}` : "€ ****,**"}
+        </Text>
+        <TouchableOpacity
+          onPress={() => setIsBalanceVisible(!isBalanceVisible)}
+        >
+          <IconSymbol
+            name={isBalanceVisible ? "eye.fill" : "eye.slash.fill"}
+            size={24}
+            color="#FFFFFF"
+          />
+        </TouchableOpacity>
+      </View>
+    </Card>
+  );
+};
 
 const styles = StyleSheet.create({
   balanceContent: {
@@ -23,28 +51,5 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
 });
-
-const BalanceCard: React.FC = () => {
-  const [isBalanceVisible, setIsBalanceVisible] = useState(true);
-
-  return (
-    <Card backgroundColor="#2F4F3F" color="#FFFFFF">
-      <View style={styles.balanceContent}>
-        <Text style={styles.balanceAmount}>
-          {isBalanceVisible ? "€ 27024,27" : "€ ****,**"}
-        </Text>
-        <TouchableOpacity
-          onPress={() => setIsBalanceVisible(!isBalanceVisible)}
-        >
-          <IconSymbol
-            name={isBalanceVisible ? "eye.fill" : "eye.slash.fill"}
-            size={24}
-            color="#FFFFFF"
-          />
-        </TouchableOpacity>
-      </View>
-    </Card>
-  );
-};
 
 export default BalanceCard;

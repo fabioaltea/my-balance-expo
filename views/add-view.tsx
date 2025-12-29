@@ -19,6 +19,7 @@ import List from "@/components/ui/list";
 import InputGroup from "@/components/ui/input-group";
 import DatePicker from "@/components/ui/date-picker";
 import ListPicker from "@/components/ui/list-picker";
+import LocationPicker, { ILocation } from "@/components/ui/location-picker";
 import Transactions, { ITransaction } from "@/components/ui/transactions";
 import TransactionModal, {
   ITransactionData,
@@ -30,7 +31,9 @@ const AddView: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [transactions, setTransactions] = useState<ITransaction[]>([]);
-  const [location, setLocation] = useState("sestu");
+  const [selectedLocation, setSelectedLocation] = useState<ILocation>({
+    address: "",
+  });
   const [showTransactionPicker, setShowTransactionPicker] = useState(false);
   const [editingTransaction, setEditingTransaction] =
     useState<ITransaction | null>(null);
@@ -85,7 +88,7 @@ const AddView: React.FC = () => {
 
   const handleTransactionSave = (data: ITransactionData) => {
     console.log("Saving transaction:", data);
-    
+
     // Validate data
     if (!data.accountName || data.amount <= 0) {
       Alert.alert("Error, please complete all fields with valid data");
@@ -109,7 +112,7 @@ const AddView: React.FC = () => {
       setTransactions([...transactions, newTransaction]);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
-    
+
     // Close modal and reset editing state
     setShowTransactionPicker(false);
     setEditingTransaction(null);
@@ -152,7 +155,6 @@ const AddView: React.FC = () => {
       paddingTop: 20,
       paddingBottom: 40,
       paddingHorizontal: 20,
-      
     },
     submitButton: {
       backgroundColor: "#4a4a4a",
@@ -194,6 +196,17 @@ const AddView: React.FC = () => {
             onAddPress={handleAddTransaction}
           />
         </InputGroup>
+
+        {/* Location Card */}
+        <InputGroup>
+          <LocationPicker
+            value={selectedLocation.address}
+            onChange={setSelectedLocation}
+            label="Location"
+            placeholder="Enter location"
+            googleMapsApiKey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}
+          />
+        </InputGroup>
       </ScrollView>
 
       {/* Transaction Modal */}
@@ -212,7 +225,15 @@ const AddView: React.FC = () => {
       {/* Bottom Total and Submit */}
       {
         <View style={[styles.bottomSection, dynamicStyles.totalContainer]}>
-          <View style={{ alignItems: "center", display: "flex", flexDirection:"row", justifyContent:"space-between", width:"100%" }}>
+          <View
+            style={{
+              alignItems: "center",
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "space-between",
+              width: "100%",
+            }}
+          >
             <ThemedText style={styles.totalLabel}>Importo totale:</ThemedText>
             <ThemedText style={styles.totalAmount}>
               {getTotalAmount().toFixed(2).replace(".", ",")}€

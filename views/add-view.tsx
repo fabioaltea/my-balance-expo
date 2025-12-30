@@ -25,8 +25,10 @@ import TransactionModal, {
   ITransactionData,
 } from "@/components/ui/transaction-modal";
 import ScreenView from "@/layout/screen-view";
+import { useAccountSelection } from "@/state";
 
 const AddView: React.FC = () => {
+  const { allAccounts } = useAccountSelection();
   const [description, setDescription] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -69,12 +71,10 @@ const AddView: React.FC = () => {
     { label: "Altro", value: "altro" },
   ];
 
-  const accounts = [
-    { label: "Trade Republic", value: "Trade Republic" },
-    { label: "Intesa San Paolo", value: "Intesa San Paolo" },
-    { label: "Carta di Credito", value: "Carta di Credito" },
-    { label: "Cash", value: "Cash" },
-  ];
+  const accounts = allAccounts.map(account => ({
+    label: account.name,
+    value: account.name
+  }));
 
   const handleTransactionPress = (transaction: ITransaction) => {
     setEditingTransaction(transaction);

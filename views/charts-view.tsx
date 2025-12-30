@@ -5,6 +5,7 @@ import { View, StyleSheet } from "react-native";
 const ChartsView: React.FC = () => {
   return (
     <ScreenView>
+      <AccountsList showTotal={true} />
     </ScreenView>
   );
 };

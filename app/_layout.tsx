@@ -6,6 +6,7 @@ import 'react-native-reanimated';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { View, Text, StyleSheet } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { AppStateProvider } from '@/state';
 
 export const unstable_settings = {
   anchor: 'dashboard',
@@ -38,21 +39,23 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <SafeAreaProvider>
-        <Stack>
-          <Stack.Screen
-            name="dashboard"
-            options={{ headerShown: false, header: dashboardHeader }}
-          />
-          <Stack.Screen
-            name="add"
-            options={{ presentation: "card", title: "Add", headerShown: false }}
-          />
+        <AppStateProvider>
+          <Stack>
+            <Stack.Screen
+              name="dashboard"
+              options={{ headerShown: false, header: dashboardHeader }}
+            />
+            <Stack.Screen
+              name="add"
+              options={{ presentation: "card", title: "Add", headerShown: false }}
+            />
 
-          <Stack.Screen
-            name="modal"
-            options={{ presentation: "modal", title: "Modal" }}
-          />
-        </Stack>
+            <Stack.Screen
+              name="modal"
+              options={{ presentation: "modal", title: "Modal" }}
+            />
+          </Stack>
+        </AppStateProvider>
         <StatusBar style="auto" />
       </SafeAreaProvider>
     </ThemeProvider>

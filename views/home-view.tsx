@@ -1,21 +1,15 @@
-import Home from "@/app/dashboard/home";
 import BalanceCard from "@/components/cards/balance-card";
 import MovementsCard from "@/components/cards/movements-card";
 import FinancialSummaryCard from "@/components/cards/financial-summary-card";
-import ChipButton from "@/components/ui/chip-button";
 import PeriodPicker from "@/components/ui/period-chips-picker";
-import ScreenView from "@/layout/screen-view";
 import { View, StyleSheet, ScrollView } from "react-native";
 import React, { useState } from "react";
-import { ThemedText } from "@/components/themed-text";
 import Pager from "@/components/ui/pager";
-import { IAccount } from "@/models/Account";
+import { useAccountSelection, useMovements } from "@/state";
 
-const HomeView: React.FC<{
-  accounts: IAccount[];
-  selectedAccount: string;
-  setSelectedAccount: (account: string) => void;
-}> = ({ accounts, selectedAccount, setSelectedAccount }) => {
+const HomeView: React.FC = () => {
+  const { selectedAccount, allAccounts, switchToAccount } = useAccountSelection();
+  const { getTotalIncome, getTotalExpense } = useMovements();
   const [movementFilter, setMovementFilter] = useState<
     "all" | "income" | "expense"
   >("all");
@@ -23,12 +17,12 @@ const HomeView: React.FC<{
   return (
     <View>
       <Pager
-        selectedPage={accounts.findIndex((a) => {
+        selectedPage={allAccounts.findIndex((a) => {
           return a.name === selectedAccount;
         })}
-        onPageSelected={(index) => setSelectedAccount(accounts[index]?.name)}
+        onPageSelected={(index) => switchToAccount(allAccounts[index]?.name)}
       >
-        {accounts.map((account) => (
+        {allAccounts.map((account) => (
           <BalanceCard key={account.name} account={account} />
         ))}
       </Pager>
@@ -39,8 +33,8 @@ const HomeView: React.FC<{
       >
         <PeriodPicker></PeriodPicker>
         <FinancialSummaryCard
-          income={4084.41}
-          expense={1369.57}
+          income={getTotalIncome()}
+          expense={getTotalExpense()}
           selectedFilter={movementFilter}
           onFilterChange={setMovementFilter}
         />

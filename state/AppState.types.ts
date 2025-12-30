@@ -18,16 +18,16 @@ export interface IAppState {
   // Account management
   selectedAccount: string;
   setSelectedAccount: (account: string) => void;
-  
+
   // Date range management
   dateRange: IDateRange;
   setDateRange: (range: IDateRange) => void;
-  
+
   // Movements data
   movements: IMovement[];
   setMovements: (movements: IMovement[]) => void;
   filteredMovements: IMovement[];
-  
+
   // Privacy settings
   blurSensitiveInfo: boolean;
   setBlurSensitiveInfo: (blur: boolean) => void;
@@ -38,21 +38,21 @@ export const DATE_RANGES = {
   THIS_MONTH: {
     startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
     endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0),
-    label: "This Month"
+    label: "This Month",
   },
   LAST_MONTH: {
     startDate: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1),
     endDate: new Date(new Date().getFullYear(), new Date().getMonth(), 0),
-    label: "Last Month"
+    label: "Last Month",
   },
   LAST_3_MONTHS: {
     startDate: new Date(new Date().getFullYear(), new Date().getMonth() - 2, 1),
     endDate: new Date(),
-    label: "Last 3 Months"
+    label: "Last 3 Months",
   },
   THIS_YEAR: {
     startDate: new Date(new Date().getFullYear(), 0, 1),
     endDate: new Date(),
-    label: "This Year"
-  }
+    label: "This Year",
+  },
 };

@@ -1,6 +1,17 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { IAppState, IDateRange, IMovement, DATE_RANGES } from './AppState.types';
-import { MOCK_ACCOUNTS } from '@/models/Account';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
+import {
+  IAppState,
+  IDateRange,
+  IMovement,
+  DATE_RANGES,
+} from "./AppState.types";
+import { MOCK_ACCOUNTS } from "@/models/Account";
 
 const AppStateContext = createContext<IAppState | undefined>(undefined);
 
@@ -17,25 +28,25 @@ const MOCK_MOVEMENTS: IMovement[] = [
     type: "income",
     date: new Date(2025, 11, 15),
     accountName: "Intesa San Paolo",
-    category: "Salary"
+    category: "Salary",
   },
   {
-    id: "2", 
+    id: "2",
     description: "Pellet",
     amount: 22.96,
     type: "expense",
     date: new Date(2025, 11, 13),
     accountName: "Cash",
-    category: "Home"
+    category: "Home",
   },
   {
     id: "3",
     description: "Spesa Conad",
     amount: 40.62,
-    type: "expense", 
+    type: "expense",
     date: new Date(2025, 11, 13),
     accountName: "Cash",
-    category: "Groceries"
+    category: "Groceries",
   },
   {
     id: "4",
@@ -43,8 +54,8 @@ const MOCK_MOVEMENTS: IMovement[] = [
     amount: 22.96,
     type: "expense",
     date: new Date(2025, 11, 13),
-    accountName: "Cash", 
-    category: "Home"
+    accountName: "Cash",
+    category: "Home",
   },
   {
     id: "5",
@@ -53,43 +64,56 @@ const MOCK_MOVEMENTS: IMovement[] = [
     type: "expense",
     date: new Date(2025, 11, 13),
     accountName: "Cash",
-    category: "Groceries"
-  }
+    category: "Groceries",
+  },
 ];
 
-export const AppStateProvider: React.FC<AppStateProviderProps> = ({ children }) => {
+export const AppStateProvider: React.FC<AppStateProviderProps> = ({
+  children,
+}) => {
   // Account state
   const [selectedAccount, setSelectedAccount] = useState<string>(
     MOCK_ACCOUNTS[0]?.name || ""
   );
-  
+
   // Date range state
-  const [dateRange, setDateRange] = useState<IDateRange>(DATE_RANGES.THIS_MONTH);
-  
+  const [dateRange, setDateRange] = useState<IDateRange>(
+    DATE_RANGES.THIS_MONTH
+  );
+
   // Movements state
   const [movements, setMovements] = useState<IMovement[]>(MOCK_MOVEMENTS);
-  
+
   // Privacy state
   const [blurSensitiveInfo, setBlurSensitiveInfo] = useState<boolean>(false);
 
   // Computed filtered movements based on account and date range
-  const filteredMovements = movements.filter(movement => {
-    const isInDateRange = movement.date >= dateRange.startDate && movement.date <= dateRange.endDate;
-    const matchesAccount = selectedAccount === "All" || movement.accountName === selectedAccount;
-    
+  const filteredMovements = movements.filter((movement) => {
+    const isInDateRange =
+      movement.date >= dateRange.startDate &&
+      movement.date <= dateRange.endDate;
+    const matchesAccount =
+      selectedAccount === "All" || movement.accountName === selectedAccount;
+
     return isInDateRange && matchesAccount;
   });
 
   // Debug logging
   useEffect(() => {
-    console.log('App State Changed:', {
+    console.log("App State Changed:", {
       selectedAccount,
       dateRange: dateRange.label,
       totalMovements: movements.length,
       filteredMovements: filteredMovements.length,
-      blurSensitiveInfo
+      blurSensitiveInfo,
     });
-  }, [selectedAccount, dateRange, movements.length, filteredMovements.length, blurSensitiveInfo]);
+  }, [
+    selectedAccount,
+    dateRange,
+    movements.length,
+    filteredMovements.length,
+    blurSensitiveInfo,
+  ]);
 
   const value: IAppState = {
     selectedAccount,
@@ -113,7 +137,7 @@ export const AppStateProvider: React.FC<AppStateProviderProps> = ({ children }) 
 export const useAppState = (): IAppState => {
   const context = useContext(AppStateContext);
   if (context === undefined) {
-    throw new Error('useAppState must be used within an AppStateProvider');
+    throw new Error("useAppState must be used within an AppStateProvider");
   }
   return context;
 };

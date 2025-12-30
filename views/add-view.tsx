@@ -71,9 +71,9 @@ const AddView: React.FC = () => {
     { label: "Altro", value: "altro" },
   ];
 
-  const accounts = allAccounts.map(account => ({
+  const accounts = allAccounts.map((account) => ({
     label: account.name,
-    value: account.name
+    value: account.name,
   }));
 
   const handleTransactionPress = (transaction: ITransaction) => {

@@ -1,3 +1,4 @@
+import React from "react";
 import {
   Pressable,
   ScrollView,
@@ -59,7 +60,10 @@ const ContextMenu: React.FC<IContextMenuProps> = ({
     { light: "#edededee", dark: "#2a2a2a" },
     "cardBackground"
   );
-  const borderColor = useThemeColor({ light: "#ccc", dark: "#555" }, "border");
+  const borderColor = useThemeColor(
+    { light: "#ccc", dark: "#555" },
+    "cardBorder"
+  );
   const textColor = useThemeColor({}, "text");
   const selectedBackground = useThemeColor(
     { light: "#ccc", dark: "#444" },
@@ -122,8 +126,7 @@ const ContextMenu: React.FC<IContextMenuProps> = ({
   };
 
   const handleSelect = (option: string) => {
-    
-        onSelectOption(option);
+    onSelectOption(option);
 
     try {
       Haptics.selectionAsync();
@@ -139,7 +142,7 @@ const ContextMenu: React.FC<IContextMenuProps> = ({
         friction: 8,
       }),
     ]).start(() => {
-        onDismiss?.();
+      onDismiss?.();
     });
   };
 

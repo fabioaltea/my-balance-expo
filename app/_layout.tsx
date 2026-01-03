@@ -8,15 +8,18 @@ import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { AppStateProvider } from "@/state";
+import { AuthProvider, useAuthContext } from "@/state/AuthProvider";
+import LoginScreen from "@/components/LoginScreen";
 
 export const unstable_settings = {
   anchor: "dashboard",
 };
 
-export default function RootLayout() {
+// Main app content that requires authentication
+const AuthenticatedApp: React.FC = () => {
   const colorScheme = useColorScheme();
 
   const dashboardHeader = () => (
@@ -26,19 +29,6 @@ export default function RootLayout() {
       </View>
     </SafeAreaView>
   );
-
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      alignItems: "center",
-      justifyContent: "center",
-      padding: 20,
-    },
-    link: {
-      marginTop: 15,
-      paddingVertical: 15,
-    },
-  });
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
@@ -57,7 +47,6 @@ export default function RootLayout() {
                 headerShown: false,
               }}
             />
-
             <Stack.Screen
               name="modal"
               options={{ presentation: "modal", title: "Modal" }}
@@ -67,5 +56,48 @@ export default function RootLayout() {
         <StatusBar style="auto" />
       </SafeAreaProvider>
     </ThemeProvider>
+  );
+};
+
+// App router component that handles authentication state
+const AppRouter: React.FC = () => {
+  const { isAuthenticated, isLoading } = useAuthContext();
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#667eea" />
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <LoginScreen />;
+  }
+
+  return <AuthenticatedApp />;
+};
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#666",
+  },
+});
+
+// Root layout with authentication provider
+export default function RootLayout() {
+  return (
+    <AuthProvider>
+      <AppRouter />
+    </AuthProvider>
   );
 }

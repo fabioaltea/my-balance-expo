@@ -1,20 +1,33 @@
 {
   "expo": {
-    "name": "my-balance-expo",
-    "slug": "my-balance-expo",
+    "name": "mybalance",
+    "slug": "mybalance",
+    "owner": "fabioaltea",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "mybalanceexpo",
+    "scheme": "mybalance",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "originalFullName": "@fabioaltea/mybalance",
     "ios": {
       "supportsTablet": true,
-      "config":{
-        "googleMapsApiKey":"process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY"
+      "bundleIdentifier": "com.fabioaltea.mybalance",
+      "config": {
+        "googleMapsApiKey": "process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY"
+      },
+      "infoPlist": {
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLName": "google-oauth",
+            "CFBundleURLSchemes": [
+              "com.fabioaltea.mybalance"
+            ]
+          }
+        ],
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
-    
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
@@ -23,7 +36,8 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.fabioaltea.mybalance"
     },
     "web": {
       "output": "static",
@@ -48,6 +62,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "2d2413da-2b7d-4cab-8be2-dc832515bde8"
+      }
     }
   }
 }

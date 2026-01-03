@@ -1,5 +1,5 @@
-import { useAppState } from "./AppStateProvider";
-import { IDateRange, DATE_RANGES, IMovement } from "./AppState.types";
+import { useAppState } from "../state/AppStateProvider";
+import { IDateRange, DATE_RANGES, IMovement } from "../state/AppState.types";
 import { MOCK_ACCOUNTS, IAccount } from "@/models/Account";
 
 export const useAccountSelection = () => {
@@ -123,3 +123,30 @@ export const usePrivacy = () => {
     formatSensitiveText,
   };
 };
+
+// export const useMovements = () => {
+//   const { filteredMovements } = useAppState();
+
+//   const getTotalIncome = () => {
+//     return filteredMovements
+//       .filter((m) => m.type === "income")
+//       .reduce((total, movement) => total + movement.amount, 0);
+//   };
+
+//   const getTotalExpense = () => {
+//     return filteredMovements
+//       .filter((m) => m.type === "expense")
+//       .reduce((total, movement) => total + movement.amount, 0);
+//   };
+
+//   const getTotalBalance = () => {
+//     return getTotalIncome() - getTotalExpense();
+//   };
+
+//   return {
+//     filteredMovements,
+//     getTotalIncome,
+//     getTotalExpense,
+//     getTotalBalance,
+//   };
+// };

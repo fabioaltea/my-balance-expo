@@ -12,6 +12,7 @@ import {
   DATE_RANGES,
 } from "./AppState.types";
 import { MOCK_ACCOUNTS } from "@/models/Account";
+import { useMyBalanceData } from "../hooks/useMyBalanceData";
 
 const AppStateContext = createContext<IAppState | undefined>(undefined);
 
@@ -71,18 +72,29 @@ const MOCK_MOVEMENTS: IMovement[] = [
 export const AppStateProvider: React.FC<AppStateProviderProps> = ({
   children,
 }) => {
-  // Account state
-  const [selectedAccount, setSelectedAccount] = useState<string>(
-    MOCK_ACCOUNTS[0]?.name || ""
-  );
+  // Use real data from backend
+  const {
+    movements: realMovements,
+    accounts: realAccounts,
+    isLoading,
+  } = useMyBalanceData();
+
+  // Account state - use first real account or fallback to mock
+  const [selectedAccount, setSelectedAccount] = useState<string>("All");
 
   // Date range state
   const [dateRange, setDateRange] = useState<IDateRange>(
     DATE_RANGES.THIS_MONTH
   );
 
-  // Movements state
-  const [movements, setMovements] = useState<IMovement[]>(MOCK_MOVEMENTS);
+  // Use real movements from backend, fallback to mock for development
+  const movements =
+    realMovements.length > 0
+      ? realMovements.map((m) => ({
+          ...m,
+          date: new Date(m.date), // Ensure date is a Date object
+        }))
+      : MOCK_MOVEMENTS;
 
   // Privacy state
   const [blurSensitiveInfo, setBlurSensitiveInfo] = useState<boolean>(false);
@@ -121,7 +133,7 @@ export const AppStateProvider: React.FC<AppStateProviderProps> = ({
     dateRange,
     setDateRange,
     movements,
-    setMovements,
+    setMovements: () => {}, // Not needed since we use real data from API
     filteredMovements,
     blurSensitiveInfo,
     setBlurSensitiveInfo,

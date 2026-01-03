@@ -1,6 +1,16 @@
-# Welcome to your Expo app 👋
+# MyBalance Expo App 👋
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+This is the mobile app for MyBalance built with [Expo](https://expo.dev).
+
+## Authentication Setup
+
+Before running the app, you need to configure authentication:
+
+1. Create `.env.local` with:
+   ```bash
+   EXPO_PUBLIC_API_URL=http://localhost:8080
+   EXPO_PUBLIC_GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+   ```
 
 ## Get started
 

@@ -1,3 +1,4 @@
+import React from "react";
 import {
   DarkTheme,
   DefaultTheme,
@@ -61,8 +62,15 @@ const AuthenticatedApp: React.FC = () => {
 
 // App router component that handles authentication state
 const AppRouter: React.FC = () => {
-  const { isAuthenticated, isLoading } = useAuthContext();
+  const { isAuthenticated, isLoading, user, error } = useAuthContext();
 
+  console.log("🔍 AppRouter state:", {
+    isAuthenticated,
+    isLoading,
+    hasUser: !!user,
+    error
+  });
+ 
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -73,9 +81,11 @@ const AppRouter: React.FC = () => {
   }
 
   if (!isAuthenticated) {
+    console.log("📱 Showing LoginScreen");
     return <LoginScreen />;
   }
 
+  console.log("✅ Showing AuthenticatedApp");
   return <AuthenticatedApp />;
 };
 

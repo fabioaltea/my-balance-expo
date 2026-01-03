@@ -9,10 +9,10 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { useAuth } from "../hooks/useAuth";
+import { useAuthContext } from "../state/AuthProvider";
 
 const LoginScreen: React.FC = () => {
-  const { loginWithGoogle, isLoading, error } = useAuth();
+  const { loginWithGoogle, isLoading, error } = useAuthContext();
 
   const handleGoogleLogin = async () => {
     try {

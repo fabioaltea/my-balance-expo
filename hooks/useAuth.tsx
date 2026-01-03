@@ -131,17 +131,11 @@ export const useAuth = () => {
       const codeVerifier = generateCodeVerifier();
       const codeChallenge = await generateCodeChallenge(codeVerifier);
 
-      // console.log("🔐 PKCE generated:", {
-      //   codeVerifierLength: codeVerifier.length,
-      //   codeChallengeLength: codeChallenge.length,
-      //   codeChallengeValue: codeChallenge,
-      //   codeVerifierValue: codeVerifier,
-      // });
+   
 
       // Use custom scheme for iOS - using app scheme from Expo config
       const redirectUri =
         "com.googleusercontent.apps.1034336371411-871dda5aa8crght33ognn5hbeivrp09k:/oauthredirect";
-      //AuthSession.makeRedirectUri({scheme: "com.googleusercontent.apps.1034336371411-871dda5aa8crght33ognn5hbeivrp09k", });
 
       // Create OAuth request with PKCE
       const request = new AuthSession.AuthRequest({

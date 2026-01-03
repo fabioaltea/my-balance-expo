@@ -164,7 +164,7 @@ export class ApiHelper {
           throw new Error("Authentication expired");
         }
       }
-
+      console.log("API response:", response);
       if (!response.ok) {
         throw new Error(`Request failed: ${response.statusText}`);
       }
@@ -204,7 +204,7 @@ export class ApiHelper {
       return false;
     }
   }
-
+ 
   // Data API methods
   static async getMovements(spreadsheetId: string): Promise<any[]> {
     return this.makeAuthenticatedRequest(

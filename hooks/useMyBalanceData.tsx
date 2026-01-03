@@ -1,6 +1,9 @@
 import { useState, useCallback, useEffect } from "react";
-import { ApiHelper } from "../helpers/ApiHelper";
 import { useAuthContext } from "../state/AuthProvider";
+import { TransactionsApiHelper } from "../helpers/TransactionsApiHelper";
+import { AccountsApiHelper } from "../helpers/AccountsApiHelper";
+import { CategoriesApiHelper } from "../helpers/CategoriesApiHelper";
+import { AuthStorageHelper } from "../helpers/AuthStorageHelper";
 
 export interface Movement {
   id: string;
@@ -19,6 +22,8 @@ export interface Account {
   type: string;
   balance: number;
   color?: string;
+  textColor?: string;
+  transactions?: number;
 }
 
 export interface Category {
@@ -57,10 +62,22 @@ export const useMyBalanceData = () => {
     try {
       setDataState((prev) => ({ ...prev, isLoading: true, error: null }));
 
+      // Get access token from storage
+      const tokens = await AuthStorageHelper.getTokens();
+      if (!tokens?.accessToken) {
+        throw new Error("No access token available");
+      }
+
       const [movementsData, accountsData, categoriesData] = await Promise.all([
-        ApiHelper.getMovements(user.spreadsheetId),
-        ApiHelper.getAccounts(user.spreadsheetId),
-        ApiHelper.getCategories(user.spreadsheetId),
+        TransactionsApiHelper.getTransactions(
+          tokens.accessToken,
+          user.spreadsheetId
+        ),
+        AccountsApiHelper.getAccounts(tokens.accessToken, user.spreadsheetId),
+        CategoriesApiHelper.getCategories(
+          tokens.accessToken,
+          user.spreadsheetId
+        ),
       ]);
 
       setDataState((prev) => ({
@@ -89,9 +106,15 @@ export const useMyBalanceData = () => {
       }
 
       try {
-        const newMovement = await ApiHelper.addMovement(
-          movement,
-          user.spreadsheetId
+        const tokens = await AuthStorageHelper.getTokens();
+        if (!tokens?.accessToken) {
+          throw new Error("No access token available");
+        }
+
+        const newMovement = await TransactionsApiHelper.createTransaction(
+          tokens.accessToken,
+          user.spreadsheetId,
+          movement
         );
 
         setDataState((prev) => ({
@@ -116,10 +139,16 @@ export const useMyBalanceData = () => {
       }
 
       try {
-        const updatedMovement = await ApiHelper.updateMovement(
+        const tokens = await AuthStorageHelper.getTokens();
+        if (!tokens?.accessToken) {
+          throw new Error("No access token available");
+        }
+
+        const updatedMovement = await TransactionsApiHelper.updateTransaction(
+          tokens.accessToken,
+          user.spreadsheetId,
           movementId,
-          updates,
-          user.spreadsheetId
+          updates
         );
 
         setDataState((prev) => ({
@@ -146,7 +175,16 @@ export const useMyBalanceData = () => {
       }
 
       try {
-        await ApiHelper.deleteMovement(movementId, user.spreadsheetId);
+        const tokens = await AuthStorageHelper.getTokens();
+        if (!tokens?.accessToken) {
+          throw new Error("No access token available");
+        }
+
+        await TransactionsApiHelper.deleteTransaction(
+          tokens.accessToken,
+          user.spreadsheetId,
+          movementId
+        );
 
         setDataState((prev) => ({
           ...prev,

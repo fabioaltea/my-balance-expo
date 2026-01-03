@@ -1,16 +1,15 @@
 import { useAppState } from "../state/AppStateProvider";
 import { IDateRange, DATE_RANGES, IMovement } from "../state/AppState.types";
-import { MOCK_ACCOUNTS, IAccount } from "@/models/Account";
 
 export const useAccountSelection = () => {
-  const { selectedAccount, setSelectedAccount } = useAppState();
+  const { selectedAccount, setSelectedAccount, accounts } = useAppState();
 
-  const selectedAccountData = MOCK_ACCOUNTS.find(
+  const selectedAccountData = accounts.find(
     (account) => account.name === selectedAccount
   );
 
   const switchToAccount = (accountName: string) => {
-    const account = MOCK_ACCOUNTS.find((acc) => acc.name === accountName);
+    const account = accounts.find((acc) => acc.name === accountName);
     if (account || accountName === "All") {
       setSelectedAccount(accountName);
     }
@@ -20,7 +19,7 @@ export const useAccountSelection = () => {
     selectedAccount,
     selectedAccountData,
     switchToAccount,
-    allAccounts: MOCK_ACCOUNTS,
+    allAccounts: accounts, // Use real accounts instead of mock
   };
 };
 

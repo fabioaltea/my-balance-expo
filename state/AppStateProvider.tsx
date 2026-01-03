@@ -11,7 +11,6 @@ import {
   IMovement,
   DATE_RANGES,
 } from "./AppState.types";
-import { MOCK_ACCOUNTS } from "@/models/Account";
 import { useMyBalanceData } from "../hooks/useMyBalanceData";
 
 const AppStateContext = createContext<IAppState | undefined>(undefined);
@@ -19,55 +18,6 @@ const AppStateContext = createContext<IAppState | undefined>(undefined);
 interface AppStateProviderProps {
   children: ReactNode;
 }
-
-// Mock movements data
-const MOCK_MOVEMENTS: IMovement[] = [
-  {
-    id: "1",
-    description: "Tredicesima",
-    amount: 1391.44,
-    type: "income",
-    date: new Date(2025, 11, 15),
-    accountName: "Intesa San Paolo",
-    category: "Salary",
-  },
-  {
-    id: "2",
-    description: "Pellet",
-    amount: 22.96,
-    type: "expense",
-    date: new Date(2025, 11, 13),
-    accountName: "Cash",
-    category: "Home",
-  },
-  {
-    id: "3",
-    description: "Spesa Conad",
-    amount: 40.62,
-    type: "expense",
-    date: new Date(2025, 11, 13),
-    accountName: "Cash",
-    category: "Groceries",
-  },
-  {
-    id: "4",
-    description: "Pellet",
-    amount: 22.96,
-    type: "expense",
-    date: new Date(2025, 11, 13),
-    accountName: "Cash",
-    category: "Home",
-  },
-  {
-    id: "5",
-    description: "Spesa Conad",
-    amount: 40.62,
-    type: "expense",
-    date: new Date(2025, 11, 13),
-    accountName: "Cash",
-    category: "Groceries",
-  },
-];
 
 export const AppStateProvider: React.FC<AppStateProviderProps> = ({
   children,
@@ -79,7 +29,7 @@ export const AppStateProvider: React.FC<AppStateProviderProps> = ({
     isLoading,
   } = useMyBalanceData();
 
-  // Account state - use first real account or fallback to mock
+  // Account state - use first real account or fallback to "All"
   const [selectedAccount, setSelectedAccount] = useState<string>("All");
 
   // Date range state
@@ -87,14 +37,14 @@ export const AppStateProvider: React.FC<AppStateProviderProps> = ({
     DATE_RANGES.THIS_MONTH
   );
 
-  // Use real movements from backend, fallback to mock for development
-  const movements =
-    realMovements.length > 0
-      ? realMovements.map((m) => ({
-          ...m,
-          date: new Date(m.date), // Ensure date is a Date object
-        }))
-      : MOCK_MOVEMENTS;
+  // Always use real movements from backend
+  const movements = realMovements.map((m) => ({
+    ...m,
+    date: new Date(m.date), // Ensure date is a Date object
+  }));
+
+  // Use real accounts from backend
+  const accounts = realAccounts;
 
   // Privacy state
   const [blurSensitiveInfo, setBlurSensitiveInfo] = useState<boolean>(false);
@@ -135,6 +85,7 @@ export const AppStateProvider: React.FC<AppStateProviderProps> = ({
     movements,
     setMovements: () => {}, // Not needed since we use real data from API
     filteredMovements,
+    accounts, // Include real accounts from API
     blurSensitiveInfo,
     setBlurSensitiveInfo,
   };

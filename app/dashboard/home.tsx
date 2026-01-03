@@ -16,13 +16,21 @@ import React from "react";
 import GlassButton from "@/components/ui/glass-button";
 import Chips from "@/components/ui/chips";
 import AccountPicker from "@/components/ui/account-picker";
-import { IAccount, MOCK_ACCOUNTS } from "@/models/Account";
-
-export const ACCOUNTS: IAccount[] = MOCK_ACCOUNTS;
+import { useAccountSelection } from "@/state";
 
 export default function Home() {
-  const [selectedAccount, setSelectedAccount] =
-    React.useState("Intesa San Paolo");
+  const { allAccounts, selectedAccount, switchToAccount } =
+    useAccountSelection();
+
+  // Convert Account to IAccount for compatibility
+  const adaptedAccounts = allAccounts.map((account) => ({
+    id: account.id,
+    name: account.name,
+    balance: account.balance,
+    color: account.color || "#2F4F3F",
+    textColor: account.textColor || "#FFFFFF",
+    transactions: account.transactions || 0,
+  }));
 
   const handleButtonPress = () => {
     router.push("/add");
@@ -32,9 +40,9 @@ export default function Home() {
     <ScreenView>
       <View style={styles.header}>
         <AccountPicker
-          accounts={ACCOUNTS}
+          accounts={adaptedAccounts}
           selectedAccount={selectedAccount}
-          setSelectedAccount={setSelectedAccount}
+          setSelectedAccount={switchToAccount}
         ></AccountPicker>
         <GlassButton onPress={handleButtonPress}></GlassButton>
       </View>

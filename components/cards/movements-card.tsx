@@ -1,116 +1,77 @@
+import React, { useState } from "react";
 import { ThemedText } from "../themed-text";
 import { TouchableOpacity, StyleSheet, View } from "react-native";
 import { IconSymbol } from "../ui/icon-symbol.ios";
-import { useState } from "react";
 import Card from "../card";
 import { useThemeColor } from "@/hooks/use-theme-color";
+import { useMovements } from "@/state";
 
-const RECENT_MOVEMENTS = [
-  {
-    id: 1,
-    date: "15/12/2025",
-    description: "Tredicesima",
-    amount: 1391.44,
-    icon: "building.2.fill",
-    color: "#34C759",
-  },
-  {
-    id: 2,
-    date: "13/12/2025",
-    description: "pellet",
-    amount: -22.96,
-    icon: "calendar",
-    color: "#FF9500",
-  },
-  {
-    id: 3,
-    date: "13/12/2025",
-    description: "spesa conad",
-    amount: -40.62,
-    icon: "cart.fill",
-    color: "#FFD60A",
-  },
-  {
-    id: 4,
-    date: "13/12/2025",
-    description: "pellet",
-    amount: -22.96,
-    icon: "calendar",
-    color: "#FF9500",
-  },
-  {
-    id: 5,
-    date: "13/12/2025",
-    description: "spesa conad",
-    amount: -40.62,
-    icon: "cart.fill",
-    color: "#FFD60A",
-  },
-  {
-    id: 6,
-    date: "13/12/2025",
-    description: "pellet",
-    amount: -22.96,
-    icon: "calendar",
-    color: "#FF9500",
-  },
-  {
-    id: 7,
-    date: "13/12/2025",
-    description: "spesa conad",
-    amount: -40.62,
-    icon: "cart.fill",
-    color: "#FFD60A",
-  },
-  {
-    id: 8,
-    date: "13/12/2025",
-    description: "pellet",
-    amount: -22.96,
-    icon: "calendar",
-    color: "#FF9500",
-  },
-  {
-    id: 9,
-    date: "13/12/2025",
-    description: "spesa conad",
-    amount: -40.62,
-    icon: "cart.fill",
-    color: "#FFD60A",
-  },
-  {
-    id: 10,
-    date: "13/12/2025",
-    description: "pellet",
-    amount: -22.96,
-    icon: "calendar",
-    color: "#FF9500",
-  },
-  {
-    id: 11,
-    date: "13/12/2025",
-    description: "spesa conad",
-    amount: -40.62,
-    icon: "cart.fill",
-    color: "#FFD60A",
-  },
-  {
-    id: 12,
-    date: "13/12/2025",
-    description: "pellet",
-    amount: -22.96,
-    icon: "calendar",
-    color: "#FF9500",
-  },
-  {
-    id: 13,
-    date: "13/12/2025",
-    description: "spesa conad",
-    amount: -40.62,
-    icon: "cart.fill",
-    color: "#FFD60A",
-  },
-];
+// Helper function to get icon based on category/description
+const getMovementIcon = (category?: string, description?: string): string => {
+  const desc = description?.toLowerCase() || "";
+  const cat = category?.toLowerCase() || "";
+
+  if (
+    cat.includes("salary") ||
+    cat.includes("stipendio") ||
+    desc.includes("tredicesima")
+  ) {
+    return "building.2.fill";
+  }
+  if (
+    cat.includes("groceries") ||
+    cat.includes("spesa") ||
+    desc.includes("conad") ||
+    desc.includes("supermercato")
+  ) {
+    return "cart.fill";
+  }
+  if (
+    cat.includes("home") ||
+    cat.includes("casa") ||
+    desc.includes("pellet") ||
+    desc.includes("bolletta")
+  ) {
+    return "house.fill";
+  }
+  if (
+    cat.includes("transport") ||
+    cat.includes("trasporti") ||
+    desc.includes("benzina") ||
+    desc.includes("auto")
+  ) {
+    return "car.fill";
+  }
+  if (cat.includes("entertainment") || cat.includes("svago")) {
+    return "gamecontroller.fill";
+  }
+
+  // Default icons based on type
+  return desc.includes("expense") ? "minus.circle.fill" : "plus.circle.fill";
+};
+
+// Helper function to get color based on category/type
+const getMovementColor = (
+  type: "income" | "expense",
+  category?: string
+): string => {
+  if (type === "income") {
+    return "#34C759";
+  }
+
+  const cat = category?.toLowerCase() || "";
+  if (cat.includes("groceries") || cat.includes("spesa")) {
+    return "#FFD60A";
+  }
+  if (cat.includes("home") || cat.includes("casa")) {
+    return "#FF9500";
+  }
+  if (cat.includes("transport") || cat.includes("trasporti")) {
+    return "#5856D6";
+  }
+
+  return "#FF3B30"; // Default expense color
+};
 
 const styles = StyleSheet.create({
   // Movements
@@ -158,13 +119,25 @@ const styles = StyleSheet.create({
   negativeAmount: {
     color: "inherit",
   },
+  emptyState: {
+    paddingVertical: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emptyText: {
+    fontSize: 16,
+    color: "inherit",
+    opacity: 0.6,
+  },
 });
 
 const MovementsCard: React.FC = () => {
+  const { filteredMovements } = useMovements();
+
   // Colori del tema per la movements card
   const borderColor = useThemeColor(
     { light: "#F0F0F0", dark: "#333333" },
-    "border"
+    "tabIconDefault"
   );
   const positiveAmountColor = useThemeColor(
     { light: "#107c2bff", dark: "#34C759" },
@@ -182,44 +155,68 @@ const MovementsCard: React.FC = () => {
     },
   });
 
+  // Show only recent movements (limit to 13 like before)
+  const recentMovements = filteredMovements
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 13);
+
+  if (recentMovements.length === 0) {
+    return (
+      <Card label="">
+        <View style={styles.emptyState}>
+          <ThemedText style={styles.emptyText}>
+            No movements found for the selected period
+          </ThemedText>
+        </View>
+      </Card>
+    );
+  }
+
   return (
     <Card label="">
-      {RECENT_MOVEMENTS.map((movement, index) => (
-        <TouchableOpacity
-          key={movement.id}
-          style={[
-            dynamicStyles.movementItem,
-            index === RECENT_MOVEMENTS.length - 1 && styles.lastMovementItem,
-          ]}
-        >
-          <View
-            style={[styles.movementIcon, { backgroundColor: movement.color }]}
-          >
-            <IconSymbol
-              name={movement.icon as keyof typeof IconSymbol}
-              size={20}
-              color="#FFFFFF"
-            />
-          </View>
-          <View style={styles.movementInfo}>
-            <ThemedText style={styles.movementDate}>{movement.date}</ThemedText>
-            <ThemedText style={styles.movementDescription}>
-              {movement.description}
-            </ThemedText>
-          </View>
-          <ThemedText
+      {recentMovements.map((movement, index) => {
+        const icon = getMovementIcon(movement.category, movement.description);
+        const color = getMovementColor(movement.type, movement.category);
+        const amount =
+          movement.type === "income" ? movement.amount : -movement.amount;
+
+        return (
+          <TouchableOpacity
+            key={movement.id}
             style={[
-              styles.movementAmount,
-              movement.amount > 0
-                ? dynamicStyles.positiveAmount
-                : styles.negativeAmount,
+              dynamicStyles.movementItem,
+              index === recentMovements.length - 1 && styles.lastMovementItem,
             ]}
           >
-            {movement.amount > 0 ? "+" : ""}
-            {movement.amount.toFixed(2)}€
-          </ThemedText>
-        </TouchableOpacity>
-      ))}
+            <View style={[styles.movementIcon, { backgroundColor: color }]}>
+              <IconSymbol
+                name={icon as keyof typeof IconSymbol}
+                size={20}
+                color="#FFFFFF"
+              />
+            </View>
+            <View style={styles.movementInfo}>
+              <ThemedText style={styles.movementDate}>
+                {new Date(movement.date).toLocaleDateString("it-IT")}
+              </ThemedText>
+              <ThemedText style={styles.movementDescription}>
+                {movement.description}
+              </ThemedText>
+            </View>
+            <ThemedText
+              style={[
+                styles.movementAmount,
+                amount > 0
+                  ? dynamicStyles.positiveAmount
+                  : styles.negativeAmount,
+              ]}
+            >
+              {amount > 0 ? "+" : ""}
+              {amount.toFixed(2)}€
+            </ThemedText>
+          </TouchableOpacity>
+        );
+      })}
     </Card>
   );
 };

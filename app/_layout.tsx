@@ -68,9 +68,9 @@ const AppRouter: React.FC = () => {
     isAuthenticated,
     isLoading,
     hasUser: !!user,
-    error
+    error,
   });
- 
+
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>

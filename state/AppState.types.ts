@@ -1,3 +1,5 @@
+import { Account } from "../hooks/useMyBalanceData";
+
 export interface IDateRange {
   startDate: Date;
   endDate: Date;
@@ -27,6 +29,9 @@ export interface IAppState {
   movements: IMovement[];
   setMovements: (movements: IMovement[]) => void;
   filteredMovements: IMovement[];
+
+  // Accounts data
+  accounts: Account[];
 
   // Privacy settings
   blurSensitiveInfo: boolean;

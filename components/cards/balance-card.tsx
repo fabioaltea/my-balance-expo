@@ -1,23 +1,26 @@
+import React, { useState } from "react";
 import { ThemedText } from "../themed-text";
 import { TouchableOpacity, StyleSheet, View, Text } from "react-native";
 import { IconSymbol } from "../ui/icon-symbol.ios";
-import { useState } from "react";
 import Card from "../card";
 import GlassButton from "../ui/glass-button";
-import { IAccount } from "@/models/Account";
+import { Account } from "../../hooks/useMyBalanceData";
 
 interface IBalanceCardProps {
-  account?: IAccount;
+  account?: Account;
 }
 
 const BalanceCard: React.FC<IBalanceCardProps> = ({ account }) => {
   const [isBalanceVisible, setIsBalanceVisible] = useState(true);
 
   return (
-    <Card backgroundColor={account?.color || "#2F4F3F"} color={account?.textColor || "#FFFFFF"}>
+    <Card
+      backgroundColor={account?.color || "#2F4F3F"}
+      color={account?.textColor || "#FFFFFF"}
+    >
       <View style={styles.balanceContent}>
         <Text style={styles.balanceAmount}>
-          {isBalanceVisible ? `€ ${account?.balance.toFixed(2)}` : "€ ****,**"}
+          {isBalanceVisible ? `${account?.balance??""}` : "€ ****,**"}
         </Text>
         <TouchableOpacity
           onPress={() => setIsBalanceVisible(!isBalanceVisible)}

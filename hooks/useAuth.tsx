@@ -42,6 +42,10 @@ export const useAuth = () => {
   const [totalBalance, setTotalBalance] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
 
+  const clearError = useCallback(() => {
+    setAuthState((prev) => ({ ...prev, error: null }));
+  }, []);
+
   // Initialize authentication state
   const initializeAuth = useCallback(async () => {
     console.log("🚀 INITIALIZE AUTH CALLED");
@@ -63,12 +67,13 @@ export const useAuth = () => {
             tokens.accessToken
           );
 
-          console.log("📡 Profile response:", {
-            success: profileResponse.success,
-            hasUser: !!profileResponse.user,
-          });
+          
 
-          if (profileResponse.success && profileResponse.user) {
+          if (profileResponse && profileResponse.success && profileResponse.user) {
+            console.log("📡 Profile response:", {
+              success: profileResponse.success,
+              hasUser: !!profileResponse.user,
+            });
             console.log(
               "✅ Profile verification successful, setting auth state..."
             );
@@ -99,6 +104,18 @@ export const useAuth = () => {
             error
           );
           await AuthStorageHelper.clearAll();
+
+          // Set specific error message for expired tokens
+          setAuthState({
+            isAuthenticated: false,
+            user: null,
+            isLoading: false,
+            error: "Your session has expired. Please login again.",
+            mode: "",
+            dashboardReady: false,
+            selectedSpreadsheetId: null,
+          });
+          return;
         }
       }
 
@@ -172,6 +189,7 @@ export const useAuth = () => {
 
           setAuthState((prev) => ({
             ...prev,
+            selectedSpreadsheetId: null,
             mode: "quickstart",
             dashboardReady: true, // Quickstart is immediately ready
           }));
@@ -184,15 +202,34 @@ export const useAuth = () => {
 
       if (
         (error as any)?.message?.includes("401") ||
-        (error as any)?.message?.includes("expired")
+        (error as any)?.message?.includes("expired") ||
+        (error as any)?.message?.includes("Unauthorized")
       ) {
-        console.log("🔄 Token expired, trying to refresh...");
-        // Token expired, try to refresh
-        await refreshTokens();
+        console.log("🔄 Token expired, clearing auth and showing error...");
+        await AuthStorageHelper.clearAll();
+
+        setAuthState({
+          isAuthenticated: false,
+          user: null,
+          isLoading: false,
+          error: "Your session has expired. Please login again.",
+          mode: "",
+          dashboardReady: false,
+          selectedSpreadsheetId: null,
+        });
       } else {
-        console.log("🚪 Clearing invalid tokens and logging out...");
-        // Clear invalid tokens
-        await logout();
+        console.log("🚪 General error, logging out...");
+        // Set general error message
+        setAuthState({
+          isAuthenticated: false,
+          user: null,
+          isLoading: false,
+          error:
+            "Connection error. Please check your internet connection and try again.",
+          mode: "",
+          dashboardReady: false,
+          selectedSpreadsheetId: null,
+        });
       }
     }
   };
@@ -247,12 +284,33 @@ export const useAuth = () => {
     } catch (error) {
       console.error("Error in reloadAllData:", error);
 
-      // Set dashboard ready even on error to avoid infinite loading
-      setAuthState((prev) => ({
-        ...prev,
-        dashboardReady: true,
-        error: "Failed to load app data",
-      }));
+      // Check if it's a token expiration error
+      if (
+        (error as any)?.message?.includes("401") ||
+        (error as any)?.message?.includes("expired") ||
+        (error as any)?.message?.includes("Unauthorized")
+      ) {
+        console.log("🔄 Token expired during data reload, clearing auth...");
+        await AuthStorageHelper.clearAll();
+
+        setAuthState({
+          isAuthenticated: false,
+          user: null,
+          isLoading: false,
+          error: "Your session has expired. Please login again.",
+          mode: "",
+          dashboardReady: false,
+          selectedSpreadsheetId: null,
+        });
+      } else {
+        // Set dashboard ready even on other errors to avoid infinite loading
+        setAuthState((prev) => ({
+          ...prev,
+          dashboardReady: true,
+          error:
+            "Failed to load app data. Please check your connection and try again.",
+        }));
+      }
     }
   };
 
@@ -508,6 +566,7 @@ export const useAuth = () => {
     logout,
     refreshTokens,
     initializeAuth,
+    clearError,
     // Data functions
     reloadAllData,
   };

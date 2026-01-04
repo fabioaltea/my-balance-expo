@@ -4,7 +4,7 @@ import { TouchableOpacity, StyleSheet, View, Text } from "react-native";
 import { IconSymbol } from "../ui/icon-symbol.ios";
 import Card from "../card";
 import GlassButton from "../ui/glass-button";
-import { Account } from "../../hooks/useMyBalanceData";
+import { Account } from "../../state/AppState.types";
 
 interface IBalanceCardProps {
   account?: Account;
@@ -20,7 +20,7 @@ const BalanceCard: React.FC<IBalanceCardProps> = ({ account }) => {
     >
       <View style={styles.balanceContent}>
         <Text style={styles.balanceAmount}>
-          {isBalanceVisible ? `${account?.balance??""}` : "€ ****,**"}
+          {isBalanceVisible ? `€ ${account?.balance ?? ""}` : "€ ****,**"}
         </Text>
         <TouchableOpacity
           onPress={() => setIsBalanceVisible(!isBalanceVisible)}

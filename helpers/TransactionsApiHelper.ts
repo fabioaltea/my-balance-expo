@@ -1,3 +1,4 @@
+import { HttpHelper } from "./api/HttpHelper";
 import { ApiHelper } from "./ApiHelper";
 
 export class TransactionsApiHelper {
@@ -8,16 +9,16 @@ export class TransactionsApiHelper {
     try {
       console.log("🔄 Loading transactions from API...");
 
-      const response = await ApiHelper.get(`/transactions?spreadsheet_id=${spreadsheetId}`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-
-      
+      const response = await HttpHelper.get(
+        `/transactions?spreadsheet_id=${spreadsheetId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
 
       if (response.success) {
-        
         console.log(
           "✅ Transactions loaded successfully:",
           response.data?.length || 0
@@ -44,7 +45,7 @@ export class TransactionsApiHelper {
     try {
       console.log("➕ Creating new transaction...");
 
-      const response = await ApiHelper.post(
+      const response = await HttpHelper.post(
         `/transactions?spreadsheet_id=${spreadsheetId}`,
         { ...transactionData },
         {
@@ -79,7 +80,7 @@ export class TransactionsApiHelper {
     try {
       console.log("✏️ Updating transaction...");
 
-      const response = await ApiHelper.put(
+      const response = await HttpHelper.put(
         `/transactions/${transactionId}?spreadsheet_id=${spreadsheetId}`,
         { ...updates },
         {
@@ -113,7 +114,7 @@ export class TransactionsApiHelper {
     try {
       console.log("🗑️ Deleting transaction...");
 
-      const response = await ApiHelper.delete(
+      const response = await HttpHelper.delete(
         `/transactions/${transactionId}?spreadsheet_id=${spreadsheetId}`,
         {
           headers: {

@@ -1,4 +1,20 @@
-import { Account } from "../hooks/useMyBalanceData";
+// Core data types used across the app state
+export interface Account {
+  id: string;
+  name: string;
+  type: string;
+  balance: number;
+  color?: string;
+  textColor?: string;
+  transactions?: number;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  type: "income" | "expense";
+  color?: string;
+}
 
 export interface IDateRange {
   startDate: Date;
@@ -32,6 +48,13 @@ export interface IAppState {
 
   // Accounts data
   accounts: Account[];
+
+  // Categories data
+  categories: Category[];
+
+  // Loading and refresh controls
+  isLoading: boolean;
+  refreshData: () => Promise<void>;
 
   // Privacy settings
   blurSensitiveInfo: boolean;

@@ -1,3 +1,4 @@
+import { HttpHelper } from "./api/HttpHelper";
 import { ApiHelper } from "./ApiHelper";
 
 export class AccountsApiHelper {
@@ -8,11 +9,14 @@ export class AccountsApiHelper {
     try {
       console.log("🔄 Loading accounts from API...");
 
-      const response = await ApiHelper.get(`/accounts?spreadsheet_id=${spreadsheetId}`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
+      const response = await HttpHelper.get(
+        `/accounts?spreadsheet_id=${spreadsheetId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
 
       if (response.success) {
         console.log(
@@ -41,7 +45,7 @@ export class AccountsApiHelper {
     try {
       console.log("➕ Creating new account...");
 
-      const response = await ApiHelper.post(
+      const response = await HttpHelper.post(
         `/accounts?spreadsheet_id=${spreadsheetId}`,
         { ...accountData },
         {

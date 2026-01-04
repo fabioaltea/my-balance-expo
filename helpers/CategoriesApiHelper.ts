@@ -1,3 +1,4 @@
+import { HttpHelper } from "./api/HttpHelper";
 import { ApiHelper } from "./ApiHelper";
 
 export class CategoriesApiHelper {
@@ -8,11 +9,14 @@ export class CategoriesApiHelper {
     try {
       console.log("🔄 Loading categories from API...");
 
-      const response = await ApiHelper.get(`/categories?spreadsheet_id=${spreadsheetId}`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
+      const response = await HttpHelper.get(
+        `/categories?spreadsheet_id=${spreadsheetId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
 
       if (response.success) {
         console.log(
@@ -41,7 +45,7 @@ export class CategoriesApiHelper {
     try {
       console.log("➕ Creating new category...");
 
-      const response = await ApiHelper.post(
+      const response = await HttpHelper.post(
         `/categories?spreadsheet_id=${spreadsheetId}`,
         { ...categoryData },
         {

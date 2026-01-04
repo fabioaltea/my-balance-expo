@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   DarkTheme,
   DefaultTheme,
@@ -21,7 +21,23 @@ export const unstable_settings = {
 
 // Main app content that requires authentication
 const AuthenticatedApp: React.FC = () => {
+  const { dashboardReady } = useAuthContext();
+  const [showDashboard, setShowDashboard] = React.useState(true);
   const colorScheme = useColorScheme();
+
+
+  useEffect(() => {
+    setShowDashboard(dashboardReady);
+  }, [dashboardReady]);
+  // Show loading screen until dashboard is ready
+  if (!showDashboard) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#667eea" />
+        <Text style={styles.loadingText}>Loading dashboard...</Text>
+      </View>
+    );
+  }
 
   const dashboardHeader = () => (
     <SafeAreaView>
@@ -64,14 +80,23 @@ const AuthenticatedApp: React.FC = () => {
 const AppRouter: React.FC = () => {
   const { isAuthenticated, isLoading, user, error } = useAuthContext();
 
-  console.log("🔍 AppRouter state:", {
+  const [localState, setLocalState] = React.useState({
     isAuthenticated,
     isLoading,
     hasUser: !!user,
     error,
   });
 
-  if (isLoading) {
+  useEffect(() => {
+    setLocalState({
+      isAuthenticated,
+      isLoading,
+      hasUser: !!user,
+      error,
+    });
+  },[isAuthenticated, isLoading, user, error])
+
+  if (localState.isLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#667eea" />
@@ -80,7 +105,7 @@ const AppRouter: React.FC = () => {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!localState.isAuthenticated) {
     console.log("📱 Showing LoginScreen");
     return <LoginScreen />;
   }

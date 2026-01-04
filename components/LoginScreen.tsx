@@ -12,7 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAuthContext } from "../state/AuthProvider";
 
 const LoginScreen: React.FC = () => {
-  const { loginWithGoogle, isLoading, error } = useAuthContext();
+  const { loginWithGoogle, isLoading, error, clearError } = useAuthContext();
 
   const handleGoogleLogin = async () => {
     try {
@@ -25,6 +25,10 @@ const LoginScreen: React.FC = () => {
           : "An error occurred during login"
       );
     }
+  };
+
+  const handleDismissError = () => {
+    clearError();
   };
 
   return (
@@ -41,7 +45,15 @@ const LoginScreen: React.FC = () => {
         <View style={styles.loginSection}>
           {error && (
             <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>{error}</Text>
+              <View style={styles.errorHeader}>
+                <Text style={styles.errorText}>{error}</Text>
+                <TouchableOpacity
+                  onPress={handleDismissError}
+                  style={styles.errorCloseButton}
+                >
+                  <Ionicons name="close" size={20} color="white" />
+                </TouchableOpacity>
+              </View>
             </View>
           )}
 
@@ -138,10 +150,19 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     width: "100%",
   },
+  errorHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   errorText: {
     color: "white",
     fontSize: 14,
-    textAlign: "center",
+    flex: 1,
+    paddingRight: 8,
+  },
+  errorCloseButton: {
+    padding: 4,
   },
   loginButton: {
     flexDirection: "row",

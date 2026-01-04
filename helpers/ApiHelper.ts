@@ -1,21 +1,9 @@
+import { HttpHelper, HttpResponse } from "./api/HttpHelper";
 import { AuthStorageHelper, AuthTokens, User } from "./AuthStorageHelper";
 
-// Get API URL from environment or use default
-const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8080";
 
-console.log("🌐 API_URL configured as:", API_URL);
-
-export interface ApiResponse<T = any> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  user?: User;
-  accessToken?: string;
-  refreshToken?: string;
-}
 
 export class ApiHelper {
-  private static endpointUri = API_URL;
 
   // Authentication methods
   static async authenticateWithGoogle(data: {
@@ -23,14 +11,9 @@ export class ApiHelper {
     codeVerifier?: string;
     deviceId: string;
     deviceType: "ios" | "android";
-  }): Promise<ApiResponse> {
+  }): Promise<HttpResponse> {
     try {
-      console.log("🔐 Calling /auth/google/callback with data:", {
-        authorizationCode: data.authorizationCode ? "***" : "missing",
-        codeVerifier: data.codeVerifier ? "***" : "missing",
-        deviceId: data.deviceId,
-        deviceType: data.deviceType,
-      });
+      
 
       const requestBody = {
         ...data,
@@ -39,13 +22,16 @@ export class ApiHelper {
 
       console.log("📤 Request body:", JSON.stringify(requestBody, null, 2));
 
-      const response = await fetch(`${this.endpointUri}/auth/google/callback`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody),
-      });
+      const response = await fetch(
+        `${HttpHelper.endpointUri}/auth/google/callback`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestBody),
+        }
+      );
 
       console.log("📥 Response status:", response.status, response.statusText);
       console.log("📥 Response headers:", [...response.headers.entries()]);
@@ -79,152 +65,12 @@ export class ApiHelper {
     }
   }
 
-  // Generic GET method with authentication
-  static async get(endpoint: string, options: any = {}): Promise<ApiResponse> {
-    try {
-      const url = `${this.endpointUri}${endpoint}`;
-      const response = await fetch(url, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          ...options.headers,
-        },
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          result.error || `GET request failed: ${response.statusText}`
-        );
-      }
-
-      return { success: true, data: result.data };
-    } catch (error) {
-      console.error("GET request error:", error);
-      throw error;
-    }
-  }
-
-  // Generic POST method with authentication
-  static async post(
-    endpoint: string,
-    data: any,
-    options: any = {}
-  ): Promise<ApiResponse> {
-    try {
-      const url = `${this.endpointUri}${endpoint}`;
-      console.log("POST request to:", url, "with data:", data);
-
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...options.headers,
-        },
-        body: JSON.stringify(data),
-      });
-
-      console.log(
-        "POST response status:",
-        response.status,
-        response.statusText
-      );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("POST error response:", errorText);
-        throw new Error(
-          `POST request failed: ${response.status} ${
-            response.statusText
-          } - ${errorText.substring(0, 200)}`
-        );
-      }
-
-      const responseText = await response.text();
-      try {
-        const result = JSON.parse(responseText);
-        return { success: true, data: result.data };
-      } catch (jsonError) {
-        console.error("POST JSON parse error:", responseText);
-        throw new Error(
-          `Invalid JSON response: ${responseText.substring(0, 100)}`
-        );
-      }
-    } catch (error) {
-      console.error("POST request error:", error);
-      throw error;
-    }
-  }
-
-  // Generic PUT method with authentication
-  static async put(
-    endpoint: string,
-    data: any,
-    options: any = {}
-  ): Promise<ApiResponse> {
-    try {
-      const url = `${this.endpointUri}${endpoint}`;
-      const response = await fetch(url, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          ...options.headers,
-        },
-        body: JSON.stringify(data),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          result.error || `PUT request failed: ${response.statusText}`
-        );
-      }
-
-      return { success: true, data: result.data };
-    } catch (error) {
-      console.error("PUT request error:", error);
-      throw error;
-    }
-  }
-
-  // Generic DELETE method with authentication
-  static async delete(
-    endpoint: string,
-    options: any = {}
-  ): Promise<ApiResponse> {
-    try {
-      const url = `${this.endpointUri}${endpoint}`;
-      const response = await fetch(url, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          ...options.headers,
-        },
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          result.error || `DELETE request failed: ${response.statusText}`
-        );
-      }
-
-      return { success: true, data: result.data };
-    } catch (error) {
-      console.error("DELETE request error:", error);
-      throw error;
-    }
-  }
-
   static async refreshToken(data: {
     refreshToken: string;
     deviceId: string;
-  }): Promise<ApiResponse> {
+  }): Promise<HttpResponse> {
     try {
-      const response = await fetch(`${this.endpointUri}/auth/refresh`, {
+      const response = await fetch(`${HttpHelper.endpointUri}/auth/refresh`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -249,7 +95,7 @@ export class ApiHelper {
 
   static async logout(deviceId: string, refreshToken: string): Promise<void> {
     try {
-      await fetch(`${this.endpointUri}/auth/logout`, {
+      await fetch(`${HttpHelper.endpointUri}/auth/logout`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -263,9 +109,9 @@ export class ApiHelper {
     }
   }
 
-  static async getUserProfile(accessToken: string): Promise<ApiResponse<User>> {
+  static async getUserProfile(accessToken: string): Promise<HttpResponse<User>|null> {
     try {
-      const response = await fetch(`${this.endpointUri}/auth/profile`, {
+      const response = await fetch(`${HttpHelper.endpointUri}/auth/profile`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -283,7 +129,7 @@ export class ApiHelper {
       return result;
     } catch (error) {
       console.error("Get profile error:", error);
-      throw error;
+      return null;
     }
   }
 
@@ -305,7 +151,7 @@ export class ApiHelper {
     };
 
     try {
-      const response = await fetch(`${this.endpointUri}${endpoint}`, {
+      const response = await fetch(`${HttpHelper.endpointUri}${endpoint}`, {
         ...options,
         headers,
       });
@@ -316,7 +162,7 @@ export class ApiHelper {
         if (refreshed) {
           // Retry with new token
           const newTokens = await AuthStorageHelper.getTokens();
-          const retryResponse = await fetch(`${this.endpointUri}${endpoint}`, {
+          const retryResponse = await fetch(`${HttpHelper.endpointUri}${endpoint}`, {
             ...options,
             headers: {
               ...options.headers,

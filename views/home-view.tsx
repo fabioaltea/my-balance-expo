@@ -5,14 +5,13 @@ import PeriodPicker from "@/components/ui/period-chips-picker";
 import { View, StyleSheet, ScrollView, RefreshControl } from "react-native";
 import React, { useState } from "react";
 import Pager from "@/components/ui/pager";
-import { useAccountSelection, useMovements } from "@/state";
-import { useMyBalanceData } from "@/hooks/useMyBalanceData";
+import { useAccountSelection, useMovements, useAppState } from "@/state";
 
 const HomeView: React.FC = () => {
   const { selectedAccount, allAccounts, switchToAccount } =
     useAccountSelection();
   const { getTotalIncome, getTotalExpense } = useMovements();
-  const { refreshData, isLoading } = useMyBalanceData();
+  const { refreshData, isLoading } = useAppState();
   const [movementFilter, setMovementFilter] = useState<
     "all" | "income" | "expense"
   >("all");

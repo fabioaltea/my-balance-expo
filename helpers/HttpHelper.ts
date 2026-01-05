@@ -1,4 +1,4 @@
-import { User } from "../AuthStorageHelper";
+import { User } from "./AuthStorageHelper";
 
 // Get API URL from environment or use default
 const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8080";

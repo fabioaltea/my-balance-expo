@@ -1,10 +1,7 @@
-import { HttpHelper, HttpResponse } from "./api/HttpHelper";
+import { HttpHelper, HttpResponse } from "./HttpHelper";
 import { AuthStorageHelper, AuthTokens, User } from "./AuthStorageHelper";
 
-
-
 export class ApiHelper {
-
   // Authentication methods
   static async authenticateWithGoogle(data: {
     authorizationCode: string;
@@ -13,8 +10,6 @@ export class ApiHelper {
     deviceType: "ios" | "android";
   }): Promise<HttpResponse> {
     try {
-      
-
       const requestBody = {
         ...data,
         deviceType: "ios",
@@ -109,7 +104,9 @@ export class ApiHelper {
     }
   }
 
-  static async getUserProfile(accessToken: string): Promise<HttpResponse<User>|null> {
+  static async getUserProfile(
+    accessToken: string
+  ): Promise<HttpResponse<User> | null> {
     try {
       const response = await fetch(`${HttpHelper.endpointUri}/auth/profile`, {
         method: "GET",
@@ -162,14 +159,17 @@ export class ApiHelper {
         if (refreshed) {
           // Retry with new token
           const newTokens = await AuthStorageHelper.getTokens();
-          const retryResponse = await fetch(`${HttpHelper.endpointUri}${endpoint}`, {
-            ...options,
-            headers: {
-              ...options.headers,
-              Authorization: `Bearer ${newTokens?.accessToken}`,
-              "Content-Type": "application/json",
-            },
-          });
+          const retryResponse = await fetch(
+            `${HttpHelper.endpointUri}${endpoint}`,
+            {
+              ...options,
+              headers: {
+                ...options.headers,
+                Authorization: `Bearer ${newTokens?.accessToken}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
 
           if (!retryResponse.ok) {
             const retryText = await retryResponse.text();

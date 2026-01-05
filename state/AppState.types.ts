@@ -17,8 +17,8 @@ export interface Category {
 }
 
 export interface IDateRange {
-  startDate: Date;
-  endDate: Date;
+  startDate: string; // Format: dd-MM-yyyy
+  endDate: string;   // Format: dd-MM-yyyy
   label: string;
 }
 
@@ -27,7 +27,7 @@ export interface IMovement {
   description: string;
   amount: number;
   type: "income" | "expense";
-  date: Date;
+  date: string; // Format: dd-MM-yyyy
   accountName: string;
   category: string;
 }
@@ -61,26 +61,55 @@ export interface IAppState {
   setBlurSensitiveInfo: (blur: boolean) => void;
 }
 
-// Preset date ranges
+import {
+  getMonthStart,
+  getMonthEnd,
+  getYearStart,
+  getCurrentDate,
+} from "../utils/dateUtils";
+
+// Preset date ranges (computed at runtime)
 export const DATE_RANGES = {
   THIS_MONTH: {
-    startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-    endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0),
+    get startDate() {
+      const now = new Date();
+      return getMonthStart(now.getFullYear(), now.getMonth());
+    },
+    get endDate() {
+      const now = new Date();
+      return getMonthEnd(now.getFullYear(), now.getMonth());
+    },
     label: "This Month",
   },
   LAST_MONTH: {
-    startDate: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1),
-    endDate: new Date(new Date().getFullYear(), new Date().getMonth(), 0),
+    get startDate() {
+      const now = new Date();
+      return getMonthStart(now.getFullYear(), now.getMonth() - 1);
+    },
+    get endDate() {
+      const now = new Date();
+      return getMonthEnd(now.getFullYear(), now.getMonth() - 1);
+    },
     label: "Last Month",
   },
   LAST_3_MONTHS: {
-    startDate: new Date(new Date().getFullYear(), new Date().getMonth() - 2, 1),
-    endDate: new Date(),
+    get startDate() {
+      const now = new Date();
+      return getMonthStart(now.getFullYear(), now.getMonth() - 2);
+    },
+    get endDate() {
+      return getCurrentDate();
+    },
     label: "Last 3 Months",
   },
   THIS_YEAR: {
-    startDate: new Date(new Date().getFullYear(), 0, 1),
-    endDate: new Date(),
+    get startDate() {
+      const now = new Date();
+      return getYearStart(now.getFullYear());
+    },
+    get endDate() {
+      return getCurrentDate();
+    },
     label: "This Year",
   },
 };

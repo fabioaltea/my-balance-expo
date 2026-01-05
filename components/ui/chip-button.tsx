@@ -9,6 +9,8 @@ export interface IChipButtonProps {
   active?: boolean;
   onPress?: () => void;
   options?: string[];
+  defaultOption?: string;
+  onOptionSelect?: (option: string) => void;
 }
 
 const ChipButton: React.FC<IChipButtonProps> = ({
@@ -16,6 +18,8 @@ const ChipButton: React.FC<IChipButtonProps> = ({
   active,
   onPress,
   options,
+  defaultOption,
+  onOptionSelect,
 }) => {
   const [menuVisible, setMenuVisible] = useState(false);
   const [selectedOption, setSelectedOption] = useState("");
@@ -59,10 +63,12 @@ const ChipButton: React.FC<IChipButtonProps> = ({
   }, [active]);
 
   useEffect(() => {
-    if (options && options.length > 0) {
+    if (defaultOption) {
+      setSelectedOption(defaultOption);
+    } else if (options && options.length > 0) {
       setSelectedOption(options[0]);
     }
-  }, [options]);
+  }, [options, defaultOption]);
 
   const handlePress = async () => {
     if (onPress) {
@@ -95,6 +101,7 @@ const ChipButton: React.FC<IChipButtonProps> = ({
 
   const handleSelectOption = (option: string) => {
     setSelectedOption(option);
+    onOptionSelect?.(option);
   };
 
   return (

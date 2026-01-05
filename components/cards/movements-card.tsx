@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ThemedText } from "../themed-text";
 import { TouchableOpacity, StyleSheet, View } from "react-native";
 import { IconSymbol } from "../ui/icon-symbol.ios";
 import Card from "../card";
 import { useThemeColor } from "@/hooks/use-theme-color";
-import { useMovements } from "@/state";
+import { formatDateForDisplay, compareDates } from "@/utils/dateUtils";
+import type { Movement } from "@/state";
 
 // Helper function to get icon based on category/description
 const getMovementIcon = (category?: string, description?: string): string => {
@@ -131,8 +132,37 @@ const styles = StyleSheet.create({
   },
 });
 
-const MovementsCard: React.FC = () => {
-  const { filteredMovements } = useMovements();
+const sortMovements = (movements: Movement[]) => {
+  return movements
+    ?.sort((a, b) => {
+      // Use compareDates from dateUtils for string date comparison
+      // compareDates returns -1 if a < b, 0 if equal, 1 if a > b
+      // We want newest first, so we compare b to a (reverse order)
+      return compareDates(b.date, a.date);
+    })
+};
+
+interface MovementsCardProps {
+  movements: Movement[];
+}
+
+const MovementsCard: React.FC<MovementsCardProps> = ({ movements }) => {
+  const [recentMovements, setRecentMovements] = useState(sortMovements(movements));
+
+  useEffect(() => {
+    console.log("💳 MovementsCard: Updating with", movements?.length, "movements");
+    const sorted = sortMovements(movements);
+
+    // Log detailed info about movements being displayed
+    console.log("📋 Movements to display:", sorted?.map((m, idx) => ({
+      index: idx,
+      date: m.date,
+      description: m.description,
+      amount: m.totalAmount,
+    })));
+
+    setRecentMovements(sorted);
+  }, [movements]);
 
   // Colori del tema per la movements card
   const borderColor = useThemeColor(
@@ -155,12 +185,12 @@ const MovementsCard: React.FC = () => {
     },
   });
 
-  // Show only recent movements (limit to 13 like before)
-  const recentMovements = filteredMovements
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 13);
+  
 
-  if (recentMovements.length === 0) {
+  // Show only recent movements (limit to 13 like before)
+  // const recentMovements = sortMovements(movements);
+
+  if (recentMovements?.length === 0) {
     return (
       <Card label="">
         <View style={styles.emptyState}>
@@ -174,11 +204,11 @@ const MovementsCard: React.FC = () => {
 
   return (
     <Card label="">
-      {recentMovements.map((movement, index) => {
+      {recentMovements?.map((movement, index) => {
         const icon = getMovementIcon(movement.category, movement.description);
         const color = getMovementColor(movement.type, movement.category);
-        const amount =
-          movement.type === "income" ? movement.amount : -movement.amount;
+        // totalAmount is already signed (positive for income, negative for expense)
+        const amount = movement.totalAmount;
 
         return (
           <TouchableOpacity
@@ -197,7 +227,7 @@ const MovementsCard: React.FC = () => {
             </View>
             <View style={styles.movementInfo}>
               <ThemedText style={styles.movementDate}>
-                {new Date(movement.date).toLocaleDateString("it-IT")}
+                {formatDateForDisplay(movement.date, "it-IT")}
               </ThemedText>
               <ThemedText style={styles.movementDescription}>
                 {movement.description}

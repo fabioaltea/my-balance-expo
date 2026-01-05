@@ -1,52 +1,51 @@
-import { Image } from "expo-image";
-import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
-
-import { HelloWave } from "@/components/hello-wave";
-import ParallaxScrollView from "@/components/parallax-scroll-view";
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
-import { Link, router } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
-import Card from "@/components/card";
-import BalanceCard from "@/components/cards/balance-card";
-import MovementsCard from "@/components/cards/movements-card";
+import { StyleSheet, View } from "react-native";
+import { router } from "expo-router";
 import ScreenView from "@/layout/screen-view";
 import HomeView from "@/views/home-view";
-import React from "react";
+import React, { useMemo, useState } from "react";
 import GlassButton from "@/components/ui/glass-button";
-import Chips from "@/components/ui/chips";
 import AccountPicker from "@/components/ui/account-picker";
-import { useAccountSelection } from "@/state";
+import { useAuthContext, useMyBalanceData } from "@/state";
 
 export default function Home() {
-  const { allAccounts, selectedAccount, switchToAccount } =
-    useAccountSelection();
-
-  // Convert Account to IAccount for compatibility
-  const adaptedAccounts = allAccounts.map((account) => ({
-    id: account.id,
-    name: account.name,
-    balance: account.balance,
-    color: account.color || "#2F4F3F",
-    textColor: account.textColor || "#FFFFFF",
-    transactions: account.transactions || 0,
-  }));
-
   const handleButtonPress = () => {
     router.push("/add");
   };
+  const { selectedSpreadsheetId } = useAuthContext();
+
+  const { accounts } = useMyBalanceData(selectedSpreadsheetId);
+  const availableAccounts = useMemo(() => {
+      const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
+      return [
+        {
+          accountId: "all",
+          name: "All",
+          balance: totalBalance,
+          color: "#2F4F3F",
+          textColor: "#FFFFFF",
+        },
+        ...accounts,
+      ];
+    }, [accounts]);
+
+  const [selectedAccount, setSelectedAccount] = useState<string>("All");
+  
 
   return (
     <ScreenView>
       <View style={styles.header}>
         <AccountPicker
-          accounts={adaptedAccounts}
+          accounts={availableAccounts}
           selectedAccount={selectedAccount}
-          setSelectedAccount={switchToAccount}
+          setSelectedAccount={setSelectedAccount}
         ></AccountPicker>
         <GlassButton onPress={handleButtonPress}></GlassButton>
       </View>
-      <HomeView />
+      <HomeView
+        accounts={availableAccounts}
+        selectedAccount={selectedAccount}
+        setSelectedAccount={setSelectedAccount}
+      />
     </ScreenView>
   );
 }

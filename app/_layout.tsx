@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import {
   DarkTheme,
   DefaultTheme,
@@ -11,7 +11,6 @@ import "react-native-reanimated";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-import { AppStateProvider } from "@/state";
 import { AuthProvider, useAuthContext } from "@/state/AuthProvider";
 import LoginScreen from "@/components/LoginScreen";
 
@@ -22,15 +21,12 @@ export const unstable_settings = {
 // Main app content that requires authentication
 const AuthenticatedApp: React.FC = () => {
   const { dashboardReady } = useAuthContext();
-  const [showDashboard, setShowDashboard] = React.useState(true);
   const colorScheme = useColorScheme();
 
+  console.log("🎨 AuthenticatedApp render - dashboardReady:", dashboardReady);
 
-  useEffect(() => {
-    setShowDashboard(dashboardReady);
-  }, [dashboardReady]);
   // Show loading screen until dashboard is ready
-  if (!showDashboard) {
+  if (!dashboardReady) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#667eea" />
@@ -50,26 +46,24 @@ const AuthenticatedApp: React.FC = () => {
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <SafeAreaProvider>
-        <AppStateProvider>
-          <Stack>
-            <Stack.Screen
-              name="dashboard"
-              options={{ headerShown: false, header: dashboardHeader }}
-            />
-            <Stack.Screen
-              name="add"
-              options={{
-                presentation: "card",
-                title: "Add",
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="modal"
-              options={{ presentation: "modal", title: "Modal" }}
-            />
-          </Stack>
-        </AppStateProvider>
+        <Stack>
+          <Stack.Screen
+            name="dashboard"
+            options={{ headerShown: false, header: dashboardHeader }}
+          />
+          <Stack.Screen
+            name="add"
+            options={{
+              presentation: "card",
+              title: "Add",
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="modal"
+            options={{ presentation: "modal", title: "Modal" }}
+          />
+        </Stack>
         <StatusBar style="auto" />
       </SafeAreaProvider>
     </ThemeProvider>
@@ -80,23 +74,14 @@ const AuthenticatedApp: React.FC = () => {
 const AppRouter: React.FC = () => {
   const { isAuthenticated, isLoading, user, error } = useAuthContext();
 
-  const [localState, setLocalState] = React.useState({
+  console.log("🔀 AppRouter render:", {
     isAuthenticated,
     isLoading,
     hasUser: !!user,
     error,
   });
 
-  useEffect(() => {
-    setLocalState({
-      isAuthenticated,
-      isLoading,
-      hasUser: !!user,
-      error,
-    });
-  },[isAuthenticated, isLoading, user, error])
-
-  if (localState.isLoading) {
+  if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#667eea" />
@@ -105,7 +90,7 @@ const AppRouter: React.FC = () => {
     );
   }
 
-  if (!localState.isAuthenticated) {
+  if (!isAuthenticated) {
     console.log("📱 Showing LoginScreen");
     return <LoginScreen />;
   }

@@ -1,29 +1,20 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
-  Pressable,
-  Animated,
 } from "react-native";
 import Card from "../card";
 import { useThemeColor } from "@/hooks/use-theme-color";
 
-type FilterType = "all" | "income" | "expense";
-
 type Props = {
   income: number;
   expense: number;
-  onFilterChange: (filter: FilterType) => void;
-  selectedFilter?: FilterType;
 };
 
 const FinancialSummaryCard: React.FC<Props> = ({
   income,
   expense,
-  onFilterChange,
-  selectedFilter = "all",
 }) => {
   const balance = income - expense;
   const total = income + expense;
@@ -34,52 +25,6 @@ const FinancialSummaryCard: React.FC<Props> = ({
   const textColor = useThemeColor({}, "text");
   const subtleTextColor = useThemeColor({}, "tabIconDefault");
   const cardBackground = useThemeColor({}, "cardBackground");
-  const selectedBackground = useThemeColor(
-    { light: "#e0e0e05a", dark: "#ffffff15" },
-    "background"
-  );
-
-  // Animazioni per la selezione
-  const incomeScaleAnim = React.useRef(
-    new Animated.Value(selectedFilter === "income" ? 1.02 : 1)
-  ).current;
-  const expenseScaleAnim = React.useRef(
-    new Animated.Value(selectedFilter === "expense" ? 1.02 : 1)
-  ).current;
-  const incomeOpacityAnim = React.useRef(
-    new Animated.Value(selectedFilter === "income" ? 1 : 0.8)
-  ).current;
-  const expenseOpacityAnim = React.useRef(
-    new Animated.Value(selectedFilter === "expense" ? 1 : 0.8)
-  ).current;
-
-  // Effetto per animare quando cambia la selezione
-  React.useEffect(() => {
-    Animated.parallel([
-      Animated.spring(incomeScaleAnim, {
-        toValue: selectedFilter === "income" ? 1.02 : 1,
-        useNativeDriver: true,
-        tension: 150,
-        friction: 8,
-      }),
-      Animated.timing(incomeOpacityAnim, {
-        toValue: selectedFilter === "income" ? 1 : 0.8,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-      Animated.spring(expenseScaleAnim, {
-        toValue: selectedFilter === "expense" ? 1.02 : 1,
-        useNativeDriver: true,
-        tension: 150,
-        friction: 8,
-      }),
-      Animated.timing(expenseOpacityAnim, {
-        toValue: selectedFilter === "expense" ? 1 : 0.8,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [selectedFilter]);
 
   // Calcola le proporzioni basate sul valore maggiore
   const baseValue = Math.max(income, expense);
@@ -92,10 +37,6 @@ const FinancialSummaryCard: React.FC<Props> = ({
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })}`;
-  };
-
-  const handleChipPress = (filter: FilterType) => {
-    onFilterChange?.(filter);
   };
 
   return (
@@ -155,89 +96,47 @@ const FinancialSummaryCard: React.FC<Props> = ({
 
       {/* Details Section */}
       <View style={styles.detailsSection}>
-        <Animated.View
-          style={{
-            transform: [{ scale: incomeScaleAnim }],
-            opacity: incomeOpacityAnim,
-          }}
-        >
-          <Pressable
-            onPress={() => {
-              if (selectedFilter != "income") onFilterChange("income");
-              else onFilterChange("all");
-            }}
-            style={[
-              styles.detailRow,
-              selectedFilter === "income" && {
-                backgroundColor: selectedBackground,
-                padding: 8,
-                borderRadius: 12,
-                marginHorizontal: -4,
-              },
-            ]}
-          >
-            <View style={styles.detailLabel}>
-              <View
-                style={[styles.colorIndicator, { backgroundColor: "#4CAF50" }]}
-              />
-              <Text style={[styles.detailText, { color: textColor }]}>
-                Incomes
-              </Text>
-            </View>
-            <View style={styles.detailValue}>
-              <Text style={[styles.detailAmount, { color: textColor }]}>
-                {formatAmount(income)}
-              </Text>
-              <Text
-                style={[styles.detailPercentage, { color: subtleTextColor }]}
-              >
-                {incomePercentage.toFixed(1)}%
-              </Text>
-            </View>
-          </Pressable>
-        </Animated.View>
+        <View style={styles.detailRow}>
+          <View style={styles.detailLabel}>
+            <View
+              style={[styles.colorIndicator, { backgroundColor: "#4CAF50" }]}
+            />
+            <Text style={[styles.detailText, { color: textColor }]}>
+              Incomes
+            </Text>
+          </View>
+          <View style={styles.detailValue}>
+            <Text style={[styles.detailAmount, { color: textColor }]}>
+              {formatAmount(income)}
+            </Text>
+            <Text
+              style={[styles.detailPercentage, { color: subtleTextColor }]}
+            >
+              {incomePercentage.toFixed(1)}%
+            </Text>
+          </View>
+        </View>
 
-        <Animated.View
-          style={{
-            transform: [{ scale: expenseScaleAnim }],
-            opacity: expenseOpacityAnim,
-          }}
-        >
-          <Pressable
-            onPress={() => {
-              if (selectedFilter != "expense") onFilterChange("expense");
-              else onFilterChange("all");
-            }}
-            style={[
-              styles.detailRow,
-              selectedFilter === "expense" && {
-                backgroundColor: selectedBackground,
-                padding: 8,
-                borderRadius: 12,
-                marginHorizontal: -4,
-              },
-            ]}
-          >
-            <View style={styles.detailLabel}>
-              <View
-                style={[styles.colorIndicator, { backgroundColor: "#F44336" }]}
-              />
-              <Text style={[styles.detailText, { color: textColor }]}>
-                Outcomes
-              </Text>
-            </View>
-            <View style={styles.detailValue}>
-              <Text style={[styles.detailAmount, { color: textColor }]}>
-                {formatAmount(expense)}
-              </Text>
-              <Text
-                style={[styles.detailPercentage, { color: subtleTextColor }]}
-              >
-                {expensePercentage.toFixed(1)}%
-              </Text>
-            </View>
-          </Pressable>
-        </Animated.View>
+        <View style={styles.detailRow}>
+          <View style={styles.detailLabel}>
+            <View
+              style={[styles.colorIndicator, { backgroundColor: "#F44336" }]}
+            />
+            <Text style={[styles.detailText, { color: textColor }]}>
+              Outcomes
+            </Text>
+          </View>
+          <View style={styles.detailValue}>
+            <Text style={[styles.detailAmount, { color: textColor }]}>
+              {formatAmount(expense)}
+            </Text>
+            <Text
+              style={[styles.detailPercentage, { color: subtleTextColor }]}
+            >
+              {expensePercentage.toFixed(1)}%
+            </Text>
+          </View>
+        </View>
       </View>
     </Card>
   );

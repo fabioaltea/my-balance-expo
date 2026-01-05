@@ -1,4 +1,4 @@
-import { HttpHelper } from "./api/HttpHelper";
+import { HttpHelper } from "./HttpHelper";
 import { ApiHelper } from "./ApiHelper";
 
 export class CategoriesApiHelper {

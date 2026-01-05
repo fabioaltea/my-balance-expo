@@ -3,9 +3,10 @@ import React from "react";
 import { ThemedText } from "../themed-text";
 import ContextMenu from "./context-menu";
 import { IAccount } from "@/models/Account";
+import { Account } from "@/hooks/useMyBalanceData";
 
 export interface IAccountPickerProps {
-  accounts: IAccount[];
+  accounts: Account[];
   selectedAccount: string;
   setSelectedAccount: (account: string) => void;
 }

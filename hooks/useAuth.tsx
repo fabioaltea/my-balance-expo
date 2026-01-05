@@ -251,18 +251,29 @@ export const useAuth = () => {
         tokens.accessToken,
         authState.selectedSpreadsheetId
       );
+      console.log("📦 Raw transactions from API:", {
+        count: transactions?.length || 0,
+        sample: transactions?.slice(0, 2),
+      });
 
       console.log("Loading accounts...");
       const accounts = await AccountsApiHelper.getAccounts(
         tokens.accessToken,
         authState.selectedSpreadsheetId
       );
+      console.log("📦 Raw accounts from API:", {
+        count: accounts?.length || 0,
+        sample: accounts?.slice(0, 2),
+      });
 
       console.log("Loading categories...");
       const categories = await CategoriesApiHelper.getCategories(
         tokens.accessToken,
         authState.selectedSpreadsheetId
       );
+      console.log("📦 Raw categories from API:", {
+        count: categories?.length || 0,
+      });
 
       // Store the loaded data
       setAllTransactions(transactions);
@@ -445,6 +456,12 @@ export const useAuth = () => {
             dashboardReady: false,
             selectedSpreadsheetId: null,
           });
+
+          // Trigger startup flow to load user data and dashboard
+          console.log("🚀 Calling startUp after successful login");
+          if (authResponse.user?.email && authResponse.accessToken) {
+            await startUp(authResponse.user.email, authResponse.accessToken);
+          }
         } else {
           throw new Error(
             authResponse.error || "Backend authentication failed"

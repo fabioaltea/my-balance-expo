@@ -5,8 +5,9 @@ import {
   TextInput,
   Pressable,
   Alert,
+  ActivityIndicator,
 } from "react-native";
-import React,{ useState } from "react";
+import React, { useState } from "react";
 import { ThemedText } from "@/components/themed-text";
 import ChipButton from "@/components/ui/chip-button";
 import { IconSymbol } from "@/components/ui/icon-symbol.ios";
@@ -24,12 +25,22 @@ import Transactions, { ITransaction } from "@/components/ui/transactions";
 import TransactionModal, {
   ITransactionData,
 } from "@/components/ui/transaction-modal";
+import ModalPanel from "@/components/ui/modal-panel";
 import ScreenView from "@/layout/screen-view";
 import { useAuthContext, useMyBalanceData } from "@/state";
+import { TransactionsApiHelper } from "@/helpers/TransactionsApiHelper";
+import { formatDateToDDMMYYYY } from "@/utils/dateUtils";
+import { useRouter } from "expo-router";
+
+type ModalStatus = "loading" | "success" | "error";
 
 const AddView: React.FC = () => {
+  const router = useRouter();
   const { selectedSpreadsheetId } = useAuthContext();
-  const { accounts } = useMyBalanceData(selectedSpreadsheetId);
+  const { accounts, categories, reloadData } = useMyBalanceData(selectedSpreadsheetId);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [modalStatus, setModalStatus] = useState<ModalStatus>("loading");
   const [description, setDescription] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -60,17 +71,10 @@ const AddView: React.FC = () => {
     "tabIconDefault"
   );
 
-  const categories = [
-    { label: "Spesa", value: "spesa" },
-    { label: "Trasporti", value: "trasporti" },
-    { label: "Ristoranti", value: "ristoranti" },
-    { label: "Shopping", value: "shopping" },
-    { label: "Salute", value: "salute" },
-    { label: "Sport", value: "sport" },
-    { label: "Viaggi", value: "viaggi" },
-    { label: "Casa", value: "casa" },
-    { label: "Altro", value: "altro" },
-  ];
+  const allCategories = categories.map((category) => ({
+    label: category.name,
+    value: category.name,
+  }));
 
   const allAccounts = accounts.map((account) => ({
     label: account.name,
@@ -125,15 +129,110 @@ const AddView: React.FC = () => {
     }, 0);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+
+    // Validazione descrizione
     if (!description.trim()) {
       Alert.alert("Errore", "Inserisci una descrizione");
       return;
     }
 
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    Alert.alert("Successo", "Movimento inserito correttamente");
-    // Here you would typically save the data
+    // Validazione categoria
+    if (!selectedCategory) {
+      Alert.alert("Errore", "Seleziona una categoria");
+      return;
+    }
+
+    // Validazione data
+    if (!selectedDate) {
+      Alert.alert("Errore", "Seleziona una data");
+      return;
+    }
+
+    // Validazione transazioni (almeno una con conto e importo validi)
+    const validTransactions = transactions.filter(
+      (t) => t.accountName && t.amount > 0
+    );
+
+    if (validTransactions.length === 0) {
+      Alert.alert(
+        "Errore",
+        "Inserisci almeno una transazione con conto e importo validi"
+      );
+      return;
+    }
+
+    // Verifica spreadsheetId
+    if (!selectedSpreadsheetId) {
+      Alert.alert("Errore", "Nessun foglio di calcolo selezionato");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setModalStatus("loading");
+    setShowStatusModal(true);
+
+    try {
+      const formattedDate = formatDateToDDMMYYYY(selectedDate);
+
+      // Prepara il movimento con l'array di transazioni (formato IMovementRequest)
+      const movementData = {
+        description: description.trim(),
+        category: selectedCategory,
+        date: formattedDate,
+        location: selectedLocation.address || "",
+        transactions: validTransactions.map((transaction) => ({
+          amount: transaction.type === "income"
+            ? String(transaction.amount)
+            : String(-transaction.amount),
+          account: transaction.accountName,
+          type: transaction.type === "income" ? "in" : "out",
+        })),
+      };
+
+      // Invia una singola richiesta con tutte le transazioni
+      const result = await TransactionsApiHelper.createTransaction(
+        selectedSpreadsheetId,
+        movementData
+      );
+
+      const allSuccessful = result !== null;
+
+      if (allSuccessful) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        setModalStatus("success");
+
+        // Reset del form
+        setDescription("");
+        setSelectedCategory("");
+        setSelectedDate(new Date());
+        setTransactions([]);
+        setSelectedLocation({ address: "" });
+
+        // Ricarica i dati
+        await reloadData();
+
+        // Timeout di mezzo secondo, poi chiudi e torna alla dashboard
+        setTimeout(() => {
+          setShowStatusModal(false);
+          router.back();
+        }, 500);
+      } else {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        setModalStatus("error");
+      }
+    } catch (error) {
+      console.error("Errore durante il salvataggio:", error);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      setModalStatus("error");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleModalClose = () => {
+    setShowStatusModal(false);
   };
 
   const dynamicStyles = StyleSheet.create({
@@ -158,7 +257,10 @@ const AddView: React.FC = () => {
       paddingHorizontal: 20,
     },
     submitButton: {
-      backgroundColor: "#4a4a4a",
+      backgroundColor: "#ffffffff",
+    },
+    submitButtonText: {
+      color: "#2F4F3F",
     },
   });
 
@@ -178,7 +280,7 @@ const AddView: React.FC = () => {
             <ListPicker
               value={selectedCategory}
               onChange={setSelectedCategory}
-              items={categories}
+              items={allCategories}
               label="Category"
               placeholder="Select category"
             />
@@ -223,7 +325,61 @@ const AddView: React.FC = () => {
           accounts={allAccounts}
           onSave={handleTransactionSave}
         />
+
+        <ModalPanel
+          isVisible={showStatusModal}
+          onClose={handleModalClose}
+          onConfirm={handleModalClose}
+          title={
+            modalStatus === "loading"
+              ? "Salvataggio..."
+              : modalStatus === "success"
+              ? "Completato!"
+              : "Errore"
+          }
+          showCancelButton={modalStatus !== "loading"}
+          confirmText={modalStatus === "success" ? "OK" : "Riprova"}
+          cancelText="Chiudi"
+          maxHeight={250}
+        >
+          <View style={styles.statusModalContent}>
+            {modalStatus === "loading" && (
+              <>
+                <ActivityIndicator size="large" color="#2F4F3F" />
+                <ThemedText style={styles.statusText}>
+                  Salvataggio del movimento in corso...
+                </ThemedText>
+              </>
+            )}
+            {modalStatus === "success" && (
+              <>
+                <IconSymbol
+                  name="checkmark.circle.fill"
+                  size={48}
+                  color="#22c55e"
+                />
+                <ThemedText style={styles.statusText}>
+                  Movimento inserito correttamente!
+                </ThemedText>
+              </>
+            )}
+            {modalStatus === "error" && (
+              <>
+                <IconSymbol
+                  name="xmark.circle.fill"
+                  size={48}
+                  color="#ef4444"
+                />
+                <ThemedText style={styles.statusText}>
+                  Si è verificato un errore durante il salvataggio.
+                </ThemedText>
+              </>
+            )}
+          </View>
+        </ModalPanel>
       </View>
+
+      {/* Status Modal (Loading/Success/Error) */}
 
       {/* Bottom Total and Submit */}
       {
@@ -242,12 +398,21 @@ const AddView: React.FC = () => {
               {getTotalAmount().toFixed(2).replace(".", ",")}€
             </ThemedText>
           </View>
-
           <Pressable
             onPress={handleSubmit}
-            style={[styles.submitButton, dynamicStyles.submitButton]}
+            disabled={isSubmitting}
+            style={[
+              styles.submitButton,
+              dynamicStyles.submitButton,
+              isSubmitting && styles.submitButtonDisabled,
+            ]}
           >
-            <ThemedText style={styles.submitText}>Inserisci</ThemedText>
+            <ThemedText style={[
+              styles.submitText,
+              isSubmitting && styles.submitTextDisabled,
+            ]}>
+              {isSubmitting ? "Salvataggio..." : "Inserisci"}
+            </ThemedText>
           </Pressable>
         </View>
       }
@@ -384,10 +549,32 @@ const styles = StyleSheet.create({
     marginTop: 16,
     width: "100%",
     alignItems: "center",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    shadowColor: "#000",
   },
   submitText: {
-    color: "#fff",
+    color: "#2F4F3F",
     fontSize: 18,
     fontWeight: "600",
+  },
+  submitButtonDisabled: {
+    opacity: 0.6,
+  },
+  submitTextDisabled: {
+    opacity: 0.6,
+  },
+  statusModalContent: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 20,
+    gap: 16,
+    height: 150,
+  },
+  statusText: {
+    fontSize: 16,
+    textAlign: "center",
+    marginTop: 8,
   },
 });

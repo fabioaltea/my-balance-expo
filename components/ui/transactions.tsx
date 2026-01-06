@@ -4,6 +4,7 @@ import { useThemeColor } from "@/hooks/use-theme-color";
 import { IconSymbol } from "./icon-symbol.ios";
 import * as Haptics from "expo-haptics";
 import Card from "../card";
+import React from "react";
 
 export interface ITransaction {
   id: number;
@@ -95,7 +96,7 @@ const Transactions: React.FC<ITransactionsProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 5,
+    marginVertical: 0,
   },
   title: {
     fontSize: 18,

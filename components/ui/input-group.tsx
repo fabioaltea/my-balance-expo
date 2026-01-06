@@ -3,6 +3,7 @@ import { useTheme } from "@react-navigation/native";
 import { use } from "react";
 import { StyleSheet, View, Text } from "react-native";
 import List from "./list";
+import React from "react";
 
 interface ICardProps {
   backgroundColor?: string;

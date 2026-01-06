@@ -6,6 +6,7 @@ import { useState } from "react";
 import { IconSymbol } from "./icon-symbol.ios";
 import * as Haptics from "expo-haptics";
 import ModalPanel from "./modal-panel";
+import React from "react";
 
 export interface IListPickerItem {
   label: string;

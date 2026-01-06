@@ -49,11 +49,23 @@ const TransactionModal: React.FC<ITransactionModalProps> = ({
   const [amount, setAmount] = useState(initialData?.amount || 0);
   const [showKeyboard, setShowKeyboard] = useState(false);
 
+  // Reset form when modal opens
   useEffect(() => {
-    setTransactionType(initialData?.type || "expense");
-    setSelectedAccount(initialData?.accountName || "");
-    setAmount(initialData?.amount || 0);
-  }, [initialData]);
+    if (isVisible) {
+      if (initialData) {
+        // Edit mode: precompile with existing data
+        setTransactionType(initialData.type || "expense");
+        setSelectedAccount(initialData.accountName || "");
+        setAmount(initialData.amount || 0);
+      } else {
+        // New transaction: reset to defaults
+        setTransactionType("expense");
+        setSelectedAccount("");
+        setAmount(0);
+      }
+      setShowKeyboard(false);
+    }
+  }, [isVisible, initialData]);
 
   // Theme colors
   const backgroundColor = useThemeColor(
@@ -134,12 +146,18 @@ const TransactionModal: React.FC<ITransactionModalProps> = ({
           <ModalPanel
             isVisible={showKeyboard}
             onClose={() => setShowKeyboard(false)}
+            onConfirm={() => setShowKeyboard(false)}
             title="Edit Amount"
-            showConfirmButton={false}
+            showConfirmButton={true}
             showCancelButton={true}
-            cancelText="Done"
+            confirmText="Conferma"
+            cancelText="Annulla"
           >
-            <CurrencyInput value={amount} onChange={setAmount} />
+            <CurrencyInput
+              value={amount}
+              onChange={setAmount}
+              showConfirmButton={false}
+            />
           </ModalPanel>
         )}
       </View>

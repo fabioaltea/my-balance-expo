@@ -1,14 +1,71 @@
-import { View, StyleSheet, Pressable, Text } from "react-native";
+import { View, StyleSheet, Pressable, Text, Animated } from "react-native";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { IconSymbol } from "./icon-symbol.ios";
 import * as Haptics from "expo-haptics";
+import React, { useState, useEffect, useRef } from "react";
 
 interface ICurrencyInputProps {
   value: number;
   onChange: (value: number) => void;
+  onConfirm?: () => void;
+  showConfirmButton?: boolean;
 }
 
-const CurrencyInput: React.FC<ICurrencyInputProps> = ({ value, onChange }) => {
+const CurrencyInput: React.FC<ICurrencyInputProps> = ({
+  value,
+  onChange,
+  onConfirm,
+  showConfirmButton = false,
+}) => {
+  // Parse initial value into integer and decimal parts
+  const initialInt = Math.floor(value).toString();
+  const initialDec = Math.round((value % 1) * 100)
+    .toString()
+    .padStart(2, "0");
+
+  const [integerPart, setIntegerPart] = useState(initialInt);
+  const [decimalPart, setDecimalPart] = useState(initialDec);
+  const [typingDecimal, setTypingDecimal] = useState(false);
+
+  // Blinker animation
+  const blinkAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const blink = Animated.loop(
+      Animated.sequence([
+        Animated.timing(blinkAnim, {
+          toValue: 0,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(blinkAnim, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    blink.start();
+    return () => blink.stop();
+  }, []);
+
+  // Sync with parent value when it changes externally
+  useEffect(() => {
+    const newInt = Math.floor(value).toString();
+    const newDec = Math.round((value % 1) * 100)
+      .toString()
+      .padStart(2, "0");
+    setIntegerPart(newInt);
+    setDecimalPart(newDec);
+  }, [value]);
+
+  // Update parent when internal state changes
+  useEffect(() => {
+    const newValue =
+      parseInt(integerPart || "0") + parseInt(decimalPart || "0") / 100;
+    onChange(newValue);
+  }, [integerPart, decimalPart]);
+
   // Theme colors
   const backgroundColor = useThemeColor(
     { light: "transparent", dark: "transparent" },
@@ -23,54 +80,100 @@ const CurrencyInput: React.FC<ICurrencyInputProps> = ({ value, onChange }) => {
     { light: "#e0e0e0", dark: "#404040" },
     "tabIconDefault"
   );
+  const activeColor = "#2F4F3F";
 
   const handleNumberPress = (digit: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
-    if (digit === ",") {
-      // Handle comma - move to decimal editing
-      const currentString = value.toFixed(2);
-      const [integerPart] = currentString.split(".");
-      // For comma functionality, we could implement decimal cursor positioning
-      return;
+    if (!typingDecimal) {
+      // Typing integer part
+      if (parseInt(integerPart) > 0) {
+        // Limit to reasonable amount
+        if (integerPart.length < 7) {
+          setIntegerPart(integerPart + digit);
+        }
+      } else {
+        setIntegerPart(digit);
+      }
+    } else {
+      // Typing decimal part (max 2 digits, shift left)
+      if (parseInt(decimalPart) > 0) {
+        if (parseInt(decimalPart) < 10) {
+          // First decimal digit entered, shift and add new
+          const unitChar = decimalPart[1];
+          setDecimalPart(unitChar + digit);
+        } else {
+          // Both digits filled, shift left
+          const decChar = decimalPart[0];
+          setDecimalPart(decChar + digit);
+        }
+      } else {
+        setDecimalPart("0" + digit);
+      }
     }
+  };
 
-    if (digit === "backspace") {
-      const currentCents = Math.round(value * 100);
-      const newCents = Math.floor(currentCents / 10);
-      onChange(newCents / 100);
-      return;
+  const handleBackspace = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    if (typingDecimal) {
+      const firstChar = decimalPart[0];
+      const secondChar = decimalPart[1];
+      if (secondChar === "0") {
+        setDecimalPart("00");
+      } else {
+        setDecimalPart(firstChar + "0");
+      }
+    } else {
+      const newVal = integerPart.substring(0, integerPart.length - 1);
+      setIntegerPart(newVal.length > 0 ? newVal : "0");
     }
+  };
 
-    // Handle numeric input
-    const currentCents = Math.round(value * 100);
-    const newCents = currentCents * 10 + parseInt(digit);
+  const handleCommaPress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setTypingDecimal(true);
+  };
 
-    // Limit to reasonable amount (999,999.99)
-    if (newCents <= 99999999) {
-      onChange(newCents / 100);
-    }
+  const handleBackToInteger = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setTypingDecimal(false);
+  };
+
+  const handleConfirm = () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    onConfirm?.();
   };
 
   const KeypadButton = ({
     children,
     onPress,
     style,
+    isActive,
   }: {
     children: React.ReactNode;
     onPress: () => void;
     style?: any;
+    isActive?: boolean;
   }) => (
     <Pressable
       onPress={onPress}
       style={[
         styles.keypadButton,
-        { backgroundColor: buttonColor, borderColor },
+        {
+          backgroundColor: isActive ? activeColor : buttonColor,
+          borderColor,
+        },
         style,
       ]}
     >
       {typeof children === "string" ? (
-        <Text style={[styles.keypadText, { color: textColor }]}>
+        <Text
+          style={[
+            styles.keypadText,
+            { color: isActive ? "#fff" : textColor },
+          ]}
+        >
           {children}
         </Text>
       ) : (
@@ -81,6 +184,48 @@ const CurrencyInput: React.FC<ICurrencyInputProps> = ({ value, onChange }) => {
 
   return (
     <View style={[styles.container, { backgroundColor }]}>
+      {/* Value Display with Blinker */}
+      <View style={styles.valueDisplay}>
+        <Text style={[styles.currencySymbol, { color: textColor }]}>€</Text>
+        <Pressable onPress={handleBackToInteger}>
+          <View style={styles.valueSection}>
+            <Text
+              style={[
+                styles.valueText,
+                { color: textColor }
+              ]}
+            >
+              {integerPart}
+            </Text>
+            {!typingDecimal && (
+              <Animated.View
+                style={[styles.blinker, { opacity: blinkAnim }]}
+              />
+            )}
+          </View>
+        </Pressable>
+        <Text style={[styles.comma, { color: textColor }]}>,</Text>
+        <Pressable onPress={handleCommaPress}>
+          <View style={styles.valueSection}>
+            <Text
+              style={[
+                styles.valueText,
+                styles.decimalText,
+                { color: textColor },
+              ]}
+            >
+              {decimalPart}
+            </Text>
+            {typingDecimal && (
+              <Animated.View
+                style={[styles.blinker, { opacity: blinkAnim }]}
+              />
+            )}
+          </View>
+        </Pressable>
+      </View>
+
+      {/* Keypad */}
       <View style={styles.keypadGrid}>
         {/* Row 1 */}
         <KeypadButton onPress={() => handleNumberPress("1")}>1</KeypadButton>
@@ -98,14 +243,27 @@ const CurrencyInput: React.FC<ICurrencyInputProps> = ({ value, onChange }) => {
         <KeypadButton onPress={() => handleNumberPress("9")}>9</KeypadButton>
 
         {/* Row 4 */}
-        <KeypadButton onPress={() => handleNumberPress(",")}>
-          <Text style={[styles.keypadText, { color: textColor }]}>,</Text>
-        </KeypadButton>
+        {!typingDecimal ? (
+          <KeypadButton onPress={handleCommaPress}>
+            <Text style={[styles.keypadText, { color: textColor }]}>,</Text>
+          </KeypadButton>
+        ) : (
+          <KeypadButton onPress={handleBackToInteger} isActive>
+            <IconSymbol name="chevron.left" size={24} color="#fff" />
+          </KeypadButton>
+        )}
         <KeypadButton onPress={() => handleNumberPress("0")}>0</KeypadButton>
-        <KeypadButton onPress={() => handleNumberPress("backspace")}>
+        <KeypadButton onPress={handleBackspace}>
           <IconSymbol name="delete.left" size={24} color={textColor} />
         </KeypadButton>
       </View>
+
+      {/* Confirm Button */}
+      {showConfirmButton && (
+        <Pressable style={styles.confirmButton} onPress={handleConfirm}>
+          <Text style={styles.confirmButtonText}>Conferma</Text>
+        </Pressable>
+      )}
     </View>
   );
 };
@@ -113,7 +271,44 @@ const CurrencyInput: React.FC<ICurrencyInputProps> = ({ value, onChange }) => {
 const styles = StyleSheet.create({
   container: {
     paddingTop: 0,
-    paddingBottom: 0,
+    paddingBottom: 30,
+  },
+  valueDisplay: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    height: 80,
+    marginBottom: 10,
+  },
+  currencySymbol: {
+    fontSize: 28,
+    fontWeight: "600",
+    marginRight: 4,
+  },
+  valueSection: {
+    flexDirection: "row",
+    alignItems: "baseline",
+  },
+  valueText: {
+    fontSize: 36,
+    fontWeight: "700",
+  },
+  valueTextActive: {
+    color: "#2F4F3F",
+  },
+  decimalText: {
+    fontSize: 28,
+  },
+  comma: {
+    fontSize: 36,
+    fontWeight: "700",
+    marginHorizontal: 2,
+  },
+  blinker: {
+    width: 2,
+    height: 36,
+    backgroundColor: "#2F4F3F",
+    marginLeft: 2,
   },
   keypadGrid: {
     flexDirection: "row",
@@ -140,6 +335,18 @@ const styles = StyleSheet.create({
   },
   keypadText: {
     fontSize: 24,
+    fontWeight: "600",
+  },
+  confirmButton: {
+    backgroundColor: "#2F4F3F",
+    borderRadius: 25,
+    paddingVertical: 16,
+    marginTop: 10,
+    alignItems: "center",
+  },
+  confirmButtonText: {
+    color: "#fff",
+    fontSize: 18,
     fontWeight: "600",
   },
 });

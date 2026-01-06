@@ -1,13 +1,15 @@
 import { ThemedText } from "../themed-text";
 import { View, StyleSheet, TextInput } from "react-native";
 import { useThemeColor } from "@/hooks/use-theme-color";
+import React from "react";
 interface ITextBoxProps {
   value: string;
   onChange: (text: string) => void;
   label?: string;
+  placeholder?:string;
 }
 
-const TextBox: React.FC<ITextBoxProps> = ({ value, onChange, label }) => {
+const TextBox: React.FC<ITextBoxProps> = ({ value, onChange, label, placeholder }) => {
   return (
     <View style={styles.container}>
       {label && (
@@ -19,6 +21,7 @@ const TextBox: React.FC<ITextBoxProps> = ({ value, onChange, label }) => {
         style={[styles.textInput, { color: useThemeColor({ light: "#000", dark: "#fff" }, "text") }]}
         value={value}
         onChangeText={onChange}
+        placeholder={placeholder || ""}
       />
     </View>
   );

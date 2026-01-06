@@ -276,6 +276,7 @@ const AddView: React.FC = () => {
               value={description}
               onChange={setDescription}
               label="Description"
+              placeholder="Insert Description"
             />
             <ListPicker
               value={selectedCategory}

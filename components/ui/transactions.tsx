@@ -97,6 +97,7 @@ const Transactions: React.FC<ITransactionsProps> = ({
 const styles = StyleSheet.create({
   container: {
     marginVertical: 0,
+    paddingVertical:5
   },
   title: {
     fontSize: 18,
@@ -133,7 +134,6 @@ const styles = StyleSheet.create({
     height: 50,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 16,
   },
 });
 

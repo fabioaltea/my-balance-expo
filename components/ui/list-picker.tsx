@@ -38,7 +38,7 @@ const ListPicker: React.FC<IListPickerProps> = ({
   // Theme colors
   const textColor = useThemeColor({ light: "#000", dark: "#fff" }, "text");
   const placeholderColor = useThemeColor(
-    { light: "#666", dark: "#999" },
+    { light: "#666", dark: "#99999984" },
     "tabIconDefault"
   );
 

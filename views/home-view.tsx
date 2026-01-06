@@ -14,6 +14,7 @@ import Pager from "@/components/ui/pager";
 import { useMyBalanceData, useAuthContext, DATE_RANGES } from "@/state";
 import { isDateInRange } from "@/utils/dateUtils";
 import type { Account, IDateRange } from "@/state";
+import { BlurView } from "expo-blur";
 
 interface HomeViewProps {
   accounts: Account[];
@@ -111,36 +112,41 @@ const HomeView: React.FC<HomeViewProps> = ({accounts, selectedAccount, setSelect
           ))}
         </Pager>
       ) : (
-        <View style={{ height: 150, justifyContent: 'center', alignItems: 'center' }}>
+        <View
+          style={{
+            height: 150,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
           <Text>Loading accounts...</Text>
         </View>
       )}
-
-      <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={isLoading}
-            onRefresh={onRefresh}
-            tintColor="#007AFF"
-            colors={["#007AFF"]}
+      {/* <BlurView intensity={100} tint="default" style={styles.blurOverlay} /> */}
+        <ScrollView
+          contentContainerStyle={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={isLoading}
+              onRefresh={onRefresh}
+              tintColor="#2F4F3F"
+              colors={["#2F4F3F"]}
+            />
+          }
+        >
+          <PeriodPicker
+            dateRange={dateRange}
+            setDateRange={setDateRange}
+            movementFilter={movementFilter}
+            setMovementFilter={setMovementFilter}
           />
-        }
-      >
-        <PeriodPicker
-          dateRange={dateRange}
-          setDateRange={setDateRange}
-          movementFilter={movementFilter}
-          setMovementFilter={setMovementFilter}
-        />
-        <FinancialSummaryCard
-          income={getTotalIncome(filteredMovements)}
-          expense={getTotalExpense(filteredMovements)}
-        />
-        <MovementsCard movements={filteredMovements} />
-        <View style={{ height: 150 }}></View>
-      </ScrollView>
+          <FinancialSummaryCard
+            income={getTotalIncome(filteredMovements)}
+            expense={getTotalExpense(filteredMovements)}
+          />
+          <MovementsCard movements={filteredMovements} />
+        </ScrollView>
     </View>
   );
 };
@@ -153,7 +159,6 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     paddingHorizontal: 16,
-    paddingBottom: 100,
     flexGrow: 1,
-  },
+  }
 });

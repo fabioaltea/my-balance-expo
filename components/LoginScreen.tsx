@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Image
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -32,31 +33,20 @@ const LoginScreen: React.FC = () => {
   };
 
   return (
-    <LinearGradient colors={["#667eea", "#764ba2"]} style={styles.container}>
+    <LinearGradient colors={["#2F4F3F", "#0c2d1cff"]} style={styles.container}>
       <View style={styles.content}>
         {/* Logo/Title */}
         <View style={styles.header}>
-          <Ionicons name="wallet-outline" size={64} color="white" />
+          <Image
+            source={require("../assets/images/icon.png")}
+            style={styles.logo}
+          />
           <Text style={styles.title}>MyBalance</Text>
           <Text style={styles.subtitle}>Your personal finance tracker</Text>
         </View>
 
         {/* Login Button */}
         <View style={styles.loginSection}>
-          {error && (
-            <View style={styles.errorContainer}>
-              <View style={styles.errorHeader}>
-                <Text style={styles.errorText}>{error}</Text>
-                <TouchableOpacity
-                  onPress={handleDismissError}
-                  style={styles.errorCloseButton}
-                >
-                  <Ionicons name="close" size={20} color="white" />
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
-
           <TouchableOpacity
             style={[
               styles.loginButton,
@@ -74,10 +64,21 @@ const LoginScreen: React.FC = () => {
               </>
             )}
           </TouchableOpacity>
-
-          <Text style={styles.description}>
-            Sign in to access your Google Sheets-based financial data securely.
-          </Text>
+          {error && (
+            <View style={styles.errorContainer}>
+              <View style={[styles.errorContent]}>
+                <View style={styles.errorHeader}>
+                  <Text style={styles.errorText}>{error}</Text>
+                  <TouchableOpacity
+                    onPress={handleDismissError}
+                    style={styles.errorCloseButton}
+                  >
+                    <Ionicons name="close" size={20} color="white" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          )}
         </View>
 
         {/* Features */}
@@ -118,7 +119,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 32,
   },
   header: {
     alignItems: "center",
@@ -136,19 +136,33 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.8)",
     textAlign: "center",
   },
+  logo: {
+    width: 100,
+    height: 100,
+    marginBottom: 16,
+    borderRadius: 20,
+  },
   loginSection: {
     width: "100%",
     alignItems: "center",
     marginBottom: 40,
   },
   errorContainer: {
+    marginBottom: 16,
+    display: "flex",
+    justifyContent: "center",
+    minWidth:400
+  },
+  errorContent: {
     backgroundColor: "rgba(255, 0, 0, 0.1)",
     borderColor: "rgba(255, 0, 0, 0.3)",
     borderWidth: 1,
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
-    width: "100%",
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    display: "flex",
+    alignItems: "center",
+    width: "auto",
   },
   errorHeader: {
     flexDirection: "row",
@@ -160,6 +174,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     flex: 1,
     paddingRight: 8,
+    textOverflow: "wrap",
   },
   errorCloseButton: {
     padding: 4,
@@ -169,8 +184,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "rgba(255,255,255,0.2)",
     paddingHorizontal: 24,
-    paddingVertical: 16,
     borderRadius: 12,
+    paddingVertical: 16,
     marginBottom: 16,
     minWidth: 200,
     justifyContent: "center",
@@ -190,10 +205,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     maxWidth: 280,
   },
-  features: {
-    width: "100%",
-    maxWidth: 300,
-  },
+  features: {},
   feature: {
     flexDirection: "row",
     alignItems: "center",

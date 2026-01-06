@@ -5,7 +5,6 @@ interface AuthContextType extends AuthState {
   // Auth actions
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
-  refreshTokens: () => Promise<boolean>;
   initializeAuth: () => Promise<void>;
   clearError: () => void;
   // App data exposed by useAuth
@@ -15,7 +14,7 @@ interface AuthContextType extends AuthState {
   totalBalance: any;
   userProfile: any;
   // Data reload helper
-  reloadAllData: () => Promise<void>;
+  reloadData: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);

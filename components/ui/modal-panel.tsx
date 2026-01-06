@@ -12,6 +12,7 @@ import { useState, useRef, useEffect, ReactNode } from "react";
 import { ThemedText } from "../themed-text";
 import * as Haptics from "expo-haptics";
 import GlassButton from "./glass-button";
+import React from "react";
 
 interface IModalPanelProps {
   isVisible: boolean;
@@ -151,11 +152,6 @@ const ModalPanel: React.FC<IModalPanelProps> = ({
               {(title || showCancelButton || showConfirmButton) && (
                 <View style={styles.modalHeader}>
                   {showCancelButton ? (
-                    // <Pressable onPress={hideModal} style={styles.cancelButton}>
-                    //   <ThemedText style={styles.cancelText}>
-                    //     {cancelText}
-                    //   </ThemedText>
-                    // </Pressable>
                     <GlassButton onPress={hideModal} type="dismiss" />
                   ) : (
                     <View style={styles.spacer} />
@@ -205,13 +201,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
+    paddingTop: 20,
   },
   modalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    marginBottom: 20,
   },
   cancelButton: {
     paddingVertical: 8,

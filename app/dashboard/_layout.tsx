@@ -20,8 +20,6 @@ export default function TabLayout() {
   const colorScheme = useColorScheme();
 
   return (
-    <View style={{ flex: 1 }}>
-      {/* <DashboardHeader /> */}
       <NativeTabs minimizeBehavior="onScrollDown" iconColor="#2F4F3F">
         <NativeTabs.Trigger name="charts">
           <Label>Charts</Label>
@@ -63,6 +61,5 @@ export default function TabLayout() {
           })}
         </NativeTabs.Trigger>
       </NativeTabs>
-    </View>
   );
 }

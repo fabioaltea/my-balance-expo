@@ -1,21 +1,15 @@
 import { HttpHelper } from "./HttpHelper";
-import { ApiHelper } from "./ApiHelper";
 
 export class AccountsApiHelper {
   /**
    * Get all accounts for a specific spreadsheet
    */
-  static async getAccounts(accessToken: string, spreadsheetId: string) {
+  static async getAccounts(spreadsheetId: string): Promise<any[]> {
     try {
       console.log("🔄 Loading accounts from API...");
 
       const response = await HttpHelper.get(
-        `/accounts?spreadsheet_id=${spreadsheetId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
+        `/accounts?spreadsheet_id=${spreadsheetId}`
       );
 
       if (response.success) {
@@ -37,22 +31,13 @@ export class AccountsApiHelper {
   /**
    * Create a new account
    */
-  static async createAccount(
-    accessToken: string,
-    spreadsheetId: string,
-    accountData: any
-  ) {
+  static async createAccount(spreadsheetId: string, accountData: any) {
     try {
       console.log("➕ Creating new account...");
 
       const response = await HttpHelper.post(
         `/accounts?spreadsheet_id=${spreadsheetId}`,
-        { ...accountData },
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
+        { ...accountData }
       );
 
       if (response.success) {

@@ -66,6 +66,36 @@ export class AuthStorageHelper {
     }
   }
 
+  static isTokenExpired(token: string): boolean {
+    try {
+      // Decode JWT token to get expiration
+      const base64Url = token.split('.')[1];
+      if (!base64Url) {
+        return true;
+      }
+
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+
+      const payload = JSON.parse(jsonPayload);
+      if (!payload.exp) {
+        return true;
+      }
+
+      // Check if token is expired (exp is in seconds, Date.now() is in milliseconds)
+      const currentTime = Math.floor(Date.now() / 1000);
+      return payload.exp < currentTime;
+    } catch (error) {
+      console.error("Error checking token expiration:", error);
+      return true; // If we can't decode, consider it expired
+    }
+  }
+
   // User management
   static async storeUser(user: User): Promise<void> {
     try {

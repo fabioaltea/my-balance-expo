@@ -93,7 +93,6 @@ export const useMyBalanceData = (spreadsheetId: string | null) => {
 
       // ===== Load Transactions =====
       const rawTransactions = await TransactionsApiHelper.getTransactions(
-        tokens.accessToken,
         spreadsheetId
       );
 
@@ -117,7 +116,6 @@ export const useMyBalanceData = (spreadsheetId: string | null) => {
 
       // ===== Load Accounts =====
       const rawAccounts = await AccountsApiHelper.getAccounts(
-        tokens.accessToken,
         spreadsheetId
       );
 
@@ -135,7 +133,6 @@ export const useMyBalanceData = (spreadsheetId: string | null) => {
 
       // ===== Load Categories =====
       const rawCategories = await CategoriesApiHelper.getCategories(
-        tokens.accessToken,
         spreadsheetId
       );
 

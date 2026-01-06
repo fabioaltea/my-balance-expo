@@ -97,16 +97,13 @@ const styles = StyleSheet.create({
   },
   movementInfo: {
     flex: 1,
-    color: "inherit",
   },
   movementDate: {
     fontSize: 12,
-    color: "inherit",
     marginBottom: 0,
   },
   movementDescription: {
     fontSize: 16,
-    color: "inherit",
     fontWeight: "500",
     textTransform: "capitalize",
   },
@@ -114,12 +111,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
   },
-  positiveAmount: {
-    // Color will be set dynamically
-  },
-  negativeAmount: {
-    color: "inherit",
-  },
+  
   emptyState: {
     paddingVertical: 40,
     alignItems: "center",
@@ -178,9 +170,9 @@ const MovementsCard: React.FC<MovementsCardProps> = ({ movements }) => {
     movementItem: {
       ...styles.movementItem,
       borderBottomColor: borderColor,
+      color: borderColor,
     },
     positiveAmount: {
-      ...styles.positiveAmount,
       color: positiveAmountColor,
     },
   });
@@ -226,10 +218,10 @@ const MovementsCard: React.FC<MovementsCardProps> = ({ movements }) => {
               />
             </View>
             <View style={styles.movementInfo}>
-              <ThemedText style={styles.movementDate}>
+              <ThemedText style={[styles.movementDate]}>
                 {formatDateForDisplay(movement.date, "it-IT")}
               </ThemedText>
-              <ThemedText style={styles.movementDescription}>
+              <ThemedText style={[styles.movementDescription]}>
                 {movement.description}
               </ThemedText>
             </View>
@@ -238,7 +230,7 @@ const MovementsCard: React.FC<MovementsCardProps> = ({ movements }) => {
                 styles.movementAmount,
                 amount > 0
                   ? dynamicStyles.positiveAmount
-                  : styles.negativeAmount,
+                  : "",
               ]}
             >
               {amount > 0 ? "+" : ""}

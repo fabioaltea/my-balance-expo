@@ -46,12 +46,126 @@ export const useAuth = () => {
     setAuthState((prev) => ({ ...prev, error: null }));
   }, []);
 
-  // Initialize authentication state
+  // Helper to handle session expired
+  const handleSessionExpired = useCallback(async () => {
+    console.log("🚪 Session expired, clearing auth...");
+    await AuthStorageHelper.clearAll();
+    setAuthState({
+      isAuthenticated: false,
+      user: null,
+      isLoading: false,
+      error: "Your session has expired. Please login again.",
+      mode: "",
+      dashboardReady: false,
+      selectedSpreadsheetId: null,
+    });
+  }, []);
+
+
+  // Load user profile and app data - single entry point after authentication
+  const loadUserDataAndProfile = useCallback(async () => {
+    console.log("🚀 LOAD USER DATA AND PROFILE");
+    try {
+      console.log("📡 Getting user profile...");
+
+      // Get user profile - token management is automatic via HttpHelper
+      const profile = await ApiHelper.getUserProfile();
+
+      console.log("📊 Profile result:", {
+        success: !!profile,
+        hasUser: !!profile?.user,
+        spreadsheetId: profile?.user?.spreadsheetId,
+      });
+
+      if (!profile || !profile.user) {
+        console.log("❌ No profile data received");
+        await handleSessionExpired();
+        return;
+      }
+
+      // Store user profile in state
+      setUserProfile(profile.user);
+      await AuthStorageHelper.storeUser(profile.user);
+
+      // Check if user has a configured spreadsheet
+      if (profile.user.spreadsheetId) {
+        console.log(
+          "✅ User has spreadsheet configured:",
+          profile.user.spreadsheetId
+        );
+
+        // Load app data
+        console.log("📦 Loading app data...");
+        const [transactions, accounts, categories] = await Promise.all([
+          TransactionsApiHelper.getTransactions(profile.user.spreadsheetId),
+          AccountsApiHelper.getAccounts(profile.user.spreadsheetId),
+          CategoriesApiHelper.getCategories(profile.user.spreadsheetId),
+        ]);
+
+        // Store the loaded data
+        setAllTransactions(transactions);
+        setAccountsList(accounts);
+        setPersonalCategories(categories);
+
+        console.log("✅ Data loaded successfully:", {
+          transactionsCount: transactions?.length || 0,
+          accountsCount: accounts?.length || 0,
+          categoriesCount: categories?.length || 0,
+        });
+
+        // Set authenticated state with data ready
+        setAuthState({
+          isAuthenticated: true,
+          user: profile.user,
+          isLoading: false,
+          error: null,
+          mode: "dashboard",
+          dashboardReady: true,
+          selectedSpreadsheetId: profile.user.spreadsheetId,
+        });
+      } else {
+        console.log("🆕 Quickstart mode - no spreadsheet configured");
+
+        // Set authenticated state in quickstart mode
+        setAuthState({
+          isAuthenticated: true,
+          user: profile.user,
+          isLoading: false,
+          error: null,
+          mode: "quickstart",
+          dashboardReady: true,
+          selectedSpreadsheetId: null,
+        });
+      }
+    } catch (error) {
+      console.error("❌ Error loading user data and profile:", error);
+
+      const is401Error =
+        (error as any)?.message?.includes("401") ||
+        (error as any)?.message?.includes("expired") ||
+        (error as any)?.message?.includes("Unauthorized") ||
+        (error as any)?.message?.includes("No valid authentication token");
+
+      if (is401Error) {
+        console.log("🔄 Session expired, logging out...");
+        await handleSessionExpired();
+      } else {
+        console.log("🚪 General error during data load");
+        setAuthState((prev) => ({
+          ...prev,
+          isLoading: false,
+          error:
+            "Connection error. Please check your internet connection and try again.",
+        }));
+      }
+    }
+  }, [handleSessionExpired]);
+
+  // Initialize authentication state - check for stored tokens
   const initializeAuth = useCallback(async () => {
-    console.log("🚀 INITIALIZE AUTH CALLED");
+    console.log("🚀 INITIALIZE AUTH - Checking for stored credentials");
     try {
       setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
-      console.log("📱 Loading stored tokens and user...");
 
       const tokens = await AuthStorageHelper.getTokens();
       const user = await AuthStorageHelper.getUser();
@@ -60,78 +174,22 @@ export const useAuth = () => {
       console.log("👤 Stored user found:", !!user);
 
       if (tokens && user) {
-        console.log("✅ Both tokens and user found, verifying with API...");
-        // Verify tokens are still valid by getting user profile
-        try {
-          const profileResponse = await ApiHelper.getUserProfile(
-            tokens.accessToken
-          );
-
-          
-
-          if (profileResponse && profileResponse.success && profileResponse.user) {
-            console.log("📡 Profile response:", {
-              success: profileResponse.success,
-              hasUser: !!profileResponse.user,
-            });
-            console.log(
-              "✅ Profile verification successful, setting auth state..."
-            );
-            setAuthState({
-              isAuthenticated: true,
-              user: profileResponse.user,
-              isLoading: false,
-              error: null,
-              mode: "", // Will be set by startUp
-              dashboardReady: false,
-              selectedSpreadsheetId: null, // Will be set by startUp
-            });
-
-            console.log(
-              "🚀 Calling startUp with user email:",
-              profileResponse.user.email
-            );
-            // Start the app data loading flow
-            await startUp(profileResponse.user.email, tokens.accessToken);
-
-            // Update stored user with latest info
-            await AuthStorageHelper.storeUser(profileResponse.user);
-            return;
-          }
-        } catch (error) {
-          console.log(
-            "❌ Stored tokens are invalid, will need to re-authenticate:",
-            error
-          );
-          await AuthStorageHelper.clearAll();
-
-          // Set specific error message for expired tokens
-          setAuthState({
-            isAuthenticated: false,
-            user: null,
-            isLoading: false,
-            error: "Your session has expired. Please login again.",
-            mode: "",
-            dashboardReady: false,
-            selectedSpreadsheetId: null,
-          });
-          return;
-        }
+        console.log("✅ Stored credentials found, loading data...");
+        // We have stored credentials, load user data
+        await loadUserDataAndProfile();
+      } else {
+        console.log("❌ No stored credentials, showing login");
+        // No stored credentials, show login
+        setAuthState({
+          isAuthenticated: false,
+          user: null,
+          isLoading: false,
+          error: null,
+          mode: "",
+          dashboardReady: false,
+          selectedSpreadsheetId: null,
+        });
       }
-
-      console.log(
-        "❌ No valid authentication found, setting unauthenticated state"
-      );
-      // No valid authentication found
-      setAuthState({
-        isAuthenticated: false,
-        user: null,
-        isLoading: false,
-        error: null,
-        mode: "",
-        dashboardReady: false,
-        selectedSpreadsheetId: null,
-      });
     } catch (error) {
       console.error("❌ Auth initialization error:", error);
       setAuthState({
@@ -147,183 +205,8 @@ export const useAuth = () => {
         selectedSpreadsheetId: null,
       });
     }
-  }, []);
+  }, [loadUserDataAndProfile]);
 
-  // Startup flow - similar to Ionic useMyBalance
-  const startUp = async (userEmail: string, accessToken: string) => {
-    console.log("🚀 STARTUP CALLED for user:", userEmail);
-    try {
-      console.log(
-        "📡 Getting user profile to verify auth and get spreadsheet info..."
-      );
-
-      // Get user profile to verify authentication and get spreadsheet info
-      const profile = await ApiHelper.getUserProfile(accessToken);
-
-      console.log("📊 Profile result:", {
-        success: !!profile,
-        hasUser: !!profile?.user,
-        spreadsheetId: profile?.user?.spreadsheetId,
-      });
-
-      if (profile && profile.user) {
-        // Store user profile in state
-        setUserProfile(profile.user);
-
-        // Check if user has a configured spreadsheet
-        if (profile.user.spreadsheetId) {
-          console.log(
-            "✅ User has spreadsheet configured:",
-            profile.user.spreadsheetId
-          );
-
-          setAuthState((prev) => ({
-            ...prev,
-            selectedSpreadsheetId: profile.user?.spreadsheetId || null,
-            mode: "load", // This will trigger data loading
-          }));
-        } else {
-          console.log(
-            "🆕 Quickstart mode activated - no spreadsheet configured"
-          );
-
-          setAuthState((prev) => ({
-            ...prev,
-            selectedSpreadsheetId: null,
-            mode: "quickstart",
-            dashboardReady: true, // Quickstart is immediately ready
-          }));
-        }
-      } else {
-        console.log("❌ No profile data received");
-      }
-    } catch (error) {
-      console.error("❌ Error in startup:", error);
-
-      if (
-        (error as any)?.message?.includes("401") ||
-        (error as any)?.message?.includes("expired") ||
-        (error as any)?.message?.includes("Unauthorized")
-      ) {
-        console.log("🔄 Token expired, clearing auth and showing error...");
-        await AuthStorageHelper.clearAll();
-
-        setAuthState({
-          isAuthenticated: false,
-          user: null,
-          isLoading: false,
-          error: "Your session has expired. Please login again.",
-          mode: "",
-          dashboardReady: false,
-          selectedSpreadsheetId: null,
-        });
-      } else {
-        console.log("🚪 General error, logging out...");
-        // Set general error message
-        setAuthState({
-          isAuthenticated: false,
-          user: null,
-          isLoading: false,
-          error:
-            "Connection error. Please check your internet connection and try again.",
-          mode: "",
-          dashboardReady: false,
-          selectedSpreadsheetId: null,
-        });
-      }
-    }
-  };
-
-  // Load all app data - similar to Ionic reloadAllData
-  const reloadAllData = async () => {
-    console.log("🔄 RELOAD ALL DATA CALLED");
-
-    try {
-      const tokens = await AuthStorageHelper.getTokens();
-
-      if (!authState.selectedSpreadsheetId || !tokens?.accessToken) {
-        console.warn("Missing spreadsheetId or accessToken for reloadAllData");
-        return;
-      }
-
-      console.log("Loading transactions...");
-      const transactions = await TransactionsApiHelper.getTransactions(
-        tokens.accessToken,
-        authState.selectedSpreadsheetId
-      );
-      console.log("📦 Raw transactions from API:", {
-        count: transactions?.length || 0,
-        sample: transactions?.slice(0, 2),
-      });
-
-      console.log("Loading accounts...");
-      const accounts = await AccountsApiHelper.getAccounts(
-        tokens.accessToken,
-        authState.selectedSpreadsheetId
-      );
-      console.log("📦 Raw accounts from API:", {
-        count: accounts?.length || 0,
-        sample: accounts?.slice(0, 2),
-      });
-
-      console.log("Loading categories...");
-      const categories = await CategoriesApiHelper.getCategories(
-        tokens.accessToken,
-        authState.selectedSpreadsheetId
-      );
-      console.log("📦 Raw categories from API:", {
-        count: categories?.length || 0,
-      });
-
-      // Store the loaded data
-      setAllTransactions(transactions);
-      setAccountsList(accounts);
-      setPersonalCategories(categories);
-
-      // Mark dashboard as ready
-      setAuthState((prev) => ({
-        ...prev,
-        mode: "dashboard",
-        dashboardReady: true,
-      }));
-
-      console.log("✅ Data loaded successfully:", {
-        transactionsCount: transactions?.length || 0,
-        accountsCount: accounts?.length || 0,
-        categoriesCount: categories?.length || 0,
-      });
-    } catch (error) {
-      console.error("Error in reloadAllData:", error);
-
-      // Check if it's a token expiration error
-      if (
-        (error as any)?.message?.includes("401") ||
-        (error as any)?.message?.includes("expired") ||
-        (error as any)?.message?.includes("Unauthorized")
-      ) {
-        console.log("🔄 Token expired during data reload, clearing auth...");
-        await AuthStorageHelper.clearAll();
-
-        setAuthState({
-          isAuthenticated: false,
-          user: null,
-          isLoading: false,
-          error: "Your session has expired. Please login again.",
-          mode: "",
-          dashboardReady: false,
-          selectedSpreadsheetId: null,
-        });
-      } else {
-        // Set dashboard ready even on other errors to avoid infinite loading
-        setAuthState((prev) => ({
-          ...prev,
-          dashboardReady: true,
-          error:
-            "Failed to load app data. Please check your connection and try again.",
-        }));
-      }
-    }
-  };
 
   // PKCE utility functions for OAuth2 security - Following Google specifications
   const generateCodeVerifier = () => {
@@ -365,7 +248,7 @@ export const useAuth = () => {
   // Google OAuth login - with PKCE implementation
   const loginWithGoogle = useCallback(async () => {
     try {
-      setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
+      // setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
 
       const deviceId = await AuthStorageHelper.getOrCreateDeviceId();
 
@@ -373,17 +256,9 @@ export const useAuth = () => {
       const codeVerifier = generateCodeVerifier();
       const codeChallenge = await generateCodeChallenge(codeVerifier);
 
-      // console.log("🔐 PKCE generated:", {
-      //   codeVerifierLength: codeVerifier.length,
-      //   codeChallengeLength: codeChallenge.length,
-      //   codeChallengeValue: codeChallenge,
-      //   codeVerifierValue: codeVerifier,
-      // });
-
       // Use custom scheme for iOS - using app scheme from Expo config
       const redirectUri =
         "com.googleusercontent.apps.1034336371411-871dda5aa8crght33ognn5hbeivrp09k:/oauthredirect";
-      //AuthSession.makeRedirectUri({scheme: "com.googleusercontent.apps.1034336371411-871dda5aa8crght33ognn5hbeivrp09k", });
 
       // Create OAuth request with PKCE
       const request = new AuthSession.AuthRequest({
@@ -407,17 +282,7 @@ export const useAuth = () => {
       request.codeChallenge = codeChallenge;
       request.codeVerifier = codeVerifier;
 
-      console.log("🚀 Initiating Google OAuth with request:", {
-        clientId: request.clientId,
-        scopes: request.scopes,
-        redirectUri: request.redirectUri,
-        responseType: request.responseType,
-        codeChallengeMethod: request.codeChallengeMethod,
-        extraParams: request.extraParams,
-        usePKCE: request.usePKCE,
-        codeChallenge: request.codeChallenge,
-        codeVerifier: request.codeVerifier,
-      });
+      console.log("🚀 Initiating Google OAuth request");
 
       // Define discovery endpoint
       const discovery = {
@@ -428,6 +293,7 @@ export const useAuth = () => {
 
       if (result.type === "success" && (result as any).params?.code) {
         // Use the stored code verifier from state, NOT the local variable
+        setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
 
         const authResponse = await ApiHelper.authenticateWithGoogle({
           authorizationCode: (result as any).params.code,
@@ -437,7 +303,7 @@ export const useAuth = () => {
         });
 
         if (authResponse.success) {
-          console.log("✅ Backend authentication successful:", authResponse);
+          console.log("✅ Backend authentication successful, storing tokens");
           await AuthStorageHelper.storeTokens({
             accessToken: authResponse.accessToken!,
             refreshToken: authResponse.refreshToken!,
@@ -447,21 +313,9 @@ export const useAuth = () => {
             await AuthStorageHelper.storeUser(authResponse.user);
           }
 
-          setAuthState({
-            isAuthenticated: true,
-            user: authResponse.user || null,
-            isLoading: false,
-            error: null,
-            mode: "", // Will be set by startup flow
-            dashboardReady: false,
-            selectedSpreadsheetId: null,
-          });
-
-          // Trigger startup flow to load user data and dashboard
-          console.log("🚀 Calling startUp after successful login");
-          if (authResponse.user?.email && authResponse.accessToken) {
-            await startUp(authResponse.user.email, authResponse.accessToken);
-          }
+          // Load user profile and data after successful login
+          console.log("🚀 Loading user data after successful login");
+          await loadUserDataAndProfile();
         } else {
           throw new Error(
             authResponse.error || "Backend authentication failed"
@@ -524,46 +378,6 @@ export const useAuth = () => {
     }
   }, []);
 
-  // Refresh tokens
-  const refreshTokens = useCallback(async (): Promise<boolean> => {
-    try {
-      const tokens = await AuthStorageHelper.getTokens();
-      const deviceId = await AuthStorageHelper.getOrCreateDeviceId();
-
-      if (!tokens?.refreshToken) {
-        return false;
-      }
-
-      const result = await ApiHelper.refreshToken({
-        refreshToken: tokens.refreshToken,
-        deviceId,
-      });
-
-      if (result.success && result.accessToken && result.refreshToken) {
-        await AuthStorageHelper.storeTokens({
-          accessToken: result.accessToken,
-          refreshToken: result.refreshToken,
-        });
-        return true;
-      }
-
-      return false;
-    } catch (error) {
-      console.error("Token refresh error:", error);
-      return false;
-    }
-  }, []);
-
-  // Effect to handle mode changes and trigger data loading
-  useEffect(() => {
-    console.log("📊 MODE CHANGED:", authState.mode);
-
-    if (authState.mode === "load" && authState.selectedSpreadsheetId) {
-      console.log("🔄 Mode is 'load', triggering reloadAllData");
-      reloadAllData();
-    }
-  }, [authState.mode, authState.selectedSpreadsheetId]);
-
   // Initialize on mount
   useEffect(() => {
     console.log("🔧 useAuth useEffect mounting, calling initializeAuth");
@@ -581,10 +395,9 @@ export const useAuth = () => {
     // Auth functions
     loginWithGoogle,
     logout,
-    refreshTokens,
     initializeAuth,
     clearError,
     // Data functions
-    reloadAllData,
+    reloadData: loadUserDataAndProfile,
   };
 };

@@ -13,6 +13,7 @@ import ListPicker, { IListPickerItem } from "./list-picker";
 import CurrencyInput from "./currency-input";
 import * as Haptics from "expo-haptics";
 import ModalPanel from "./modal-panel";
+import React from "react";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 

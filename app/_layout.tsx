@@ -29,19 +29,13 @@ const AuthenticatedApp: React.FC = () => {
   if (!dashboardReady) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#667eea" />
+        <ActivityIndicator size="large" color="#2F4F3F" />
         <Text style={styles.loadingText}>Loading dashboard...</Text>
       </View>
     );
   }
 
-  const dashboardHeader = () => (
-    <SafeAreaView>
-      <View style={{ padding: 16, height: 566, justifyContent: "center" }}>
-        <Text>Account</Text>
-      </View>
-    </SafeAreaView>
-  );
+
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
@@ -49,7 +43,11 @@ const AuthenticatedApp: React.FC = () => {
         <Stack>
           <Stack.Screen
             name="dashboard"
-            options={{ headerShown: false, header: dashboardHeader }}
+            options={{
+              headerShown: false,
+              gestureEnabled: false,
+              headerBackVisible: false,
+            }}
           />
           <Stack.Screen
             name="add"
@@ -84,7 +82,7 @@ const AppRouter: React.FC = () => {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#667eea" />
+        <ActivityIndicator size="large" color="#2F4F3F" />
         <Text style={styles.loadingText}>Loading...</Text>
       </View>
     );
@@ -109,7 +107,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: "#666",
+    color: "#2F4F3F",
   },
 });
 

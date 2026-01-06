@@ -1,21 +1,15 @@
 import { HttpHelper } from "./HttpHelper";
-import { ApiHelper } from "./ApiHelper";
 
 export class CategoriesApiHelper {
   /**
    * Get all categories for a specific spreadsheet
    */
-  static async getCategories(accessToken: string, spreadsheetId: string) {
+  static async getCategories(spreadsheetId: string): Promise<any[]> {
     try {
       console.log("🔄 Loading categories from API...");
 
       const response = await HttpHelper.get(
-        `/categories?spreadsheet_id=${spreadsheetId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
+        `/categories?spreadsheet_id=${spreadsheetId}`
       );
 
       if (response.success) {
@@ -37,22 +31,13 @@ export class CategoriesApiHelper {
   /**
    * Create a new category
    */
-  static async createCategory(
-    accessToken: string,
-    spreadsheetId: string,
-    categoryData: any
-  ) {
+  static async createCategory(spreadsheetId: string, categoryData: any) {
     try {
       console.log("➕ Creating new category...");
 
       const response = await HttpHelper.post(
         `/categories?spreadsheet_id=${spreadsheetId}`,
-        { ...categoryData },
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
+        { ...categoryData }
       );
 
       if (response.success) {

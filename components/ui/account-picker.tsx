@@ -4,6 +4,8 @@ import { ThemedText } from "../themed-text";
 import ContextMenu from "./context-menu";
 import { IAccount } from "@/models/Account";
 import { Account } from "@/hooks/useMyBalanceData";
+import { Icon } from "expo-router/build/native-tabs/common/elements";
+              import { IconSymbol } from "@/components/ui/icon-symbol";
 
 export interface IAccountPickerProps {
   accounts: Account[];
@@ -32,10 +34,11 @@ const AccountPicker: React.FC<IAccountPickerProps> = ({
 
   return (
     <View>
-      <Pressable onPress={handleOpenMenu}>
+      <Pressable style={styles.pressable} onPress={handleOpenMenu}>
         <ThemedText type="title">
-          {selectedAccount || "Select Account"} ▼
+          {selectedAccount || "Select Account"}
         </ThemedText>
+        <IconSymbol name={"chevron.down"} color={"#2F4F3F"}></IconSymbol>
       </Pressable>
       {menuOpen && (
         <ContextMenu
@@ -48,5 +51,14 @@ const AccountPicker: React.FC<IAccountPickerProps> = ({
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  pressable: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+});
 
 export default AccountPicker;

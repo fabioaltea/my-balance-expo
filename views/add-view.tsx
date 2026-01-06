@@ -6,7 +6,7 @@ import {
   Pressable,
   Alert,
 } from "react-native";
-import { useState } from "react";
+import React,{ useState } from "react";
 import { ThemedText } from "@/components/themed-text";
 import ChipButton from "@/components/ui/chip-button";
 import { IconSymbol } from "@/components/ui/icon-symbol.ios";
@@ -25,10 +25,11 @@ import TransactionModal, {
   ITransactionData,
 } from "@/components/ui/transaction-modal";
 import ScreenView from "@/layout/screen-view";
-import { useAccountSelection } from "@/state";
+import { useAuthContext, useMyBalanceData } from "@/state";
 
 const AddView: React.FC = () => {
-  const { allAccounts } = useAccountSelection();
+  const { selectedSpreadsheetId } = useAuthContext();
+  const { accounts } = useMyBalanceData(selectedSpreadsheetId);
   const [description, setDescription] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -42,7 +43,7 @@ const AddView: React.FC = () => {
 
   // Theme colors
   const backgroundColor = useThemeColor(
-    { light: "#fff", dark: "#000" },
+    { light: "transparent", dark: "#1a1a1a" },
     "background"
   );
   const cardColor = useThemeColor(
@@ -71,7 +72,7 @@ const AddView: React.FC = () => {
     { label: "Altro", value: "altro" },
   ];
 
-  const accounts = allAccounts.map((account) => ({
+  const allAccounts = accounts.map((account) => ({
     label: account.name,
     value: account.name,
   }));
@@ -163,64 +164,66 @@ const AddView: React.FC = () => {
 
   return (
     <ScreenView>
-      <ThemedText type="title" style={styles.title}>
-        Inserisci Movimento
-      </ThemedText>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <InputGroup>
-          <TextBox
-            value={description}
-            onChange={setDescription}
-            label="Description"
-          />
-          <ListPicker
-            value={selectedCategory}
-            onChange={setSelectedCategory}
-            items={categories}
-            label="Category"
-            placeholder="Select category"
-          />
+      <View style={[styles.container, dynamicStyles.container]}>
+        <ThemedText type="title" style={styles.title}>
+          Inserisci Movimento
+        </ThemedText>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <InputGroup>
+            <TextBox
+              value={description}
+              onChange={setDescription}
+              label="Description"
+            />
+            <ListPicker
+              value={selectedCategory}
+              onChange={setSelectedCategory}
+              items={categories}
+              label="Category"
+              placeholder="Select category"
+            />
 
-          <DatePicker
-            value={selectedDate}
-            onChange={setSelectedDate}
-            label="Date"
-          />
-        </InputGroup>
+            <DatePicker
+              value={selectedDate}
+              onChange={setSelectedDate}
+              label="Date"
+            />
+          </InputGroup>
 
-        {/* Transactions Component */}
-        <InputGroup label="Transactions">
-          <Transactions
-            transactions={transactions}
-            onTransactionPress={handleTransactionPress}
-            onAddPress={handleAddTransaction}
-          />
-        </InputGroup>
+          {/* Transactions Component */}
+          <InputGroup label="Transactions">
+            <Transactions
+              transactions={transactions}
+              onTransactionPress={handleTransactionPress}
+              onAddPress={handleAddTransaction}
+            />
+          </InputGroup>
 
-        {/* Location Card */}
-        <InputGroup>
-          <LocationPicker
-            value={selectedLocation.address}
-            onChange={setSelectedLocation}
-            label="Location"
-            placeholder="Enter location"
-            googleMapsApiKey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}
-          />
-        </InputGroup>
-      </ScrollView>
+          {/* Location Card */}
+          <InputGroup>
+            <LocationPicker
+              value={selectedLocation.address}
+              onChange={setSelectedLocation}
+              label="Location"
+              placeholder="Enter location"
+              googleMapsApiKey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}
+            />
+          </InputGroup>
+        </ScrollView>
 
-      {/* Transaction Modal */}
-      <TransactionModal
-        isVisible={showTransactionPicker}
-        onClose={() => {
-          setShowTransactionPicker(false);
-          setEditingTransaction(null);
-        }}
-        title={editingTransaction ? "Edit Transaction" : "Add Transaction"}
-        initialData={editingTransaction}
-        accounts={accounts}
-        onSave={handleTransactionSave}
-      />
+        {/* Transaction Modal */}
+        <TransactionModal
+          isVisible={showTransactionPicker}
+          onClose={() => {
+            setShowTransactionPicker(false);
+            setEditingTransaction(null);
+          }}
+          title={editingTransaction ? "Edit Transaction" : "Add Transaction"}
+          initialData={editingTransaction}
+          accounts={allAccounts}
+          onSave={handleTransactionSave}
+        />
+      </View>
 
       {/* Bottom Total and Submit */}
       {
@@ -234,7 +237,7 @@ const AddView: React.FC = () => {
               width: "100%",
             }}
           >
-            <ThemedText style={styles.totalLabel}>Importo totale:</ThemedText>
+            <ThemedText style={styles.totalLabel}>Total:</ThemedText>
             <ThemedText style={styles.totalAmount}>
               {getTotalAmount().toFixed(2).replace(".", ",")}€
             </ThemedText>
@@ -257,6 +260,7 @@ export default AddView;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding:16
   },
   scrollContainer: {
     paddingHorizontal: 20,

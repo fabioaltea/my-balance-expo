@@ -1,21 +1,15 @@
 import { HttpHelper } from "./HttpHelper";
-import { ApiHelper } from "./ApiHelper";
 
 export class TransactionsApiHelper {
   /**
    * Get all transactions for a specific spreadsheet
    */
-  static async getTransactions(accessToken: string, spreadsheetId: string) {
+  static async getTransactions(spreadsheetId: string): Promise<any[]> {
     try {
       console.log("🔄 Loading transactions from API...");
 
       const response = await HttpHelper.get(
-        `/transactions?spreadsheet_id=${spreadsheetId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
+        `/transactions?spreadsheet_id=${spreadsheetId}`
       );
 
       if (response.success) {
@@ -38,7 +32,6 @@ export class TransactionsApiHelper {
    * Create a new transaction
    */
   static async createTransaction(
-    accessToken: string,
     spreadsheetId: string,
     transactionData: any
   ) {
@@ -47,12 +40,7 @@ export class TransactionsApiHelper {
 
       const response = await HttpHelper.post(
         `/transactions?spreadsheet_id=${spreadsheetId}`,
-        { ...transactionData },
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
+        { ...transactionData }
       );
 
       if (response.success) {
@@ -72,7 +60,6 @@ export class TransactionsApiHelper {
    * Update a transaction
    */
   static async updateTransaction(
-    accessToken: string,
     spreadsheetId: string,
     transactionId: string,
     updates: any
@@ -82,12 +69,7 @@ export class TransactionsApiHelper {
 
       const response = await HttpHelper.put(
         `/transactions/${transactionId}?spreadsheet_id=${spreadsheetId}`,
-        { ...updates },
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
+        { ...updates }
       );
 
       if (response.success) {
@@ -107,7 +89,6 @@ export class TransactionsApiHelper {
    * Delete a transaction
    */
   static async deleteTransaction(
-    accessToken: string,
     spreadsheetId: string,
     transactionId: string
   ) {
@@ -115,12 +96,7 @@ export class TransactionsApiHelper {
       console.log("🗑️ Deleting transaction...");
 
       const response = await HttpHelper.delete(
-        `/transactions/${transactionId}?spreadsheet_id=${spreadsheetId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
+        `/transactions/${transactionId}?spreadsheet_id=${spreadsheetId}`
       );
 
       if (response.success) {

@@ -4,8 +4,7 @@ import React from "react";
 
 export default function Add() {
   return (
-      // <AddView/>
-      <></>
+      <AddView />
   );
 }
 

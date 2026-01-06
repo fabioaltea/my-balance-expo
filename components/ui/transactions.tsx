@@ -1,10 +1,13 @@
-import { View, StyleSheet, Pressable } from "react-native";
+import { View, StyleSheet, Pressable, Animated } from "react-native";
 import { ThemedText } from "../themed-text";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { IconSymbol } from "./icon-symbol.ios";
 import * as Haptics from "expo-haptics";
-import Card from "../card";
-import React from "react";
+import React, { useRef } from "react";
+import {
+  Swipeable,
+  GestureHandlerRootView,
+} from "react-native-gesture-handler";
 
 export interface ITransaction {
   id: number;
@@ -17,12 +20,128 @@ interface ITransactionsProps {
   transactions: ITransaction[];
   onTransactionPress: (transaction: ITransaction) => void;
   onAddPress: () => void;
+  onDeletePress?: (transaction: ITransaction) => void;
 }
+
+interface TransactionRowProps {
+  transaction: ITransaction;
+  onPress: () => void;
+  onDelete: () => void;
+  borderColor: string;
+  textColor: string;
+}
+
+const TransactionRow: React.FC<TransactionRowProps> = ({
+  transaction,
+  onPress,
+  onDelete,
+  borderColor,
+  textColor,
+}) => {
+  const swipeableRef = useRef<Swipeable>(null);
+
+  const formatAmount = (amount: number, type: "income" | "expense") => {
+    const formattedAmount = amount.toFixed(2).replace(".", ",");
+    const prefix = type === "income" ? "+ " : "- ";
+    return `${prefix}${formattedAmount}€`;
+  };
+
+  const handleDelete = () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    swipeableRef.current?.close();
+    onDelete();
+  };
+
+  const renderRightActions = (
+    progress: Animated.AnimatedInterpolation<number>,
+    dragX: Animated.AnimatedInterpolation<number>
+  ) => {
+    // Show the trash only after a sufficient left swipe
+    const showThreshold = -60; // reveal after amount/content has slid left
+
+    // Container (red button) visibility: hidden until threshold is crossed
+    const containerOpacity = dragX.interpolate({
+      inputRange: [-120, showThreshold, showThreshold + 0.001, 0],
+      outputRange: [1, 1, 0, 0],
+      extrapolate: "clamp",
+    });
+
+    const scale = dragX.interpolate({
+      inputRange: [-120, showThreshold, 0],
+      outputRange: [1, 1, 0.5],
+      extrapolate: "clamp",
+    });
+
+    const opacity = dragX.interpolate({
+      // Keep hidden until the threshold is crossed
+      inputRange: [-120, -80, showThreshold, 0],
+      outputRange: [1, 1, 0, 0],
+      extrapolate: "clamp",
+    });
+
+    return (
+      <Animated.View style={[styles.deleteAction, { opacity: containerOpacity }]}>
+        <Pressable onPress={handleDelete} style={styles.deleteContent}>
+          <Animated.View
+            style={[
+              styles.deleteContent,
+              { transform: [{ scale }], opacity },
+            ]}
+          >
+            <IconSymbol name="trash" size={22} color="#fff" />
+          </Animated.View>
+        </Pressable>
+      </Animated.View>
+    );
+  };
+
+  return (
+    <Swipeable
+      ref={swipeableRef}
+      renderRightActions={renderRightActions}
+      rightThreshold={40}
+      overshootRight={false}
+      onSwipeableOpen={(direction) => {
+        if (direction === "right") {
+          handleDelete();
+        }
+      }}
+    >
+      <Pressable
+        onPress={onPress}
+        style={[styles.transactionRow, { borderBottomColor: borderColor }]}
+      >
+        <View style={styles.transactionContent}>
+          <ThemedText style={styles.accountName}>
+            {transaction.accountName}
+          </ThemedText>
+          <ThemedText
+            style={[
+              styles.amount,
+              {
+                color: transaction.type === "income" ? "#22c55e" : "#ef4444",
+              },
+            ]}
+          >
+            {formatAmount(transaction.amount, transaction.type)}
+          </ThemedText>
+        </View>
+        {/* <IconSymbol
+          name="chevron.right"
+          size={16}
+          color={textColor}
+          style={styles.chevron}
+        /> */}
+      </Pressable>
+    </Swipeable>
+  );
+};
 
 const Transactions: React.FC<ITransactionsProps> = ({
   transactions,
   onTransactionPress,
   onAddPress,
+  onDeletePress,
 }) => {
   // Theme colors
   const textColor = useThemeColor({ light: "#000", dark: "#fff" }, "text");
@@ -30,12 +149,6 @@ const Transactions: React.FC<ITransactionsProps> = ({
     { light: "#e0e0e0", dark: "#333" },
     "tabIconDefault"
   );
-
-  const formatAmount = (amount: number, type: "income" | "expense") => {
-    const formattedAmount = amount.toFixed(2).replace(".", ",");
-    const prefix = type === "income" ? "+ " : "- ";
-    return `${prefix}${formattedAmount}€`;
-  };
 
   const handleTransactionPress = (transaction: ITransaction) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -47,57 +160,36 @@ const Transactions: React.FC<ITransactionsProps> = ({
     onAddPress();
   };
 
+  const handleDelete = (transaction: ITransaction) => {
+    onDeletePress?.(transaction);
+  };
+
   return (
-    
-
-    <View style={styles.container}>
-      {/* <ThemedText type="defaultSemiBold" style={styles.title}>
-        Transazioni
-      </ThemedText> */}
-
+    <GestureHandlerRootView style={styles.container}>
       {/* Transaction List */}
       {transactions.map((transaction) => (
-        <Pressable
+        <TransactionRow
           key={transaction.id}
+          transaction={transaction}
           onPress={() => handleTransactionPress(transaction)}
-          style={[styles.transactionRow, { borderBottomColor: borderColor }]}
-        >
-          <View style={styles.transactionContent}>
-            <ThemedText style={styles.accountName}>
-              {transaction.accountName}
-            </ThemedText>
-            <ThemedText
-              style={[
-                styles.amount,
-                {
-                  color: transaction.type === "income" ? "#22c55e" : "#ef4444",
-                },
-              ]}
-            >
-              {formatAmount(transaction.amount, transaction.type)}
-            </ThemedText>
-          </View>
-          <IconSymbol
-            name="chevron.right"
-            size={16}
-            color={textColor}
-            style={styles.chevron}
-          />
-        </Pressable>
+          onDelete={() => handleDelete(transaction)}
+          borderColor={borderColor}
+          textColor={textColor}
+        />
       ))}
 
       {/* Add Button */}
       <Pressable onPress={handleAddPress} style={styles.addButton}>
         <IconSymbol name="plus" size={24} color="#fff" />
       </Pressable>
-    </View>
+    </GestureHandlerRootView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     marginVertical: 0,
-    paddingVertical:5
+    paddingVertical: 5,
   },
   title: {
     fontSize: 18,
@@ -109,6 +201,8 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 0,
     borderBottomWidth: StyleSheet.hairlineWidth,
+    backgroundColor: "transparent",
+    marginBottom: 8,
   },
   transactionContent: {
     flex: 1,
@@ -132,6 +226,20 @@ const styles = StyleSheet.create({
     backgroundColor: "#2F4F3F",
     borderRadius: 25,
     height: 50,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 5,
+  },
+  deleteAction: {
+    backgroundColor: "#ef4444ff",
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 20,
+    marginVertical: 2,
+    width:70,
+    height: 40,
+  },
+  deleteContent: {
     justifyContent: "center",
     alignItems: "center",
   },

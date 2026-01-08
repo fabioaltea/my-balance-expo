@@ -3,7 +3,7 @@ import React from "react";
 import { ThemedText } from "../themed-text";
 import ContextMenu from "./context-menu";
 import { IAccount } from "@/models/Account";
-import { Account } from "@/hooks/useMyBalanceData";
+import type { Account } from "@/state";
 import { Icon } from "expo-router/build/native-tabs/common/elements";
               import { IconSymbol } from "@/components/ui/icon-symbol";
 

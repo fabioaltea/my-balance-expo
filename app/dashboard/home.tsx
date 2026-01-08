@@ -5,31 +5,39 @@ import HomeView from "@/views/home-view";
 import React, { useMemo, useState } from "react";
 import GlassButton from "@/components/ui/glass-button";
 import AccountPicker from "@/components/ui/account-picker";
-import { useAuthContext, useMyBalanceData } from "@/state";
+import { useDataContext } from "@/state";
 
 export default function Home() {
   const handleButtonPress = () => {
     router.push("/add");
   };
-  const { selectedSpreadsheetId } = useAuthContext();
 
-  const { accounts } = useMyBalanceData(selectedSpreadsheetId);
+  // Get data from centralized context
+  const {
+    accounts,
+    movements,
+    isLoading,
+    reloadData,
+    getTotalIncome,
+    getTotalExpense,
+  } = useDataContext();
+
   const availableAccounts = useMemo(() => {
-      const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
-      return [
-        {
-          accountId: "all",
-          name: "All",
-          balance: totalBalance,
-          color: "#2F4F3F",
-          textColor: "#FFFFFF",
-        },
-        ...accounts,
-      ];
-    }, [accounts]);
+    const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
+    const sortedAccounts = [...accounts].sort((a, b) => b.balance - a.balance);
+    return [
+      {
+        accountId: "all",
+        name: "All",
+        balance: totalBalance,
+        color: "#2F4F3F",
+        textColor: "#FFFFFF",
+      },
+      ...sortedAccounts,
+    ];
+  }, [accounts]);
 
   const [selectedAccount, setSelectedAccount] = useState<string>("All");
-  
 
   return (
     <ScreenView>
@@ -45,6 +53,11 @@ export default function Home() {
         accounts={availableAccounts}
         selectedAccount={selectedAccount}
         setSelectedAccount={setSelectedAccount}
+        movements={movements}
+        isLoading={isLoading}
+        reloadData={reloadData}
+        getTotalIncome={getTotalIncome}
+        getTotalExpense={getTotalExpense}
       />
     </ScreenView>
   );

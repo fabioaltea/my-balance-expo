@@ -31,7 +31,7 @@ const Pager: React.FC<IPagerProps> = ({
   return (
     <PagerView
       ref={pagerRef}
-      style={[styles.container, { height: 150 }]}
+      style={[styles.container, { height: 120 }]}
       initialPage={selectedPage || 0}
       onPageSelected={handlePageSelected}
     >

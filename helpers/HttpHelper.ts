@@ -26,6 +26,8 @@ export class HttpHelper {
   ): Promise<{ accessToken: string; refreshToken: string } | null> {
     try {
       console.log("🔄 Calling refresh token API...");
+      console.log("🔄 Endpoint:", `${this.endpointUri}/auth/refresh`);
+      console.log("🔄 Device ID:", deviceId);
 
       const response = await fetch(`${this.endpointUri}/auth/refresh`, {
         method: "POST",
@@ -35,10 +37,16 @@ export class HttpHelper {
         body: JSON.stringify({ refreshToken, deviceId }),
       });
 
+      console.log("🔄 Response status:", response.status, response.statusText);
+
       const result = await response.json();
+      console.log("🔄 Response body:", JSON.stringify(result, null, 2));
 
       if (!response.ok || !result.success) {
-        console.error("❌ Token refresh API failed:", result.error);
+        console.error("❌ Token refresh API failed:");
+        console.error("   Status:", response.status);
+        console.error("   Error:", result.error);
+        console.error("   Code:", result.code);
         return null;
       }
 
@@ -50,6 +58,7 @@ export class HttpHelper {
         };
       }
 
+      console.error("❌ Response missing tokens");
       return null;
     } catch (error) {
       console.error("❌ Token refresh API error:", error);

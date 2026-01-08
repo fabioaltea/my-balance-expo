@@ -111,4 +111,62 @@ export class TransactionsApiHelper {
       return false;
     }
   }
+
+  /**
+   * Update an existing movement (new RESTful API)
+   */
+  static async updateMovement(
+    spreadsheetId: string,
+    movementId: string,
+    movementData: any
+  ) {
+    try {
+      console.log("✏️ Updating movement...", movementId);
+
+      const response = await HttpHelper.put(
+        `/movements/${movementId}?spreadsheet_id=${spreadsheetId}`,
+        { ...movementData }
+      );
+
+      if (response.success) {
+        console.log("✅ Movement updated successfully");
+        return response.data;
+      } else {
+        console.error("❌ Failed to update movement:", response.error);
+        return null;
+      }
+    } catch (error) {
+      console.error("❌ Error updating movement:", error);
+      return null;
+    }
+  }
+
+  /**
+   * Update an existing movement (legacy endpoint - same as Ionic)
+   * Uses POST /update which does raw Google Sheets update
+   */
+  static async updateMovementLegacy(
+    spreadsheetId: string,
+    movementData: any
+  ) {
+    try {
+      console.log("✏️ Updating movement (legacy)...", movementData);
+
+      const response = await HttpHelper.post(
+        `/update?spreadsheetId=${encodeURIComponent(spreadsheetId)}`,
+        movementData
+      );
+
+      if (response.success) {
+        console.log("✅ Movement updated successfully (legacy)");
+        return response.data;
+      } else {
+        console.error("❌ Failed to update movement (legacy):", response.error);
+        return null;
+      }
+    } catch (error) {
+      console.error("❌ Error updating movement (legacy):", error);
+      return null;
+    }
+  }
 }

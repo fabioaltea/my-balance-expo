@@ -12,6 +12,7 @@ import { useColorScheme } from "@/hooks/use-color-scheme";
 import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { AuthProvider, useAuthContext } from "@/state/AuthProvider";
+import { DataProvider } from "@/state/DataProvider";
 import LoginScreen from "@/components/LoginScreen";
 
 export const unstable_settings = {
@@ -94,7 +95,11 @@ const AppRouter: React.FC = () => {
   }
 
   console.log("✅ Showing AuthenticatedApp");
-  return <AuthenticatedApp />;
+  return (
+    <DataProvider>
+      <AuthenticatedApp />
+    </DataProvider>
+  );
 };
 
 const styles = StyleSheet.create({

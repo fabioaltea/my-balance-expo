@@ -3,8 +3,8 @@
 // Authentication
 export { AuthProvider, useAuthContext } from "./AuthProvider";
 
-// Data management (NEW - simplified architecture)
-export { useMyBalanceData } from "../hooks/useMyBalanceData";
+// Data management - Centralized context
+export { DataProvider, useDataContext } from "./DataProvider";
 export type { Transaction, Movement, Account, Category } from "../hooks/useMyBalanceData";
 
 // Date utilities

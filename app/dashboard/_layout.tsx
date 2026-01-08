@@ -15,6 +15,7 @@ import {
 } from "expo-router/unstable-native-tabs";
 import { Platform } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -52,11 +53,11 @@ export default function TabLayout() {
         </NativeTabs.Trigger>
 
         <NativeTabs.Trigger name="settings">
-          <Label>Settings</Label>
+          <Label>Fabio</Label>
           {Platform.select({
-            ios: <Icon sf="list.bullet" />,
+            ios: <Icon sf="person.fill" />,
             android: (
-              <Icon src={<VectorIcon family={MaterialIcons} name="list" />} />
+              <Icon src={<VectorIcon family={MaterialIcons} name="people" />} />
             ),
           })}
         </NativeTabs.Trigger>

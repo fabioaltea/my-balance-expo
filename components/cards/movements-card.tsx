@@ -5,6 +5,8 @@ import { IconSymbol } from "../ui/icon-symbol.ios";
 import Card from "../card";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { formatDateForDisplay, compareDates } from "@/utils/dateUtils";
+import { router } from "expo-router";
+import * as Haptics from "expo-haptics";
 import type { Movement } from "@/state";
 
 // Helper function to get icon based on category/description
@@ -141,6 +143,20 @@ interface MovementsCardProps {
 const MovementsCard: React.FC<MovementsCardProps> = ({ movements }) => {
   const [recentMovements, setRecentMovements] = useState(sortMovements(movements));
 
+  const handleMovementPress = (movement: Movement) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push({
+      pathname: "/add",
+      params: {
+        movementId: movement.id,
+        description: movement.description,
+        category: movement.category,
+        date: movement.date,
+        transactions: JSON.stringify(movement.transactions),
+      },
+    });
+  };
+
   useEffect(() => {
     console.log("💳 MovementsCard: Updating with", movements?.length, "movements");
     const sorted = sortMovements(movements);
@@ -205,6 +221,7 @@ const MovementsCard: React.FC<MovementsCardProps> = ({ movements }) => {
         return (
           <TouchableOpacity
             key={movement.id}
+            onPress={() => handleMovementPress(movement)}
             style={[
               dynamicStyles.movementItem,
               index === recentMovements.length - 1 && styles.lastMovementItem,
@@ -234,7 +251,7 @@ const MovementsCard: React.FC<MovementsCardProps> = ({ movements }) => {
               ]}
             >
               {amount > 0 ? "+" : ""}
-              {amount.toFixed(2)}€
+              {amount.toFixed(2).replace(".", ",")}€
             </ThemedText>
           </TouchableOpacity>
         );

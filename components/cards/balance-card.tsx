@@ -20,7 +20,7 @@ const BalanceCard: React.FC<IBalanceCardProps> = ({ account }) => {
     >
       <View style={styles.balanceContent}>
         <Text style={styles.balanceAmount}>
-          {isBalanceVisible ? `€ ${account?.balance ?? ""}` : "€ ****,**"}
+          {isBalanceVisible ? `€ ${account?.balance.toFixed(2).replace(".", ",") ?? ""}` : "€ ****,**"}
         </Text>
         <TouchableOpacity
           onPress={() => setIsBalanceVisible(!isBalanceVisible)}

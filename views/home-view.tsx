@@ -1,6 +1,8 @@
 import BalanceCard from "@/components/cards/balance-card";
 import MovementsCard from "@/components/cards/movements-card";
 import FinancialSummaryCard from "@/components/cards/financial-summary-card";
+import FinancialSummaryCardSkeleton from "@/components/cards/financial-summary-card-skeleton";
+import MovementsCardSkeleton from "@/components/cards/movements-card-skeleton";
 import PeriodPicker from "@/components/ui/period-chips-picker";
 import {
   View,
@@ -11,29 +13,31 @@ import {
 } from "react-native";
 import React, { useState, useMemo } from "react";
 import Pager from "@/components/ui/pager";
-import { useMyBalanceData, useAuthContext, DATE_RANGES } from "@/state";
+import { DATE_RANGES } from "@/state";
 import { isDateInRange } from "@/utils/dateUtils";
-import type { Account, IDateRange } from "@/state";
-import { BlurView } from "expo-blur";
+import type { Account, Movement, IDateRange } from "@/state";
 
 interface HomeViewProps {
   accounts: Account[];
   selectedAccount: string;
   setSelectedAccount: (account: string) => void;
+  movements: Movement[];
+  isLoading: boolean;
+  reloadData: () => Promise<void>;
+  getTotalIncome: (filteredMovements: Movement[]) => number;
+  getTotalExpense: (filteredMovements: Movement[]) => number;
 }
 
-const HomeView: React.FC<HomeViewProps> = ({accounts, selectedAccount, setSelectedAccount}) => {
-  // Get spreadsheetId from auth context
-  const { selectedSpreadsheetId } = useAuthContext();
-
-  // Load all data using new unified hook
-  const {
-    movements,
-    isLoading,
-    reloadData,
-    getTotalIncome,
-    getTotalExpense,
-  } = useMyBalanceData(selectedSpreadsheetId);
+const HomeView: React.FC<HomeViewProps> = ({
+  accounts,
+  selectedAccount,
+  setSelectedAccount,
+  movements,
+  isLoading,
+  reloadData,
+  getTotalIncome,
+  getTotalExpense,
+}) => {
 
   // Local state for filters
   const [dateRange, setDateRange] = useState<IDateRange>(DATE_RANGES.THIS_MONTH);
@@ -141,11 +145,20 @@ const HomeView: React.FC<HomeViewProps> = ({accounts, selectedAccount, setSelect
             movementFilter={movementFilter}
             setMovementFilter={setMovementFilter}
           />
-          <FinancialSummaryCard
-            income={getTotalIncome(filteredMovements)}
-            expense={getTotalExpense(filteredMovements)}
-          />
-          <MovementsCard movements={filteredMovements} />
+          {isLoading ? (
+            <>
+              <FinancialSummaryCardSkeleton />
+              <MovementsCardSkeleton itemCount={5} />
+            </>
+          ) : (
+            <>
+              <FinancialSummaryCard
+                income={getTotalIncome(filteredMovements)}
+                expense={getTotalExpense(filteredMovements)}
+              />
+              <MovementsCard movements={filteredMovements} />
+            </>
+          )}
         </ScrollView>
     </View>
   );

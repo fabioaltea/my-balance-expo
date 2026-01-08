@@ -1,4 +1,12 @@
-import { View, StyleSheet, Pressable, Animated } from "react-native";
+import {
+  View,
+  StyleSheet,
+  Pressable,
+  Animated,
+  LayoutAnimation,
+  Platform,
+  UIManager,
+} from "react-native";
 import { ThemedText } from "../themed-text";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { IconSymbol } from "./icon-symbol.ios";
@@ -14,6 +22,9 @@ export interface ITransaction {
   accountName: string;
   amount: number;
   type: "income" | "expense";
+  // Original IDs from backend (for update operations)
+  transactionID?: string;
+  movementID?: string;
 }
 
 interface ITransactionsProps {
@@ -39,6 +50,12 @@ const TransactionRow: React.FC<TransactionRowProps> = ({
   textColor,
 }) => {
   const swipeableRef = useRef<Swipeable>(null);
+  const translateX = useRef(new Animated.Value(0)).current;
+
+  // Enable native LayoutAnimation on Android
+  if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+    UIManager.setLayoutAnimationEnabledExperimental(true);
+  }
 
   const formatAmount = (amount: number, type: "income" | "expense") => {
     const formattedAmount = amount.toFixed(2).replace(".", ",");
@@ -48,8 +65,16 @@ const TransactionRow: React.FC<TransactionRowProps> = ({
 
   const handleDelete = () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-    swipeableRef.current?.close();
-    onDelete();
+    // Complete the left scroll, then collapse upwards and remove
+    // Finish left swipe natively (transform) then collapse using LayoutAnimation
+    Animated.timing(translateX, {
+      toValue: -240,
+      duration: 220,
+      useNativeDriver: true,
+    }).start(() => {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+      onDelete();
+    });
   };
 
   const renderRightActions = (
@@ -83,10 +108,7 @@ const TransactionRow: React.FC<TransactionRowProps> = ({
       <Animated.View style={[styles.deleteAction, { opacity: containerOpacity }]}>
         <Pressable onPress={handleDelete} style={styles.deleteContent}>
           <Animated.View
-            style={[
-              styles.deleteContent,
-              { transform: [{ scale }], opacity },
-            ]}
+            style={[styles.deleteContent, { transform: [{ scale }], opacity }]}
           >
             <IconSymbol name="trash" size={22} color="#fff" />
           </Animated.View>
@@ -107,32 +129,34 @@ const TransactionRow: React.FC<TransactionRowProps> = ({
         }
       }}
     >
-      <Pressable
-        onPress={onPress}
-        style={[styles.transactionRow, { borderBottomColor: borderColor }]}
-      >
-        <View style={styles.transactionContent}>
-          <ThemedText style={styles.accountName}>
-            {transaction.accountName}
-          </ThemedText>
-          <ThemedText
-            style={[
-              styles.amount,
-              {
-                color: transaction.type === "income" ? "#22c55e" : "#ef4444",
-              },
-            ]}
-          >
-            {formatAmount(transaction.amount, transaction.type)}
-          </ThemedText>
-        </View>
-        {/* <IconSymbol
-          name="chevron.right"
-          size={16}
-          color={textColor}
-          style={styles.chevron}
-        /> */}
-      </Pressable>
+      <Animated.View style={[styles.animatedContainer, { transform: [{ translateX }] }]}>
+        <Pressable
+          onPress={onPress}
+          style={[styles.transactionRow, { borderBottomColor: borderColor }]}
+        >
+          <View style={styles.transactionContent}>
+            <ThemedText style={styles.accountName}>
+              {transaction.accountName}
+            </ThemedText>
+            <ThemedText
+              style={[
+                styles.amount,
+                {
+                  color: transaction.type === "income" ? "#22c55e" : "#ef4444",
+                },
+              ]}
+            >
+              {formatAmount(transaction.amount, transaction.type)}
+            </ThemedText>
+          </View>
+          {/* <IconSymbol
+            name="chevron.right"
+            size={16}
+            color={textColor}
+            style={styles.chevron}
+          /> */}
+        </Pressable>
+      </Animated.View>
     </Swipeable>
   );
 };
@@ -236,13 +260,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 20,
     marginVertical: 2,
-    width:70,
+    width: 70,
     height: 40,
   },
   deleteContent: {
     justifyContent: "center",
     alignItems: "center",
   },
+  animatedContainer: {
+    overflow: "hidden",
+  },
+ 
 });
 
 export default Transactions;

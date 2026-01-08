@@ -82,7 +82,6 @@ const ListPicker: React.FC<IListPickerProps> = ({
           >
             {getDisplayValue()}
           </ThemedText>
-          
         </View>
       </Pressable>
 
@@ -101,6 +100,11 @@ const ListPicker: React.FC<IListPickerProps> = ({
             style={styles.picker}
             itemStyle={styles.pickerItem}
           >
+            <Picker.Item
+              key={""}
+              label={""}
+              value={"" }
+            />
             {items.map((item) => (
               <Picker.Item
                 key={item.value}

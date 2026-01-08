@@ -7,7 +7,7 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ThemedText } from "@/components/themed-text";
 import ChipButton from "@/components/ui/chip-button";
 import { IconSymbol } from "@/components/ui/icon-symbol.ios";
@@ -27,17 +27,31 @@ import TransactionModal, {
 } from "@/components/ui/transaction-modal";
 import ModalPanel from "@/components/ui/modal-panel";
 import ScreenView from "@/layout/screen-view";
-import { useAuthContext, useMyBalanceData } from "@/state";
+import { useAuthContext, useDataContext } from "@/state";
 import { TransactionsApiHelper } from "@/helpers/TransactionsApiHelper";
-import { formatDateToDDMMYYYY } from "@/utils/dateUtils";
+import { formatDateToDDMMYYYY, parseDateFromDDMMYYYY } from "@/utils/dateUtils";
 import { useRouter } from "expo-router";
 
 type ModalStatus = "loading" | "success" | "error";
 
-const AddView: React.FC = () => {
+interface AddViewProps {
+  editingMovementId?: string;
+  initialDescription?: string;
+  initialCategory?: string;
+  initialDate?: string;
+  initialTransactions?: string;
+}
+
+const AddView: React.FC<AddViewProps> = ({
+  editingMovementId,
+  initialDescription,
+  initialCategory,
+  initialDate,
+  initialTransactions,
+}) => {
   const router = useRouter();
   const { selectedSpreadsheetId } = useAuthContext();
-  const { accounts, categories, reloadData } = useMyBalanceData(selectedSpreadsheetId);
+  const { accounts, categories, reloadData } = useDataContext();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [modalStatus, setModalStatus] = useState<ModalStatus>("loading");
@@ -51,6 +65,50 @@ const AddView: React.FC = () => {
   const [showTransactionPicker, setShowTransactionPicker] = useState(false);
   const [editingTransaction, setEditingTransaction] =
     useState<ITransaction | null>(null);
+
+  const isEditing = !!editingMovementId;
+
+  // Pre-populate form when editing an existing movement
+  useEffect(() => {
+    if (initialDescription) {
+      setDescription(initialDescription);
+    }
+    if (initialCategory) {
+      setSelectedCategory(initialCategory);
+    }
+    if (initialDate) {
+      const parsedDate = parseDateFromDDMMYYYY(initialDate);
+      if (parsedDate) {
+        setSelectedDate(parsedDate);
+      }
+    }
+    if (initialTransactions) {
+      try {
+        const parsedTransactions = JSON.parse(initialTransactions);
+        const mappedTransactions: ITransaction[] = parsedTransactions.map(
+          (t: any, index: number) => {
+            // Parse amount from backend format (string with comma decimal, e.g. "10,50" or "-10,50")
+            const amountStr = String(t.amount || "0").replace(",", ".");
+            const amountNum = parseFloat(amountStr);
+            // Convert backend type "in"/"out" to frontend type "income"/"expense"
+            const frontendType: "income" | "expense" = t.type === "in" ? "income" : "expense";
+            return {
+              id: index + 1,
+              accountName: t.account,
+              amount: Math.abs(amountNum),
+              type: frontendType,
+              // Preserve original IDs for update (same as Ionic)
+              transactionID: t.transactionId || t.transactionID,
+              movementID: t.movementId || t.movementID,
+            };
+          }
+        );
+        setTransactions(mappedTransactions);
+      } catch (e) {
+        console.error("Error parsing transactions:", e);
+      }
+    }
+  }, [initialDescription, initialCategory, initialDate, initialTransactions]);
 
   // Theme colors
   const backgroundColor = useThemeColor(
@@ -89,6 +147,11 @@ const AddView: React.FC = () => {
   const handleAddTransaction = () => {
     setEditingTransaction(null);
     setShowTransactionPicker(true);
+  };
+
+  const handleDeleteTransaction = (transaction: ITransaction) => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    setTransactions(transactions.filter((t) => t.id !== transaction.id));
   };
 
   const handleTransactionSave = (data: ITransactionData) => {
@@ -178,24 +241,35 @@ const AddView: React.FC = () => {
 
       // Prepara il movimento con l'array di transazioni (formato IMovementRequest)
       const movementData = {
+        movementId: isEditing && editingMovementId ? editingMovementId : undefined,
         description: description.trim(),
         category: selectedCategory,
         date: formattedDate,
         location: selectedLocation.address || "",
         transactions: validTransactions.map((transaction) => ({
           amount: transaction.type === "income"
-            ? String(transaction.amount)
-            : String(-transaction.amount),
+            ? String(transaction.amount).replace(".", ",")
+            : String(-transaction.amount).replace(".", ","),
           account: transaction.accountName,
           type: transaction.type === "income" ? "in" : "out",
         })),
       };
 
-      // Invia una singola richiesta con tutte le transazioni
-      const result = await TransactionsApiHelper.createTransaction(
-        selectedSpreadsheetId,
-        movementData
-      );
+      let result;
+      if (isEditing && editingMovementId) {
+        // Update existing movement
+        result = await TransactionsApiHelper.updateMovement(
+          selectedSpreadsheetId,
+          editingMovementId,
+          movementData
+        );
+      } else {
+        // Create new movement
+        result = await TransactionsApiHelper.createTransaction(
+          selectedSpreadsheetId,
+          movementData
+        );
+      }
 
       const allSuccessful = result !== null;
 
@@ -268,7 +342,7 @@ const AddView: React.FC = () => {
     <ScreenView>
       <View style={[styles.container, dynamicStyles.container]}>
         <ThemedText type="title" style={styles.title}>
-          Inserisci Movimento
+          {isEditing ? "Edit Movement" : "New Movement"}
         </ThemedText>
         <ScrollView showsVerticalScrollIndicator={false}>
           <InputGroup>
@@ -299,6 +373,7 @@ const AddView: React.FC = () => {
               transactions={transactions}
               onTransactionPress={handleTransactionPress}
               onAddPress={handleAddTransaction}
+              onDeletePress={handleDeleteTransaction}
             />
           </InputGroup>
 
@@ -333,14 +408,15 @@ const AddView: React.FC = () => {
           onConfirm={handleModalClose}
           title={
             modalStatus === "loading"
-              ? "Salvataggio..."
+              ? "Saving"
               : modalStatus === "success"
-              ? "Completato!"
-              : "Errore"
+              ? "Completed"
+              : "Error"
           }
           showCancelButton={modalStatus !== "loading"}
-          confirmText={modalStatus === "success" ? "OK" : "Riprova"}
-          cancelText="Chiudi"
+          showConfirmButton={modalStatus !== "loading"}
+          confirmText={modalStatus === "success" ? "OK" : "Retry"}
+          cancelText="Close"
           maxHeight={250}
         >
           <View style={styles.statusModalContent}>
@@ -348,7 +424,7 @@ const AddView: React.FC = () => {
               <>
                 <ActivityIndicator size="large" color="#2F4F3F" />
                 <ThemedText style={styles.statusText}>
-                  Salvataggio del movimento in corso...
+                  {isEditing ? "Updating movement..." : "Saving movement..."}
                 </ThemedText>
               </>
             )}
@@ -360,7 +436,7 @@ const AddView: React.FC = () => {
                   color="#22c55e"
                 />
                 <ThemedText style={styles.statusText}>
-                  Movimento inserito correttamente!
+                  {isEditing ? "Movement updated successfully!" : "Movement saved successfully!"}
                 </ThemedText>
               </>
             )}
@@ -372,7 +448,7 @@ const AddView: React.FC = () => {
                   color="#ef4444"
                 />
                 <ThemedText style={styles.statusText}>
-                  Si è verificato un errore durante il salvataggio.
+                  An error occurred while saving.
                 </ThemedText>
               </>
             )}
@@ -412,7 +488,7 @@ const AddView: React.FC = () => {
               styles.submitText,
               isSubmitting && styles.submitTextDisabled,
             ]}>
-              {isSubmitting ? "Salvataggio..." : "Inserisci"}
+              {isSubmitting ? "Saving" : isEditing ? "Update" : "Insert"}
             </ThemedText>
           </Pressable>
         </View>

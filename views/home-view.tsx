@@ -37,11 +37,16 @@ const HomeView: React.FC<HomeViewProps> = ({
   getTotalExpense,
 }) => {
   // Local state for date range
-  const [dateRange, setDateRange] = useState<IDateRange>(DATE_RANGES.THIS_MONTH);
-  const [isPeriodTransitioning, setIsPeriodTransitioning] = useState<boolean>(false);
+  const [dateRange, setDateRange] = useState<IDateRange>(
+    DATE_RANGES.THIS_MONTH
+  );
+  const [isPeriodTransitioning, setIsPeriodTransitioning] =
+    useState<boolean>(false);
 
   // Handle date range change with transitioning state
-  const handleDateRangeChange = (range: IDateRange & { isTransitioning?: boolean }) => {
+  const handleDateRangeChange = (
+    range: IDateRange & { isTransitioning?: boolean }
+  ) => {
     setDateRange(range);
     if (range.isTransitioning) {
       setIsPeriodTransitioning(true);
@@ -55,10 +60,10 @@ const HomeView: React.FC<HomeViewProps> = ({
     }
   }, [isLoading, isPeriodTransitioning]);
 
-  
-
   // Calculate current selected account index
-  const selectedAccountIndex = accounts.findIndex((a) => a.name === selectedAccount);
+  const selectedAccountIndex = accounts.findIndex(
+    (a) => a.name === selectedAccount
+  );
 
   // Debug logging
   React.useEffect(() => {
@@ -74,16 +79,20 @@ const HomeView: React.FC<HomeViewProps> = ({
   // Note: Account filtering happens at transaction level, not movement level
   // since a movement can contain transactions from multiple accounts
   const filteredMovements = useMemo(() => {
-    return movements
-      .filter((m) => {
-        const dateMatches = isDateInRange(m.date, dateRange.startDate, dateRange.endDate);
+    return movements.filter((m) => {
+      const dateMatches = isDateInRange(
+        m.date,
+        dateRange.startDate,
+        dateRange.endDate
+      );
 
-        // If a specific account is selected, only show movements that have at least one transaction for that account
-        const accountMatches = selectedAccount === "All" ||
-          m.transactions.some(t => t.account === selectedAccount);
+      // If a specific account is selected, only show movements that have at least one transaction for that account
+      const accountMatches =
+        selectedAccount === "All" ||
+        m.transactions.some((t) => t.account === selectedAccount);
 
-        return dateMatches && accountMatches;
-      });
+      return dateMatches && accountMatches;
+    });
   }, [movements, selectedAccount, dateRange]);
 
   // Handle account switch
@@ -138,32 +147,32 @@ const HomeView: React.FC<HomeViewProps> = ({
         </View>
       )}
       {/* <BlurView intensity={100} tint="default" style={styles.blurOverlay} /> */}
-        <ScrollView
-          contentContainerStyle={styles.scrollContainer}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={isLoading}
-              onRefresh={onRefresh}
-              tintColor="#2F4F3F"
-              colors={["#2F4F3F"]}
-            />
-          }
-        >
-          <PeriodPicker
-            setDateRange={handleDateRangeChange}
-            isLoading={isLoading}
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isLoading}
+            onRefresh={onRefresh}
+            tintColor="#2F4F3F"
+            colors={["#2F4F3F"]}
           />
-          <FinancialSummaryCard
-            income={getTotalIncome(filteredMovements)}
-            expense={getTotalExpense(filteredMovements)}
-            isTransitioning={isPeriodTransitioning}
-          />
-          <MovementsCard 
-            movements={filteredMovements} 
-            isTransitioning={isPeriodTransitioning}
-          />
-        </ScrollView>
+        }
+      >
+        <PeriodPicker
+          setDateRange={handleDateRangeChange}
+          isLoading={isLoading}
+        />
+        <FinancialSummaryCard
+          income={getTotalIncome(filteredMovements)}
+          expense={getTotalExpense(filteredMovements)}
+          isTransitioning={isPeriodTransitioning}
+        />
+        <MovementsCard
+          movements={filteredMovements}
+          isTransitioning={isPeriodTransitioning}
+        />
+      </ScrollView>
     </View>
   );
 };
@@ -177,5 +186,5 @@ const styles = StyleSheet.create({
   scrollContainer: {
     paddingHorizontal: 16,
     flexGrow: 1,
-  }
+  },
 });

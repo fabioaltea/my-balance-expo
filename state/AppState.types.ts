@@ -18,7 +18,7 @@ export interface Category {
 
 export interface IDateRange {
   startDate: string; // Format: dd-MM-yyyy
-  endDate: string;   // Format: dd-MM-yyyy
+  endDate: string; // Format: dd-MM-yyyy
   label: string;
   isTransitioning?: boolean; // Flag to indicate data is reloading
 }

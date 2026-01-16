@@ -27,11 +27,21 @@ const FinancialSummaryCardSkeleton: React.FC = () => {
         <View style={styles.detailRow}>
           <View style={styles.detailLabel}>
             <Skeleton width={15} height={15} borderRadius={6} />
-            <Skeleton width={70} height={18} borderRadius={4} style={{ marginLeft: 8 }} />
+            <Skeleton
+              width={70}
+              height={18}
+              borderRadius={4}
+              style={{ marginLeft: 8 }}
+            />
           </View>
           <View style={styles.detailValue}>
             <Skeleton width={90} height={18} borderRadius={4} />
-            <Skeleton width={40} height={12} borderRadius={4} style={{ marginTop: 2 }} />
+            <Skeleton
+              width={40}
+              height={12}
+              borderRadius={4}
+              style={{ marginTop: 2 }}
+            />
           </View>
         </View>
 
@@ -39,11 +49,21 @@ const FinancialSummaryCardSkeleton: React.FC = () => {
         <View style={styles.detailRow}>
           <View style={styles.detailLabel}>
             <Skeleton width={15} height={15} borderRadius={6} />
-            <Skeleton width={80} height={18} borderRadius={4} style={{ marginLeft: 8 }} />
+            <Skeleton
+              width={80}
+              height={18}
+              borderRadius={4}
+              style={{ marginLeft: 8 }}
+            />
           </View>
           <View style={styles.detailValue}>
             <Skeleton width={90} height={18} borderRadius={4} />
-            <Skeleton width={40} height={12} borderRadius={4} style={{ marginTop: 2 }} />
+            <Skeleton
+              width={40}
+              height={12}
+              borderRadius={4}
+              style={{ marginTop: 2 }}
+            />
           </View>
         </View>
       </View>

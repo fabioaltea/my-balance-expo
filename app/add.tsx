@@ -3,8 +3,11 @@ import React from "react";
 import { useLocalSearchParams } from "expo-router";
 
 export default function Add() {
-  const { movementId } = useLocalSearchParams<{ movementId?: string }>();
+  const { movementId, recurrenceId } = useLocalSearchParams<{ 
+    movementId?: string;
+    recurrenceId?: string;
+  }>();
 
-  return <AddView editingMovementId={movementId} />;
+  return <AddView editingMovementId={movementId} recurrenceId={recurrenceId} />;
 }
 

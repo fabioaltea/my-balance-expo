@@ -1,9 +1,5 @@
 import React from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-} from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import Card from "../card";
 import Skeleton from "../ui/skeleton";
 import { useThemeColor } from "@/hooks/use-theme-color";
@@ -46,7 +42,8 @@ const FinancialSummaryCard: React.FC<Props> = ({
 
   // Show skeleton if loading AND no data yet (both income and expense are 0)
   // OR if period is transitioning (changing month/year)
-  const showSkeleton = (isLoading && income === 0 && expense === 0) || isTransitioning;
+  const showSkeleton =
+    (isLoading && income === 0 && expense === 0) || isTransitioning;
 
   if (showSkeleton) {
     return (
@@ -62,7 +59,12 @@ const FinancialSummaryCard: React.FC<Props> = ({
           <View style={styles.detailRow}>
             <View style={styles.detailLabel}>
               <Skeleton width={15} height={15} borderRadius={6} />
-              <Skeleton width={70} height={18} borderRadius={4} style={{ marginLeft: 8 }} />
+              <Skeleton
+                width={70}
+                height={18}
+                borderRadius={4}
+                style={{ marginLeft: 8 }}
+              />
             </View>
             <View style={styles.detailValue}>
               <Skeleton width={90} height={18} borderRadius={4} />
@@ -71,7 +73,12 @@ const FinancialSummaryCard: React.FC<Props> = ({
           <View style={styles.detailRow}>
             <View style={styles.detailLabel}>
               <Skeleton width={15} height={15} borderRadius={6} />
-              <Skeleton width={80} height={18} borderRadius={4} style={{ marginLeft: 8 }} />
+              <Skeleton
+                width={80}
+                height={18}
+                borderRadius={4}
+                style={{ marginLeft: 8 }}
+              />
             </View>
             <View style={styles.detailValue}>
               <Skeleton width={90} height={18} borderRadius={4} />
@@ -152,9 +159,7 @@ const FinancialSummaryCard: React.FC<Props> = ({
             <Text style={[styles.detailAmount, { color: textColor }]}>
               {formatAmount(income)}
             </Text>
-            <Text
-              style={[styles.detailPercentage, { color: subtleTextColor }]}
-            >
+            <Text style={[styles.detailPercentage, { color: subtleTextColor }]}>
               {incomePercentage.toFixed(1)}%
             </Text>
           </View>
@@ -173,9 +178,7 @@ const FinancialSummaryCard: React.FC<Props> = ({
             <Text style={[styles.detailAmount, { color: textColor }]}>
               {formatAmount(expense)}
             </Text>
-            <Text
-              style={[styles.detailPercentage, { color: subtleTextColor }]}
-            >
+            <Text style={[styles.detailPercentage, { color: subtleTextColor }]}>
               {expensePercentage.toFixed(1)}%
             </Text>
           </View>

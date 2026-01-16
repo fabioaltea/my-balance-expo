@@ -10,6 +10,7 @@ interface DataContextType {
 
   // Derived data
   movements: Movement[];
+  recurringMovements: Movement[];
 
   // State
   isLoading: boolean;

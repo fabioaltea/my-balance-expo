@@ -36,18 +36,25 @@ type ModalStatus = "loading" | "success" | "error";
 
 interface AddViewProps {
   editingMovementId?: string;
+  recurrenceId?: string;
 }
 
 const AddView: React.FC<AddViewProps> = ({
   editingMovementId,
+  recurrenceId,
 }) => {
   const router = useRouter();
   const { selectedSpreadsheetId } = useAuthContext();
-  const { accounts, categories, movements, reloadData } = useDataContext();
+  const { accounts, categories, movements, recurringMovements, reloadData } = useDataContext();
 
   // Find the movement being edited from the global movements list
   const editingMovement = editingMovementId
     ? movements.find((m) => m.id === editingMovementId)
+    : undefined;
+
+  // Find the recurring movement template if recurrenceId is provided
+  const recurringTemplate = recurrenceId
+    ? recurringMovements.find((m) => m.recurrenceId === recurrenceId)
     : undefined;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
@@ -92,6 +99,28 @@ const AddView: React.FC<AddViewProps> = ({
     setTransactions(mappedTransactions);
     setSelectedLocation({ address: editingMovement.location || "" });
   }, [editingMovement]);
+
+  // Pre-populate form when adding from recurring template
+  useEffect(() => {
+    if (!recurringTemplate || editingMovement) return; // Don't override if editing
+
+    setDescription(recurringTemplate.description);
+    setSelectedCategory(recurringTemplate.category);
+    // Keep today's date (already set in state initialization)
+
+    // Map transactions from the recurring template
+    const mappedTransactions: ITransaction[] = recurringTemplate.transactions.map(
+      (t, index) => ({
+        id: index + 1,
+        accountName: t.account,
+        amount: t.amount,
+        type: t.type,
+        // Don't copy transactionId and movementId - these are new transactions
+      })
+    );
+    setTransactions(mappedTransactions);
+    setSelectedLocation({ address: recurringTemplate.location || "" });
+  }, [recurringTemplate, editingMovement]);
 
   // Theme colors
   const backgroundColor = useThemeColor(

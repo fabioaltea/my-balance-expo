@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
   },
-  
+
   emptyState: {
     paddingVertical: 40,
     alignItems: "center",
@@ -129,13 +129,12 @@ const styles = StyleSheet.create({
 });
 
 const sortMovements = (movements: Movement[]) => {
-  return movements
-    ?.sort((a, b) => {
-      // Use compareDates from dateUtils for string date comparison
-      // compareDates returns -1 if a < b, 0 if equal, 1 if a > b
-      // We want newest first, so we compare b to a (reverse order)
-      return compareDates(b.date, a.date);
-    })
+  return movements?.sort((a, b) => {
+    // Use compareDates from dateUtils for string date comparison
+    // compareDates returns -1 if a < b, 0 if equal, 1 if a > b
+    // We want newest first, so we compare b to a (reverse order)
+    return compareDates(b.date, a.date);
+  });
 };
 
 interface MovementsCardProps {
@@ -143,9 +142,14 @@ interface MovementsCardProps {
   isTransitioning?: boolean;
 }
 
-const MovementsCard: React.FC<MovementsCardProps> = ({ movements, isTransitioning = false }) => {
+const MovementsCard: React.FC<MovementsCardProps> = ({
+  movements,
+  isTransitioning = false,
+}) => {
   const { isLoading } = useDataContext();
-  const [recentMovements, setRecentMovements] = useState(sortMovements(movements));
+  const [recentMovements, setRecentMovements] = useState(
+    sortMovements(movements)
+  );
 
   const handleMovementPress = (movement: Movement) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -158,16 +162,23 @@ const MovementsCard: React.FC<MovementsCardProps> = ({ movements, isTransitionin
   };
 
   useEffect(() => {
-    console.log("💳 MovementsCard: Updating with", movements?.length, "movements");
+    console.log(
+      "💳 MovementsCard: Updating with",
+      movements?.length,
+      "movements"
+    );
     const sorted = sortMovements(movements);
 
     // Log detailed info about movements being displayed
-    console.log("📋 Movements to display:", sorted?.map((m, idx) => ({
-      index: idx,
-      date: m.date,
-      description: m.description,
-      amount: m.totalAmount,
-    })));
+    console.log(
+      "📋 Movements to display:",
+      sorted?.map((m, idx) => ({
+        index: idx,
+        date: m.date,
+        description: m.description,
+        amount: m.totalAmount,
+      }))
+    );
 
     setRecentMovements(sorted);
   }, [movements]);
@@ -193,13 +204,12 @@ const MovementsCard: React.FC<MovementsCardProps> = ({ movements, isTransitionin
     },
   });
 
-  
-
   // Show only recent movements (limit to 13 like before)
   // const recentMovements = sortMovements(movements);
 
   // Show skeleton if loading AND no movements yet OR if period is transitioning
-  const showSkeleton = (isLoading && recentMovements?.length === 0) || isTransitioning;
+  const showSkeleton =
+    (isLoading && recentMovements?.length === 0) || isTransitioning;
 
   if (showSkeleton) {
     return (
@@ -213,9 +223,19 @@ const MovementsCard: React.FC<MovementsCardProps> = ({ movements, isTransitionin
               index === 4 && styles.lastMovementItem,
             ]}
           >
-            <Skeleton width={50} height={50} borderRadius={30} style={{ marginRight: 16 }} />
+            <Skeleton
+              width={50}
+              height={50}
+              borderRadius={30}
+              style={{ marginRight: 16 }}
+            />
             <View style={styles.movementInfo}>
-              <Skeleton width={80} height={12} borderRadius={4} style={{ marginBottom: 4 }} />
+              <Skeleton
+                width={80}
+                height={12}
+                borderRadius={4}
+                style={{ marginBottom: 4 }}
+              />
               <Skeleton width={140} height={16} borderRadius={4} />
             </View>
             <Skeleton width={70} height={16} borderRadius={4} />
@@ -273,9 +293,7 @@ const MovementsCard: React.FC<MovementsCardProps> = ({ movements, isTransitionin
             <ThemedText
               style={[
                 styles.movementAmount,
-                amount > 0
-                  ? dynamicStyles.positiveAmount
-                  : "",
+                amount > 0 ? dynamicStyles.positiveAmount : "",
               ]}
             >
               {amount > 0 ? "+" : ""}

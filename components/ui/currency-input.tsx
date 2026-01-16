@@ -27,27 +27,56 @@ const CurrencyInput: React.FC<ICurrencyInputProps> = ({
   const [decimalPart, setDecimalPart] = useState(initialDec);
   const [typingDecimal, setTypingDecimal] = useState(false);
 
-  // Blinker animation
-  const blinkAnim = useRef(new Animated.Value(1)).current;
+  // Blinker animations - separate for integer and decimal
+  const integerBlinkAnim = useRef(new Animated.Value(1)).current;
+  const decimalBlinkAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const blink = Animated.loop(
+    const integerBlink = Animated.loop(
       Animated.sequence([
-        Animated.timing(blinkAnim, {
+        Animated.timing(integerBlinkAnim, {
           toValue: 0,
           duration: 500,
           useNativeDriver: true,
         }),
-        Animated.timing(blinkAnim, {
+        Animated.timing(integerBlinkAnim, {
           toValue: 1,
           duration: 500,
           useNativeDriver: true,
         }),
       ])
     );
-    blink.start();
-    return () => blink.stop();
-  }, []);
+
+    const decimalBlink = Animated.loop(
+      Animated.sequence([
+        Animated.timing(decimalBlinkAnim, {
+          toValue: 0,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(decimalBlinkAnim, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    if (typingDecimal) {
+      integerBlinkAnim.setValue(0);
+      integerBlink.stop();
+      decimalBlink.start();
+    } else {
+      decimalBlinkAnim.setValue(0);
+      decimalBlink.stop();
+      integerBlink.start();
+    }
+
+    return () => {
+      integerBlink.stop();
+      decimalBlink.stop();
+    };
+  }, [typingDecimal]);
 
   // Sync with parent value when it changes externally
   useEffect(() => {
@@ -169,10 +198,7 @@ const CurrencyInput: React.FC<ICurrencyInputProps> = ({
     >
       {typeof children === "string" ? (
         <Text
-          style={[
-            styles.keypadText,
-            { color: isActive ? "#fff" : textColor },
-          ]}
+          style={[styles.keypadText, { color: isActive ? "#fff" : textColor }]}
         >
           {children}
         </Text>
@@ -189,38 +215,34 @@ const CurrencyInput: React.FC<ICurrencyInputProps> = ({
         <Text style={[styles.currencySymbol, { color: textColor }]}>€</Text>
         <Pressable onPress={handleBackToInteger}>
           <View style={styles.valueSection}>
-            <Text
-              style={[
-                styles.valueText,
-                { color: textColor }
-              ]}
-            >
+            <Text style={[styles.valueText, { color: textColor }]}>
               {integerPart}
             </Text>
-            {!typingDecimal && (
-              <Animated.View
-                style={[styles.blinker, { opacity: blinkAnim }]}
-              />
-            )}
+            <Animated.View
+              style={[styles.blinker, { opacity: integerBlinkAnim }]}
+            />
           </View>
         </Pressable>
         <Text style={[styles.comma, { color: textColor }]}>,</Text>
         <Pressable onPress={handleCommaPress}>
           <View style={styles.valueSection}>
-            <Text
+            <View >
+              <Text
+                style={[
+                  styles.valueText,
+                  styles.decimalText,
+                  { color: textColor },
+                ]}
+              >
+                {decimalPart}
+              </Text>
+            </View>
+            <Animated.View
               style={[
-                styles.valueText,
-                styles.decimalText,
-                { color: textColor },
+                styles.blinker,
+                { opacity: decimalBlinkAnim },
               ]}
-            >
-              {decimalPart}
-            </Text>
-            {typingDecimal && (
-              <Animated.View
-                style={[styles.blinker, { opacity: blinkAnim }]}
-              />
-            )}
+            />
           </View>
         </Pressable>
       </View>
@@ -278,7 +300,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     height: 80,
-    marginBottom: 10,
   },
   currencySymbol: {
     fontSize: 28,
@@ -287,7 +308,7 @@ const styles = StyleSheet.create({
   },
   valueSection: {
     flexDirection: "row",
-    alignItems: "baseline",
+    alignItems: "flex-end",
   },
   valueText: {
     fontSize: 36,

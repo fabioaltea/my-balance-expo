@@ -34,6 +34,7 @@ export interface Transaction {
   account: string;
   category: string;
   location?: string;
+  recurrenceId?: string;
 }
 
 export interface Movement {
@@ -42,6 +43,7 @@ export interface Movement {
   description: string;
   category: string;
   location?: string;
+  recurrenceId?: string;
   transactions: Transaction[]; // Can contain multiple transactions across different accounts
   totalAmount: number; // Signed: sum of all transactions (positive for net income, negative for net expense)
   type: "income" | "expense"; // Derived from totalAmount sign
@@ -116,8 +118,7 @@ export const useMyBalanceData = (spreadsheetId: string | null) => {
           type: amount >= 0 ? ("income" as const) : ("expense" as const),
           account: t.account || "",
           category: t.category || "",
-          location: t.location || "",
-        };
+          location: t.location || "",          recurrenceId: t.recurrenceId || undefined,        };
       });
 
       console.log("✅ Transactions loaded:", transformedTransactions.length);
@@ -190,6 +191,7 @@ export const useMyBalanceData = (spreadsheetId: string | null) => {
           description: transaction.description,
           category: transaction.category,
           location: transaction.location,
+          recurrenceId: transaction.recurrenceId,
           transactions: [],
           totalAmount: 0,
           type: "expense" as const, // Will be determined after calculating totalAmount
@@ -229,6 +231,26 @@ export const useMyBalanceData = (spreadsheetId: string | null) => {
     return getTotalIncome(filteredMovements) - getTotalExpense(filteredMovements);
   };
 
+  /**
+   * Identify recurring movements
+   * A movement is recurring if it has a recurrenceId
+   * We get unique recurring movements by grouping by recurrenceId
+   */
+  const recurringMovements: Movement[] = Object.values(
+    movements
+      .filter((m) => m.recurrenceId) // Only movements with recurrenceId
+      .reduce((acc, movement) => {
+        const recurrenceId = movement.recurrenceId!;
+        
+        // Keep only the most recent movement for each recurrenceId
+        if (!acc[recurrenceId] || movement.date > acc[recurrenceId].date) {
+          acc[recurrenceId] = movement;
+        }
+        
+        return acc;
+      }, {} as Record<string, Movement>)
+  );
+
   return {
     // Raw data from backend
     transactions,
@@ -237,6 +259,7 @@ export const useMyBalanceData = (spreadsheetId: string | null) => {
 
     // Derived data
     movements, // Transactions grouped into movements
+    recurringMovements, // Unique recurring movement templates
 
     // State
     isLoading,

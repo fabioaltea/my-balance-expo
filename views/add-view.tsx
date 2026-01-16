@@ -45,7 +45,8 @@ const AddView: React.FC<AddViewProps> = ({
 }) => {
   const router = useRouter();
   const { selectedSpreadsheetId } = useAuthContext();
-  const { accounts, categories, movements, recurringMovements, reloadData } = useDataContext();
+  const { accounts, categories, movements, recurringMovements, reloadData } =
+    useDataContext();
 
   // Find the movement being edited from the global movements list
   const editingMovement = editingMovementId
@@ -93,7 +94,6 @@ const AddView: React.FC<AddViewProps> = ({
         type: t.type,
         transactionID: t.transactionId,
         movementID: t.movementId,
-
       })
     );
     setTransactions(mappedTransactions);
@@ -109,15 +109,14 @@ const AddView: React.FC<AddViewProps> = ({
     // Keep today's date (already set in state initialization)
 
     // Map transactions from the recurring template
-    const mappedTransactions: ITransaction[] = recurringTemplate.transactions.map(
-      (t, index) => ({
+    const mappedTransactions: ITransaction[] =
+      recurringTemplate.transactions.map((t, index) => ({
         id: index + 1,
         accountName: t.account,
         amount: t.amount,
         type: t.type,
         // Don't copy transactionId and movementId - these are new transactions
-      })
-    );
+      }));
     setTransactions(mappedTransactions);
     setSelectedLocation({ address: recurringTemplate.location || "" });
   }, [recurringTemplate, editingMovement]);
@@ -253,15 +252,17 @@ const AddView: React.FC<AddViewProps> = ({
 
       // Prepara il movimento con l'array di transazioni (formato IMovementRequest)
       const movementData = {
-        movementId: isEditing && editingMovementId ? editingMovementId : undefined,
+        movementId:
+          isEditing && editingMovementId ? editingMovementId : undefined,
         description: description.trim(),
         category: selectedCategory,
         date: formattedDate,
         location: selectedLocation.address || "",
         transactions: validTransactions.map((transaction) => ({
-          amount: transaction.type === "income"
-            ? String(transaction.amount).replace(".", ",")
-            : String(-transaction.amount).replace(".", ","),
+          amount:
+            transaction.type === "income"
+              ? String(transaction.amount).replace(".", ",")
+              : String(-transaction.amount).replace(".", ","),
           account: transaction.accountName,
           type: transaction.type === "income" ? "in" : "out",
         })),
@@ -448,7 +449,9 @@ const AddView: React.FC<AddViewProps> = ({
                   color="#22c55e"
                 />
                 <ThemedText style={styles.statusText}>
-                  {isEditing ? "Movement updated successfully!" : "Movement saved successfully!"}
+                  {isEditing
+                    ? "Movement updated successfully!"
+                    : "Movement saved successfully!"}
                 </ThemedText>
               </>
             )}
@@ -496,10 +499,12 @@ const AddView: React.FC<AddViewProps> = ({
               isSubmitting && styles.submitButtonDisabled,
             ]}
           >
-            <ThemedText style={[
-              styles.submitText,
-              isSubmitting && styles.submitTextDisabled,
-            ]}>
+            <ThemedText
+              style={[
+                styles.submitText,
+                isSubmitting && styles.submitTextDisabled,
+              ]}
+            >
               {isSubmitting ? "Saving" : isEditing ? "Update" : "Insert"}
             </ThemedText>
           </Pressable>
@@ -514,7 +519,7 @@ export default AddView;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding:16
+    padding: 16,
   },
   scrollContainer: {
     paddingHorizontal: 20,

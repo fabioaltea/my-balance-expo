@@ -102,11 +102,20 @@ export const useMyBalanceData = (spreadsheetId: string | null) => {
 
       // Debug: log first raw transaction to see available fields
       if (rawTransactions?.length > 0) {
-        console.log("🔍 Raw transaction sample:", JSON.stringify(rawTransactions[0], null, 2));
+        console.log(
+          "🔍 Raw transaction sample:",
+          JSON.stringify(rawTransactions[0], null, 2)
+        );
       }
 
-      const transformedTransactions: Transaction[] = (rawTransactions || []).map((t: any) => {
-        const amountStr = t.amount?.replace?.(/[€\s]/g, "")?.replace(".", "").replace?.(",", ".") || "0";
+      const transformedTransactions: Transaction[] = (
+        rawTransactions || []
+      ).map((t: any) => {
+        const amountStr =
+          t.amount
+            ?.replace?.(/[€\s]/g, "")
+            ?.replace(".", "")
+            .replace?.(",", ".") || "0";
         const amount = parseFloat(amountStr);
 
         return {
@@ -118,25 +127,27 @@ export const useMyBalanceData = (spreadsheetId: string | null) => {
           type: amount >= 0 ? ("income" as const) : ("expense" as const),
           account: t.account || "",
           category: t.category || "",
-          location: t.location || "",          recurrenceId: t.recurrenceId || undefined,        };
+          location: t.location || "",
+          recurrenceId: t.recurrenceId || undefined,
+        };
       });
 
       console.log("✅ Transactions loaded:", transformedTransactions.length);
 
       // ===== Load Accounts =====
-      const rawAccounts = await AccountsApiHelper.getAccounts(
-        spreadsheetId
-      );
+      const rawAccounts = await AccountsApiHelper.getAccounts(spreadsheetId);
 
-      const transformedAccounts: Account[] = (rawAccounts || []).map((a: any) => ({
-        accountId: a.accountId || a.id || Math.random().toString(),
-        name: a.name || "",
-        balance: parseFloat(
-          a.balance?.replace?.(/[€\s]/g, "")?.replace?.(",", ".") || "0"
-        ),
-        color: a.color || "#2F4F3F",
-        textColor: a.textColor || "#FFFFFF",
-      }));
+      const transformedAccounts: Account[] = (rawAccounts || []).map(
+        (a: any) => ({
+          accountId: a.accountId || a.id || Math.random().toString(),
+          name: a.name || "",
+          balance: parseFloat(
+            a.balance?.replace?.(/[€\s]/g, "")?.replace?.(",", ".") || "0"
+          ),
+          color: a.color || "#2F4F3F",
+          textColor: a.textColor || "#FFFFFF",
+        })
+      );
 
       console.log("✅ Accounts loaded:", transformedAccounts.length);
 
@@ -145,12 +156,14 @@ export const useMyBalanceData = (spreadsheetId: string | null) => {
         spreadsheetId
       );
 
-      const transformedCategories: Category[] = (rawCategories || []).map((c: any) => ({
-        id: c.id || Math.random().toString(),
-        name: c.name || "",
-        type: (c.type as "income" | "expense") || "expense",
-        color: c.color || "#2F4F3F",
-      }));
+      const transformedCategories: Category[] = (rawCategories || []).map(
+        (c: any) => ({
+          id: c.id || Math.random().toString(),
+          name: c.name || "",
+          type: (c.type as "income" | "expense") || "expense",
+          color: c.color || "#2F4F3F",
+        })
+      );
 
       console.log("✅ Categories loaded:", transformedCategories.length);
 
@@ -202,11 +215,15 @@ export const useMyBalanceData = (spreadsheetId: string | null) => {
       acc[movementId].transactions.push(transaction);
 
       // Update totalAmount (income is positive, expense is negative)
-      const signedAmount = transaction.type === "income" ? transaction.amount : -transaction.amount;
+      const signedAmount =
+        transaction.type === "income"
+          ? transaction.amount
+          : -transaction.amount;
       acc[movementId].totalAmount += signedAmount;
 
       // Update type based on net totalAmount
-      acc[movementId].type = acc[movementId].totalAmount >= 0 ? "income" : "expense";
+      acc[movementId].type =
+        acc[movementId].totalAmount >= 0 ? "income" : "expense";
 
       return acc;
     }, {} as Record<string, Movement>)
@@ -228,7 +245,9 @@ export const useMyBalanceData = (spreadsheetId: string | null) => {
   };
 
   const getBalance = (filteredMovements: Movement[]) => {
-    return getTotalIncome(filteredMovements) - getTotalExpense(filteredMovements);
+    return (
+      getTotalIncome(filteredMovements) - getTotalExpense(filteredMovements)
+    );
   };
 
   /**
@@ -241,12 +260,12 @@ export const useMyBalanceData = (spreadsheetId: string | null) => {
       .filter((m) => m.recurrenceId) // Only movements with recurrenceId
       .reduce((acc, movement) => {
         const recurrenceId = movement.recurrenceId!;
-        
+
         // Keep only the most recent movement for each recurrenceId
         if (!acc[recurrenceId] || movement.date > acc[recurrenceId].date) {
           acc[recurrenceId] = movement;
         }
-        
+
         return acc;
       }, {} as Record<string, Movement>)
   );

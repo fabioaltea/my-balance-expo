@@ -40,7 +40,7 @@ const HomeView: React.FC = () => {
   // Filter movements based on date range (only for recent view)
   const filteredMovements = useMemo(() => {
     if (viewMode !== "recent") return [];
-    
+
     return movements.filter((m) => {
       return isDateInRange(m.date, dateRange.startDate, dateRange.endDate);
     });
@@ -50,14 +50,14 @@ const HomeView: React.FC = () => {
     <View>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <ViewModePicker selectedMode={viewMode} onModeChange={setViewMode} />
-        
+
         {viewMode === "recent" && (
           <>
             <PeriodPicker
               setDateRange={handleDateRangeChange}
               isLoading={isLoading}
             />
-            <MovementsCard 
+            <MovementsCard
               movements={filteredMovements}
               isTransitioning={isPeriodTransitioning}
             />

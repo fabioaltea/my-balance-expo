@@ -140,7 +140,9 @@ const RecurringMovementsCard: React.FC = () => {
               <ThemedText style={styles.itemDescription}>
                 {movement.description}
               </ThemedText>
-              <ThemedText style={[styles.itemCategory, { color: subtextColor }]}>
+              <ThemedText
+                style={[styles.itemCategory, { color: subtextColor }]}
+              >
                 {movement.category} • {movement.transactions.length} transaction
                 {movement.transactions.length > 1 ? "s" : ""}
               </ThemedText>

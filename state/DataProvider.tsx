@@ -1,5 +1,11 @@
 import React, { createContext, useContext, ReactNode } from "react";
-import { useMyBalanceData, Transaction, Movement, Account, Category } from "../hooks/useMyBalanceData";
+import {
+  useMyBalanceData,
+  Transaction,
+  Movement,
+  Account,
+  Category,
+} from "../hooks/useMyBalanceData";
 import { useAuthContext } from "./AuthProvider";
 
 interface DataContextType {

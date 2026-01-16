@@ -3,7 +3,9 @@ import { ThemedText } from "../themed-text";
 import { TouchableOpacity, StyleSheet, View } from "react-native";
 import { IconSymbol } from "../ui/icon-symbol.ios";
 import Card from "../card";
+import Skeleton from "../ui/skeleton";
 import { useThemeColor } from "@/hooks/use-theme-color";
+import { useDataContext } from "@/state/DataProvider";
 import { formatDateForDisplay, compareDates } from "@/utils/dateUtils";
 import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
@@ -138,9 +140,11 @@ const sortMovements = (movements: Movement[]) => {
 
 interface MovementsCardProps {
   movements: Movement[];
+  isTransitioning?: boolean;
 }
 
-const MovementsCard: React.FC<MovementsCardProps> = ({ movements }) => {
+const MovementsCard: React.FC<MovementsCardProps> = ({ movements, isTransitioning = false }) => {
+  const { isLoading } = useDataContext();
   const [recentMovements, setRecentMovements] = useState(sortMovements(movements));
 
   const handleMovementPress = (movement: Movement) => {
@@ -149,10 +153,6 @@ const MovementsCard: React.FC<MovementsCardProps> = ({ movements }) => {
       pathname: "/add",
       params: {
         movementId: movement.id,
-        description: movement.description,
-        category: movement.category,
-        date: movement.date,
-        transactions: JSON.stringify(movement.transactions),
       },
     });
   };
@@ -198,6 +198,34 @@ const MovementsCard: React.FC<MovementsCardProps> = ({ movements }) => {
   // Show only recent movements (limit to 13 like before)
   // const recentMovements = sortMovements(movements);
 
+  // Show skeleton if loading AND no movements yet OR if period is transitioning
+  const showSkeleton = (isLoading && recentMovements?.length === 0) || isTransitioning;
+
+  if (showSkeleton) {
+    return (
+      <Card label="">
+        {[...Array(5)].map((_, index) => (
+          <View
+            key={index}
+            style={[
+              styles.movementItem,
+              { borderBottomColor: borderColor },
+              index === 4 && styles.lastMovementItem,
+            ]}
+          >
+            <Skeleton width={50} height={50} borderRadius={30} style={{ marginRight: 16 }} />
+            <View style={styles.movementInfo}>
+              <Skeleton width={80} height={12} borderRadius={4} style={{ marginBottom: 4 }} />
+              <Skeleton width={140} height={16} borderRadius={4} />
+            </View>
+            <Skeleton width={70} height={16} borderRadius={4} />
+          </View>
+        ))}
+      </Card>
+    );
+  }
+
+  // Empty state when not loading and no movements
   if (recentMovements?.length === 0) {
     return (
       <Card label="">

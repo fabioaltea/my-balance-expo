@@ -1,17 +1,42 @@
 import React, { useState } from "react";
-import { ThemedText } from "../themed-text";
 import { TouchableOpacity, StyleSheet, View, Text } from "react-native";
 import { IconSymbol } from "../ui/icon-symbol.ios";
 import Card from "../card";
-import GlassButton from "../ui/glass-button";
+import Skeleton from "../ui/skeleton";
 import { Account } from "../../state/AppState.types";
+import { useDataContext } from "../../state/DataProvider";
 
 interface IBalanceCardProps {
   account?: Account;
 }
 
 const BalanceCard: React.FC<IBalanceCardProps> = ({ account }) => {
+  const { isLoading } = useDataContext();
   const [isBalanceVisible, setIsBalanceVisible] = useState(true);
+
+  // Show skeleton only if loading AND no account data yet
+  const showSkeleton = isLoading && !account;
+
+  const renderBalanceContent = () => {
+    if (showSkeleton) {
+      return (
+        <Skeleton
+          width={180}
+          height={36}
+          borderRadius={8}
+          style={{ backgroundColor: "rgba(255, 255, 255, 0.3)" }}
+        />
+      );
+    }
+
+    return (
+      <Text style={styles.balanceAmount}>
+        {isBalanceVisible
+          ? `€ ${account?.balance.toFixed(2).replace(".", ",") ?? ""}`
+          : "€ ****,**"}
+      </Text>
+    );
+  };
 
   return (
     <Card
@@ -19,11 +44,10 @@ const BalanceCard: React.FC<IBalanceCardProps> = ({ account }) => {
       color={account?.textColor || "#FFFFFF"}
     >
       <View style={styles.balanceContent}>
-        <Text style={styles.balanceAmount}>
-          {isBalanceVisible ? `€ ${account?.balance.toFixed(2).replace(".", ",") ?? ""}` : "€ ****,**"}
-        </Text>
+        {renderBalanceContent()}
         <TouchableOpacity
           onPress={() => setIsBalanceVisible(!isBalanceVisible)}
+          disabled={showSkeleton}
         >
           <IconSymbol
             name={isBalanceVisible ? "eye.fill" : "eye.slash.fill"}

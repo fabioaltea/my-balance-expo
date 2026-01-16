@@ -1,8 +1,6 @@
 import BalanceCard from "@/components/cards/balance-card";
 import MovementsCard from "@/components/cards/movements-card";
 import FinancialSummaryCard from "@/components/cards/financial-summary-card";
-import FinancialSummaryCardSkeleton from "@/components/cards/financial-summary-card-skeleton";
-import MovementsCardSkeleton from "@/components/cards/movements-card-skeleton";
 import PeriodPicker from "@/components/ui/period-chips-picker";
 import {
   View,
@@ -38,10 +36,24 @@ const HomeView: React.FC<HomeViewProps> = ({
   getTotalIncome,
   getTotalExpense,
 }) => {
-
-  // Local state for filters
+  // Local state for date range
   const [dateRange, setDateRange] = useState<IDateRange>(DATE_RANGES.THIS_MONTH);
-  const [movementFilter, setMovementFilter] = useState<"all" | "income" | "expense">("all");
+  const [isPeriodTransitioning, setIsPeriodTransitioning] = useState<boolean>(false);
+
+  // Handle date range change with transitioning state
+  const handleDateRangeChange = (range: IDateRange & { isTransitioning?: boolean }) => {
+    setDateRange(range);
+    if (range.isTransitioning) {
+      setIsPeriodTransitioning(true);
+    }
+  };
+
+  // Reset transitioning state when data finishes loading
+  React.useEffect(() => {
+    if (!isLoading && isPeriodTransitioning) {
+      setIsPeriodTransitioning(false);
+    }
+  }, [isLoading, isPeriodTransitioning]);
 
   
 
@@ -58,22 +70,21 @@ const HomeView: React.FC<HomeViewProps> = ({
     console.log("  - Selected Account Index:", selectedAccountIndex);
   }, [accounts, movements, selectedAccount, selectedAccountIndex, accounts]);
 
-  // Filter movements based on date range and movement type
+  // Filter movements based on date range
   // Note: Account filtering happens at transaction level, not movement level
   // since a movement can contain transactions from multiple accounts
   const filteredMovements = useMemo(() => {
     return movements
       .filter((m) => {
         const dateMatches = isDateInRange(m.date, dateRange.startDate, dateRange.endDate);
-        const typeMatches = movementFilter === "all" || m.type === movementFilter;
 
         // If a specific account is selected, only show movements that have at least one transaction for that account
         const accountMatches = selectedAccount === "All" ||
           m.transactions.some(t => t.account === selectedAccount);
 
-        return dateMatches && typeMatches && accountMatches;
+        return dateMatches && accountMatches;
       });
-  }, [movements, selectedAccount, dateRange, movementFilter]);
+  }, [movements, selectedAccount, dateRange]);
 
   // Handle account switch
   const handleAccountSwitch = (index: number) => {
@@ -140,25 +151,18 @@ const HomeView: React.FC<HomeViewProps> = ({
           }
         >
           <PeriodPicker
-            dateRange={dateRange}
-            setDateRange={setDateRange}
-            movementFilter={movementFilter}
-            setMovementFilter={setMovementFilter}
+            setDateRange={handleDateRangeChange}
+            isLoading={isLoading}
           />
-          {isLoading ? (
-            <>
-              <FinancialSummaryCardSkeleton />
-              <MovementsCardSkeleton itemCount={5} />
-            </>
-          ) : (
-            <>
-              <FinancialSummaryCard
-                income={getTotalIncome(filteredMovements)}
-                expense={getTotalExpense(filteredMovements)}
-              />
-              <MovementsCard movements={filteredMovements} />
-            </>
-          )}
+          <FinancialSummaryCard
+            income={getTotalIncome(filteredMovements)}
+            expense={getTotalExpense(filteredMovements)}
+            isTransitioning={isPeriodTransitioning}
+          />
+          <MovementsCard 
+            movements={filteredMovements} 
+            isTransitioning={isPeriodTransitioning}
+          />
         </ScrollView>
     </View>
   );

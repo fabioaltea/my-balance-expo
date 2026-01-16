@@ -53,7 +53,10 @@ const TransactionRow: React.FC<TransactionRowProps> = ({
   const translateX = useRef(new Animated.Value(0)).current;
 
   // Enable native LayoutAnimation on Android
-  if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+  if (
+    Platform.OS === "android" &&
+    UIManager.setLayoutAnimationEnabledExperimental
+  ) {
     UIManager.setLayoutAnimationEnabledExperimental(true);
   }
 
@@ -105,7 +108,9 @@ const TransactionRow: React.FC<TransactionRowProps> = ({
     });
 
     return (
-      <Animated.View style={[styles.deleteAction, { opacity: containerOpacity }]}>
+      <Animated.View
+        style={[styles.deleteAction, { opacity: containerOpacity }]}
+      >
         <Pressable onPress={handleDelete} style={styles.deleteContent}>
           <Animated.View
             style={[styles.deleteContent, { transform: [{ scale }], opacity }]}
@@ -129,7 +134,9 @@ const TransactionRow: React.FC<TransactionRowProps> = ({
         }
       }}
     >
-      <Animated.View style={[styles.animatedContainer, { transform: [{ translateX }] }]}>
+      <Animated.View
+        style={[styles.animatedContainer, { transform: [{ translateX }] }]}
+      >
         <Pressable
           onPress={onPress}
           style={[styles.transactionRow, { borderBottomColor: borderColor }]}
@@ -270,7 +277,6 @@ const styles = StyleSheet.create({
   animatedContainer: {
     overflow: "hidden",
   },
- 
 });
 
 export default Transactions;

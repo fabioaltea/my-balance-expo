@@ -33,6 +33,7 @@ export interface Transaction {
   type: "income" | "expense";
   account: string;
   category: string;
+  location?: string;
 }
 
 export interface Movement {
@@ -40,6 +41,7 @@ export interface Movement {
   date: string; // dd-MM-yyyy format
   description: string;
   category: string;
+  location?: string;
   transactions: Transaction[]; // Can contain multiple transactions across different accounts
   totalAmount: number; // Signed: sum of all transactions (positive for net income, negative for net expense)
   type: "income" | "expense"; // Derived from totalAmount sign
@@ -96,6 +98,11 @@ export const useMyBalanceData = (spreadsheetId: string | null) => {
         spreadsheetId
       );
 
+      // Debug: log first raw transaction to see available fields
+      if (rawTransactions?.length > 0) {
+        console.log("🔍 Raw transaction sample:", JSON.stringify(rawTransactions[0], null, 2));
+      }
+
       const transformedTransactions: Transaction[] = (rawTransactions || []).map((t: any) => {
         const amountStr = t.amount?.replace?.(/[€\s]/g, "")?.replace(".", "").replace?.(",", ".") || "0";
         const amount = parseFloat(amountStr);
@@ -109,6 +116,7 @@ export const useMyBalanceData = (spreadsheetId: string | null) => {
           type: amount >= 0 ? ("income" as const) : ("expense" as const),
           account: t.account || "",
           category: t.category || "",
+          location: t.location || "",
         };
       });
 
@@ -181,6 +189,7 @@ export const useMyBalanceData = (spreadsheetId: string | null) => {
           date: transaction.date,
           description: transaction.description,
           category: transaction.category,
+          location: transaction.location,
           transactions: [],
           totalAmount: 0,
           type: "expense" as const, // Will be determined after calculating totalAmount

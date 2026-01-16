@@ -6,6 +6,8 @@ import {
   User,
 } from "../helpers/AuthStorageHelper";
 import { ApiHelper } from "../helpers/ApiHelper";
+import FunctionHelper from "../utils/FunctionHelper";
+import { DataFilterHelper } from "../utils/DataFilterHelper";
 import { TransactionsApiHelper } from "../helpers/TransactionsApiHelper";
 import { AccountsApiHelper } from "../helpers/AccountsApiHelper";
 import { CategoriesApiHelper } from "../helpers/CategoriesApiHelper";
@@ -37,10 +39,17 @@ export const useAuth = () => {
 
   // App data states
   const [allTransactions, setAllTransactions] = useState<any>(null);
+  const [confirmedTransactions, setConfirmedTransactions] = useState<any>(null);
+  const [unconfirmedTransactions, setUnconfirmedTransactions] =
+    useState<any>(null);
+  const [recurrentTransactions, setRecurrentTransactions] = useState<any>(null);
   const [accountsList, setAccountsList] = useState<any>(null);
   const [personalCategories, setPersonalCategories] = useState<any>(null);
   const [totalBalance, setTotalBalance] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [confirmedMovements, setConfirmedMovements] = useState<any>(null);
+  const [unconfirmedMovements, setUnconfirmedMovements] = useState<any>(null);
+  const [recurrentMovements, setRecurrentMovements] = useState<any>(null);
 
   const clearError = useCallback(() => {
     setAuthState((prev) => ({ ...prev, error: null }));
@@ -60,7 +69,6 @@ export const useAuth = () => {
       selectedSpreadsheetId: null,
     });
   }, []);
-
 
   // Load user profile and app data - single entry point after authentication
   const loadUserDataAndProfile = useCallback(async () => {
@@ -102,15 +110,84 @@ export const useAuth = () => {
           CategoriesApiHelper.getCategories(profile.user.spreadsheetId),
         ]);
 
+        // Filter transactions by status and not deleted
+        const confirmedTxns = (transactions || []).filter(
+          (t: any) =>
+            (t.status === "Confirmed" || t.status === "") && !t.dateDeleted
+        );
+        const unconfirmedTxns = (transactions || []).filter(
+          (t: any) => t.status === "Pending" && !t.dateDeleted
+        );
+        const recurrentTxns = (transactions || []).filter(
+          (t: any) => t.status === "Recurrent" && !t.dateDeleted
+        );
+
+        setConfirmedTransactions(confirmedTxns);
+        setUnconfirmedTransactions(unconfirmedTxns);
+        setRecurrentTransactions(recurrentTxns);
+
+        // Use shared helpers for currency conversion
+
+        // // Map confirmed transactions to accounts and compute running balances
+        // const parsedAccounts = (accounts || []).map((account: any) => {
+        //   const parsed = confirmedTxns
+        //     .filter((t: any) =>
+        //       account.isTotal === 1 ? true : t.account === account.name
+        //     )
+        //     .sort((a: any, b: any) => (a.date < b.date ? -1 : 1));
+
+        //   let prevAmount = 0;
+        //   const withPrev = parsed.map((t: any, idx: number) => {
+        //     const cur = FunctionHelper.ConvertCurrencyToNumber(t.amount);
+        //     const running = prevAmount + cur;
+        //     prevAmount = running;
+        //     return { ...t, previousTransactionsAmount: running };
+        //   });
+
+        //   const balance =
+        //     withPrev.length > 0
+        //       ? withPrev[withPrev.length - 1].previousTransactionsAmount
+        //       : 0;
+        //   return {
+        //     ...account,
+        //     transactions: withPrev,
+        //     balance: FunctionHelper.ConvertNumberToCurrency(balance),
+        //   };
+        // });
+
+        // Compute total balance as sum of non-total accounts (exclude "All")
+        // const totalAmount = (parsedAccounts || []).reduce(
+        //   (sum: number, a: any) => {
+        //     const last =
+        //       a.transactions?.[a.transactions.length - 1]
+        //         ?.previousTransactionsAmount;
+        //     return sum + (last || 0);
+        //   },
+        //   0
+        // );
+
+        // Group transactions into movements by movementId
+        setConfirmedMovements(
+          DataFilterHelper.groupTransactionsByMovementId(confirmedTxns)
+        );
+        setUnconfirmedMovements(
+          DataFilterHelper.groupTransactionsByMovementId(unconfirmedTxns)
+        );
+        setRecurrentMovements(
+          DataFilterHelper.groupTransactionsByMovementId(recurrentTxns)
+        );
+
         // Store the loaded data
-        setAllTransactions(transactions);
+        setAllTransactions(confirmedTxns);
         setAccountsList(accounts);
         setPersonalCategories(categories);
+        // setTotalBalance(FunctionHelper.ConvertNumberToCurrency(totalAmount));
 
         console.log("✅ Data loaded successfully:", {
           transactionsCount: transactions?.length || 0,
           accountsCount: accounts?.length || 0,
           categoriesCount: categories?.length || 0,
+          // totalBalance: FunctionHelper.ConvertNumberToCurrency(totalAmount),
         });
 
         // Set authenticated state with data ready
@@ -206,7 +283,6 @@ export const useAuth = () => {
       });
     }
   }, [loadUserDataAndProfile]);
-
 
   // PKCE utility functions for OAuth2 security - Following Google specifications
   const generateCodeVerifier = () => {

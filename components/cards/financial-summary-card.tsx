@@ -5,17 +5,22 @@ import {
   StyleSheet,
 } from "react-native";
 import Card from "../card";
+import Skeleton from "../ui/skeleton";
 import { useThemeColor } from "@/hooks/use-theme-color";
+import { useDataContext } from "@/state/DataProvider";
 
 type Props = {
   income: number;
   expense: number;
+  isTransitioning?: boolean;
 };
 
 const FinancialSummaryCard: React.FC<Props> = ({
   income,
   expense,
+  isTransitioning = false,
 }) => {
+  const { isLoading } = useDataContext();
   const balance = income - expense;
   const total = income + expense;
   const incomePercentage = balance > 0 ? (income / balance) * 100 : 0;
@@ -38,6 +43,44 @@ const FinancialSummaryCard: React.FC<Props> = ({
       maximumFractionDigits: 2,
     })}`;
   };
+
+  // Show skeleton if loading AND no data yet (both income and expense are 0)
+  // OR if period is transitioning (changing month/year)
+  const showSkeleton = (isLoading && income === 0 && expense === 0) || isTransitioning;
+
+  if (showSkeleton) {
+    return (
+      <Card backgroundColor={cardBackground} color={textColor}>
+        <View style={styles.balanceRow}>
+          <Skeleton width={80} height={24} borderRadius={6} />
+          <Skeleton width={120} height={28} borderRadius={6} />
+        </View>
+        <View style={styles.progressBarContainer}>
+          <Skeleton width="100%" height={15} borderRadius={6} />
+        </View>
+        <View style={styles.detailsSection}>
+          <View style={styles.detailRow}>
+            <View style={styles.detailLabel}>
+              <Skeleton width={15} height={15} borderRadius={6} />
+              <Skeleton width={70} height={18} borderRadius={4} style={{ marginLeft: 8 }} />
+            </View>
+            <View style={styles.detailValue}>
+              <Skeleton width={90} height={18} borderRadius={4} />
+            </View>
+          </View>
+          <View style={styles.detailRow}>
+            <View style={styles.detailLabel}>
+              <Skeleton width={15} height={15} borderRadius={6} />
+              <Skeleton width={80} height={18} borderRadius={4} style={{ marginLeft: 8 }} />
+            </View>
+            <View style={styles.detailValue}>
+              <Skeleton width={90} height={18} borderRadius={4} />
+            </View>
+          </View>
+        </View>
+      </Card>
+    );
+  }
 
   return (
     <Card backgroundColor={cardBackground} color={textColor}>
@@ -186,6 +229,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    height: 28,
+    marginBottom: 0,
   },
   balanceLabel: {
     fontSize: 22,
@@ -206,6 +251,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 8,
     paddingVertical: 4,
+    height: 42,
   },
   detailRowSelected: {
     backgroundColor: "#e0e0e05a",
@@ -240,6 +286,7 @@ const styles = StyleSheet.create({
   },
   progressBarContainer: {
     marginVertical: 16,
+    height: 15,
   },
   progressBar: {
     height: 15,

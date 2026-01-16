@@ -31,7 +31,7 @@ const FinancialSummaryCardSkeleton: React.FC = () => {
           </View>
           <View style={styles.detailValue}>
             <Skeleton width={90} height={18} borderRadius={4} />
-            <Skeleton width={40} height={14} borderRadius={4} style={{ marginTop: 4 }} />
+            <Skeleton width={40} height={12} borderRadius={4} style={{ marginTop: 2 }} />
           </View>
         </View>
 
@@ -43,7 +43,7 @@ const FinancialSummaryCardSkeleton: React.FC = () => {
           </View>
           <View style={styles.detailValue}>
             <Skeleton width={90} height={18} borderRadius={4} />
-            <Skeleton width={40} height={14} borderRadius={4} style={{ marginTop: 4 }} />
+            <Skeleton width={40} height={12} borderRadius={4} style={{ marginTop: 2 }} />
           </View>
         </View>
       </View>
@@ -56,9 +56,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    height: 28,
+    marginBottom: 0,
   },
   progressBarContainer: {
     marginVertical: 16,
+    height: 15,
   },
   detailsSection: {
     gap: 12,
@@ -71,6 +74,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 8,
     paddingVertical: 4,
+    height: 42,
   },
   detailLabel: {
     flexDirection: "row",

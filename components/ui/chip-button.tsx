@@ -3,6 +3,7 @@ import * as Haptics from "expo-haptics";
 import { useEffect, useState, useRef } from "react";
 import ContextMenu from "./context-menu";
 import { useThemeColor } from "@/hooks/use-theme-color";
+import React from "react";
 
 export interface IChipButtonProps {
   text: string;

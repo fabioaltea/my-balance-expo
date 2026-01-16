@@ -42,7 +42,6 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
   placeholder = "Enter location...",
   googleMapsApiKey,
 }) => {
-  const [searchQuery, setSearchQuery] = useState(value);
   const [searchResults, setSearchResults] = useState<ILocation[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<ILocation | null>(
     null
@@ -59,6 +58,7 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
   useEffect(() => {
     setSelectedLocation(searchResults[0] || null);
   }, [searchResults]);
+
 
   const cardHeight = useRef(new Animated.Value(40)).current; // Initial collapsed height
 
@@ -78,12 +78,11 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
   );
 
   const handleTextChange = async (text: string) => {
-    setSearchQuery(text);
+    onChange({ address: text });
     if (!text.trim()) {
       setSearchResults([]);
       setSelectedLocation(null);
       collapseCard();
-      onChange({ address: "" });
       return;
     }
 
@@ -186,7 +185,6 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
 
   const handleLocationSelect = (location: ILocation) => {
     setSelectedLocation(location);
-    setSearchQuery(location.address);
     onChange(location);
     setSearchResults([]);
     
@@ -212,7 +210,7 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
       ]}
     >
 
-        <TextBox label="Location" value={searchQuery} onChange={handleTextChange}>
+        <TextBox label="Location" value={value} onChange={handleTextChange}>
             
         </TextBox>
         

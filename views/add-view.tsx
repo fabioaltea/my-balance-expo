@@ -36,22 +36,19 @@ type ModalStatus = "loading" | "success" | "error";
 
 interface AddViewProps {
   editingMovementId?: string;
-  initialDescription?: string;
-  initialCategory?: string;
-  initialDate?: string;
-  initialTransactions?: string;
 }
 
 const AddView: React.FC<AddViewProps> = ({
   editingMovementId,
-  initialDescription,
-  initialCategory,
-  initialDate,
-  initialTransactions,
 }) => {
   const router = useRouter();
   const { selectedSpreadsheetId } = useAuthContext();
-  const { accounts, categories, reloadData } = useDataContext();
+  const { accounts, categories, movements, reloadData } = useDataContext();
+
+  // Find the movement being edited from the global movements list
+  const editingMovement = editingMovementId
+    ? movements.find((m) => m.id === editingMovementId)
+    : undefined;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [modalStatus, setModalStatus] = useState<ModalStatus>("loading");
@@ -70,45 +67,31 @@ const AddView: React.FC<AddViewProps> = ({
 
   // Pre-populate form when editing an existing movement
   useEffect(() => {
-    if (initialDescription) {
-      setDescription(initialDescription);
+    if (!editingMovement) return;
+
+    setDescription(editingMovement.description);
+    setSelectedCategory(editingMovement.category);
+
+    const parsedDate = parseDateFromDDMMYYYY(editingMovement.date);
+    if (parsedDate) {
+      setSelectedDate(parsedDate);
     }
-    if (initialCategory) {
-      setSelectedCategory(initialCategory);
-    }
-    if (initialDate) {
-      const parsedDate = parseDateFromDDMMYYYY(initialDate);
-      if (parsedDate) {
-        setSelectedDate(parsedDate);
-      }
-    }
-    if (initialTransactions) {
-      try {
-        const parsedTransactions = JSON.parse(initialTransactions);
-        const mappedTransactions: ITransaction[] = parsedTransactions.map(
-          (t: any, index: number) => {
-            // Parse amount from backend format (string with comma decimal, e.g. "10,50" or "-10,50")
-            const amountStr = String(t.amount || "0").replace(",", ".");
-            const amountNum = parseFloat(amountStr);
-            // Convert backend type "in"/"out" to frontend type "income"/"expense"
-            const frontendType: "income" | "expense" = t.type === "in" ? "income" : "expense";
-            return {
-              id: index + 1,
-              accountName: t.account,
-              amount: Math.abs(amountNum),
-              type: frontendType,
-              // Preserve original IDs for update (same as Ionic)
-              transactionID: t.transactionId || t.transactionID,
-              movementID: t.movementId || t.movementID,
-            };
-          }
-        );
-        setTransactions(mappedTransactions);
-      } catch (e) {
-        console.error("Error parsing transactions:", e);
-      }
-    }
-  }, [initialDescription, initialCategory, initialDate, initialTransactions]);
+
+    // Map transactions from the movement
+    const mappedTransactions: ITransaction[] = editingMovement.transactions.map(
+      (t, index) => ({
+        id: index + 1,
+        accountName: t.account,
+        amount: t.amount,
+        type: t.type,
+        transactionID: t.transactionId,
+        movementID: t.movementId,
+
+      })
+    );
+    setTransactions(mappedTransactions);
+    setSelectedLocation({ address: editingMovement.location || "" });
+  }, [editingMovement]);
 
   // Theme colors
   const backgroundColor = useThemeColor(

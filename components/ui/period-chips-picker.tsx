@@ -1,6 +1,6 @@
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, TouchableOpacity, Text } from "react-native";
 import ChipButton from "./chip-button";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import React from "react";
 import { formatDateToDDMMYYYY } from "@/utils/dateUtils";
 import type { IDateRange } from "@/state";
@@ -15,15 +15,14 @@ function monthStartEnd(year: number, monthIndex: number) {
 }
 
 interface PeriodPickerProps {
-    dateRange: IDateRange;
-    setDateRange: (range: IDateRange) => void;
-    movementFilter: "all" | "income" | "expense";
-    setMovementFilter: (filter: "all" | "income" | "expense") => void;
+    setDateRange: (range: IDateRange & { isTransitioning?: boolean }) => void;
+    isLoading?: boolean;
 }
 
-const PeriodPicker: React.FC<PeriodPickerProps> = ({ dateRange, setDateRange, movementFilter, setMovementFilter }) => {
+const PeriodPicker: React.FC<PeriodPickerProps> = ({ setDateRange, isLoading = false }) => {
     const now = new Date();
     const currentYear = now.getFullYear();
+    const currentMonthIndex = now.getMonth();
     const months = useMemo(
         () => [
             "January", "February", "March", "April", "May", "June",
@@ -31,23 +30,18 @@ const PeriodPicker: React.FC<PeriodPickerProps> = ({ dateRange, setDateRange, mo
         ],
         []
     );
-    const currentMonthName = months[now.getMonth()];
-    const currentMonthIndex = now.getMonth();
 
-    const [selected, setSelected] = useState<string | null>("Months");
     const [selectedYear, setSelectedYear] = useState<number>(currentYear);
-    const [selectedMonth, setSelectedMonth] = useState<string>(currentMonthName);
+    const [selectedMonthIndex, setSelectedMonthIndex] = useState<number>(currentMonthIndex);
+    const [mode, setMode] = useState<"month" | "year">("month");
+    const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
 
-    const filterOptions = useMemo(() => ["All", "Income", "Expense"], []);
-
-    const availableMonths = useMemo(() => {
-        if (selectedYear < currentYear) {
-            return months; // All months available for past years
-        } else if (selectedYear === currentYear) {
-            return months.slice(0, currentMonthIndex + 1); // Only months up to current month
+    // Reset transitioning state when loading is complete
+    useEffect(() => {
+        if (!isLoading && isTransitioning) {
+            setIsTransitioning(false);
         }
-        return []; // No months available for future years
-    }, [selectedYear, currentYear, currentMonthIndex, months]);
+    }, [isLoading, isTransitioning]);
 
     const availableYears = useMemo(() =>
         Array.from({ length: 6 }, (_, i) => String(currentYear - i)),
@@ -55,98 +49,158 @@ const PeriodPicker: React.FC<PeriodPickerProps> = ({ dateRange, setDateRange, mo
     );
 
     const setCustomRange = (startDate: string, endDate: string, label?: string) => {
+        setIsTransitioning(true);
         setDateRange({
             startDate,
             endDate,
             label: label || `${startDate} - ${endDate}`,
+            isTransitioning: true,
         });
     };
 
-    const handleFilterSelect = (opt: string) => {
-        const filterMap: Record<string, "all" | "income" | "expense"> = {
-            "All": "all",
-            "Income": "income",
-            "Expense": "expense"
-        };
-        setMovementFilter(filterMap[opt]);
+    const updateMonthRange = (year: number, monthIndex: number) => {
+        const { start, end } = monthStartEnd(year, monthIndex);
+        setCustomRange(start, end, `${months[monthIndex]} ${year}`);
+    };
+
+    const updateYearRange = (year: number) => {
+        const start = formatDateToDDMMYYYY(new Date(year, 0, 1));
+        const end = formatDateToDDMMYYYY(new Date(year, 11, 31));
+        setCustomRange(start, end, `${year}`);
+    };
+
+    const canGoNext = () => {
+        if (mode === "year") {
+            return selectedYear < currentYear;
+        }
+        return !(selectedYear === currentYear && selectedMonthIndex === currentMonthIndex);
+    };
+
+    const goToPreviousMonth = () => {
+        if (mode === "year") {
+            const newYear = selectedYear - 1;
+            setSelectedYear(newYear);
+            updateYearRange(newYear);
+        } else {
+            let newMonthIndex = selectedMonthIndex - 1;
+            let newYear = selectedYear;
+
+            if (newMonthIndex < 0) {
+                newMonthIndex = 11;
+                newYear = newYear - 1;
+            }
+
+            setSelectedMonthIndex(newMonthIndex);
+            setSelectedYear(newYear);
+            updateMonthRange(newYear, newMonthIndex);
+        }
+    };
+
+    const goToNextMonth = () => {
+        if (!canGoNext()) return;
+
+        if (mode === "year") {
+            const newYear = selectedYear + 1;
+            setSelectedYear(newYear);
+            updateYearRange(newYear);
+        } else {
+            let newMonthIndex = selectedMonthIndex + 1;
+            let newYear = selectedYear;
+
+            if (newMonthIndex > 11) {
+                newMonthIndex = 0;
+                newYear = newYear + 1;
+            }
+
+            setSelectedMonthIndex(newMonthIndex);
+            setSelectedYear(newYear);
+            updateMonthRange(newYear, newMonthIndex);
+        }
     };
 
     const handleMonthSelect = (opt: string) => {
-        setSelectedMonth(opt);
         const monthIndex = months.indexOf(opt);
-        const { start, end } = monthStartEnd(selectedYear, monthIndex);
-        setCustomRange(start, end, `${opt} ${selectedYear}`);
+        setSelectedMonthIndex(monthIndex);
+        updateMonthRange(selectedYear, monthIndex);
     };
 
     const handleYearSelect = (opt: string) => {
         const y = parseInt(opt, 10);
         setSelectedYear(y);
 
-        // If currently viewing a month, update the range for that month in the new year
-        if (selected === "Months") {
-            const monthIndex = months.indexOf(selectedMonth);
-            if (monthIndex !== -1) {
-                const { start, end } = monthStartEnd(y, monthIndex);
-                setCustomRange(start, end, `${selectedMonth} ${y}`);
-            }
+        if (mode === "year") {
+            updateYearRange(y);
         } else {
-            // If viewing year, show the entire new year
-            const start = formatDateToDDMMYYYY(new Date(y, 0, 1));
-            const end = formatDateToDDMMYYYY(new Date(y, 11, 31));
-            setCustomRange(start, end, String(y));
+            // If selecting current year and current month is beyond available months, adjust
+            let monthIndex = selectedMonthIndex;
+            if (y === currentYear && monthIndex > currentMonthIndex) {
+                monthIndex = currentMonthIndex;
+                setSelectedMonthIndex(monthIndex);
+            }
+            updateMonthRange(y, monthIndex);
         }
     };
 
-    const currentFilterLabel = movementFilter === "all" ? "All" : movementFilter === "income" ? "Income" : "Expense";
+    const handleMonthModeClick = () => {
+        setMode("month");
+        updateMonthRange(selectedYear, selectedMonthIndex);
+    };
 
-    const handleMonthsPress = () => {
-        setSelected("Months");
-        // When switching to Months view, apply the currently selected month
-        const monthIndex = months.indexOf(selectedMonth);
-        if (monthIndex !== -1) {
-            const { start, end } = monthStartEnd(selectedYear, monthIndex);
-            setCustomRange(start, end, `${selectedMonth} ${selectedYear}`);
+    const handleYearModeClick = () => {
+        setMode("year");
+        updateYearRange(selectedYear);
+    };
+
+    const availableMonths = useMemo(() => {
+        if (selectedYear < currentYear) {
+            return months;
+        } else if (selectedYear === currentYear) {
+            return months.slice(0, currentMonthIndex + 1);
         }
-    };
-
-    const handleYearsPress = () => {
-        setSelected("Years");
-        // When switching to Years view, apply the entire year
-        const start = formatDateToDDMMYYYY(new Date(selectedYear, 0, 1));
-        const end = formatDateToDDMMYYYY(new Date(selectedYear, 11, 31));
-        setCustomRange(start, end, String(selectedYear));
-    };
+        return [];
+    }, [selectedYear, currentYear, currentMonthIndex, months]);
 
     return (
-        <View style={styles.wrapper}>
-            <ChipButton
-                text="Filter"
-                key="Filter"
-                active={selected === "Filter"}
-                onPress={() => setSelected("Filter")}
-                options={filterOptions}
-                defaultOption={currentFilterLabel}
-                onOptionSelect={handleFilterSelect}
-            />
-            <ChipButton
-                text="Months"
-                key="Months"
-                active={selected === "Months"}
-                onPress={handleMonthsPress}
-                options={availableMonths}
-                defaultOption={selectedMonth}
-                onOptionSelect={handleMonthSelect}
-            />
-            <ChipButton
-                text="Years"
-                key="Years"
-                active={selected === "Years"}
-                onPress={handleYearsPress}
-                options={availableYears}
-                defaultOption={String(selectedYear)}
-                onOptionSelect={handleYearSelect}
-            />
-        </View>
+      <View style={styles.wrapper}>
+        <TouchableOpacity
+          style={styles.arrowButton}
+          onPress={goToPreviousMonth}
+        >
+          <Text style={styles.arrowText}>←</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.arrowButton,
+            !canGoNext() && styles.arrowButtonDisabled,
+          ]}
+          onPress={goToNextMonth}
+          disabled={!canGoNext()}
+        >
+          <Text
+            style={[styles.arrowText, !canGoNext() && styles.arrowTextDisabled]}
+          >
+            →
+          </Text>
+        </TouchableOpacity>
+        <ChipButton
+          text="Months"
+          key="Months"
+          active={mode === "month"}
+          onPress={handleMonthModeClick}
+          options={availableMonths}
+          defaultOption={months[selectedMonthIndex]}
+          onOptionSelect={handleMonthSelect}
+        />
+        <ChipButton
+          text="Years"
+          key="Years"
+          active={mode === "year"}
+          onPress={handleYearModeClick}
+          options={availableYears}
+          defaultOption={String(selectedYear)}
+          onOptionSelect={handleYearSelect}
+        />
+      </View>
     );
 }
 
@@ -155,30 +209,25 @@ const styles = StyleSheet.create({
         display: "flex",
         flexDirection: "row",
         justifyContent: "space-between",
+        alignItems: "center",
         marginBottom: 16,
-        gap: 10
+        gap: 8
     },
-    navigation: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: 20,
-        paddingHorizontal: 20,
+    arrowButton: {
+        padding: 8,
+        paddingHorizontal: 12,
+        borderRadius: 20,
+        backgroundColor: "#f0f0f0",
     },
-    navButton: {
-        padding: 10,
-        minWidth: 40,
-        alignItems: "center",
+    arrowButtonDisabled: {
+        opacity: 0.3,
     },
-    navText: {
-        fontSize: 24,
+    arrowText: {
+        fontSize: 18,
         fontWeight: "bold",
     },
-    periodLabel: {
-        fontSize: 16,
-        fontWeight: "600",
-        flex: 1,
-        textAlign: "center",
+    arrowTextDisabled: {
+        color: "#999",
     },
 });
 

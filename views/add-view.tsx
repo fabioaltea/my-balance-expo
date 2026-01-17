@@ -7,7 +7,8 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import * as Crypto from "expo-crypto";
 import { ThemedText } from "@/components/themed-text";
 import ChipButton from "@/components/ui/chip-button";
 import { IconSymbol } from "@/components/ui/icon-symbol.ios";
@@ -26,6 +27,8 @@ import TransactionModal, {
   ITransactionData,
 } from "@/components/ui/transaction-modal";
 import ModalPanel from "@/components/ui/modal-panel";
+import GlassButton from "@/components/ui/glass-button";
+import ContextMenu, { IContextMenuOption } from "@/components/ui/context-menu";
 import ScreenView from "@/layout/screen-view";
 import { useAuthContext, useDataContext } from "@/state";
 import { TransactionsApiHelper } from "@/helpers/TransactionsApiHelper";
@@ -70,6 +73,14 @@ const AddView: React.FC<AddViewProps> = ({
   const [showTransactionPicker, setShowTransactionPicker] = useState(false);
   const [editingTransaction, setEditingTransaction] =
     useState<ITransaction | null>(null);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [buttonPosition, setButtonPosition] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null>(null);
+  const menuButtonRef = useRef<View>(null);
 
   const isEditing = !!editingMovementId;
 
@@ -203,45 +214,146 @@ const AddView: React.FC<AddViewProps> = ({
     }, 0);
   };
 
-  const handleSubmit = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+  const handleMenuPress = () => {
+    menuButtonRef.current?.measure((x, y, width, height, pageX, pageY) => {
+      setButtonPosition({ x: pageX, y: pageY, width, height });
+    });
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setMenuVisible(true);
+  };
 
-    // Validazione descrizione
+  const validateMovement = (): boolean => {
     if (!description.trim()) {
-      Alert.alert("Errore", "Inserisci una descrizione");
-      return;
+      Alert.alert("Error", "Please enter a description");
+      return false;
     }
-
-    // Validazione categoria
     if (!selectedCategory) {
-      Alert.alert("Errore", "Seleziona una categoria");
-      return;
+      Alert.alert("Error", "Please select a category");
+      return false;
     }
-
-    // Validazione data
     if (!selectedDate) {
-      Alert.alert("Errore", "Seleziona una data");
-      return;
+      Alert.alert("Error", "Please select a date");
+      return false;
     }
-
-    // Validazione transazioni (almeno una con conto e importo validi)
     const validTransactions = transactions.filter(
       (t) => t.accountName && t.amount > 0
     );
-
     if (validTransactions.length === 0) {
+      Alert.alert("Error", "Please add at least one transaction with a valid account and amount");
+      return false;
+    }
+    if (!selectedSpreadsheetId) {
+      Alert.alert("Error", "No spreadsheet selected");
+      return false;
+    }
+    return true;
+  };
+
+  const handleMenuOption = (option: string) => {
+    setMenuVisible(false);
+    if (option === "Save as recurring") {
+      if (!validateMovement()) {
+        return;
+      }
       Alert.alert(
-        "Errore",
-        "Inserisci almeno una transazione con conto e importo validi"
+        "Recurring Movement",
+        "This movement will be saved as recurring. Continue?",
+        [
+          {
+            text: "Cancel",
+            style: "cancel",
+          },
+          {
+            text: "Save",
+            onPress: () => {
+              handleSubmit(true);
+            },
+          },
+        ]
       );
+    } else if (option === "Delete movement") {
+      handleDeleteMovement();
+    }
+  };
+
+  const handleDeleteMovement = async () => {
+    Alert.alert(
+      "Delete Movement",
+      "Are you sure you want to delete this movement? This action cannot be undone.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            if (!selectedSpreadsheetId || !editingMovementId) return;
+
+            setIsSubmitting(true);
+            setModalStatus("loading");
+            setShowStatusModal(true);
+
+            try {
+              const result = await TransactionsApiHelper.deleteMovement(
+                selectedSpreadsheetId,
+                editingMovementId
+              );
+
+              if (result) {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                setModalStatus("success");
+                await reloadData();
+                setTimeout(() => {
+                  setShowStatusModal(false);
+                  router.back();
+                }, 500);
+              } else {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+                setModalStatus("error");
+              }
+            } catch (error) {
+              console.error("Error deleting movement:", error);
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+              setModalStatus("error");
+            } finally {
+              setIsSubmitting(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const getMenuOptions = (): IContextMenuOption[] => {
+    if (isEditing) {
+      return [
+        {
+          label: "Delete movement",
+          icon: "trash-outline",
+          destructive: true,
+        },
+      ];
+    }
+    return [
+      {
+        label: "Save as recurring",
+        icon: "repeat-outline",
+      },
+    ];
+  };
+
+  const handleSubmit = async (asRecurrent: boolean = false) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+
+    if (!validateMovement()) {
       return;
     }
 
-    // Verifica spreadsheetId
-    if (!selectedSpreadsheetId) {
-      Alert.alert("Errore", "Nessun foglio di calcolo selezionato");
-      return;
-    }
+    const validTransactions = transactions.filter(
+      (t) => t.accountName && t.amount > 0
+    );
 
     setIsSubmitting(true);
     setModalStatus("loading");
@@ -250,8 +362,8 @@ const AddView: React.FC<AddViewProps> = ({
     try {
       const formattedDate = formatDateToDDMMYYYY(selectedDate);
 
-      // Prepara il movimento con l'array di transazioni (formato IMovementRequest)
-      const movementData = {
+      // Prepare movement data with transactions array (IMovementRequest format)
+      const movementData: Record<string, any> = {
         movementId:
           isEditing && editingMovementId ? editingMovementId : undefined,
         description: description.trim(),
@@ -267,6 +379,12 @@ const AddView: React.FC<AddViewProps> = ({
           type: transaction.type === "income" ? "in" : "out",
         })),
       };
+
+      // If the movement should be saved as recurring, add recurrenceId and status
+      if (asRecurrent && !isEditing) {
+        movementData.recurrenceId = Crypto.randomUUID();
+        movementData.status = "recurrent";
+      }
 
       let result;
       if (isEditing && editingMovementId) {
@@ -290,17 +408,17 @@ const AddView: React.FC<AddViewProps> = ({
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         setModalStatus("success");
 
-        // Reset del form
+        // Reset form
         setDescription("");
         setSelectedCategory("");
         setSelectedDate(new Date());
         setTransactions([]);
         setSelectedLocation({ address: "" });
 
-        // Ricarica i dati
+        // Reload data
         await reloadData();
 
-        // Timeout di mezzo secondo, poi chiudi e torna alla dashboard
+        // Wait half a second, then close and go back to dashboard
         setTimeout(() => {
           setShowStatusModal(false);
           router.back();
@@ -310,7 +428,7 @@ const AddView: React.FC<AddViewProps> = ({
         setModalStatus("error");
       }
     } catch (error) {
-      console.error("Errore durante il salvataggio:", error);
+      console.error("Error saving movement:", error);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       setModalStatus("error");
     } finally {
@@ -354,9 +472,28 @@ const AddView: React.FC<AddViewProps> = ({
   return (
     <ScreenView>
       <View style={[styles.container, dynamicStyles.container]}>
-        <ThemedText type="title" style={styles.title}>
-          {isEditing ? "Edit Movement" : "New Movement"}
-        </ThemedText>
+        <View style={styles.headerContainer}>
+          <ThemedText type="title" style={styles.title}>
+            {isEditing ? "Edit Movement" : "New Movement"}
+          </ThemedText>
+          <View ref={menuButtonRef} collapsable={false}>
+            <GlassButton
+              type="menu"
+              size={20}
+              onPress={handleMenuPress}
+              accessibilityLabel="Menu opzioni"
+            />
+          </View>
+          {menuVisible && buttonPosition && (
+            <ContextMenu
+              options={getMenuOptions()}
+              selectedOption=""
+              onSelectOption={handleMenuOption}
+              onDismiss={() => setMenuVisible(false)}
+              buttonPosition={buttonPosition}
+            />
+          )}
+        </View>
         <ScrollView showsVerticalScrollIndicator={false}>
           <InputGroup>
             <TextBox
@@ -526,8 +663,14 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingBottom: 120,
   },
-  title: {
+  headerContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 30,
+  },
+  title: {
+    flex: 1,
     textAlign: "left",
   },
   inputCard: {

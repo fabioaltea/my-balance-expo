@@ -1,9 +1,21 @@
 import React, { useState, useMemo } from "react";
-import { View, StyleSheet, ScrollView, TouchableOpacity, Text } from "react-native";
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Text,
+} from "react-native";
 import { useDataContext } from "@/state/DataProvider";
 import { useMonthlyBalances, MonthlyData } from "@/hooks/useMonthlyBalances";
-import { useIncomeExpenses, IncomeExpenseData } from "@/hooks/useIncomeExpenses";
-import { useCategoryAccountBreakdown, PeriodBreakdownData } from "@/hooks/useCategoryAccountBreakdown";
+import {
+  useIncomeExpenses,
+  IncomeExpenseData,
+} from "@/hooks/useIncomeExpenses";
+import {
+  useCategoryAccountBreakdown,
+  PeriodBreakdownData,
+} from "@/hooks/useCategoryAccountBreakdown";
 import StackedBarChart from "@/components/charts/StackedBarChart";
 import IncomeExpenseChart from "@/components/charts/IncomeExpenseChart";
 import BreakdownStackedChart from "@/components/charts/BreakdownStackedChart";
@@ -20,8 +32,18 @@ type ViewMode = "months" | "years";
 
 // Full month names for modal title
 const FULL_MONTH_NAMES = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December"
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
 const ChartsView: React.FC = () => {
@@ -42,8 +64,10 @@ const ChartsView: React.FC = () => {
   const [selectedMonth, setSelectedMonth] = useState<MonthlyData | null>(null);
 
   // State for income/expense modal
-  const [isIncomeExpenseModalVisible, setIsIncomeExpenseModalVisible] = useState(false);
-  const [selectedIncomeExpense, setSelectedIncomeExpense] = useState<IncomeExpenseData | null>(null);
+  const [isIncomeExpenseModalVisible, setIsIncomeExpenseModalVisible] =
+    useState(false);
+  const [selectedIncomeExpense, setSelectedIncomeExpense] =
+    useState<IncomeExpenseData | null>(null);
 
   // State for breakdown charts (category vs account)
   type GroupBy = "category" | "account";
@@ -51,10 +75,14 @@ const ChartsView: React.FC = () => {
   const [incomeGroupBy, setIncomeGroupBy] = useState<GroupBy>("category");
 
   // State for breakdown modals
-  const [isExpenseBreakdownModalVisible, setIsExpenseBreakdownModalVisible] = useState(false);
-  const [selectedExpenseBreakdown, setSelectedExpenseBreakdown] = useState<PeriodBreakdownData | null>(null);
-  const [isIncomeBreakdownModalVisible, setIsIncomeBreakdownModalVisible] = useState(false);
-  const [selectedIncomeBreakdown, setSelectedIncomeBreakdown] = useState<PeriodBreakdownData | null>(null);
+  const [isExpenseBreakdownModalVisible, setIsExpenseBreakdownModalVisible] =
+    useState(false);
+  const [selectedExpenseBreakdown, setSelectedExpenseBreakdown] =
+    useState<PeriodBreakdownData | null>(null);
+  const [isIncomeBreakdownModalVisible, setIsIncomeBreakdownModalVisible] =
+    useState(false);
+  const [selectedIncomeBreakdown, setSelectedIncomeBreakdown] =
+    useState<PeriodBreakdownData | null>(null);
 
   // Calculate monthly balances with offset
   const monthlyData = useMonthlyBalances({
@@ -136,7 +164,8 @@ const ChartsView: React.FC = () => {
       .slice(-YEARS_TO_SHOW);
   }, [incomeExpenseYearlyRaw]);
 
-  const incomeExpenseData = viewMode === "months" ? incomeExpenseMonthly : incomeExpenseYearly;
+  const incomeExpenseData =
+    viewMode === "months" ? incomeExpenseMonthly : incomeExpenseYearly;
 
   // Calculate expense breakdown data
   const expenseBreakdownMonthly = useCategoryAccountBreakdown({
@@ -196,7 +225,8 @@ const ChartsView: React.FC = () => {
       .slice(-YEARS_TO_SHOW);
   }, [expenseBreakdownYearlyRaw]);
 
-  const expenseBreakdownData = viewMode === "months" ? expenseBreakdownMonthly : expenseBreakdownYearly;
+  const expenseBreakdownData =
+    viewMode === "months" ? expenseBreakdownMonthly : expenseBreakdownYearly;
 
   // Calculate income breakdown data
   const incomeBreakdownMonthly = useCategoryAccountBreakdown({
@@ -254,7 +284,8 @@ const ChartsView: React.FC = () => {
       .slice(-YEARS_TO_SHOW);
   }, [incomeBreakdownYearlyRaw]);
 
-  const incomeBreakdownData = viewMode === "months" ? incomeBreakdownMonthly : incomeBreakdownYearly;
+  const incomeBreakdownData =
+    viewMode === "months" ? incomeBreakdownMonthly : incomeBreakdownYearly;
 
   // Navigation handlers - scroll by 1 month or 1 year depending on mode
   const canGoNext = viewMode === "months" ? monthOffset > 0 : yearOffset > 0;
@@ -328,17 +359,16 @@ const ChartsView: React.FC = () => {
   if (isLoading && transactions.length === 0) {
     return (
       <ScrollView style={styles.container}>
-        <Card backgroundColor={cardBackground} color={textColor} label="Balance History">
+        <Card
+          backgroundColor={cardBackground}
+          color={textColor}
+          label="Balance History"
+        >
           <View style={styles.skeletonContainer}>
             <Skeleton width="100%" height={20} borderRadius={4} />
             <View style={styles.skeletonBars}>
               {[120, 160, 140, 180, 150, 170].map((h, i) => (
-                <Skeleton
-                  key={i}
-                  width={30}
-                  height={h}
-                  borderRadius={4}
-                />
+                <Skeleton key={i} width={30} height={h} borderRadius={4} />
               ))}
             </View>
             <Skeleton width="100%" height={16} borderRadius={4} />
@@ -373,18 +403,33 @@ const ChartsView: React.FC = () => {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.arrowButton, !canGoPrevious && styles.arrowButtonDisabled]}
+            style={[
+              styles.arrowButton,
+              !canGoPrevious && styles.arrowButtonDisabled,
+            ]}
             onPress={goToPrevious}
             disabled={!canGoPrevious}
           >
-            <Text style={[styles.arrowText, !canGoPrevious && styles.arrowTextDisabled]}>←</Text>
+            <Text
+              style={[
+                styles.arrowText,
+                !canGoPrevious && styles.arrowTextDisabled,
+              ]}
+            >
+              ←
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.arrowButton, !canGoNext && styles.arrowButtonDisabled]}
+            style={[
+              styles.arrowButton,
+              !canGoNext && styles.arrowButtonDisabled,
+            ]}
             onPress={goToNext}
             disabled={!canGoNext}
           >
-            <Text style={[styles.arrowText, !canGoNext && styles.arrowTextDisabled]}>
+            <Text
+              style={[styles.arrowText, !canGoNext && styles.arrowTextDisabled]}
+            >
               →
             </Text>
           </TouchableOpacity>
@@ -392,333 +437,385 @@ const ChartsView: React.FC = () => {
       </View>
 
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Balance History Chart */}
-      <Text style={[styles.chartLabel, { color: textColor, marginTop: 0 }]}>Balance History</Text>
-      <Card backgroundColor={cardBackground} color={textColor}>
-        <StackedBarChart
-          data={chartData}
-          height={200}
-          showLabels={true}
-          showYAxis={true}
-          showLegend={false}
-          showTotal={false}
-          onBarPress={handleBarPress}
-          viewMode={viewMode}
-        />
-      </Card>
+        {/* Balance History Chart */}
+        <Text style={[styles.chartLabel, { color: textColor, marginTop: 0 }]}>
+          Balance History
+        </Text>
+        <Card backgroundColor={cardBackground} color={textColor}>
+          <StackedBarChart
+            data={chartData}
+            height={200}
+            showLabels={true}
+            showYAxis={true}
+            showLegend={false}
+            showTotal={false}
+            onBarPress={handleBarPress}
+            viewMode={viewMode}
+          />
+        </Card>
 
-      {/* Income/Expense Chart */}
-      <Text style={[styles.chartLabel, { color: textColor }]}>Income & Expenses</Text>
-      <Card backgroundColor={cardBackground} color={textColor}>
-        <IncomeExpenseChart
-          data={incomeExpenseData}
-          height={200}
-          showLabels={true}
-          showYAxis={true}
-          onBarPress={handleIncomeExpensePress}
-          viewMode={viewMode}
-        />
-      </Card>
+        {/* Income/Expense Chart */}
+        <Text style={[styles.chartLabel, { color: textColor }]}>
+          Income & Expenses
+        </Text>
+        <Card backgroundColor={cardBackground} color={textColor}>
+          <IncomeExpenseChart
+            data={incomeExpenseData}
+            height={200}
+            showLabels={true}
+            showYAxis={true}
+            onBarPress={handleIncomeExpensePress}
+            viewMode={viewMode}
+          />
+        </Card>
 
-      {/* Expense Breakdown Chart */}
-      <View style={styles.chartHeaderRow}>
-        <Text style={[styles.chartLabel, { color: textColor }]}>Expenses Breakdown</Text>
-        <TouchableOpacity
-          style={styles.groupByChip}
-          onPress={() => setExpenseGroupBy((prev) => (prev === "category" ? "account" : "category"))}
-        >
-          <Text style={styles.groupByText}>
-            {expenseGroupBy === "category" ? "Category" : "Account"}
+        {/* Expense Breakdown Chart */}
+        <View style={styles.chartHeaderRow}>
+          <Text style={[styles.chartLabel, { color: textColor }]}>
+            Expenses Breakdown
           </Text>
-        </TouchableOpacity>
-      </View>
-      <Card backgroundColor={cardBackground} color={textColor}>
-        <BreakdownStackedChart
-          data={expenseBreakdownData}
-          height={200}
-          showLabels={true}
-          showYAxis={true}
-          onBarPress={handleExpenseBreakdownPress}
-          viewMode={viewMode}
-        />
-      </Card>
+          <TouchableOpacity
+            style={styles.groupByChip}
+            onPress={() =>
+              setExpenseGroupBy((prev) =>
+                prev === "category" ? "account" : "category",
+              )
+            }
+          >
+            <Text style={styles.groupByText}>
+              {expenseGroupBy === "category" ? "Category" : "Account"}
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <Card backgroundColor={cardBackground} color={textColor}>
+          <BreakdownStackedChart
+            data={expenseBreakdownData}
+            height={200}
+            showLabels={true}
+            showYAxis={true}
+            onBarPress={handleExpenseBreakdownPress}
+            viewMode={viewMode}
+          />
+        </Card>
 
-      {/* Income Breakdown Chart */}
-      <View style={styles.chartHeaderRow}>
-        <Text style={[styles.chartLabel, { color: textColor }]}>Income Breakdown</Text>
-        <TouchableOpacity
-          style={styles.groupByChip}
-          onPress={() => setIncomeGroupBy((prev) => (prev === "category" ? "account" : "category"))}
-        >
-          <Text style={styles.groupByText}>
-            {incomeGroupBy === "category" ? "Category" : "Account"}
+        {/* Income Breakdown Chart */}
+        <View style={styles.chartHeaderRow}>
+          <Text style={[styles.chartLabel, { color: textColor }]}>
+            Income Breakdown
           </Text>
-        </TouchableOpacity>
-      </View>
-      <Card backgroundColor={cardBackground} color={textColor}>
-        <BreakdownStackedChart
-          data={incomeBreakdownData}
-          height={200}
-          showLabels={true}
-          showYAxis={true}
-          onBarPress={handleIncomeBreakdownPress}
-          viewMode={viewMode}
-        />
-      </Card>
+          <TouchableOpacity
+            style={styles.groupByChip}
+            onPress={() =>
+              setIncomeGroupBy((prev) =>
+                prev === "category" ? "account" : "category",
+              )
+            }
+          >
+            <Text style={styles.groupByText}>
+              {incomeGroupBy === "category" ? "Category" : "Account"}
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <Card backgroundColor={cardBackground} color={textColor}>
+          <BreakdownStackedChart
+            data={incomeBreakdownData}
+            height={200}
+            showLabels={true}
+            showYAxis={true}
+            onBarPress={handleIncomeBreakdownPress}
+            viewMode={viewMode}
+          />
+        </Card>
 
-      {/* Month/Year Detail Modal */}
-      <ModalPanel
-        isVisible={isModalVisible}
-        onClose={() => setIsModalVisible(false)}
-        title={selectedMonth
-          ? viewMode === "months"
-            ? `${FULL_MONTH_NAMES[selectedMonth.monthIndex]} ${selectedMonth.year}`
-            : `Year ${selectedMonth.year}`
-          : ""
-        }
-        showConfirmButton={false}
-        showCancelButton={true}
-      >
-        {selectedMonth && (
-          <View style={styles.modalContent}>
-            {/* Total Balance */}
-            <View style={styles.totalSection}>
-              <Text style={[styles.totalLabel, { color: subtleTextColor }]}>
-                Total Balance
-              </Text>
-              <Text style={[styles.totalAmount, { color: textColor }]}>
-                {formatAmount(selectedMonth.totalBalance)}
-              </Text>
-            </View>
+        {/* Month/Year Detail Modal */}
+        <ModalPanel
+          isVisible={isModalVisible}
+          onClose={() => setIsModalVisible(false)}
+          title={
+            selectedMonth
+              ? viewMode === "months"
+                ? `${FULL_MONTH_NAMES[selectedMonth.monthIndex]} ${selectedMonth.year}`
+                : `Year ${selectedMonth.year}`
+              : ""
+          }
+          showConfirmButton={false}
+          showCancelButton={true}
+        >
+          {selectedMonth && (
+            <View style={styles.modalContent}>
+              {/* Total Balance */}
+              <View style={styles.totalSection}>
+                <Text style={[styles.totalLabel, { color: subtleTextColor }]}>
+                  Total Balance
+                </Text>
+                <Text style={[styles.totalAmount, { color: textColor }]}>
+                  {formatAmount(selectedMonth.totalBalance)}
+                </Text>
+              </View>
 
-            {/* Accounts List */}
-            <View style={styles.accountsSection}>
-              <Text style={[styles.sectionTitle, { color: subtleTextColor }]}>
-                Accounts
-              </Text>
+              {/* Accounts List */}
+              <View style={styles.accountsSection}>
+                <Text style={[styles.sectionTitle, { color: subtleTextColor }]}>
+                  Accounts
+                </Text>
+              </View>
+              <ScrollView
+                style={styles.accountsList}
+                contentContainerStyle={styles.accountsListContent}
+                showsVerticalScrollIndicator={true}
+                bounces={true}
+                nestedScrollEnabled={true}
+              >
+                {[...selectedMonth.accounts]
+                  .sort((a, b) => b.balance - a.balance)
+                  .map((account, index) => (
+                    <View key={index} style={styles.accountRow}>
+                      <View style={styles.accountInfo}>
+                        <View
+                          style={[
+                            styles.accountColorDot,
+                            { backgroundColor: account.color },
+                          ]}
+                        />
+                        <Text
+                          style={[styles.accountName, { color: textColor }]}
+                        >
+                          {account.accountName}
+                        </Text>
+                      </View>
+                      <Text
+                        style={[
+                          styles.accountBalance,
+                          {
+                            color: account.balance >= 0 ? "#4CAF50" : "#F44336",
+                          },
+                        ]}
+                      >
+                        {formatAmount(account.balance)}
+                      </Text>
+                    </View>
+                  ))}
+              </ScrollView>
             </View>
-            <ScrollView
-              style={styles.accountsList}
-              contentContainerStyle={styles.accountsListContent}
-              showsVerticalScrollIndicator={true}
-              bounces={true}
-              nestedScrollEnabled={true}
-            >
-              {[...selectedMonth.accounts]
-                .sort((a, b) => b.balance - a.balance)
-                .map((account, index) => (
-                <View key={index} style={styles.accountRow}>
-                  <View style={styles.accountInfo}>
-                    <View
-                      style={[
-                        styles.accountColorDot,
-                        { backgroundColor: account.color },
-                      ]}
-                    />
-                    <Text style={[styles.accountName, { color: textColor }]}>
-                      {account.accountName}
-                    </Text>
-                  </View>
+          )}
+        </ModalPanel>
+
+        {/* Income/Expense Detail Modal */}
+        <ModalPanel
+          isVisible={isIncomeExpenseModalVisible}
+          onClose={() => setIsIncomeExpenseModalVisible(false)}
+          title={
+            selectedIncomeExpense
+              ? viewMode === "months"
+                ? `${FULL_MONTH_NAMES[selectedIncomeExpense.monthIndex]} ${selectedIncomeExpense.year}`
+                : `Year ${selectedIncomeExpense.year}`
+              : ""
+          }
+          showConfirmButton={false}
+          showCancelButton={true}
+        >
+          {selectedIncomeExpense && (
+            <View style={styles.modalContent}>
+              {/* Income */}
+              <View style={styles.incomeExpenseRow}>
+                <View style={styles.incomeExpenseItem}>
                   <Text
                     style={[
-                      styles.accountBalance,
-                      { color: account.balance >= 0 ? "#4CAF50" : "#F44336" },
+                      styles.incomeExpenseLabel,
+                      { color: subtleTextColor },
                     ]}
                   >
-                    {formatAmount(account.balance)}
+                    Entrate
+                  </Text>
+                  <Text
+                    style={[styles.incomeExpenseAmount, { color: "#4CAF50" }]}
+                  >
+                    {formatAmount(selectedIncomeExpense.income)}
                   </Text>
                 </View>
-              ))}
-            </ScrollView>
-          </View>
-        )}
-      </ModalPanel>
-
-      {/* Income/Expense Detail Modal */}
-      <ModalPanel
-        isVisible={isIncomeExpenseModalVisible}
-        onClose={() => setIsIncomeExpenseModalVisible(false)}
-        title={selectedIncomeExpense
-          ? viewMode === "months"
-            ? `${FULL_MONTH_NAMES[selectedIncomeExpense.monthIndex]} ${selectedIncomeExpense.year}`
-            : `Year ${selectedIncomeExpense.year}`
-          : ""
-        }
-        showConfirmButton={false}
-        showCancelButton={true}
-      >
-        {selectedIncomeExpense && (
-          <View style={styles.modalContent}>
-            {/* Income */}
-            <View style={styles.incomeExpenseRow}>
-              <View style={styles.incomeExpenseItem}>
-                <Text style={[styles.incomeExpenseLabel, { color: subtleTextColor }]}>
-                  Entrate
-                </Text>
-                <Text style={[styles.incomeExpenseAmount, { color: "#4CAF50" }]}>
-                  {formatAmount(selectedIncomeExpense.income)}
-                </Text>
+                <View style={styles.incomeExpenseItem}>
+                  <Text
+                    style={[
+                      styles.incomeExpenseLabel,
+                      { color: subtleTextColor },
+                    ]}
+                  >
+                    Uscite
+                  </Text>
+                  <Text
+                    style={[styles.incomeExpenseAmount, { color: "#F44336" }]}
+                  >
+                    {formatAmount(selectedIncomeExpense.expenses)}
+                  </Text>
+                </View>
               </View>
-              <View style={styles.incomeExpenseItem}>
-                <Text style={[styles.incomeExpenseLabel, { color: subtleTextColor }]}>
-                  Uscite
+
+              {/* Balance */}
+              <View style={styles.balanceSection}>
+                <Text style={[styles.balanceLabel, { color: subtleTextColor }]}>
+                  Bilancio
                 </Text>
-                <Text style={[styles.incomeExpenseAmount, { color: "#F44336" }]}>
-                  {formatAmount(selectedIncomeExpense.expenses)}
+                <Text
+                  style={[
+                    styles.balanceAmount,
+                    {
+                      color:
+                        selectedIncomeExpense.income -
+                          selectedIncomeExpense.expenses >=
+                        0
+                          ? "#4CAF50"
+                          : "#F44336",
+                    },
+                  ]}
+                >
+                  {formatAmount(
+                    selectedIncomeExpense.income -
+                      selectedIncomeExpense.expenses,
+                  )}
                 </Text>
               </View>
             </View>
+          )}
+        </ModalPanel>
 
-            {/* Balance */}
-            <View style={styles.balanceSection}>
-              <Text style={[styles.balanceLabel, { color: subtleTextColor }]}>
-                Bilancio
-              </Text>
-              <Text
-                style={[
-                  styles.balanceAmount,
-                  {
-                    color: selectedIncomeExpense.income - selectedIncomeExpense.expenses >= 0
-                      ? "#4CAF50"
-                      : "#F44336",
-                  },
-                ]}
+        {/* Expense Breakdown Detail Modal */}
+        <ModalPanel
+          isVisible={isExpenseBreakdownModalVisible}
+          onClose={() => setIsExpenseBreakdownModalVisible(false)}
+          title={
+            selectedExpenseBreakdown
+              ? viewMode === "months"
+                ? `Expenses - ${FULL_MONTH_NAMES[selectedExpenseBreakdown.monthIndex]} ${selectedExpenseBreakdown.year}`
+                : `Expenses - Year ${selectedExpenseBreakdown.year}`
+              : ""
+          }
+          showConfirmButton={false}
+          showCancelButton={true}
+        >
+          {selectedExpenseBreakdown && (
+            <View style={styles.modalContent}>
+              {/* Total */}
+              <View style={styles.totalSection}>
+                <Text style={[styles.totalLabel, { color: subtleTextColor }]}>
+                  Total Expenses
+                </Text>
+                <Text style={[styles.totalAmount, { color: "#F44336" }]}>
+                  {formatAmount(selectedExpenseBreakdown.total)}
+                </Text>
+              </View>
+
+              {/* Breakdown List */}
+              <View style={styles.accountsSection}>
+                <Text style={[styles.sectionTitle, { color: subtleTextColor }]}>
+                  {expenseGroupBy === "category" ? "Categories" : "Accounts"}
+                </Text>
+              </View>
+              <ScrollView
+                style={styles.accountsList}
+                contentContainerStyle={styles.accountsListContent}
+                showsVerticalScrollIndicator={true}
+                bounces={true}
+                nestedScrollEnabled={true}
               >
-                {formatAmount(selectedIncomeExpense.income - selectedIncomeExpense.expenses)}
-              </Text>
+                {[...selectedExpenseBreakdown.items]
+                  .sort((a, b) => b.amount - a.amount)
+                  .map((item, index) => (
+                    <View key={index} style={styles.accountRow}>
+                      <View style={styles.accountInfo}>
+                        <View
+                          style={[
+                            styles.accountColorDot,
+                            { backgroundColor: item.color },
+                          ]}
+                        />
+                        <Text
+                          style={[styles.accountName, { color: textColor }]}
+                        >
+                          {item.name}
+                        </Text>
+                      </View>
+                      <Text
+                        style={[styles.accountBalance, { color: "#F44336" }]}
+                      >
+                        {formatAmount(item.amount)}
+                      </Text>
+                    </View>
+                  ))}
+              </ScrollView>
             </View>
-          </View>
-        )}
-      </ModalPanel>
+          )}
+        </ModalPanel>
 
-      {/* Expense Breakdown Detail Modal */}
-      <ModalPanel
-        isVisible={isExpenseBreakdownModalVisible}
-        onClose={() => setIsExpenseBreakdownModalVisible(false)}
-        title={selectedExpenseBreakdown
-          ? viewMode === "months"
-            ? `Expenses - ${FULL_MONTH_NAMES[selectedExpenseBreakdown.monthIndex]} ${selectedExpenseBreakdown.year}`
-            : `Expenses - Year ${selectedExpenseBreakdown.year}`
-          : ""
-        }
-        showConfirmButton={false}
-        showCancelButton={true}
-      >
-        {selectedExpenseBreakdown && (
-          <View style={styles.modalContent}>
-            {/* Total */}
-            <View style={styles.totalSection}>
-              <Text style={[styles.totalLabel, { color: subtleTextColor }]}>
-                Total Expenses
-              </Text>
-              <Text style={[styles.totalAmount, { color: "#F44336" }]}>
-                {formatAmount(selectedExpenseBreakdown.total)}
-              </Text>
+        {/* Income Breakdown Detail Modal */}
+        <ModalPanel
+          isVisible={isIncomeBreakdownModalVisible}
+          onClose={() => setIsIncomeBreakdownModalVisible(false)}
+          title={
+            selectedIncomeBreakdown
+              ? viewMode === "months"
+                ? `Income - ${FULL_MONTH_NAMES[selectedIncomeBreakdown.monthIndex]} ${selectedIncomeBreakdown.year}`
+                : `Income - Year ${selectedIncomeBreakdown.year}`
+              : ""
+          }
+          showConfirmButton={false}
+          showCancelButton={true}
+        >
+          {selectedIncomeBreakdown && (
+            <View style={styles.modalContent}>
+              {/* Total */}
+              <View style={styles.totalSection}>
+                <Text style={[styles.totalLabel, { color: subtleTextColor }]}>
+                  Total Income
+                </Text>
+                <Text style={[styles.totalAmount, { color: "#4CAF50" }]}>
+                  {formatAmount(selectedIncomeBreakdown.total)}
+                </Text>
+              </View>
+
+              {/* Breakdown List */}
+              <View style={styles.accountsSection}>
+                <Text style={[styles.sectionTitle, { color: subtleTextColor }]}>
+                  {incomeGroupBy === "category" ? "Categories" : "Accounts"}
+                </Text>
+              </View>
+              <ScrollView
+                style={styles.accountsList}
+                contentContainerStyle={styles.accountsListContent}
+                showsVerticalScrollIndicator={true}
+                bounces={true}
+                nestedScrollEnabled={true}
+              >
+                {[...selectedIncomeBreakdown.items]
+                  .sort((a, b) => b.amount - a.amount)
+                  .map((item, index) => (
+                    <View key={index} style={styles.accountRow}>
+                      <View style={styles.accountInfo}>
+                        <View
+                          style={[
+                            styles.accountColorDot,
+                            { backgroundColor: item.color },
+                          ]}
+                        />
+                        <Text
+                          style={[styles.accountName, { color: textColor }]}
+                        >
+                          {item.name}
+                        </Text>
+                      </View>
+                      <Text
+                        style={[styles.accountBalance, { color: "#4CAF50" }]}
+                      >
+                        {formatAmount(item.amount)}
+                      </Text>
+                    </View>
+                  ))}
+              </ScrollView>
             </View>
+          )}
+        </ModalPanel>
 
-            {/* Breakdown List */}
-            <View style={styles.accountsSection}>
-              <Text style={[styles.sectionTitle, { color: subtleTextColor }]}>
-                {expenseGroupBy === "category" ? "Categories" : "Accounts"}
-              </Text>
-            </View>
-            <ScrollView
-              style={styles.accountsList}
-              contentContainerStyle={styles.accountsListContent}
-              showsVerticalScrollIndicator={true}
-              bounces={true}
-              nestedScrollEnabled={true}
-            >
-              {[...selectedExpenseBreakdown.items]
-                .sort((a, b) => b.amount - a.amount)
-                .map((item, index) => (
-                <View key={index} style={styles.accountRow}>
-                  <View style={styles.accountInfo}>
-                    <View
-                      style={[
-                        styles.accountColorDot,
-                        { backgroundColor: item.color },
-                      ]}
-                    />
-                    <Text style={[styles.accountName, { color: textColor }]}>
-                      {item.name}
-                    </Text>
-                  </View>
-                  <Text style={[styles.accountBalance, { color: "#F44336" }]}>
-                    {formatAmount(item.amount)}
-                  </Text>
-                </View>
-              ))}
-            </ScrollView>
-          </View>
-        )}
-      </ModalPanel>
-
-      {/* Income Breakdown Detail Modal */}
-      <ModalPanel
-        isVisible={isIncomeBreakdownModalVisible}
-        onClose={() => setIsIncomeBreakdownModalVisible(false)}
-        title={selectedIncomeBreakdown
-          ? viewMode === "months"
-            ? `Income - ${FULL_MONTH_NAMES[selectedIncomeBreakdown.monthIndex]} ${selectedIncomeBreakdown.year}`
-            : `Income - Year ${selectedIncomeBreakdown.year}`
-          : ""
-        }
-        showConfirmButton={false}
-        showCancelButton={true}
-      >
-        {selectedIncomeBreakdown && (
-          <View style={styles.modalContent}>
-            {/* Total */}
-            <View style={styles.totalSection}>
-              <Text style={[styles.totalLabel, { color: subtleTextColor }]}>
-                Total Income
-              </Text>
-              <Text style={[styles.totalAmount, { color: "#4CAF50" }]}>
-                {formatAmount(selectedIncomeBreakdown.total)}
-              </Text>
-            </View>
-
-            {/* Breakdown List */}
-            <View style={styles.accountsSection}>
-              <Text style={[styles.sectionTitle, { color: subtleTextColor }]}>
-                {incomeGroupBy === "category" ? "Categories" : "Accounts"}
-              </Text>
-            </View>
-            <ScrollView
-              style={styles.accountsList}
-              contentContainerStyle={styles.accountsListContent}
-              showsVerticalScrollIndicator={true}
-              bounces={true}
-              nestedScrollEnabled={true}
-            >
-              {[...selectedIncomeBreakdown.items]
-                .sort((a, b) => b.amount - a.amount)
-                .map((item, index) => (
-                <View key={index} style={styles.accountRow}>
-                  <View style={styles.accountInfo}>
-                    <View
-                      style={[
-                        styles.accountColorDot,
-                        { backgroundColor: item.color },
-                      ]}
-                    />
-                    <Text style={[styles.accountName, { color: textColor }]}>
-                      {item.name}
-                    </Text>
-                  </View>
-                  <Text style={[styles.accountBalance, { color: "#4CAF50" }]}>
-                    {formatAmount(item.amount)}
-                  </Text>
-                </View>
-              ))}
-            </ScrollView>
-          </View>
-        )}
-      </ModalPanel>
-
-      {/* Bottom spacer for scroll */}
-      <View style={styles.bottomSpacer} />
+        {/* Bottom spacer for scroll */}
+        <View style={styles.bottomSpacer} />
       </ScrollView>
     </View>
   );

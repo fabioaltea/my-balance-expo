@@ -169,4 +169,31 @@ export class TransactionsApiHelper {
       return null;
     }
   }
+
+  /**
+   * Delete a movement and all its transactions
+   */
+  static async deleteMovement(
+    spreadsheetId: string,
+    movementId: string
+  ) {
+    try {
+      console.log("🗑️ Deleting movement...", movementId);
+
+      const response = await HttpHelper.delete(
+        `/movements/${movementId}?spreadsheet_id=${spreadsheetId}`
+      );
+
+      if (response.success) {
+        console.log("✅ Movement deleted successfully");
+        return true;
+      } else {
+        console.error("❌ Failed to delete movement:", response.error);
+        return false;
+      }
+    } catch (error) {
+      console.error("❌ Error deleting movement:", error);
+      return false;
+    }
+  }
 }

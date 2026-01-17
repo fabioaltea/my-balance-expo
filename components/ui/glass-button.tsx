@@ -13,8 +13,9 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useThemeColor } from "@/hooks/use-theme-color";
+import React from "react";
 
-type GlassButtonType = "add" | "search" | "confirm" | "dismiss";
+type GlassButtonType = "add" | "search" | "confirm" | "dismiss" | "menu";
 
 type Props = {
   onPress: () => void;
@@ -79,6 +80,8 @@ const GlassButton = ({
             ? "Confirm"
             : type === "dismiss"
             ? "Dismiss"
+            : type === "menu"
+            ? "Menu"
             : "Add")
         }
       >
@@ -118,6 +121,8 @@ const GlassButton = ({
                 ? "checkmark"
                 : type === "dismiss"
                 ? "close"
+                : type === "menu"
+                ? "ellipsis-vertical"
                 : "add"
             }
             size={size}

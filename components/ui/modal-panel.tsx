@@ -47,15 +47,15 @@ const ModalPanel: React.FC<IModalPanelProps> = ({
   // Theme colors
   const backgroundColor = useThemeColor(
     { light: "#fff", dark: "#1a1a1a" },
-    "background"
+    "background",
   );
   const borderColor = useThemeColor(
     { light: "#e0e0e0", dark: "#333" },
-    "tabIconDefault"
+    "tabIconDefault",
   );
   const overlayColor = useThemeColor(
     { light: "rgba(0,0,0,0.5)", dark: "rgba(0,0,0,0.7)" },
-    "tabIconDefault"
+    "tabIconDefault",
   );
 
   const hideModal = () => {
@@ -125,10 +125,7 @@ const ModalPanel: React.FC<IModalPanelProps> = ({
       <View style={styles.modalContainer}>
         {/* Overlay - tappable to close */}
         <Pressable
-          style={[
-            styles.modalOverlay,
-            dynamicStyles.overlay,
-          ]}
+          style={[styles.modalOverlay, dynamicStyles.overlay]}
           onPress={hideModal}
         />
 
@@ -150,35 +147,32 @@ const ModalPanel: React.FC<IModalPanelProps> = ({
             },
           ]}
         >
-            {/* Modal Header */}
-            {(title || showCancelButton || showConfirmButton) && (
-              <View style={styles.modalHeader}>
-                {showCancelButton ? (
-                  <GlassButton onPress={hideModal} type="dismiss" />
-                ) : (
-                  <View style={styles.spacer} />
-                )}
+          {/* Modal Header */}
+          {(title || showCancelButton || showConfirmButton) && (
+            <View style={styles.modalHeader}>
+              {showCancelButton ? (
+                <GlassButton onPress={hideModal} type="dismiss" />
+              ) : (
+                <View style={styles.spacer} />
+              )}
 
-                {title && (
-                  <ThemedText
-                    type="defaultSemiBold"
-                    style={styles.modalTitle}
-                  >
-                    {title}
-                  </ThemedText>
-                )}
+              {title && (
+                <ThemedText type="defaultSemiBold" style={styles.modalTitle}>
+                  {title}
+                </ThemedText>
+              )}
 
-                {showConfirmButton ? (
-                  <GlassButton onPress={handleConfirm} type="confirm" />
-                ) : (
-                  <View style={styles.spacer} />
-                )}
-              </View>
-            )}
+              {showConfirmButton ? (
+                <GlassButton onPress={handleConfirm} type="confirm" />
+              ) : (
+                <View style={styles.spacer} />
+              )}
+            </View>
+          )}
 
-            {/* Modal Content */}
-            <View style={styles.contentContainer}>{children}</View>
-          </Animated.View>
+          {/* Modal Content */}
+          <View style={styles.contentContainer}>{children}</View>
+        </Animated.View>
       </View>
     </Modal>
   );

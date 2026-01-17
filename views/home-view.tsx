@@ -1,5 +1,6 @@
 import BalanceCard from "@/components/cards/balance-card";
 import MovementsCard from "@/components/cards/movements-card";
+import RecurringMovementsCard from "@/components/cards/recurring-movements-card";
 import FinancialSummaryCard from "@/components/cards/financial-summary-card";
 import PeriodPicker from "@/components/ui/period-chips-picker";
 import {
@@ -14,6 +15,7 @@ import Pager from "@/components/ui/pager";
 import { DATE_RANGES } from "@/state";
 import { isDateInRange } from "@/utils/dateUtils";
 import type { Account, Movement, IDateRange } from "@/state";
+import ViewModePicker from "@/components/ui/view-mode-picker";
 
 interface HomeViewProps {
   accounts: Account[];
@@ -40,6 +42,7 @@ const HomeView: React.FC<HomeViewProps> = ({
   const [dateRange, setDateRange] = useState<IDateRange>(
     DATE_RANGES.THIS_MONTH
   );
+  const [viewMode, setViewMode] = useState<"recent" | "next" | "recurring">("recent");
   const [isPeriodTransitioning, setIsPeriodTransitioning] =
     useState<boolean>(false);
 
@@ -75,10 +78,8 @@ const HomeView: React.FC<HomeViewProps> = ({
     console.log("  - Selected Account Index:", selectedAccountIndex);
   }, [accounts, movements, selectedAccount, selectedAccountIndex, accounts]);
 
-  // Filter movements based on date range
-  // Note: Account filtering happens at transaction level, not movement level
-  // since a movement can contain transactions from multiple accounts
-  const filteredMovements = useMemo(() => {
+  // Filter movements based on date range and account
+  const dateFilteredMovements = useMemo(() => {
     return movements.filter((m) => {
       const dateMatches = isDateInRange(
         m.date,
@@ -94,6 +95,26 @@ const HomeView: React.FC<HomeViewProps> = ({
       return dateMatches && accountMatches;
     });
   }, [movements, selectedAccount, dateRange]);
+
+  // Filter movements based on viewMode (only for recent and next)
+  const filteredMovements = useMemo(() => {
+    switch (viewMode) {
+      case "next":
+        // Show upcoming/future movements
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return dateFilteredMovements.filter((m) => {
+          const [day, month, year] = m.date.split("-").map(Number);
+          const movementDate = new Date(year, month - 1, day);
+          return movementDate >= today;
+        });
+
+      case "recent":
+      default:
+        // Show all movements in the selected period (default behavior)
+        return dateFilteredMovements;
+    }
+  }, [dateFilteredMovements, viewMode]);
 
   // Handle account switch
   const handleAccountSwitch = (index: number) => {
@@ -164,14 +185,20 @@ const HomeView: React.FC<HomeViewProps> = ({
           isLoading={isLoading}
         />
         <FinancialSummaryCard
-          income={getTotalIncome(filteredMovements)}
-          expense={getTotalExpense(filteredMovements)}
+          income={getTotalIncome(dateFilteredMovements)}
+          expense={getTotalExpense(dateFilteredMovements)}
           isTransitioning={isPeriodTransitioning}
         />
-        <MovementsCard
-          movements={filteredMovements}
-          isTransitioning={isPeriodTransitioning}
-        />
+        <ViewModePicker selectedMode={viewMode} onModeChange={setViewMode} />
+        {viewMode === "recurring" ? (
+          <RecurringMovementsCard />
+        ) : (
+          <MovementsCard
+            movements={filteredMovements}
+            isTransitioning={isPeriodTransitioning}
+          />
+        )}
+        <View style={{ height: 100 }}></View>
       </ScrollView>
     </View>
   );

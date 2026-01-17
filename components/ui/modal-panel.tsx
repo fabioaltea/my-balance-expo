@@ -5,7 +5,6 @@ import {
   Pressable,
   Animated,
   Dimensions,
-  TouchableWithoutFeedback,
 } from "react-native";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { useState, useRef, useEffect, ReactNode } from "react";
@@ -123,71 +122,75 @@ const ModalPanel: React.FC<IModalPanelProps> = ({
       animationType="none"
       statusBarTranslucent={true}
     >
-      <TouchableWithoutFeedback onPress={hideModal}>
-        <Animated.View
+      <View style={styles.modalContainer}>
+        {/* Overlay - tappable to close */}
+        <Pressable
           style={[
             styles.modalOverlay,
             dynamicStyles.overlay,
-            { opacity: opacityAnimation },
+          ]}
+          onPress={hideModal}
+        />
+
+        {/* Content panel - separate from overlay */}
+        <Animated.View
+          style={[
+            styles.modalContent,
+            dynamicStyles.modalContent,
+            {
+              opacity: opacityAnimation,
+              transform: [
+                {
+                  translateY: slideAnimation.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [maxHeight, 0],
+                  }),
+                },
+              ],
+            },
           ]}
         >
-          <TouchableWithoutFeedback onPress={() => {}}>
-            <Animated.View
-              style={[
-                styles.modalContent,
-                dynamicStyles.modalContent,
-                {
-                  transform: [
-                    {
-                      translateY: slideAnimation.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [maxHeight, 0],
-                      }),
-                    },
-                  ],
-                },
-              ]}
-            >
-              {/* Modal Header */}
-              {(title || showCancelButton || showConfirmButton) && (
-                <View style={styles.modalHeader}>
-                  {showCancelButton ? (
-                    <GlassButton onPress={hideModal} type="dismiss" />
-                  ) : (
-                    <View style={styles.spacer} />
-                  )}
+            {/* Modal Header */}
+            {(title || showCancelButton || showConfirmButton) && (
+              <View style={styles.modalHeader}>
+                {showCancelButton ? (
+                  <GlassButton onPress={hideModal} type="dismiss" />
+                ) : (
+                  <View style={styles.spacer} />
+                )}
 
-                  {title && (
-                    <ThemedText
-                      type="defaultSemiBold"
-                      style={styles.modalTitle}
-                    >
-                      {title}
-                    </ThemedText>
-                  )}
+                {title && (
+                  <ThemedText
+                    type="defaultSemiBold"
+                    style={styles.modalTitle}
+                  >
+                    {title}
+                  </ThemedText>
+                )}
 
-                  {showConfirmButton ? (
-                    <GlassButton onPress={handleConfirm} type="confirm" />
-                  ) : (
-                    <View style={styles.spacer} />
-                  )}
-                </View>
-              )}
+                {showConfirmButton ? (
+                  <GlassButton onPress={handleConfirm} type="confirm" />
+                ) : (
+                  <View style={styles.spacer} />
+                )}
+              </View>
+            )}
 
-              {/* Modal Content */}
-              <View style={styles.contentContainer}>{children}</View>
-            </Animated.View>
-          </TouchableWithoutFeedback>
-        </Animated.View>
-      </TouchableWithoutFeedback>
+            {/* Modal Content */}
+            <View style={styles.contentContainer}>{children}</View>
+          </Animated.View>
+      </View>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  modalOverlay: {
+  modalContainer: {
     flex: 1,
     justifyContent: "flex-end",
+  },
+  modalOverlay: {
+    ...StyleSheet.absoluteFillObject,
   },
   modalContent: {
     borderTopLeftRadius: 30,
@@ -238,11 +241,13 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   spacer: {
-    minWidth: 80,
+    width: 48,
+    height: 48,
   },
   contentContainer: {
     paddingBottom: 30,
     paddingHorizontal: 20,
+    flexShrink: 1,
   },
 });
 

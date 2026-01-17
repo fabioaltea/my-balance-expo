@@ -8,6 +8,9 @@
       "credentialsSource": "remote",
       "developmentClient": true,
       "distribution": "internal",
+      "env": {
+        "APP_VARIANT": "development"
+      },
       "ios": {
         "simulator": false
       },

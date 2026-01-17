@@ -148,12 +148,12 @@ export default function Settings() {
           <View style={styles.profileCard}>
             <View style={styles.profileAvatar}>
               <ThemedText style={styles.profileInitial}>
-                {user?.name?.charAt(0).toUpperCase() || "U"}
+                {user?.email?.charAt(0).toUpperCase() || "U"}
               </ThemedText>
             </View>
             <View style={styles.profileInfo}>
               <ThemedText style={[styles.profileName, { color: textColor }]}>
-                {user?.name || "User"}
+                {user?.email || "User"}
               </ThemedText>
               <ThemedText
                 style={[styles.profileEmail, { color: secondaryTextColor }]}

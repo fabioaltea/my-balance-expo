@@ -332,9 +332,8 @@ export const useAuth = () => {
       const codeVerifier = generateCodeVerifier();
       const codeChallenge = await generateCodeChallenge(codeVerifier);
 
-      // Use custom scheme for iOS - using app scheme from Expo config
-      const redirectUri =
-        "com.googleusercontent.apps.1034336371411-871dda5aa8crght33ognn5hbeivrp09k:/oauthredirect";
+      // Use custom scheme for iOS - from env var (reversed Google client ID)
+      const redirectUri = `${process.env.EXPO_PUBLIC_GOOGLE_REDIRECT_SCHEME}:/oauthredirect`;
 
       // Create OAuth request with PKCE
       const request = new AuthSession.AuthRequest({

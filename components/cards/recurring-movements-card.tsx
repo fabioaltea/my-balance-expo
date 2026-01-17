@@ -8,7 +8,6 @@ import { useDataContext } from "@/state/DataProvider";
 import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
 import type { Movement } from "@/state";
-import { formatDateForDisplay } from "@/utils/dateUtils";
 
 // Helper function to get icon based on category/description
 const getMovementIcon = (category?: string, description?: string): string => {
@@ -77,7 +76,7 @@ const getMovementColor = (
 };
 
 const RecurringMovementsCard: React.FC = () => {
-  const { recurringMovements, isLoading } = useDataContext();
+  const { recurringMovements } = useDataContext();
 
   const handleQuickAdd = (movement: Movement) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -97,7 +96,7 @@ const RecurringMovementsCard: React.FC = () => {
     "tabIconDefault"
   );
   const subtextColor = useThemeColor(
-    { light: "#666", dark: "#999" },
+    { light: "#888", dark: "#999" },
     "tabIconDefault"
   );
 
@@ -112,17 +111,25 @@ const RecurringMovementsCard: React.FC = () => {
     return null;
   }
 
+  // Format amount for display
+  const formatAmount = (amount: number) => {
+    const sign = amount > 0 ? "+" : "";
+    return `${sign}${amount.toFixed(2).replace(".", ",")}€`;
+  };
+
   return (
     <Card>
       {recurringMovements.map((movement, index) => {
         const icon = getMovementIcon(movement.category, movement.description);
         const color = getMovementColor(movement.type, movement.category);
         const amount = movement.totalAmount;
+        const transactionCount = movement.transactions.length;
 
         return (
           <TouchableOpacity
             key={movement.recurrenceId || movement.id}
             onPress={() => handleQuickAdd(movement)}
+            activeOpacity={0.6}
             style={[
               styles.recurringItem,
               dynamicStyles.itemBorder,
@@ -137,19 +144,21 @@ const RecurringMovementsCard: React.FC = () => {
               />
             </View>
             <View style={styles.itemInfo}>
+              <ThemedText style={[styles.itemSubtitle, { color: subtextColor }]}>
+                {formatAmount(amount)} • {transactionCount} transaction
+                {transactionCount > 1 ? "s" : ""}
+              </ThemedText>
               <ThemedText style={styles.itemDescription}>
                 {movement.description}
               </ThemedText>
-              <ThemedText
-                style={[styles.itemCategory, { color: subtextColor }]}
-              >
-                {movement.category} • {movement.transactions.length} transaction
-                {movement.transactions.length > 1 ? "s" : ""}
-              </ThemedText>
             </View>
-            <View style={styles.addButton}>
-              <IconSymbol name="plus.circle.fill" size={24} color="#2F4F3F" />
-            </View>
+            <TouchableOpacity
+              onPress={() => handleQuickAdd(movement)}
+              style={styles.addButton}
+              activeOpacity={0.7}
+            >
+              <IconSymbol name="plus.circle.fill" size={28} color="#2F4F3F" />
+            </TouchableOpacity>
           </TouchableOpacity>
         );
       })}
@@ -161,34 +170,35 @@ const styles = StyleSheet.create({
   recurringItem: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 12,
+    paddingVertical: 10,
     borderBottomWidth: 1,
   },
   lastItem: {
     borderBottomWidth: 0,
   },
   iconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 50,
+    height: 50,
+    borderRadius: 30,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 12,
+    marginRight: 16,
   },
   itemInfo: {
     flex: 1,
   },
+  itemSubtitle: {
+    fontSize: 12,
+    marginBottom: 0,
+  },
   itemDescription: {
     fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 2,
+    fontWeight: "500",
     textTransform: "capitalize",
-  },
-  itemCategory: {
-    fontSize: 12,
   },
   addButton: {
     marginLeft: 8,
+    padding: 4,
   },
 });
 

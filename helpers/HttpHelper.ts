@@ -130,6 +130,7 @@ export class HttpHelper {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
+          "X-Authorization": `Bearer ${accessToken}`,
           ...options.headers,
         },
       });
@@ -170,6 +171,7 @@ export class HttpHelper {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
+          "X-Authorization": `Bearer ${accessToken}`,
           ...options.headers,
         },
         body: JSON.stringify(data),
@@ -226,6 +228,7 @@ export class HttpHelper {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
+          "X-Authorization": `Bearer ${accessToken}`,
           ...options.headers,
         },
         body: JSON.stringify(data),
@@ -264,6 +267,7 @@ export class HttpHelper {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
+          "X-Authorization": `Bearer ${accessToken}`,
           ...options.headers,
         },
       });

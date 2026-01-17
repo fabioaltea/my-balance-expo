@@ -10,10 +10,7 @@ import {
 
 export default function TabLayout() {
   return (
-    <NativeTabs
-      minimizeBehavior="onScrollDown"
-      iconColor="#2F4F3F"
-    >
+    <NativeTabs minimizeBehavior="onScrollDown" iconColor="#2F4F3F">
       <NativeTabs.Trigger name="charts">
         <Label>Charts</Label>
         {Platform.select({
@@ -35,15 +32,15 @@ export default function TabLayout() {
         })}
       </NativeTabs.Trigger>
 
-      <NativeTabs.Trigger name="movements">
+      {/* <NativeTabs.Trigger name="movements">
         <Label>Movements</Label>
         {Platform.select({
           ios: <Icon sf="list.bullet" />,
           android: (
             <Icon src={<VectorIcon family={MaterialIcons} name="list" />} />
           ),
-        })}
-      </NativeTabs.Trigger>
+        })} 
+      </NativeTabs.Trigger>*/}
 
       <NativeTabs.Trigger name="settings">
         <Label>Fabio</Label>

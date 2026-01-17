@@ -3,7 +3,7 @@ import ChipButton from "./chip-button";
 import { useState } from "react";
 import React from "react";
 
-export type ViewMode = "recent" | "recurring";
+export type ViewMode = "recent" | "recurring" | "next";
 
 interface ViewModePickerProps {
   selectedMode: ViewMode;
@@ -17,6 +17,7 @@ const ViewModePicker: React.FC<ViewModePickerProps> = ({
   const modes: { label: string; value: ViewMode }[] = [
     { label: "Recent", value: "recent" },
     { label: "Recurring", value: "recurring" },
+    { label: "Next", value: "next" },
   ];
 
   return (

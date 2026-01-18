@@ -38,8 +38,7 @@ export default function Settings() {
 
   const handleNavigation = (route: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    // router.push(route as any);
-    Alert.alert("Coming soon", `${route} feature is under development`);
+    router.push(route as any);
   };
 
   // Theme colors
@@ -91,7 +90,7 @@ export default function Settings() {
           ]}
         >
           <IconSymbol
-            name={icon}
+            name={icon as keyof typeof IconSymbol}
             size={20}
             color={isDestructive ? destructiveColor : "#2F4F3F"}
           />
@@ -172,12 +171,12 @@ export default function Settings() {
             <SettingsItem
               icon="creditcard.fill"
               title="Accounts"
-              onPress={() => handleNavigation("accounts")}
+              onPress={() => handleNavigation("/accounts")}
             />
             <SettingsItem
               icon="folder.fill"
               title="Categories"
-              onPress={() => handleNavigation("categories")}
+              onPress={() => handleNavigation("/categories")}
             />
           </InputGroup>
         </SettingsSection>

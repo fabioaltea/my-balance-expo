@@ -63,6 +63,22 @@ const AuthenticatedApp: React.FC = () => {
             }}
           />
           <Stack.Screen
+            name="accounts"
+            options={{
+              presentation: "card",
+              title: "Accounts",
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="categories"
+            options={{
+              presentation: "card",
+              title: "Categories",
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
             name="modal"
             options={{ presentation: "modal", title: "Modal" }}
           />

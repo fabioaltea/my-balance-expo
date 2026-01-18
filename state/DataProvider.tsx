@@ -5,6 +5,7 @@ import {
   Movement,
   Account,
   Category,
+  PendingRecurrence,
 } from "../hooks/useMyBalanceData";
 import { useAuthContext } from "./AuthProvider";
 
@@ -17,6 +18,7 @@ interface DataContextType {
   // Derived data
   movements: Movement[];
   recurringMovements: Movement[];
+  pendingRecurrences: PendingRecurrence[];
 
   // State
   isLoading: boolean;

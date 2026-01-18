@@ -5,7 +5,13 @@ export { AuthProvider, useAuthContext } from "./AuthProvider";
 
 // Data management - Centralized context
 export { DataProvider, useDataContext } from "./DataProvider";
-export type { Transaction, Movement, Account, Category } from "../hooks/useMyBalanceData";
+export type {
+  Transaction,
+  Movement,
+  Account,
+  Category,
+  PendingRecurrence,
+} from "../hooks/useMyBalanceData";
 
 // Date utilities
 export { DATE_RANGES } from "./AppState.types";

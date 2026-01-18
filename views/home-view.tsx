@@ -14,14 +14,16 @@ import React, { useState, useMemo } from "react";
 import Pager from "@/components/ui/pager";
 import { DATE_RANGES } from "@/state";
 import { isDateInRange } from "@/utils/dateUtils";
-import type { Account, Movement, IDateRange } from "@/state";
+import type { Account, Movement, IDateRange, PendingRecurrence } from "@/state";
 import ViewModePicker from "@/components/ui/view-mode-picker";
+import PendingRecurrencesCard from "@/components/cards/pending-recurrences-card";
 
 interface HomeViewProps {
   accounts: Account[];
   selectedAccount: string;
   setSelectedAccount: (account: string) => void;
   movements: Movement[];
+  pendingRecurrences: PendingRecurrence[];
   isLoading: boolean;
   reloadData: () => Promise<void>;
   getTotalIncome: (filteredMovements: Movement[]) => number;
@@ -33,6 +35,7 @@ const HomeView: React.FC<HomeViewProps> = ({
   selectedAccount,
   setSelectedAccount,
   movements,
+  pendingRecurrences,
   isLoading,
   reloadData,
   getTotalIncome,
@@ -40,15 +43,17 @@ const HomeView: React.FC<HomeViewProps> = ({
 }) => {
   // Local state for date range
   const [dateRange, setDateRange] = useState<IDateRange>(
-    DATE_RANGES.THIS_MONTH
+    DATE_RANGES.THIS_MONTH,
   );
-  const [viewMode, setViewMode] = useState<"recent" | "next" | "recurring">("recent");
+  const [viewMode, setViewMode] = useState<"recent" | "next" | "recurring">(
+    "recent",
+  );
   const [isPeriodTransitioning, setIsPeriodTransitioning] =
     useState<boolean>(false);
 
   // Handle date range change with transitioning state
   const handleDateRangeChange = (
-    range: IDateRange & { isTransitioning?: boolean }
+    range: IDateRange & { isTransitioning?: boolean },
   ) => {
     setDateRange(range);
     if (range.isTransitioning) {
@@ -65,7 +70,7 @@ const HomeView: React.FC<HomeViewProps> = ({
 
   // Calculate current selected account index
   const selectedAccountIndex = accounts.findIndex(
-    (a) => a.name === selectedAccount
+    (a) => a.name === selectedAccount,
   );
 
   // Debug logging
@@ -74,9 +79,21 @@ const HomeView: React.FC<HomeViewProps> = ({
     console.log("  - Accounts:", accounts.length);
     console.log("  - Available Accounts:", accounts.length);
     console.log("  - Movements:", movements.length);
+    console.log("  - Pending Recurrences:", pendingRecurrences?.length || 0);
+    console.log(
+      "  - Pending Recurrences Data:",
+      JSON.stringify(pendingRecurrences, null, 2),
+    );
     console.log("  - Selected Account:", selectedAccount);
     console.log("  - Selected Account Index:", selectedAccountIndex);
-  }, [accounts, movements, selectedAccount, selectedAccountIndex, accounts]);
+  }, [
+    accounts,
+    movements,
+    pendingRecurrences,
+    selectedAccount,
+    selectedAccountIndex,
+    accounts,
+  ]);
 
   // Filter movements based on date range and account
   const dateFilteredMovements = useMemo(() => {
@@ -84,7 +101,7 @@ const HomeView: React.FC<HomeViewProps> = ({
       const dateMatches = isDateInRange(
         m.date,
         dateRange.startDate,
-        dateRange.endDate
+        dateRange.endDate,
       );
 
       // If a specific account is selected, only show movements that have at least one transaction for that account
@@ -115,6 +132,17 @@ const HomeView: React.FC<HomeViewProps> = ({
         return dateFilteredMovements;
     }
   }, [dateFilteredMovements, viewMode]);
+
+  // Filter pending recurrences to only show future (not overdue)
+  const futurePendingRecurrences = useMemo(() => {
+    return (pendingRecurrences || []).filter((p) => !p.isOverdue);
+  }, [pendingRecurrences]);
+
+  // Count of pending items for badge
+  const pendingCount = futurePendingRecurrences.reduce(
+    (sum, p) => sum + p.missingCount,
+    0,
+  );
 
   // Handle account switch
   const handleAccountSwitch = (index: number) => {
@@ -189,13 +217,21 @@ const HomeView: React.FC<HomeViewProps> = ({
           expense={getTotalExpense(dateFilteredMovements)}
           isTransitioning={isPeriodTransitioning}
         />
-        <ViewModePicker selectedMode={viewMode} onModeChange={setViewMode} />
-        {viewMode === "recurring" ? (
-          <RecurringMovementsCard />
-        ) : (
+        <ViewModePicker
+          selectedMode={viewMode}
+          onModeChange={setViewMode}
+          pendingCount={pendingCount}
+        />
+        {viewMode === "recurring" && <RecurringMovementsCard />}
+        {viewMode === "recent" && (
           <MovementsCard
             movements={filteredMovements}
             isTransitioning={isPeriodTransitioning}
+          />
+        )}
+        {viewMode === "next" && (
+          <PendingRecurrencesCard
+            pendingRecurrences={futurePendingRecurrences}
           />
         )}
         <View style={{ height: 100 }}></View>

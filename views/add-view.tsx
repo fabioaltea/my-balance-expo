@@ -29,6 +29,7 @@ import TransactionModal, {
 import ModalPanel from "@/components/ui/modal-panel";
 import GlassButton from "@/components/ui/glass-button";
 import ContextMenu, { IContextMenuOption } from "@/components/ui/context-menu";
+import RecurrencyPicker from "@/components/ui/recurrency-picker";
 import ScreenView from "@/layout/screen-view";
 import { useAuthContext, useDataContext } from "@/state";
 import { TransactionsApiHelper } from "@/helpers/TransactionsApiHelper";
@@ -52,8 +53,10 @@ const AddView: React.FC<AddViewProps> = ({
     useDataContext();
 
   // Find the movement being edited from the global movements list
+  // Also search in recurringMovements for editing recurring templates
   const editingMovement = editingMovementId
-    ? movements.find((m) => m.id === editingMovementId)
+    ? movements.find((m) => m.id === editingMovementId) ||
+      recurringMovements.find((m) => m.id === editingMovementId)
     : undefined;
 
   // Find the recurring movement template if recurrenceId is provided
@@ -80,9 +83,12 @@ const AddView: React.FC<AddViewProps> = ({
     width: number;
     height: number;
   } | null>(null);
+  const [showRecurrencyPicker, setShowRecurrencyPicker] = useState(false);
+  const [recurrencePattern, setRecurrencePattern] = useState<string>("");
   const menuButtonRef = useRef<View>(null);
 
   const isEditing = !!editingMovementId;
+  const isEditingRecurring = isEditing && editingMovement && (editingMovement.status?.toLowerCase() === "recurrent" || editingMovement.recurrencePattern);
 
   // Pre-populate form when editing an existing movement
   useEffect(() => {
@@ -109,6 +115,7 @@ const AddView: React.FC<AddViewProps> = ({
     );
     setTransactions(mappedTransactions);
     setSelectedLocation({ address: editingMovement.location || "" });
+    setRecurrencePattern(editingMovement.recurrencePattern || "");
   }, [editingMovement]);
 
   // Pre-populate form when adding from recurring template
@@ -255,24 +262,21 @@ const AddView: React.FC<AddViewProps> = ({
       if (!validateMovement()) {
         return;
       }
-      Alert.alert(
-        "Recurring Movement",
-        "This movement will be saved as recurring. Continue?",
-        [
-          {
-            text: "Cancel",
-            style: "cancel",
-          },
-          {
-            text: "Save",
-            onPress: () => {
-              handleSubmit(true);
-            },
-          },
-        ]
-      );
+      // Open RecurrencyPicker instead of alert
+      setShowRecurrencyPicker(true);
     } else if (option === "Delete movement") {
       handleDeleteMovement();
+    }
+  };
+
+  const handleRecurrencySave = async (pattern: string) => {
+    setShowRecurrencyPicker(false);
+    // If editing a recurring movement, just update the pattern state
+    if (isEditingRecurring) {
+      setRecurrencePattern(pattern);
+    } else {
+      // Save with the recurrence pattern (new recurring movement)
+      await handleSubmit(true, pattern);
     }
   };
 
@@ -304,11 +308,11 @@ const AddView: React.FC<AddViewProps> = ({
               if (result) {
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
                 setModalStatus("success");
-                await reloadData();
                 setTimeout(() => {
                   setShowStatusModal(false);
                   router.back();
-                }, 500);
+                }, 100);
+                                await reloadData();
               } else {
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
                 setModalStatus("error");
@@ -344,7 +348,7 @@ const AddView: React.FC<AddViewProps> = ({
     ];
   };
 
-  const handleSubmit = async (asRecurrent: boolean = false) => {
+  const handleSubmit = async (asRecurrent: boolean = false, newRecurrencePattern?: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
 
     if (!validateMovement()) {
@@ -380,24 +384,42 @@ const AddView: React.FC<AddViewProps> = ({
         })),
       };
 
-      // If the movement should be saved as recurring, add recurrenceId and status
+      // If the movement should be saved as recurring, add recurrenceId, status, and pattern
       if (asRecurrent && !isEditing) {
         movementData.recurrenceId = Crypto.randomUUID();
         movementData.status = "recurrent";
+        if (newRecurrencePattern) {
+          movementData.recurrencePattern = newRecurrencePattern;
+        }
+      }
+
+      // If this is a new movement created from a recurring template, link it to the template
+      // This allows tracking of how many occurrences have been recorded for the template
+      if (recurrenceId && recurringTemplate && !isEditing && !asRecurrent) {
+        movementData.recurrenceId = recurrenceId;
+        // Don't set status to "recurrent" - this is a regular movement, not a template
+      }
+
+      // If editing a recurring movement, preserve recurrence data
+      // Use the state variable recurrencePattern (not the parameter)
+      if (isEditingRecurring && editingMovement) {
+        movementData.recurrenceId = editingMovement.recurrenceId;
+        movementData.status = "recurrent";
+        movementData.recurrencePattern = recurrencePattern;
       }
 
       let result;
       if (isEditing && editingMovementId) {
         // Update existing movement
         result = await TransactionsApiHelper.updateMovement(
-          selectedSpreadsheetId,
+          selectedSpreadsheetId??"",
           editingMovementId,
           movementData
         );
       } else {
         // Create new movement
         result = await TransactionsApiHelper.createTransaction(
-          selectedSpreadsheetId,
+          selectedSpreadsheetId??"",
           movementData
         );
       }
@@ -408,21 +430,29 @@ const AddView: React.FC<AddViewProps> = ({
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         setModalStatus("success");
 
-        // Reset form
-        setDescription("");
-        setSelectedCategory("");
-        setSelectedDate(new Date());
-        setTransactions([]);
-        setSelectedLocation({ address: "" });
+        // For recurring saves, stay on page with form still filled
+        // For normal saves, reset form and go back
+        if (asRecurrent && !isEditing) {
+          // Stay on page, just close modal quickly
+          setTimeout(() => {
+            setShowStatusModal(false);
+          }, 100);
+        } else {
+          // Reset form
+          setDescription("");
+          setSelectedCategory("");
+          setSelectedDate(new Date());
+          setTransactions([]);
+          setSelectedLocation({ address: "" });
 
+          // Quick close and go back to dashboard
+          setTimeout(() => {
+            setShowStatusModal(false);
+            router.back();
+          }, 100);
+        }
         // Reload data
         await reloadData();
-
-        // Wait half a second, then close and go back to dashboard
-        setTimeout(() => {
-          setShowStatusModal(false);
-          router.back();
-        }, 500);
       } else {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         setModalStatus("error");
@@ -474,7 +504,7 @@ const AddView: React.FC<AddViewProps> = ({
       <View style={[styles.container, dynamicStyles.container]}>
         <View style={styles.headerContainer}>
           <ThemedText type="title" style={styles.title}>
-            {isEditing ? "Edit Movement" : "New Movement"}
+            {isEditingRecurring ? "Edit Recurrent" : isEditing ? "Edit Movement" : "New Movement"}
           </ThemedText>
           <View ref={menuButtonRef} collapsable={false}>
             <GlassButton
@@ -513,9 +543,27 @@ const AddView: React.FC<AddViewProps> = ({
             <DatePicker
               value={selectedDate}
               onChange={setSelectedDate}
-              label="Date"
+              label={isEditingRecurring ? "Start" : "Date"}
             />
           </InputGroup>
+
+          {/* Recurrence Pattern - only visible when editing a recurring movement */}
+          {isEditingRecurring && (
+            <InputGroup>
+              <Pressable
+                onPress={() => setShowRecurrencyPicker(true)}
+                style={styles.recurrenceField}
+              >
+                <ThemedText style={styles.recurrenceLabel}>Recurrence</ThemedText>
+                <View style={styles.recurrenceValueContainer}>
+                  <ThemedText style={styles.recurrenceValue}>
+                    {recurrencePattern || "Not set"}
+                  </ThemedText>
+                  <IconSymbol name="chevron.right" size={16} color={placeholderColor} />
+                </View>
+              </Pressable>
+            </InputGroup>
+          )}
 
           {/* Transactions Component */}
           <InputGroup label="Transactions">
@@ -550,6 +598,15 @@ const AddView: React.FC<AddViewProps> = ({
           initialData={editingTransaction}
           accounts={allAccounts}
           onSave={handleTransactionSave}
+        />
+
+        {/* Recurrency Picker Modal */}
+        <RecurrencyPicker
+          isVisible={showRecurrencyPicker}
+          onClose={() => setShowRecurrencyPicker(false)}
+          onSave={handleRecurrencySave}
+          startDate={selectedDate}
+          initialPattern={isEditingRecurring ? recurrencePattern : undefined}
         />
 
         <ModalPanel
@@ -813,5 +870,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: "center",
     marginTop: 8,
+  },
+  recurrenceField: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 12,
+  },
+  recurrenceLabel: {
+    fontSize: 16,
+    fontWeight: "500",
+  },
+  recurrenceValueContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  recurrenceValue: {
+    fontSize: 16,
+    opacity: 0.7,
   },
 });

@@ -74,7 +74,7 @@ export const compareDates = (date1: string, date2: string): number => {
 export const isDateInRange = (
   date: string,
   startDate: string,
-  endDate: string
+  endDate: string,
 ): boolean => {
   return compareDates(date, startDate) >= 0 && compareDates(date, endDate) <= 0;
 };
@@ -124,14 +124,20 @@ export const getCurrentDate = (): string => {
  */
 export const convertISOToLocalFormat = (isoString: string): string => {
   if (!isoString || typeof isoString !== "string") {
-    console.warn("⚠️ convertISOToLocalFormat: Invalid input, using current date", { isoString });
+    console.warn(
+      "⚠️ convertISOToLocalFormat: Invalid input, using current date",
+      { isoString },
+    );
     return getCurrentDate();
   }
 
   try {
     const date = new Date(isoString);
     if (isNaN(date.getTime())) {
-      console.warn("⚠️ convertISOToLocalFormat: Invalid ISO date, using current date", { isoString });
+      console.warn(
+        "⚠️ convertISOToLocalFormat: Invalid ISO date, using current date",
+        { isoString },
+      );
       return getCurrentDate();
     }
     const formatted = formatDateToDDMMYYYY(date);
@@ -153,10 +159,215 @@ export const convertISOToLocalFormat = (isoString: string): string => {
 /**
  * Format date for display (locale-aware)
  */
-export const formatDateForDisplay = (dateStr: string, locale: string = "it-IT"): string => {
+export const formatDateForDisplay = (
+  dateStr: string,
+  locale: string = "it-IT",
+): string => {
   const date = parseDateFromDDMMYYYY(dateStr);
   if (!date) {
     return dateStr;
   }
   return date.toLocaleDateString(locale);
+};
+
+// ===========================
+// Recurrence Pattern Utilities
+// ===========================
+
+export type RecurrenceUnit = "D" | "W" | "M" | "Y";
+
+export interface ParsedRecurrencePattern {
+  unit: RecurrenceUnit;
+  frequency: number;
+}
+
+/**
+ * Parse ISO 8601 duration pattern (e.g., P1W, P2M, P1Y)
+ * Returns the unit and frequency
+ */
+export const parseRecurrencePattern = (
+  pattern: string,
+): ParsedRecurrencePattern | null => {
+  if (!pattern || typeof pattern !== "string") {
+    return null;
+  }
+
+  const match = pattern.match(/^P(\d+)([DWMY])$/);
+  if (!match) {
+    return null;
+  }
+
+  return {
+    frequency: parseInt(match[1], 10),
+    unit: match[2] as RecurrenceUnit,
+  };
+};
+
+/**
+ * Calculate the number of expected occurrences for a recurrence pattern within a date range
+ *
+ * Examples:
+ * - P1W (weekly) in a 30-day month → ~4 occurrences
+ * - P2W (bi-weekly) in a 30-day month → ~2 occurrences
+ * - P1M (monthly) in a month → 1 occurrence
+ * - P1D (daily) in a 30-day month → 30 occurrences
+ */
+export const calculateExpectedOccurrences = (
+  pattern: string,
+  startDate: string,
+  endDate: string,
+): number => {
+  const parsed = parseRecurrencePattern(pattern);
+  if (!parsed) {
+    return 0;
+  }
+
+  const start = parseDateFromDDMMYYYY(startDate);
+  const end = parseDateFromDDMMYYYY(endDate);
+
+  if (!start || !end) {
+    return 0;
+  }
+
+  // Calculate total days in the period
+  const totalDays =
+    Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+  const { unit, frequency } = parsed;
+
+  switch (unit) {
+    case "D":
+      // Daily: every N days
+      return Math.floor(totalDays / frequency);
+    case "W":
+      // Weekly: every N weeks (N * 7 days)
+      return Math.floor(totalDays / (frequency * 7));
+    case "M":
+      // Monthly: calculate months in period
+      const startYear = start.getFullYear();
+      const startMonth = start.getMonth();
+      const endYear = end.getFullYear();
+      const endMonth = end.getMonth();
+      const totalMonths =
+        (endYear - startYear) * 12 + (endMonth - startMonth) + 1;
+      return Math.floor(totalMonths / frequency);
+    case "Y":
+      // Yearly: calculate years in period
+      const years = end.getFullYear() - start.getFullYear() + 1;
+      return Math.floor(years / frequency);
+    default:
+      return 0;
+  }
+};
+
+/**
+ * Get the period (month boundaries) containing a specific date
+ * Returns start and end of that month
+ */
+export const getMonthPeriodForDate = (
+  dateStr: string,
+): { startDate: string; endDate: string } | null => {
+  const date = parseDateFromDDMMYYYY(dateStr);
+  if (!date) {
+    return null;
+  }
+
+  return {
+    startDate: getMonthStart(date.getFullYear(), date.getMonth()),
+    endDate: getMonthEnd(date.getFullYear(), date.getMonth()),
+  };
+};
+
+/**
+ * Get list of month periods from a start date to current date
+ * Used to check for overdue recurring movements
+ *
+ * @param startDateStr - The start date (e.g., template's date)
+ * @param maxMonthsBack - Maximum number of months to look back (default 3)
+ */
+export const getMonthPeriodsFromStartDate = (
+  startDateStr: string,
+  maxMonthsBack: number = 3,
+): Array<{
+  startDate: string;
+  endDate: string;
+  label: string;
+  isOverdue: boolean;
+}> => {
+  const startDate = parseDateFromDDMMYYYY(startDateStr);
+  const now = new Date();
+
+  if (!startDate) {
+    return [];
+  }
+
+  const periods: Array<{
+    startDate: string;
+    endDate: string;
+    label: string;
+    isOverdue: boolean;
+  }> = [];
+
+  // Start from the template's start month
+  let currentYear = startDate.getFullYear();
+  let currentMonth = startDate.getMonth();
+
+  // Calculate the earliest month we want to check (maxMonthsBack months before current)
+  const earliestYear = now.getFullYear();
+  const earliestMonth = now.getMonth() - maxMonthsBack + 1;
+  const earliestDate = new Date(earliestYear, earliestMonth, 1);
+
+  // If template start is after the earliest date we care about, start from template
+  if (startDate > earliestDate) {
+    currentYear = startDate.getFullYear();
+    currentMonth = startDate.getMonth();
+  } else {
+    currentYear = earliestDate.getFullYear();
+    currentMonth = earliestDate.getMonth();
+  }
+
+  // Iterate through months until current month
+  while (
+    currentYear < now.getFullYear() ||
+    (currentYear === now.getFullYear() && currentMonth <= now.getMonth())
+  ) {
+    const periodStart = getMonthStart(currentYear, currentMonth);
+    const periodEnd = getMonthEnd(currentYear, currentMonth);
+
+    // Determine if this period is overdue (before current month)
+    const isOverdue =
+      currentYear < now.getFullYear() ||
+      (currentYear === now.getFullYear() && currentMonth < now.getMonth());
+
+    const monthNames = [
+      "Gennaio",
+      "Febbraio",
+      "Marzo",
+      "Aprile",
+      "Maggio",
+      "Giugno",
+      "Luglio",
+      "Agosto",
+      "Settembre",
+      "Ottobre",
+      "Novembre",
+      "Dicembre",
+    ];
+
+    periods.push({
+      startDate: periodStart,
+      endDate: periodEnd,
+      label: `${monthNames[currentMonth]} ${currentYear}`,
+      isOverdue,
+    });
+
+    // Move to next month
+    currentMonth++;
+    if (currentMonth > 11) {
+      currentMonth = 0;
+      currentYear++;
+    }
+  }
+
+  return periods;
 };

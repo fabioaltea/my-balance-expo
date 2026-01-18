@@ -16,6 +16,7 @@ export default function Home() {
   const {
     accounts,
     movements,
+    pendingRecurrences,
     isLoading,
     reloadData,
     getTotalIncome,
@@ -54,6 +55,7 @@ export default function Home() {
         selectedAccount={selectedAccount}
         setSelectedAccount={setSelectedAccount}
         movements={movements}
+        pendingRecurrences={pendingRecurrences}
         isLoading={isLoading}
         reloadData={reloadData}
         getTotalIncome={getTotalIncome}

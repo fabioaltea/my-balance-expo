@@ -12,6 +12,7 @@ export interface IChipButtonProps {
   options?: string[];
   defaultOption?: string;
   onOptionSelect?: (option: string) => void;
+  badge?: number;
 }
 
 const ChipButton: React.FC<IChipButtonProps> = ({
@@ -21,6 +22,7 @@ const ChipButton: React.FC<IChipButtonProps> = ({
   options,
   defaultOption,
   onOptionSelect,
+  badge,
 }) => {
   const [menuVisible, setMenuVisible] = useState(false);
   const [selectedOption, setSelectedOption] = useState("");
@@ -116,30 +118,57 @@ const ChipButton: React.FC<IChipButtonProps> = ({
           buttonPosition={buttonPosition}
         />
       )}
-      <Pressable
-        ref={buttonRef}
-        onLongPress={handleOpenMenu}
-        onPress={handlePress}
-        style={dynamicStyles.chipButton}
-      >
-        <Text style={dynamicStyles.chipText}>{selectedOption || text}</Text>
-      </Pressable>
+      <View style={styles.chipWrapper}>
+        <Pressable
+          ref={buttonRef}
+          onLongPress={handleOpenMenu}
+          onPress={handlePress}
+          style={dynamicStyles.chipButton}
+        >
+          <Text style={dynamicStyles.chipText}>{selectedOption || text}</Text>
+        </Pressable>
+        {badge !== undefined && badge > 0 && (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{badge}</Text>
+          </View>
+        )}
+      </View>
     </>
   );
 };
 
 const styles = StyleSheet.create({
+  chipWrapper: {
+    position: "relative",
+    flexGrow: 1,
+  },
   chipButton: {
     padding: 8,
     paddingHorizontal: 20,
     borderRadius: 20,
     display: "flex",
-    flexGrow: 1,
   },
   chipText: {
     fontSize: 18,
     fontWeight: "500",
     textAlign: "center",
+  },
+  badge: {
+    position: "absolute",
+    top: -6,
+    right: -2,
+    backgroundColor: "#FF3B30",
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 6,
+  },
+  badgeText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "700",
   },
   menu: {
     height: 200,

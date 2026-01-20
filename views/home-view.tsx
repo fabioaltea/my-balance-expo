@@ -80,10 +80,7 @@ const HomeView: React.FC<HomeViewProps> = ({
     console.log("  - Available Accounts:", accounts.length);
     console.log("  - Movements:", movements.length);
     console.log("  - Pending Recurrences:", pendingRecurrences?.length || 0);
-    console.log(
-      "  - Pending Recurrences Data:",
-      JSON.stringify(pendingRecurrences, null, 2),
-    );
+   
     console.log("  - Selected Account:", selectedAccount);
     console.log("  - Selected Account Index:", selectedAccountIndex);
   }, [

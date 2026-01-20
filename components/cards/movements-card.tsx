@@ -169,17 +169,6 @@ const MovementsCard: React.FC<MovementsCardProps> = ({
     );
     const sorted = sortMovements(movements);
 
-    // Log detailed info about movements being displayed
-    console.log(
-      "📋 Movements to display:",
-      sorted?.map((m, idx) => ({
-        index: idx,
-        date: m.date,
-        description: m.description,
-        amount: m.totalAmount,
-      }))
-    );
-
     setRecentMovements(sorted);
   }, [movements]);
 

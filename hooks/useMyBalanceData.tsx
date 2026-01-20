@@ -132,14 +132,6 @@ export const useMyBalanceData = (spreadsheetId: string | null) => {
       const rawTransactions =
         await TransactionsApiHelper.getTransactions(spreadsheetId);
 
-      // Debug: log first raw transaction to see available fields
-      if (rawTransactions?.length > 0) {
-        console.log(
-          "🔍 Raw transaction sample:",
-          JSON.stringify(rawTransactions[0], null, 2),
-        );
-      }
-
       const transformedTransactions: Transaction[] = (
         rawTransactions || []
       ).map((t: any) => {
@@ -322,22 +314,6 @@ export const useMyBalanceData = (spreadsheetId: string | null) => {
       ),
   );
 
-  // Debug: log all movements with recurrenceId to see the data structure
-  React.useEffect(() => {
-    const movementsWithRecurrence = allMovements.filter((m) => m.recurrenceId);
-    console.log(
-      "🔍 All movements with recurrenceId:",
-      movementsWithRecurrence.map((m) => ({
-        id: m.id,
-        recurrenceId: m.recurrenceId,
-        recurrencePattern: m.recurrencePattern,
-        status: m.status,
-        date: m.date,
-        description: m.description,
-      })),
-    );
-  }, [allMovements]);
-
   /**
    * Calculate pending recurring movements
    * For each recurring template, check each period (month) from start date to now
@@ -346,19 +322,6 @@ export const useMyBalanceData = (spreadsheetId: string | null) => {
   const pendingRecurrences: PendingRecurrence[] = useMemo(() => {
     const result: PendingRecurrence[] = [];
 
-    console.log("🔄 Calculating pending recurrences...");
-    console.log("  - Recurring templates count:", recurringMovements.length);
-    console.log(
-      "  - Recurring templates:",
-      recurringMovements.map((m) => ({
-        id: m.recurrenceId,
-        pattern: m.recurrencePattern,
-        date: m.date,
-        description: m.description,
-        status: m.status,
-      })),
-    );
-
     // For each recurring template
     for (const template of recurringMovements) {
       const {
@@ -366,25 +329,14 @@ export const useMyBalanceData = (spreadsheetId: string | null) => {
         recurrencePattern,
         date: templateStartDate,
       } = template;
-
-      console.log(`  - Processing template: ${template.description}`);
-      console.log(`    recurrenceId: ${recurrenceId}`);
-      console.log(`    recurrencePattern: ${recurrencePattern}`);
-      console.log(`    templateStartDate: ${templateStartDate}`);
-
       if (!recurrenceId || !recurrencePattern) {
-        console.log(
-          `    ⚠️ Skipping - missing recurrenceId or recurrencePattern`,
-        );
+       
         continue;
       }
 
       // Get all periods from template start date to now (max 3 months back)
       const periods = getMonthPeriodsFromStartDate(templateStartDate, 3);
-      console.log(
-        `    Periods to check:`,
-        periods.map((p) => p.label),
-      );
+    
 
       for (const period of periods) {
         // Calculate expected occurrences for this period based on pattern
@@ -404,8 +356,6 @@ export const useMyBalanceData = (spreadsheetId: string | null) => {
         );
         const actualCount = matchingMovements.length;
         const missingCount = expectedCount - actualCount;
-
-        console.log(`    Period ${period.label}: expected=${expectedCount}, actual=${actualCount}, missing=${missingCount}`);
 
         if (expectedCount === 0) {
           continue;
@@ -437,10 +387,7 @@ export const useMyBalanceData = (spreadsheetId: string | null) => {
       return b.periodStart.localeCompare(a.periodStart);
     });
 
-    console.log("✅ Pending recurrences result:", sorted.length, "items");
-    if (sorted.length > 0) {
-      console.log("  First item:", JSON.stringify(sorted[0], null, 2));
-    }
+    
 
     return sorted;
   }, [recurringMovements, movements]);

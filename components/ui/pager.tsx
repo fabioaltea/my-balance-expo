@@ -6,12 +6,14 @@ export interface IPagerProps {
   children: React.ReactNode;
   onPageSelected?: (e: any) => void;
   selectedPage?: number;
+  style?: any;
 }
 
 const Pager: React.FC<IPagerProps> = ({
   children,
   onPageSelected,
   selectedPage,
+  style,
 }) => {
   const pagerRef = useRef<PagerView>(null);
 
@@ -31,7 +33,7 @@ const Pager: React.FC<IPagerProps> = ({
   return (
     <PagerView
       ref={pagerRef}
-      style={[styles.container, { height: 120 }]}
+      style={[styles.container, style]}
       initialPage={selectedPage || 0}
       onPageSelected={handlePageSelected}
     >
@@ -50,7 +52,7 @@ const Pager: React.FC<IPagerProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    // flex removed, height will be set dynamically
+    height: 120, // Default height, can be overridden by style prop
   },
   page: {
     flex: 1,

@@ -48,40 +48,42 @@ const FinancialSummaryCard: React.FC<Props> = ({
   if (showSkeleton) {
     return (
       <Card backgroundColor={cardBackground} color={textColor}>
-        <View style={styles.balanceRow}>
-          <Skeleton width={80} height={24} borderRadius={6} />
-          <Skeleton width={120} height={28} borderRadius={6} />
-        </View>
-        <View style={styles.progressBarContainer}>
-          <Skeleton width="100%" height={15} borderRadius={6} />
-        </View>
-        <View style={styles.detailsSection}>
-          <View style={styles.detailRow}>
-            <View style={styles.detailLabel}>
-              <Skeleton width={15} height={15} borderRadius={6} />
-              <Skeleton
-                width={70}
-                height={18}
-                borderRadius={4}
-                style={{ marginLeft: 8 }}
-              />
-            </View>
-            <View style={styles.detailValue}>
-              <Skeleton width={90} height={18} borderRadius={4} />
-            </View>
+        <View style={{ height: 230 }}>
+          <View style={styles.balanceRow}>
+            <Skeleton width={80} height={24} borderRadius={6} />
+            <Skeleton width={120} height={28} borderRadius={6} />
           </View>
-          <View style={styles.detailRow}>
-            <View style={styles.detailLabel}>
-              <Skeleton width={15} height={15} borderRadius={6} />
-              <Skeleton
-                width={80}
-                height={18}
-                borderRadius={4}
-                style={{ marginLeft: 8 }}
-              />
+          <View style={styles.progressBarContainer}>
+            <Skeleton width="100%" height={15} borderRadius={6} />
+          </View>
+          <View style={styles.detailsSection}>
+            <View style={styles.detailRow}>
+              <View style={styles.detailLabel}>
+                <Skeleton width={15} height={15} borderRadius={6} />
+                <Skeleton
+                  width={70}
+                  height={18}
+                  borderRadius={4}
+                  style={{ marginLeft: 8 }}
+                />
+              </View>
+              <View style={styles.detailValue}>
+                <Skeleton width={90} height={18} borderRadius={4} />
+              </View>
             </View>
-            <View style={styles.detailValue}>
-              <Skeleton width={90} height={18} borderRadius={4} />
+            <View style={styles.detailRow}>
+              <View style={styles.detailLabel}>
+                <Skeleton width={15} height={15} borderRadius={6} />
+                <Skeleton
+                  width={80}
+                  height={18}
+                  borderRadius={4}
+                  style={{ marginLeft: 8 }}
+                />
+              </View>
+              <View style={styles.detailValue}>
+                <Skeleton width={90} height={18} borderRadius={4} />
+              </View>
             </View>
           </View>
         </View>
@@ -91,96 +93,104 @@ const FinancialSummaryCard: React.FC<Props> = ({
 
   return (
     <Card backgroundColor={cardBackground} color={textColor}>
-      {/* Balance Display */}
-      <View style={styles.balanceRow}>
-        <Text style={[styles.balanceLabel, { color: textColor }]}>
-          {balance >= 0 ? "Savings" : "Loss"}
-        </Text>
-        <Text
-          style={[
-            styles.balanceAmount,
-            { color: balance >= 0 ? "#4CAF50" : "#F44336" },
-          ]}
-        >
-          {balance >= 0 ? "+" : ""}
-          {formatAmount(balance)}
-        </Text>
-      </View>
-
-      {/* Progress Bar */}
-      <View style={styles.progressBarContainer}>
-        <View style={styles.progressBar}>
-          {/* Entrate - sempre 50% della barra */}
-          <View
+      <View style={{ height: 200 }}>
+        {/* Balance Display */}
+        <View style={styles.balanceRow}>
+          <Text style={[styles.balanceLabel, { color: textColor }]}>
+            {balance >= 0 ? "Savings" : "Loss"}
+          </Text>
+          <Text
             style={[
-              styles.progressSegment,
-              styles.incomeSegment,
-              { flex: 0.5 * incomeRatio },
+              styles.balanceAmount,
+              { color: balance >= 0 ? "#4CAF50" : "#F44336" },
             ]}
-          />
-
-          {/* Risparmi/Perdite - il resto del 50% */}
-          <View
-            style={[
-              styles.progressSegment,
-              balance >= 0 ? styles.savingsSegment : styles.lossSegment,
-              {
-                flex:
-                  0.5 *
-                  (1 -
-                    (expenseRatio < incomeRatio ? expenseRatio : incomeRatio)),
-              },
-            ]}
-          />
-
-          {/* Uscite - proporzionate alle entrate nel restante 50% */}
-          <View
-            style={[
-              styles.progressSegment,
-              styles.expenseSegment,
-              { flex: 0.5 * expenseRatio },
-            ]}
-          />
+          >
+            {balance >= 0 ? "+" : ""}
+            {formatAmount(balance)}
+          </Text>
         </View>
-      </View>
 
-      {/* Details Section */}
-      <View style={styles.detailsSection}>
-        <View style={styles.detailRow}>
-          <View style={styles.detailLabel}>
+        {/* Progress Bar */}
+        <View style={styles.progressBarContainer}>
+          <View style={styles.progressBar}>
+            {/* Entrate - sempre 50% della barra */}
             <View
-              style={[styles.colorIndicator, { backgroundColor: "#4CAF50" }]}
+              style={[
+                styles.progressSegment,
+                styles.incomeSegment,
+                { flex: 0.5 * incomeRatio },
+              ]}
             />
-            <Text style={[styles.detailText, { color: textColor }]}>
-              Incomes
-            </Text>
-          </View>
-          <View style={styles.detailValue}>
-            <Text style={[styles.detailAmount, { color: textColor }]}>
-              {formatAmount(income)}
-            </Text>
-            <Text style={[styles.detailPercentage, { color: subtleTextColor }]}>
-              {incomePercentage.toFixed(1)}%
-            </Text>
+
+            {/* Risparmi/Perdite - il resto del 50% */}
+            <View
+              style={[
+                styles.progressSegment,
+                balance >= 0 ? styles.savingsSegment : styles.lossSegment,
+                {
+                  flex:
+                    0.5 *
+                    (1 -
+                      (expenseRatio < incomeRatio
+                        ? expenseRatio
+                        : incomeRatio)),
+                },
+              ]}
+            />
+
+            {/* Uscite - proporzionate alle entrate nel restante 50% */}
+            <View
+              style={[
+                styles.progressSegment,
+                styles.expenseSegment,
+                { flex: 0.5 * expenseRatio },
+              ]}
+            />
           </View>
         </View>
 
-        <View style={styles.detailRow}>
-          <View style={styles.detailLabel}>
-            <View
-              style={[styles.colorIndicator, { backgroundColor: "#F44336" }]}
-            />
-            <Text style={[styles.detailText, { color: textColor }]}>
-              Outcomes
-            </Text>
+        {/* Details Section */}
+        <View style={styles.detailsSection}>
+          <View style={styles.detailRow}>
+            <View style={styles.detailLabel}>
+              <View
+                style={[styles.colorIndicator, { backgroundColor: "#4CAF50" }]}
+              />
+              <Text style={[styles.detailText, { color: textColor }]}>
+                Incomes
+              </Text>
+            </View>
+            <View style={styles.detailValue}>
+              <Text style={[styles.detailAmount, { color: textColor }]}>
+                {formatAmount(income)}
+              </Text>
+              <Text
+                style={[styles.detailPercentage, { color: subtleTextColor }]}
+              >
+                {incomePercentage.toFixed(1)}%
+              </Text>
+            </View>
           </View>
-          <View style={styles.detailValue}>
-            <Text style={[styles.detailAmount, { color: textColor }]}>
-              {formatAmount(expense)}
-            </Text>
-            <Text style={[styles.detailPercentage, { color: subtleTextColor }]}>
-              {expensePercentage.toFixed(1)}%
-            </Text>
+
+          <View style={styles.detailRow}>
+            <View style={styles.detailLabel}>
+              <View
+                style={[styles.colorIndicator, { backgroundColor: "#F44336" }]}
+              />
+              <Text style={[styles.detailText, { color: textColor }]}>
+                Outcomes
+              </Text>
+            </View>
+            <View style={styles.detailValue}>
+              <Text style={[styles.detailAmount, { color: textColor }]}>
+                {formatAmount(expense)}
+              </Text>
+              <Text
+                style={[styles.detailPercentage, { color: subtleTextColor }]}
+              >
+                {expensePercentage.toFixed(1)}%
+              </Text>
+            </View>
           </View>
         </View>
       </View>

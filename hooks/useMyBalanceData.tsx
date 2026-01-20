@@ -18,11 +18,14 @@ import { TransactionsApiHelper } from "../helpers/TransactionsApiHelper";
 import { AccountsApiHelper } from "../helpers/AccountsApiHelper";
 import { CategoriesApiHelper } from "../helpers/CategoriesApiHelper";
 import { AuthStorageHelper } from "../helpers/AuthStorageHelper";
+import { AuthenticationError } from "../helpers/HttpHelper";
 import {
   convertISOToLocalFormat,
   calculateExpectedOccurrences,
   getMonthPeriodsFromStartDate,
   isDateInRange,
+  getCurrentMonthPeriod,
+  getLast12MonthsPeriods,
 } from "../utils/dateUtils";
 import React from "react";
 
@@ -97,11 +100,49 @@ export interface PendingRecurrence {
   isOverdue: boolean;
 }
 
+/**
+ * Monthly forecast data for end-of-month balance prediction
+ */
+export interface MonthlyForecast {
+  /** Current total balance (sum of all accounts) */
+  currentBalance: number;
+  /** Income already recorded this month */
+  currentMonthIncome: number;
+  /** Expenses already recorded this month */
+  currentMonthExpense: number;
+  /** Pending recurring income for this month */
+  pendingRecurringIncome: number;
+  /** Pending recurring expenses for this month */
+  pendingRecurringExpense: number;
+  /** Average monthly income (last 12 months) */
+  avgMonthlyIncome: number;
+  /** Average monthly expense (last 12 months) */
+  avgMonthlyExpense: number;
+  /** Predicted end-of-month balance */
+  forecastBalance: number;
+  /** Expected change from current balance */
+  forecastDelta: number;
+}
+
+/**
+ * Forecast data for a specific account
+ */
+export interface AccountForecast {
+  accountId: string;
+  accountName: string;
+  currentBalance: number;
+  forecastBalance: number;
+  forecastDelta: number;
+}
+
 // ===========================
 // Hook
 // ===========================
 
-export const useMyBalanceData = (spreadsheetId: string | null) => {
+export const useMyBalanceData = (
+  spreadsheetId: string | null,
+  onAuthError?: () => Promise<void>,
+) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -200,11 +241,21 @@ export const useMyBalanceData = (spreadsheetId: string | null) => {
       console.log("✅ useMyBalanceData: All data loaded successfully");
     } catch (err: any) {
       console.error("❌ useMyBalanceData: Error loading data:", err);
-      setError(err.message || "Failed to load data");
+
+      // If authentication error, trigger logout
+      if (err instanceof AuthenticationError) {
+        console.log("🔐 Authentication error detected, triggering logout...");
+        setError("Session expired. Please login again.");
+        if (onAuthError) {
+          await onAuthError();
+        }
+      } else {
+        setError(err.message || "Failed to load data");
+      }
     } finally {
       setIsLoading(false);
     }
-  }, [spreadsheetId]);
+  }, [spreadsheetId, onAuthError]);
 
   // Auto-load on mount and spreadsheetId change
   useEffect(() => {
@@ -330,13 +381,11 @@ export const useMyBalanceData = (spreadsheetId: string | null) => {
         date: templateStartDate,
       } = template;
       if (!recurrenceId || !recurrencePattern) {
-       
         continue;
       }
 
       // Get all periods from template start date to now (max 3 months back)
       const periods = getMonthPeriodsFromStartDate(templateStartDate, 3);
-    
 
       for (const period of periods) {
         // Calculate expected occurrences for this period based on pattern
@@ -346,7 +395,7 @@ export const useMyBalanceData = (spreadsheetId: string | null) => {
           period.endDate,
         );
 
-          // Count actual occurrences: movements with same recurrenceId in this period
+        // Count actual occurrences: movements with same recurrenceId in this period
         // Exclude the template itself (status = "recurrent")
         const matchingMovements = movements.filter(
           (m) =>
@@ -387,10 +436,205 @@ export const useMyBalanceData = (spreadsheetId: string | null) => {
       return b.periodStart.localeCompare(a.periodStart);
     });
 
-    
-
     return sorted;
   }, [recurringMovements, movements]);
+
+  /**
+   * Calculate monthly forecast for end-of-month balance prediction
+   */
+  const monthlyForecast = useMemo<MonthlyForecast>(() => {
+    // 1. Current balance = sum of all account balances
+    const currentBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
+
+    // 2. Get current month period
+    const currentMonth = getCurrentMonthPeriod();
+
+    // 3. Calculate current month income and expenses
+    const currentMonthMovements = movements.filter((m) =>
+      isDateInRange(m.date, currentMonth.startDate, currentMonth.endDate),
+    );
+    const currentMonthIncome = currentMonthMovements
+      .filter((m) => m.type === "income")
+      .reduce((sum, m) => sum + m.totalAmount, 0);
+    const currentMonthExpense = currentMonthMovements
+      .filter((m) => m.type === "expense")
+      .reduce((sum, m) => sum + Math.abs(m.totalAmount), 0);
+
+    // 4. Calculate pending recurring for current month
+    const currentMonthPending = pendingRecurrences.filter(
+      (pr) => !pr.isOverdue,
+    );
+    const pendingRecurringIncome = currentMonthPending
+      .filter((pr) => pr.template.type === "income")
+      .reduce(
+        (sum, pr) => sum + Math.abs(pr.template.totalAmount) * pr.missingCount,
+        0,
+      );
+    const pendingRecurringExpense = currentMonthPending
+      .filter((pr) => pr.template.type === "expense")
+      .reduce(
+        (sum, pr) => sum + Math.abs(pr.template.totalAmount) * pr.missingCount,
+        0,
+      );
+
+    // 5. Calculate historical averages (last 12 months)
+    const last12Months = getLast12MonthsPeriods();
+    let totalHistoricalIncome = 0;
+    let totalHistoricalExpense = 0;
+    let monthsWithData = 0;
+
+    for (const period of last12Months) {
+      const periodMovements = movements.filter((m) =>
+        isDateInRange(m.date, period.startDate, period.endDate),
+      );
+
+      if (periodMovements.length > 0) {
+        monthsWithData++;
+        totalHistoricalIncome += periodMovements
+          .filter((m) => m.type === "income")
+          .reduce((sum, m) => sum + m.totalAmount, 0);
+        totalHistoricalExpense += periodMovements
+          .filter((m) => m.type === "expense")
+          .reduce((sum, m) => sum + Math.abs(m.totalAmount), 0);
+      }
+    }
+
+    const avgMonthlyIncome =
+      monthsWithData > 0 ? totalHistoricalIncome / monthsWithData : 0;
+    const avgMonthlyExpense =
+      monthsWithData > 0 ? totalHistoricalExpense / monthsWithData : 0;
+
+    // 6. Calculate forecast
+    // Expected remaining income = max(0, average - already recorded)
+    // Expected remaining expense = max(0, average - already recorded)
+    const expectedRemainingIncome = Math.max(
+      0,
+      avgMonthlyIncome - currentMonthIncome,
+    );
+    const expectedRemainingExpense = Math.max(
+      0,
+      avgMonthlyExpense - currentMonthExpense,
+    );
+
+    const forecastBalance =
+      currentBalance +
+      pendingRecurringIncome -
+      pendingRecurringExpense +
+      expectedRemainingIncome -
+      expectedRemainingExpense;
+
+    const forecastDelta = forecastBalance - currentBalance;
+
+    return {
+      currentBalance,
+      currentMonthIncome,
+      currentMonthExpense,
+      pendingRecurringIncome,
+      pendingRecurringExpense,
+      avgMonthlyIncome,
+      avgMonthlyExpense,
+      forecastBalance,
+      forecastDelta,
+    };
+  }, [accounts, movements, pendingRecurrences]);
+
+  /**
+   * Calculate forecast for each individual account
+   */
+  const accountForecasts = useMemo<AccountForecast[]>(() => {
+    const currentMonth = getCurrentMonthPeriod();
+    const last12Months = getLast12MonthsPeriods();
+
+    return accounts.map((account) => {
+      // Filter transactions for this account
+      const accountTransactions = transactions.filter(
+        (t) => t.account === account.name,
+      );
+
+      // Current month transactions for this account
+      const currentMonthTx = accountTransactions.filter((t) =>
+        isDateInRange(t.date, currentMonth.startDate, currentMonth.endDate),
+      );
+      const currentMonthIncome = currentMonthTx
+        .filter((t) => t.type === "income")
+        .reduce((sum, t) => sum + t.amount, 0);
+      const currentMonthExpense = currentMonthTx
+        .filter((t) => t.type === "expense")
+        .reduce((sum, t) => sum + t.amount, 0);
+
+      // Pending recurring for this account
+      const accountPending = pendingRecurrences.filter(
+        (pr) =>
+          !pr.isOverdue &&
+          pr.template.transactions.some((t) => t.account === account.name),
+      );
+      const pendingIncome = accountPending
+        .filter((pr) => pr.template.type === "income")
+        .reduce((sum, pr) => {
+          const accountTx = pr.template.transactions.filter(
+            (t) => t.account === account.name,
+          );
+          const accountAmount = accountTx.reduce((s, t) => s + t.amount, 0);
+          return sum + accountAmount * pr.missingCount;
+        }, 0);
+      const pendingExpense = accountPending
+        .filter((pr) => pr.template.type === "expense")
+        .reduce((sum, pr) => {
+          const accountTx = pr.template.transactions.filter(
+            (t) => t.account === account.name,
+          );
+          const accountAmount = accountTx.reduce((s, t) => s + t.amount, 0);
+          return sum + accountAmount * pr.missingCount;
+        }, 0);
+
+      // Historical averages for this account
+      let totalIncome = 0;
+      let totalExpense = 0;
+      let monthsWithData = 0;
+
+      for (const period of last12Months) {
+        const periodTx = accountTransactions.filter((t) =>
+          isDateInRange(t.date, period.startDate, period.endDate),
+        );
+        if (periodTx.length > 0) {
+          monthsWithData++;
+          totalIncome += periodTx
+            .filter((t) => t.type === "income")
+            .reduce((sum, t) => sum + t.amount, 0);
+          totalExpense += periodTx
+            .filter((t) => t.type === "expense")
+            .reduce((sum, t) => sum + t.amount, 0);
+        }
+      }
+
+      const avgIncome = monthsWithData > 0 ? totalIncome / monthsWithData : 0;
+      const avgExpense = monthsWithData > 0 ? totalExpense / monthsWithData : 0;
+
+      const expectedRemainingIncome = Math.max(
+        0,
+        avgIncome - currentMonthIncome,
+      );
+      const expectedRemainingExpense = Math.max(
+        0,
+        avgExpense - currentMonthExpense,
+      );
+
+      const forecastBalance =
+        account.balance +
+        pendingIncome -
+        pendingExpense +
+        expectedRemainingIncome -
+        expectedRemainingExpense;
+
+      return {
+        accountId: account.accountId,
+        accountName: account.name,
+        currentBalance: account.balance,
+        forecastBalance,
+        forecastDelta: forecastBalance - account.balance,
+      };
+    });
+  }, [accounts, transactions, pendingRecurrences]);
 
   return {
     // Raw data from backend
@@ -402,6 +646,8 @@ export const useMyBalanceData = (spreadsheetId: string | null) => {
     movements, // Transactions grouped into movements
     recurringMovements, // Unique recurring movement templates
     pendingRecurrences, // Missing recurring occurrences (current + overdue)
+    monthlyForecast, // End-of-month balance forecast (total)
+    accountForecasts, // End-of-month balance forecast per account
 
     // State
     isLoading,

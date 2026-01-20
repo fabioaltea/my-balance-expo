@@ -371,3 +371,48 @@ export const getMonthPeriodsFromStartDate = (
 
   return periods;
 };
+
+/**
+ * Get the current month period (start and end dates)
+ */
+export const getCurrentMonthPeriod = (): {
+  startDate: string;
+  endDate: string;
+} => {
+  const now = new Date();
+  return {
+    startDate: getMonthStart(now.getFullYear(), now.getMonth()),
+    endDate: getMonthEnd(now.getFullYear(), now.getMonth()),
+  };
+};
+
+/**
+ * Get the last 12 months as periods (excluding current month)
+ * Used for calculating historical averages
+ */
+export const getLast12MonthsPeriods = (): Array<{
+  startDate: string;
+  endDate: string;
+}> => {
+  const periods: Array<{ startDate: string; endDate: string }> = [];
+  const now = new Date();
+
+  // Start from 12 months ago up to last month (exclude current month)
+  for (let i = 12; i >= 1; i--) {
+    let month = now.getMonth() - i;
+    let year = now.getFullYear();
+
+    // Handle year rollover
+    while (month < 0) {
+      month += 12;
+      year -= 1;
+    }
+
+    periods.push({
+      startDate: getMonthStart(year, month),
+      endDate: getMonthEnd(year, month),
+    });
+  }
+
+  return periods;
+};

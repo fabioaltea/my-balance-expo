@@ -1,4 +1,4 @@
-import { StyleSheet, View, ScrollView, Pressable, Dimensions } from 'react-native';
+import { StyleSheet, View, ScrollView, Pressable, Dimensions, Alert, TextInput } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import ScreenView from '@/layout/screen-view';
 import React, { useState } from 'react';
@@ -9,6 +9,8 @@ import List from '@/components/ui/list';
 import ModalPanel from '@/components/ui/modal-panel';
 import { Account } from '@/hooks/useMyBalanceData';
 import * as Haptics from 'expo-haptics';
+import { AccountsApiHelper } from '@/helpers/AccountsApiHelper';
+import { useAuthContext } from '@/state/AuthProvider';
 
 // Color palette (ordered by hue)
 const COLOR_PALETTE = [
@@ -40,10 +42,13 @@ const formatCurrency = (amount: number): string => {
 };
 
 export default function Accounts() {
-  const { accounts } = useDataContext();
+  const { accounts, reloadData } = useDataContext();
+  const { selectedSpreadsheetId } = useAuthContext();
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
   const [selectedColor, setSelectedColor] = useState<string>('#2F4F3F');
+  const [editedName, setEditedName] = useState<string>('');
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const handleButtonPress = () => {
     // router.push("/add");
@@ -53,12 +58,56 @@ export default function Accounts() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setSelectedAccount(account);
     setSelectedColor(account.color || '#2F4F3F');
+    setEditedName(account.name);
     setModalVisible(true);
   };
 
-  const handleConfirm = () => {
-    // TODO: save color to account
-    console.log('Save:', selectedAccount?.accountId, selectedColor);
+  const handleCloseModal = () => {
+    setModalVisible(false);
+    setSelectedAccount(null);
+    setEditedName('');
+  };
+
+  const performUpdate = async () => {
+    if (!selectedAccount || !selectedSpreadsheetId) return;
+
+    setIsUpdating(true);
+    try {
+      await AccountsApiHelper.updateAccount(
+        selectedSpreadsheetId,
+        selectedAccount.accountId,
+        {
+          name: editedName,
+          color: selectedColor,
+        }
+      );
+      await reloadData();
+      handleCloseModal();
+    } catch (error) {
+      console.error('Error updating account:', error);
+      Alert.alert('Errore', 'Impossibile aggiornare il conto');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleConfirm = async () => {
+    if (!selectedAccount) return;
+
+    const nameChanged = editedName !== selectedAccount.name;
+
+    if (nameChanged) {
+      await Alert.alert(
+        'Conferma modifica',
+        `Stai per rinominare il conto da "${selectedAccount.name}" a "${editedName}".\n\nTutte le transazioni associate a questo conto saranno aggiornate con il nuovo nome.`,
+        [
+          { text: 'Annulla', style: 'cancel' },
+          { text: 'Conferma', onPress: performUpdate },
+        ]
+      );
+    } else {
+      performUpdate();
+    }
   };
 
   return (
@@ -78,12 +127,21 @@ export default function Accounts() {
                 delayLongPress={300}
               >
                 <View style={styles.accountRow}>
-                  <ThemedText style={styles.accountName}>{account.name}</ThemedText>
-                  <View style={[styles.balanceBadge, { backgroundColor: account.color || '#2F4F3F' }]}>
-                    <ThemedText style={[styles.balanceText, { color: account.textColor || '#FFFFFF' }]}>
-                      {formatCurrency(account.balance)}
-                    </ThemedText>
+                  <View style={styles.accountLeft}>
+                    <View
+                      style={[
+                        styles.colorDot,
+                        {
+                          backgroundColor: account.color || '#2F4F3F',
+                          borderColor: account.textColor || '#FFFFFF',
+                        },
+                      ]}
+                    />
+                    <ThemedText style={styles.accountName}>{account.name}</ThemedText>
                   </View>
+                  <ThemedText style={styles.balanceText}>
+                    {formatCurrency(account.balance)}
+                  </ThemedText>
                 </View>
               </Pressable>
             ))}
@@ -93,23 +151,37 @@ export default function Accounts() {
 
       <ModalPanel
         isVisible={modalVisible}
-        onClose={() => setModalVisible(false)}
+        onClose={handleCloseModal}
         onConfirm={handleConfirm}
-        title={selectedAccount?.name || 'Modifica Conto'}
-        maxHeight={Dimensions.get('window').height * 0.4}
+        title="Edit Account"
+        maxHeight={Dimensions.get('window').height * 0.7}
       >
         <View>
           {/* Preview */}
           <View style={styles.previewContainer}>
-            <View style={[styles.previewBadge, { backgroundColor: selectedColor }]}>
-              <ThemedText style={styles.previewText}>
-                {selectedAccount ? formatCurrency(selectedAccount.balance) : '€ 0,00'}
-              </ThemedText>
+            <View style={styles.previewRow}>
+              <View
+                style={[
+                  styles.previewDot,
+                  { backgroundColor: selectedColor, borderColor: '#FFFFFF' },
+                ]}
+              />
+              <ThemedText style={styles.previewName}>{editedName || 'Account Name'}</ThemedText>
             </View>
           </View>
 
+          {/* Name input */}
+          <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>Name</ThemedText>
+          <TextInput
+            style={styles.nameInput}
+            value={editedName}
+            onChangeText={setEditedName}
+            placeholder="Account Name"
+            placeholderTextColor="#999"
+          />
+
           {/* Color selection */}
-          <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>Colore</ThemedText>
+          <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>Color</ThemedText>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -150,39 +222,59 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 8,
+    paddingVertical: 12,
   },
-  accountName: {
-    fontSize: 16,
+  accountLeft: {
+    flexDirection: "row",
+    alignItems: "center",
     flex: 1,
   },
-  balanceBadge: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 16,
+  colorDot: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    marginRight: 12,
+  },
+  accountName: {
+    fontSize: 18,
+    flex: 1,
   },
   balanceText: {
-    fontSize: 14,
-    fontWeight: "600",
+    fontSize: 18,
+    fontWeight: "700",
   },
   previewContainer: {
     alignItems: "center",
     marginBottom: 24,
   },
-  previewBadge: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 20,
+  previewRow: {
+    flexDirection: "row",
+    alignItems: "center",
   },
-  previewText: {
+  previewDot: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 1,
+    marginRight: 10,
+  },
+  previewName: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#FFFFFF",
   },
   sectionTitle: {
     marginBottom: 12,
     marginTop: 8,
-    textAlign: "center",
+  },
+  nameInput: {
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: "#FFFFFF",
+    marginBottom: 16,
   },
   colorScrollView: {
     marginBottom: 20,

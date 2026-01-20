@@ -17,6 +17,7 @@ export default function Home() {
     accounts,
     movements,
     pendingRecurrences,
+    monthlyForecast,
     isLoading,
     reloadData,
     getTotalIncome,
@@ -56,6 +57,7 @@ export default function Home() {
         setSelectedAccount={setSelectedAccount}
         movements={movements}
         pendingRecurrences={pendingRecurrences}
+        monthlyForecast={monthlyForecast}
         isLoading={isLoading}
         reloadData={reloadData}
         getTotalIncome={getTotalIncome}

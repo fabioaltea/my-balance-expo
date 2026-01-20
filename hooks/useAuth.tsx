@@ -15,6 +15,7 @@ import * as WebBrowser from "expo-web-browser";
 import { makeRedirectUri } from "expo-auth-session";
 import * as AuthSession from "expo-auth-session";
 import * as Crypto from "expo-crypto";
+import { NotificationsHelpers } from "@/helpers/NotificationsHelpers";
 
 export interface AuthState {
   isAuthenticated: boolean;
@@ -254,6 +255,7 @@ export const useAuth = () => {
         console.log("✅ Stored credentials found, loading data...");
         // We have stored credentials, load user data
         await loadUserDataAndProfile();
+        // await NotificationsHelpers.registerForPushNotificationsAsync();
       } else {
         console.log("❌ No stored credentials, showing login");
         // No stored credentials, show login
@@ -391,6 +393,8 @@ export const useAuth = () => {
           // Load user profile and data after successful login
           console.log("🚀 Loading user data after successful login");
           await loadUserDataAndProfile();
+          // await NotificationsHelpers.registerForPushNotificationsAsync();
+
         } else {
           throw new Error(
             authResponse.error || "Backend authentication failed"

@@ -2,17 +2,18 @@ import { View, StyleSheet, ScrollView, Alert } from "react-native";
 import { ThemedText } from "../themed-text";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { IconSymbol } from "../ui/icon-symbol.ios";
-import { IAccount, MOCK_ACCOUNTS } from "@/models/Account";
+import { IAccount } from "@/models/Account";
 import AccountCard from "./account-card";
 import { useState } from "react";
+import React from "react";
 
 interface IAccountsListProps {
-  accounts?: IAccount[];
+  accounts: IAccount[];
   showTotal?: boolean;
 }
 
 const AccountsList: React.FC<IAccountsListProps> = ({
-  accounts = MOCK_ACCOUNTS,
+  accounts,
   showTotal = true,
 }) => {
   const [selectedAccount, setSelectedAccount] = useState<IAccount | null>(null);

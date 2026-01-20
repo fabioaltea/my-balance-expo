@@ -1,4 +1,4 @@
-import { HttpHelper } from "./HttpHelper";
+import { HttpHelper, AuthenticationError } from "./HttpHelper";
 
 export class TransactionsApiHelper {
   /**
@@ -9,13 +9,13 @@ export class TransactionsApiHelper {
       console.log("🔄 Loading transactions from API...");
 
       const response = await HttpHelper.get(
-        `/transactions?spreadsheet_id=${spreadsheetId}`
+        `/transactions?spreadsheet_id=${spreadsheetId}`,
       );
 
       if (response.success) {
         console.log(
           "✅ Transactions loaded successfully:",
-          response.data?.length || 0
+          response.data?.length || 0,
         );
         return response.data || [];
       } else {
@@ -24,6 +24,10 @@ export class TransactionsApiHelper {
       }
     } catch (error) {
       console.error("❌ Error loading transactions:", error);
+      // Re-throw authentication errors to trigger logout
+      if (error instanceof AuthenticationError) {
+        throw error;
+      }
       return [];
     }
   }
@@ -31,16 +35,13 @@ export class TransactionsApiHelper {
   /**
    * Create a new transaction
    */
-  static async createTransaction(
-    spreadsheetId: string,
-    transactionData: any
-  ) {
+  static async createTransaction(spreadsheetId: string, transactionData: any) {
     try {
       console.log("➕ Creating new transaction...");
 
       const response = await HttpHelper.post(
         `/transactions?spreadsheet_id=${spreadsheetId}`,
-        { ...transactionData }
+        { ...transactionData },
       );
 
       if (response.success) {
@@ -62,14 +63,14 @@ export class TransactionsApiHelper {
   static async updateTransaction(
     spreadsheetId: string,
     transactionId: string,
-    updates: any
+    updates: any,
   ) {
     try {
       console.log("✏️ Updating transaction...");
 
       const response = await HttpHelper.put(
         `/transactions/${transactionId}?spreadsheet_id=${spreadsheetId}`,
-        { ...updates }
+        { ...updates },
       );
 
       if (response.success) {
@@ -88,15 +89,12 @@ export class TransactionsApiHelper {
   /**
    * Delete a transaction
    */
-  static async deleteTransaction(
-    spreadsheetId: string,
-    transactionId: string
-  ) {
+  static async deleteTransaction(spreadsheetId: string, transactionId: string) {
     try {
       console.log("🗑️ Deleting transaction...");
 
       const response = await HttpHelper.delete(
-        `/transactions/${transactionId}?spreadsheet_id=${spreadsheetId}`
+        `/transactions/${transactionId}?spreadsheet_id=${spreadsheetId}`,
       );
 
       if (response.success) {
@@ -118,14 +116,14 @@ export class TransactionsApiHelper {
   static async updateMovement(
     spreadsheetId: string,
     movementId: string,
-    movementData: any
+    movementData: any,
   ) {
     try {
       console.log("✏️ Updating movement...", movementId);
 
       const response = await HttpHelper.put(
         `/movements/${movementId}?spreadsheet_id=${spreadsheetId}`,
-        { ...movementData }
+        { ...movementData },
       );
 
       if (response.success) {
@@ -145,16 +143,13 @@ export class TransactionsApiHelper {
    * Update an existing movement (legacy endpoint - same as Ionic)
    * Uses POST /update which does raw Google Sheets update
    */
-  static async updateMovementLegacy(
-    spreadsheetId: string,
-    movementData: any
-  ) {
+  static async updateMovementLegacy(spreadsheetId: string, movementData: any) {
     try {
       console.log("✏️ Updating movement (legacy)...", movementData);
 
       const response = await HttpHelper.post(
         `/update?spreadsheetId=${encodeURIComponent(spreadsheetId)}`,
-        movementData
+        movementData,
       );
 
       if (response.success) {
@@ -173,15 +168,12 @@ export class TransactionsApiHelper {
   /**
    * Delete a movement and all its transactions
    */
-  static async deleteMovement(
-    spreadsheetId: string,
-    movementId: string
-  ) {
+  static async deleteMovement(spreadsheetId: string, movementId: string) {
     try {
       console.log("🗑️ Deleting movement...", movementId);
 
       const response = await HttpHelper.delete(
-        `/movements/${movementId}?spreadsheet_id=${spreadsheetId}`
+        `/movements/${movementId}?spreadsheet_id=${spreadsheetId}`,
       );
 
       if (response.success) {

@@ -1,13 +1,13 @@
 import { View, StyleSheet } from "react-native";
 import ScreenView from "@/layout/screen-view";
 import AccountsList from "@/components/cards/accounts-list";
-import { useAccountSelection } from "@/state";
+import React from "react";
+import { IAccount } from "@/models/Account";
 
 const AccountsView: React.FC = () => {
-  const { allAccounts } = useAccountSelection();
-
+  const allAccounts=[];
   // Convert Account to IAccount for compatibility
-  const adaptedAccounts = allAccounts.map((account) => ({
+  const adaptedAccounts = allAccounts.map((account:IAccount) => ({
     id: account.id,
     name: account.name,
     balance: account.balance,

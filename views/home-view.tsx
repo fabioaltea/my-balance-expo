@@ -1,7 +1,8 @@
 import BalanceCard from "@/components/cards/balance-card";
 import MovementsCard from "@/components/cards/movements-card";
 import RecurringMovementsCard from "@/components/cards/recurring-movements-card";
-import FinancialSummaryCard from "@/components/cards/financial-summary-card";
+// import FinancialSummaryCard from "@/components/cards/financial-summary-card";
+import ForecastCard from "@/components/cards/forecast-card";
 import PeriodPicker from "@/components/ui/period-chips-picker";
 import {
   View,
@@ -15,8 +16,10 @@ import Pager from "@/components/ui/pager";
 import { DATE_RANGES } from "@/state";
 import { isDateInRange } from "@/utils/dateUtils";
 import type { Account, Movement, IDateRange, PendingRecurrence } from "@/state";
+import type { MonthlyForecast } from "@/hooks/useMyBalanceData";
 import ViewModePicker from "@/components/ui/view-mode-picker";
 import PendingRecurrencesCard from "@/components/cards/pending-recurrences-card";
+import FinancialSummaryCard from "@/components/cards/financial-summary-card";
 
 interface HomeViewProps {
   accounts: Account[];
@@ -24,6 +27,7 @@ interface HomeViewProps {
   setSelectedAccount: (account: string) => void;
   movements: Movement[];
   pendingRecurrences: PendingRecurrence[];
+  monthlyForecast: MonthlyForecast;
   isLoading: boolean;
   reloadData: () => Promise<void>;
   getTotalIncome: (filteredMovements: Movement[]) => number;
@@ -36,6 +40,7 @@ const HomeView: React.FC<HomeViewProps> = ({
   setSelectedAccount,
   movements,
   pendingRecurrences,
+  monthlyForecast,
   isLoading,
   reloadData,
   getTotalIncome,
@@ -80,7 +85,7 @@ const HomeView: React.FC<HomeViewProps> = ({
     console.log("  - Available Accounts:", accounts.length);
     console.log("  - Movements:", movements.length);
     console.log("  - Pending Recurrences:", pendingRecurrences?.length || 0);
-   
+
     console.log("  - Selected Account:", selectedAccount);
     console.log("  - Selected Account Index:", selectedAccountIndex);
   }, [
@@ -166,6 +171,7 @@ const HomeView: React.FC<HomeViewProps> = ({
         <Pager
           selectedPage={selectedAccountIndex}
           onPageSelected={handleAccountSwitch}
+          style={{ height: 110, marginBottom: 12 }}
         >
           {accounts.map((account) => (
             <BalanceCard
@@ -209,11 +215,18 @@ const HomeView: React.FC<HomeViewProps> = ({
           setDateRange={handleDateRangeChange}
           isLoading={isLoading}
         />
-        <FinancialSummaryCard
-          income={getTotalIncome(dateFilteredMovements)}
-          expense={getTotalExpense(dateFilteredMovements)}
-          isTransitioning={isPeriodTransitioning}
-        />
+        <Pager style={{ height: 230, marginHorizontal: -16, marginBottom: 16 }}>
+          <FinancialSummaryCard
+            income={getTotalIncome(dateFilteredMovements)}
+            expense={getTotalExpense(dateFilteredMovements)}
+            isTransitioning={isPeriodTransitioning}
+          />
+          <ForecastCard
+            forecast={monthlyForecast}
+            isTransitioning={isPeriodTransitioning}
+          />
+        </Pager>
+
         <ViewModePicker
           selectedMode={viewMode}
           onModeChange={setViewMode}

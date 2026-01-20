@@ -11,6 +11,8 @@ export type {
   Account,
   Category,
   PendingRecurrence,
+  MonthlyForecast,
+  AccountForecast,
 } from "../hooks/useMyBalanceData";
 
 // Date utilities

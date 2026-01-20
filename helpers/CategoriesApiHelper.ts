@@ -1,4 +1,4 @@
-import { HttpHelper } from "./HttpHelper";
+import { HttpHelper, AuthenticationError } from "./HttpHelper";
 
 export class CategoriesApiHelper {
   /**
@@ -9,13 +9,13 @@ export class CategoriesApiHelper {
       console.log("🔄 Loading categories from API...");
 
       const response = await HttpHelper.get(
-        `/categories?spreadsheet_id=${spreadsheetId}`
+        `/categories?spreadsheet_id=${spreadsheetId}`,
       );
 
       if (response.success) {
         console.log(
           "✅ Categories loaded successfully:",
-          response.data?.length || 0
+          response.data?.length || 0,
         );
         return response.data || [];
       } else {
@@ -24,6 +24,10 @@ export class CategoriesApiHelper {
       }
     } catch (error) {
       console.error("❌ Error loading categories:", error);
+      // Re-throw authentication errors to trigger logout
+      if (error instanceof AuthenticationError) {
+        throw error;
+      }
       return [];
     }
   }
@@ -37,7 +41,7 @@ export class CategoriesApiHelper {
 
       const response = await HttpHelper.post(
         `/categories?spreadsheet_id=${spreadsheetId}`,
-        { ...categoryData }
+        { ...categoryData },
       );
 
       if (response.success) {

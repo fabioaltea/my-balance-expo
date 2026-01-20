@@ -5,6 +5,16 @@ const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8080";
 
 console.log("🌐 API_URL configured as:", API_URL);
 
+/**
+ * Custom error for authentication failures that require re-login
+ */
+export class AuthenticationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "AuthenticationError";
+  }
+}
+
 export interface HttpResponse<T = any> {
   success: boolean;
   data?: T;
@@ -22,7 +32,7 @@ export class HttpHelper {
    */
   private static async refreshTokensViaApi(
     refreshToken: string,
-    deviceId: string
+    deviceId: string,
   ): Promise<{ accessToken: string; refreshToken: string } | null> {
     try {
       console.log("🔄 Calling refresh token API...");
@@ -75,7 +85,7 @@ export class HttpHelper {
 
       if (!tokens) {
         console.log("❌ No tokens available");
-        return null;
+        throw new AuthenticationError("No authentication tokens available");
       }
 
       // Check if access token is expired
@@ -85,7 +95,7 @@ export class HttpHelper {
         // Check if refresh token is valid
         if (AuthStorageHelper.isTokenExpired(tokens.refreshToken)) {
           console.log("❌ Refresh token also expired");
-          return null;
+          throw new AuthenticationError("Refresh token expired");
         }
 
         // Get device ID
@@ -94,12 +104,12 @@ export class HttpHelper {
         // Refresh the token
         const newTokens = await this.refreshTokensViaApi(
           tokens.refreshToken,
-          deviceId
+          deviceId,
         );
 
         if (!newTokens) {
           console.log("❌ Token refresh failed");
-          return null;
+          throw new AuthenticationError("Token refresh failed");
         }
 
         // Store new tokens
@@ -138,8 +148,14 @@ export class HttpHelper {
       const result = await response.json();
 
       if (!response.ok) {
+        // If 401 Unauthorized, throw AuthenticationError to trigger logout
+        if (response.status === 401) {
+          throw new AuthenticationError(
+            result.error || "Authentication failed",
+          );
+        }
         throw new Error(
-          result.error || `GET request failed: ${response.statusText}`
+          result.error || `GET request failed: ${response.statusText}`,
         );
       }
 
@@ -154,7 +170,7 @@ export class HttpHelper {
   static async post(
     endpoint: string,
     data: any,
-    options: any = {}
+    options: any = {},
   ): Promise<HttpResponse> {
     try {
       const accessToken = await this.getValidAccessToken();
@@ -180,7 +196,7 @@ export class HttpHelper {
       console.log(
         "POST response status:",
         response.status,
-        response.statusText
+        response.statusText,
       );
 
       if (!response.ok) {
@@ -189,7 +205,7 @@ export class HttpHelper {
         throw new Error(
           `POST request failed: ${response.status} ${
             response.statusText
-          } - ${errorText.substring(0, 200)}`
+          } - ${errorText.substring(0, 200)}`,
         );
       }
 
@@ -200,7 +216,7 @@ export class HttpHelper {
       } catch (jsonError) {
         console.error("POST JSON parse error:", responseText);
         throw new Error(
-          `Invalid JSON response: ${responseText.substring(0, 100)}`
+          `Invalid JSON response: ${responseText.substring(0, 100)}`,
         );
       }
     } catch (error) {
@@ -213,7 +229,7 @@ export class HttpHelper {
   static async put(
     endpoint: string,
     data: any,
-    options: any = {}
+    options: any = {},
   ): Promise<HttpResponse> {
     try {
       const accessToken = await this.getValidAccessToken();
@@ -238,7 +254,7 @@ export class HttpHelper {
 
       if (!response.ok) {
         throw new Error(
-          result.error || `PUT request failed: ${response.statusText}`
+          result.error || `PUT request failed: ${response.statusText}`,
         );
       }
 
@@ -252,7 +268,7 @@ export class HttpHelper {
   // Generic DELETE method with automatic token management
   static async delete(
     endpoint: string,
-    options: any = {}
+    options: any = {},
   ): Promise<HttpResponse> {
     try {
       const accessToken = await this.getValidAccessToken();
@@ -276,7 +292,7 @@ export class HttpHelper {
 
       if (!response.ok) {
         throw new Error(
-          result.error || `DELETE request failed: ${response.statusText}`
+          result.error || `DELETE request failed: ${response.statusText}`,
         );
       }
 

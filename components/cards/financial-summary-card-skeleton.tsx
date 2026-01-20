@@ -10,6 +10,7 @@ const FinancialSummaryCardSkeleton: React.FC = () => {
 
   return (
     <Card backgroundColor={cardBackground} color={textColor}>
+      <View style={{ height: 200 }}>
       {/* Balance Row */}
       <View style={styles.balanceRow}>
         <Skeleton width={80} height={24} borderRadius={6} />
@@ -66,6 +67,7 @@ const FinancialSummaryCardSkeleton: React.FC = () => {
             />
           </View>
         </View>
+      </View>
       </View>
     </Card>
   );

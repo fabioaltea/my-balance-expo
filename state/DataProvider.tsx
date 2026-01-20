@@ -6,6 +6,8 @@ import {
   Account,
   Category,
   PendingRecurrence,
+  MonthlyForecast,
+  AccountForecast,
 } from "../hooks/useMyBalanceData";
 import { useAuthContext } from "./AuthProvider";
 
@@ -19,6 +21,8 @@ interface DataContextType {
   movements: Movement[];
   recurringMovements: Movement[];
   pendingRecurrences: PendingRecurrence[];
+  monthlyForecast: MonthlyForecast;
+  accountForecasts: AccountForecast[];
 
   // State
   isLoading: boolean;
@@ -40,8 +44,8 @@ interface DataProviderProps {
 }
 
 export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
-  const { selectedSpreadsheetId } = useAuthContext();
-  const data = useMyBalanceData(selectedSpreadsheetId);
+  const { selectedSpreadsheetId, logout } = useAuthContext();
+  const data = useMyBalanceData(selectedSpreadsheetId, logout);
 
   return <DataContext.Provider value={data}>{children}</DataContext.Provider>;
 };

@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import React from "react";
 import { formatDateToDDMMYYYY } from "@/utils/dateUtils";
 import type { IDateRange } from "@/state";
+import { useThemeColor } from "@/hooks/use-theme-color";
 
 function monthStartEnd(year: number, monthIndex: number) {
   const start = new Date(year, monthIndex, 1);
@@ -180,13 +181,37 @@ const PeriodPicker: React.FC<PeriodPickerProps> = ({
     return [];
   }, [selectedYear, currentYear, currentMonthIndex, months]);
 
+   const inactiveBackground = useThemeColor(
+     { light: "#a8a8a8ff", dark: "#4a4a4a" },
+     "tabIconDefault",
+   );
+   const activeBackground = useThemeColor(
+     { light: "#000", dark: "#fff" },
+     "text",
+   );
+
+   const dynamicStyles = StyleSheet.create({
+     chipButton: {
+       ...styles.chipButton,
+       backgroundColor: inactiveBackground,
+     },
+   });
+
   return (
     <View style={styles.wrapper}>
-      <TouchableOpacity style={styles.arrowButton} onPress={goToPreviousMonth}>
+      <TouchableOpacity
+        style={[styles.arrowButton, dynamicStyles.chipButton]}
+        onPress={goToPreviousMonth}
+      >
         <Text style={styles.arrowText}>←</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        style={[styles.arrowButton, !canGoNext() && styles.arrowButtonDisabled]}
+        style={[
+          styles.arrowButton,
+          !canGoNext() && styles.arrowButtonDisabled,
+          ,
+          dynamicStyles.chipButton,
+        ]}
         onPress={goToNextMonth}
         disabled={!canGoNext()}
       >
@@ -239,10 +264,30 @@ const styles = StyleSheet.create({
   arrowText: {
     fontSize: 18,
     fontWeight: "bold",
+    color: "#fff",
   },
   arrowTextDisabled: {
-    color: "#999",
+    color: "#e3e3e3",
   },
-});
+  chipWrapper: {
+    position: "relative",
+    flexGrow: 1,
+  },
+  chipButton: {
+    padding: 8,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    display: "flex",
+  },
+}
+
+
+
+);
 
 export default PeriodPicker;
+
+
+
+ 
+

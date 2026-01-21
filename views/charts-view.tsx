@@ -47,7 +47,7 @@ const FULL_MONTH_NAMES = [
 ];
 
 const ChartsView: React.FC = () => {
-  const { transactions, accounts, isLoading } = useDataContext();
+  const { transactions, movements, accounts, isLoading } = useDataContext();
   const cardBackground = useThemeColor({}, "cardBackground");
   const textColor = useThemeColor({}, "text");
   const subtleTextColor = useThemeColor({}, "tabIconDefault");
@@ -128,13 +128,13 @@ const ChartsView: React.FC = () => {
 
   // Calculate income/expenses data
   const incomeExpenseMonthly = useIncomeExpenses({
-    transactions,
+    movements,
     monthsToShow: MONTHS_TO_SHOW,
     monthOffset,
   });
 
   const incomeExpenseYearlyRaw = useIncomeExpenses({
-    transactions,
+    movements,
     monthsToShow: YEARS_TO_SHOW * 12,
     monthOffset: yearOffset * 12,
   });
@@ -169,6 +169,7 @@ const ChartsView: React.FC = () => {
 
   // Calculate expense breakdown data
   const expenseBreakdownMonthly = useCategoryAccountBreakdown({
+    movements,
     transactions,
     accounts,
     type: "expense",
@@ -178,6 +179,7 @@ const ChartsView: React.FC = () => {
   });
 
   const expenseBreakdownYearlyRaw = useCategoryAccountBreakdown({
+    movements,
     transactions,
     accounts,
     type: "expense",
@@ -230,6 +232,7 @@ const ChartsView: React.FC = () => {
 
   // Calculate income breakdown data
   const incomeBreakdownMonthly = useCategoryAccountBreakdown({
+    movements,
     transactions,
     accounts,
     type: "income",
@@ -239,6 +242,7 @@ const ChartsView: React.FC = () => {
   });
 
   const incomeBreakdownYearlyRaw = useCategoryAccountBreakdown({
+    movements,
     transactions,
     accounts,
     type: "income",

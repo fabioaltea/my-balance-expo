@@ -1,11 +1,12 @@
 /**
  * Hook to calculate monthly/yearly income and expenses for charts
  *
- * Calculates total income and expenses for each month/year.
+ * Calculates total income and expenses for each month/year based on movement deltas.
+ * Uses the net totalAmount of each movement (not individual transactions).
  */
 
 import { useMemo } from "react";
-import { Transaction } from "./useMyBalanceData";
+import { Movement } from "./useMyBalanceData";
 import { parseDateFromDDMMYYYY } from "../utils/dateUtils";
 
 export interface IncomeExpenseData {
@@ -18,18 +19,18 @@ export interface IncomeExpenseData {
 }
 
 interface UseIncomeExpensesParams {
-  transactions: Transaction[];
+  movements: Movement[];
   monthsToShow?: number;
   monthOffset?: number;
 }
 
 export const useIncomeExpenses = ({
-  transactions,
+  movements,
   monthsToShow = 12,
   monthOffset = 0,
 }: UseIncomeExpensesParams): IncomeExpenseData[] => {
   return useMemo(() => {
-    if (!transactions.length) {
+    if (!movements.length) {
       return [];
     }
 
@@ -48,24 +49,25 @@ export const useIncomeExpenses = ({
       months.push({ year, month, startDate, endDate });
     }
 
-    // For each month, calculate income and expenses
+    // For each month, calculate income and expenses based on movement deltas
     const monthlyData: IncomeExpenseData[] = months.map(({ year, month, startDate, endDate }) => {
-      // Filter transactions for this specific month
-      const monthTransactions = transactions.filter((t) => {
-        const txDate = parseDateFromDDMMYYYY(t.date);
-        if (!txDate) return false;
-        return txDate >= startDate && txDate <= endDate;
+      // Filter movements for this specific month
+      const monthMovements = movements.filter((m) => {
+        const movementDate = parseDateFromDDMMYYYY(m.date);
+        if (!movementDate) return false;
+        return movementDate >= startDate && movementDate <= endDate;
       });
 
-      // Calculate income and expenses
+      // Calculate income and expenses using movement totalAmount (delta)
+      // totalAmount is positive for net income, negative for net expense
       let income = 0;
       let expenses = 0;
 
-      monthTransactions.forEach((t) => {
-        if (t.type === "income") {
-          income += t.amount;
+      monthMovements.forEach((m) => {
+        if (m.totalAmount >= 0) {
+          income += m.totalAmount;
         } else {
-          expenses += t.amount;
+          expenses += Math.abs(m.totalAmount);
         }
       });
 
@@ -82,5 +84,5 @@ export const useIncomeExpenses = ({
     });
 
     return monthlyData;
-  }, [transactions, monthsToShow, monthOffset]);
+  }, [movements, monthsToShow, monthOffset]);
 };

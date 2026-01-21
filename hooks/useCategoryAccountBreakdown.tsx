@@ -1,9 +1,12 @@
 /**
  * Hook to calculate income/expenses breakdown by category or account per period
+ *
+ * - When groupBy="category": Uses movement deltas (net totalAmount)
+ * - When groupBy="account": Uses individual transaction amounts (original logic)
  */
 
 import { useMemo } from "react";
-import { Transaction, Account } from "./useMyBalanceData";
+import { Transaction, Movement, Account } from "./useMyBalanceData";
 import { parseDateFromDDMMYYYY } from "../utils/dateUtils";
 
 export interface BreakdownItem {
@@ -23,6 +26,7 @@ export interface PeriodBreakdownData {
 }
 
 interface UseCategoryAccountBreakdownParams {
+  movements: Movement[];
   transactions: Transaction[];
   accounts: Account[];
   type: "income" | "expense";
@@ -56,6 +60,7 @@ const getColorForCategory = (category: string, index: number): string => {
 };
 
 export const useCategoryAccountBreakdown = ({
+  movements,
   transactions,
   accounts,
   type,
@@ -64,7 +69,9 @@ export const useCategoryAccountBreakdown = ({
   monthOffset = 0,
 }: UseCategoryAccountBreakdownParams): PeriodBreakdownData[] => {
   return useMemo(() => {
-    if (!transactions.length) {
+    // Use movements for category breakdown, transactions for account breakdown
+    const hasData = groupBy === "category" ? movements.length > 0 : transactions.length > 0;
+    if (!hasData) {
       return [];
     }
 
@@ -91,35 +98,59 @@ export const useCategoryAccountBreakdown = ({
 
     // Track all unique categories/accounts for consistent coloring
     const allGroupKeys = new Set<string>();
-    transactions.forEach((t) => {
-      if ((type === "expense" && t.type === "expense") || (type === "income" && t.type === "income")) {
-        if (groupBy === "category") {
-          allGroupKeys.add(t.category || "Altro");
-        } else {
+    if (groupBy === "category") {
+      movements.forEach((m) => {
+        // Filter by type based on totalAmount sign
+        const isIncome = m.totalAmount >= 0;
+        if ((type === "expense" && !isIncome) || (type === "income" && isIncome)) {
+          allGroupKeys.add(m.category || "Altro");
+        }
+      });
+    } else {
+      transactions.forEach((t) => {
+        if ((type === "expense" && t.type === "expense") || (type === "income" && t.type === "income")) {
           allGroupKeys.add(t.account);
         }
-      }
-    });
+      });
+    }
     const groupKeyArray = Array.from(allGroupKeys);
 
     // Calculate breakdown for each month
     const monthlyData: PeriodBreakdownData[] = months.map(({ year, month, startDate, endDate }) => {
-      // Filter transactions for this month and type
-      const monthTransactions = transactions.filter((t) => {
-        const txDate = parseDateFromDDMMYYYY(t.date);
-        if (!txDate) return false;
-        if (txDate < startDate || txDate > endDate) return false;
-        return t.type === type;
-      });
-
-      // Group by category or account
       const groupedAmounts = new Map<string, number>();
 
-      monthTransactions.forEach((t) => {
-        const key = groupBy === "category" ? (t.category || "Altro") : t.account;
-        const current = groupedAmounts.get(key) || 0;
-        groupedAmounts.set(key, current + t.amount);
-      });
+      if (groupBy === "category") {
+        // Use movements and their totalAmount (delta)
+        const monthMovements = movements.filter((m) => {
+          const movementDate = parseDateFromDDMMYYYY(m.date);
+          if (!movementDate) return false;
+          if (movementDate < startDate || movementDate > endDate) return false;
+          // Filter by type based on totalAmount sign
+          const isIncome = m.totalAmount >= 0;
+          return type === "income" ? isIncome : !isIncome;
+        });
+
+        monthMovements.forEach((m) => {
+          const key = m.category || "Altro";
+          const current = groupedAmounts.get(key) || 0;
+          // Use absolute value of totalAmount
+          groupedAmounts.set(key, current + Math.abs(m.totalAmount));
+        });
+      } else {
+        // Use transactions (original logic for account breakdown)
+        const monthTransactions = transactions.filter((t) => {
+          const txDate = parseDateFromDDMMYYYY(t.date);
+          if (!txDate) return false;
+          if (txDate < startDate || txDate > endDate) return false;
+          return t.type === type;
+        });
+
+        monthTransactions.forEach((t) => {
+          const key = t.account;
+          const current = groupedAmounts.get(key) || 0;
+          groupedAmounts.set(key, current + t.amount);
+        });
+      }
 
       // Build items array
       const items: BreakdownItem[] = [];
@@ -158,5 +189,5 @@ export const useCategoryAccountBreakdown = ({
     });
 
     return monthlyData;
-  }, [transactions, accounts, type, groupBy, monthsToShow, monthOffset]);
+  }, [movements, transactions, accounts, type, groupBy, monthsToShow, monthOffset]);
 };

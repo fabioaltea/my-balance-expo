@@ -2,9 +2,9 @@ import React from "react";
 import { View, StyleSheet, Pressable } from "react-native";
 import { ThemedText } from "../themed-text";
 import { useThemeColor } from "@/hooks/use-theme-color";
-import { IconSymbol } from "../ui/icon-symbol";
 import { IAccount } from "@/models/Account";
 import * as Haptics from "expo-haptics";
+import IconSymbol from "../ui/icon-symbol";
 
 interface IAccountCardProps {
   account: IAccount;

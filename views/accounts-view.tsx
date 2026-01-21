@@ -5,7 +5,7 @@ import React from "react";
 import { IAccount } from "@/models/Account";
 
 const AccountsView: React.FC = () => {
-  const allAccounts=[];
+  const allAccounts:IAccount[]=[];
   // Convert Account to IAccount for compatibility
   const adaptedAccounts = allAccounts.map((account:IAccount) => ({
     id: account.id,

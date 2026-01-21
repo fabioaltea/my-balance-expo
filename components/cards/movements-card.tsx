@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { ThemedText } from "../themed-text";
 import { TouchableOpacity, StyleSheet, View } from "react-native";
-import { IconSymbol } from "../ui/icon-symbol";
+import IconSymbol from "../ui/icon-symbol";
 import Card from "../card";
 import Skeleton from "../ui/skeleton";
 import { useThemeColor } from "@/hooks/use-theme-color";
@@ -11,46 +11,11 @@ import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
 import type { Movement } from "@/state";
 import type { Category } from "@/hooks/useMyBalanceData";
+import { MovementHelper } from "@/helpers/MovementHelper";
 
-// Default colors for income/expense
-const DEFAULT_INCOME_COLOR = "#34C759";
-const DEFAULT_EXPENSE_COLOR = "#FF3B30";
-const DEFAULT_ICON = "cash";
 
-// Helper to get icon from category data or fallback
-const getMovementIcon = (
-  categoryName?: string,
-  categories?: Category[]
-): string => {
-  if (!categoryName || !categories) return DEFAULT_ICON;
 
-  const category = categories.find(
-    (c) => c.name.toLowerCase() === categoryName.toLowerCase()
-  );
 
-  return category?.icon || DEFAULT_ICON;
-};
-
-// Helper to get color from category data or fallback based on type
-const getMovementColor = (
-  type: "income" | "expense",
-  categoryName?: string,
-  categories?: Category[]
-): string => {
-  if (!categoryName || !categories) {
-    return type === "income" ? DEFAULT_INCOME_COLOR : DEFAULT_EXPENSE_COLOR;
-  }
-
-  const category = categories.find(
-    (c) => c.name.toLowerCase() === categoryName.toLowerCase()
-  );
-
-  if (category?.color) {
-    return category.color;
-  }
-
-  return type === "income" ? DEFAULT_INCOME_COLOR : DEFAULT_EXPENSE_COLOR;
-};
 
 const styles = StyleSheet.create({
   // Movements
@@ -224,8 +189,8 @@ const MovementsCard: React.FC<MovementsCardProps> = ({
   return (
     <Card label="">
       {recentMovements?.map((movement, index) => {
-        const icon = getMovementIcon(movement.category, categories);
-        const color = getMovementColor(movement.type, movement.category, categories);
+        const icon = MovementHelper.getMovementIcon(movement.category, categories);
+        const color = MovementHelper.getMovementColor(movement.type, movement.category, categories);
         // totalAmount is already signed (positive for income, negative for expense)
         const amount = movement.totalAmount;
 

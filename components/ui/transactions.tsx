@@ -9,13 +9,13 @@ import {
 } from "react-native";
 import { ThemedText } from "../themed-text";
 import { useThemeColor } from "@/hooks/use-theme-color";
-import { IconSymbol } from "./icon-symbol";
 import * as Haptics from "expo-haptics";
 import React, { useRef } from "react";
 import {
   Swipeable,
   GestureHandlerRootView,
 } from "react-native-gesture-handler";
+import IconSymbol from "./icon-symbol";
 
 export interface ITransaction {
   id: number;
@@ -115,7 +115,7 @@ const TransactionRow: React.FC<TransactionRowProps> = ({
           <Animated.View
             style={[styles.deleteContent, { transform: [{ scale }], opacity }]}
           >
-            <IconSymbol name="trash" size={22} color="#fff" />
+            <IconSymbol name="delete" size={22} color="#fff" />
           </Animated.View>
         </Pressable>
       </Animated.View>
@@ -211,7 +211,7 @@ const Transactions: React.FC<ITransactionsProps> = ({
 
       {/* Add Button */}
       <Pressable onPress={handleAddPress} style={styles.addButton}>
-        <IconSymbol name="plus" size={24} color="#fff" />
+        <IconSymbol name="add" size={24} color="#fff" />
       </Pressable>
     </GestureHandlerRootView>
   );

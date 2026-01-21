@@ -3,7 +3,6 @@ import { View, StyleSheet, Pressable } from "react-native";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { Picker } from "@react-native-picker/picker";
 import { useState } from "react";
-import { IconSymbol } from "./icon-symbol";
 import * as Haptics from "expo-haptics";
 import ModalPanel from "./modal-panel";
 import React from "react";

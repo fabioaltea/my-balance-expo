@@ -1,8 +1,8 @@
 import { View, StyleSheet, Pressable, Text, Animated } from "react-native";
 import { useThemeColor } from "@/hooks/use-theme-color";
-import { IconSymbol } from "./icon-symbol";
 import * as Haptics from "expo-haptics";
 import React, { useState, useEffect, useRef } from "react";
+import IconSymbol from "./icon-symbol";
 
 interface ICurrencyInputProps {
   value: number;

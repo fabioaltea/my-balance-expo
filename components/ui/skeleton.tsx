@@ -51,6 +51,8 @@ const Skeleton: React.FC<SkeletonProps> = ({
           height,
           borderRadius,
           backgroundColor: baseColor,
+        } as ViewStyle,
+        {
           opacity,
         },
         style,

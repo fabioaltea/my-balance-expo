@@ -1,7 +1,6 @@
 import React, { useState, useRef } from "react";
 import { ThemedText } from "../themed-text";
 import { TouchableOpacity, StyleSheet, View, Alert } from "react-native";
-import { IconSymbol, IconName } from "../ui/icon-symbol";
 import Card from "../card";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { useAuthContext, useDataContext } from "@/state";
@@ -10,75 +9,15 @@ import * as Haptics from "expo-haptics";
 import type { Movement } from "@/state";
 import ContextMenu, { IContextMenuOption } from "../ui/context-menu";
 import { TransactionsApiHelper } from "@/helpers/TransactionsApiHelper";
+import IconSymbol, { IconName } from "../ui/icon-symbol";
+import { MovementHelper } from "@/helpers/MovementHelper";
 
-// Helper function to get icon based on category/description
-const getMovementIcon = (category?: string, description?: string): IconName => {
-  const desc = description?.toLowerCase() || "";
-  const cat = category?.toLowerCase() || "";
 
-  if (
-    cat.includes("salary") ||
-    cat.includes("stipendio") ||
-    desc.includes("tredicesima")
-  ) {
-    return "office-building";
-  }
-  if (
-    cat.includes("groceries") ||
-    cat.includes("spesa") ||
-    desc.includes("conad") ||
-    desc.includes("supermercato")
-  ) {
-    return "cart";
-  }
-  if (
-    cat.includes("home") ||
-    cat.includes("casa") ||
-    desc.includes("pellet") ||
-    desc.includes("bolletta")
-  ) {
-    return "home";
-  }
-  if (
-    cat.includes("transport") ||
-    cat.includes("trasporti") ||
-    desc.includes("benzina") ||
-    desc.includes("auto")
-  ) {
-    return "car";
-  }
-  if (cat.includes("entertainment") || cat.includes("svago")) {
-    return "gamepad-variant";
-  }
 
-  return "cash";
-};
 
-// Helper function to get color based on category/type
-const getMovementColor = (
-  type: "income" | "expense",
-  category?: string
-): string => {
-  if (type === "income") {
-    return "#34C759";
-  }
-
-  const cat = category?.toLowerCase() || "";
-  if (cat.includes("groceries") || cat.includes("spesa")) {
-    return "#FFD60A";
-  }
-  if (cat.includes("home") || cat.includes("casa")) {
-    return "#FF9500";
-  }
-  if (cat.includes("transport") || cat.includes("trasporti")) {
-    return "#5856D6";
-  }
-
-  return "#FF3B30"; // Default expense color
-};
 
 const RecurringMovementsCard: React.FC = () => {
-  const { recurringMovements, reloadData } = useDataContext();
+  const { recurringMovements, categories, reloadData } = useDataContext();
   const { selectedSpreadsheetId } = useAuthContext();
 
   const [menuVisible, setMenuVisible] = useState(false);
@@ -217,8 +156,12 @@ const RecurringMovementsCard: React.FC = () => {
   return (
     <Card>
       {recurringMovements.map((movement, index) => {
-        const icon = getMovementIcon(movement.category, movement.description);
-        const color = getMovementColor(movement.type, movement.category);
+        const icon = MovementHelper.getMovementIcon(movement.category, categories);
+        const color = MovementHelper.getMovementColor(
+          movement.type,
+          movement.category,
+          categories
+        );
         const amount = movement.totalAmount;
         const transactionCount = movement.transactions.length;
         const recurrencePattern = movement.recurrencePattern
@@ -267,7 +210,7 @@ const RecurringMovementsCard: React.FC = () => {
                 style={styles.addButton}
                 activeOpacity={0.7}
               >
-                <IconSymbol name="plus-circle" size={28} color="#2F4F3F" />
+                <IconSymbol name="add-circle" size={28} color="#2F4F3F" />
               </TouchableOpacity>
             </TouchableOpacity>
           </View>

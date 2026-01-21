@@ -7,55 +7,9 @@ import { useDataContext } from '@/state/DataProvider';
 import Card from '@/components/card';
 import List from '@/components/ui/list';
 import ModalPanel from '@/components/ui/modal-panel';
-import { IconSymbol, IconName } from '@/components/ui/icon-symbol';
 import { Category } from '@/hooks/useMyBalanceData';
 import * as Haptics from 'expo-haptics';
-
-// Ionicons for categories (verified names from @expo/vector-icons)
-const CATEGORY_ICONS: IconName[] = [
-  // Home & Living
-  'home', 'home-outline', 'bed', 'bed-outline', 'bulb', 'bulb-outline', 'flash', 'flash-outline', 'flame', 'flame-outline',
-  // Transport
-  'car', 'car-outline', 'car-sport', 'car-sport-outline', 'bus', 'bus-outline', 'train', 'train-outline', 'subway', 'subway-outline',
-  'airplane', 'airplane-outline', 'bicycle', 'bicycle-outline', 'boat', 'boat-outline',
-  // Shopping
-  'cart', 'cart-outline', 'bag', 'bag-outline', 'bag-handle', 'bag-handle-outline', 'basket', 'basket-outline',
-  'pricetag', 'pricetag-outline', 'pricetags', 'pricetags-outline', 'storefront', 'storefront-outline', 'shirt', 'shirt-outline',
-  // Food & Drink
-  'fast-food', 'fast-food-outline', 'restaurant', 'restaurant-outline', 'cafe', 'cafe-outline',
-  'beer', 'beer-outline', 'wine', 'wine-outline', 'pint', 'pint-outline', 'pizza', 'pizza-outline',
-  'ice-cream', 'ice-cream-outline', 'nutrition', 'nutrition-outline',
-  // Finance
-  'cash', 'cash-outline', 'card', 'card-outline', 'wallet', 'wallet-outline',
-  'stats-chart', 'stats-chart-outline', 'bar-chart', 'bar-chart-outline', 'pie-chart', 'pie-chart-outline',
-  'trending-up', 'trending-up-outline', 'trending-down', 'trending-down-outline',
-  // Health
-  'medical', 'medical-outline', 'medkit', 'medkit-outline', 'fitness', 'fitness-outline',
-  'heart', 'heart-outline', 'heart-circle', 'heart-circle-outline', 'pulse', 'pulse-outline',
-  'walk', 'walk-outline', 'bandage', 'bandage-outline',
-  // Entertainment
-  'game-controller', 'game-controller-outline', 'film', 'film-outline', 'musical-note', 'musical-note-outline',
-  'musical-notes', 'musical-notes-outline', 'tv', 'tv-outline', 'ticket', 'ticket-outline',
-  'happy', 'happy-outline', 'balloon', 'balloon-outline',
-  // Communication
-  'call', 'call-outline', 'phone-portrait', 'phone-portrait-outline', 'mail', 'mail-outline', 'mail-open', 'mail-open-outline',
-  'wifi', 'wifi-outline', 'globe', 'globe-outline', 'chatbubble', 'chatbubble-outline',
-  // Work & Education
-  'briefcase', 'briefcase-outline', 'business', 'business-outline', 'school', 'school-outline',
-  'book', 'book-outline', 'pencil', 'pencil-outline', 'laptop', 'laptop-outline', 'desktop', 'desktop-outline',
-  'calculator', 'calculator-outline',
-  // Nature
-  'leaf', 'leaf-outline', 'flower', 'flower-outline', 'rose', 'rose-outline', 'paw', 'paw-outline', 'fish', 'fish-outline',
-  // People
-  'person', 'person-outline', 'people', 'people-outline', 'body', 'body-outline', 'man', 'man-outline', 'woman', 'woman-outline',
-  // Other
-  'gift', 'gift-outline', 'star', 'star-outline', 'flag', 'flag-outline',
-  'build', 'build-outline', 'hammer', 'hammer-outline', 'camera', 'camera-outline',
-  'color-palette', 'color-palette-outline', 'umbrella', 'umbrella-outline',
-  'settings', 'settings-outline', 'cog', 'cog-outline', 'trash', 'trash-outline',
-  'location', 'location-outline', 'time', 'time-outline',
-
-];
+import IconSymbol, { IconName } from '@/components/ui/icon-symbol';
 
 const VALID_ICONS = [
   "link",
@@ -1444,7 +1398,7 @@ export default function Categories() {
   const { categories } = useDataContext();
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-  const [selectedIcon, setSelectedIcon] = useState<IconName>('pricetag');
+  const [selectedIcon, setSelectedIcon] = useState<IconName>('label');
   const [selectedColor, setSelectedColor] = useState<string>('#2F4F3F');
 
   const handleButtonPress = () => {
@@ -1454,7 +1408,7 @@ export default function Categories() {
   const handleIconLongPress = (category: Category) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setSelectedCategory(category);
-    setSelectedIcon((category.icon || 'pricetag') as IconName);
+    setSelectedIcon((category.icon || 'label') as IconName);
     setSelectedColor(category.color || '#2F4F3F');
     setModalVisible(true);
   };
@@ -1521,7 +1475,7 @@ export default function Categories() {
 
           {/* Color selection */}
           <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
-            Colore
+            Color
           </ThemedText>
           <ScrollView
             horizontal
@@ -1550,7 +1504,7 @@ export default function Categories() {
             {VALID_ICONS.map((icon) => (
               <Pressable
                 key={icon}
-                onPress={() => setSelectedIcon(icon)}
+                onPress={() => setSelectedIcon(icon as IconName)}
                 style={[
                   styles.iconItem,
                   selectedIcon === icon && styles.selectedItem,

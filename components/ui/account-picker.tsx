@@ -4,8 +4,6 @@ import { ThemedText } from "../themed-text";
 import ContextMenu from "./context-menu";
 import { IAccount } from "@/models/Account";
 import type { Account } from "@/state";
-import { Icon } from "expo-router/build/native-tabs/common/elements";
-              import { IconSymbol } from "@/components/ui/icon-symbol";
 
 export interface IAccountPickerProps {
   accounts: Account[];
@@ -38,7 +36,7 @@ const AccountPicker: React.FC<IAccountPickerProps> = ({
         <ThemedText type="title">
           {selectedAccount || "Select Account"}
         </ThemedText>
-        <IconSymbol name="chevron-down" color="#2F4F3F" />
+        {/* <IconSymbol name="chevron-down" color="#2F4F3F" /> */}
       </Pressable>
       {menuOpen && (
         <ContextMenu

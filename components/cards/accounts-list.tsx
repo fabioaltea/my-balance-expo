@@ -1,11 +1,11 @@
 import { View, StyleSheet, ScrollView, Alert } from "react-native";
 import { ThemedText } from "../themed-text";
 import { useThemeColor } from "@/hooks/use-theme-color";
-import { IconSymbol } from "../ui/icon-symbol";
 import { IAccount } from "@/models/Account";
 import AccountCard from "./account-card";
 import { useState } from "react";
 import React from "react";
+import IconSymbol from "../ui/icon-symbol";
 
 interface IAccountsListProps {
   accounts: IAccount[];

@@ -9,7 +9,6 @@ import {
 } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
-import { IconSymbol } from "@/components/ui/icon-symbol";
 import ScreenView from "@/layout/screen-view";
 import React from "react";
 import { useAuthContext } from "@/state";
@@ -18,6 +17,7 @@ import Card from "@/components/card";
 import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
 import InputGroup from "@/components/ui/input-group";
+import IconSymbol from "@/components/ui/icon-symbol";
 
 export default function Settings() {
   const { user, logout } = useAuthContext();
@@ -105,7 +105,10 @@ export default function Settings() {
         </ThemedText>
       </View>
       {showChevron && (
-        <IconSymbol name="chevron-right" size={16} color={secondaryTextColor} />
+        <IconSymbol 
+        
+        name="chevron-right" size={16} color={secondaryTextColor}
+         />
       )}
     </TouchableOpacity>
   );

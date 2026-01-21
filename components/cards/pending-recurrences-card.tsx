@@ -1,78 +1,13 @@
 import React from "react";
 import { ThemedText } from "../themed-text";
 import { TouchableOpacity, StyleSheet, View } from "react-native";
-import { IconSymbol, IconName } from "../ui/icon-symbol";
 import Card from "../card";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
-import type { PendingRecurrence } from "@/state";
-
-// Helper function to get icon based on category/description
-const getMovementIcon = (category?: string, description?: string): IconName => {
-  const desc = description?.toLowerCase() || "";
-  const cat = category?.toLowerCase() || "";
-
-  if (
-    cat.includes("salary") ||
-    cat.includes("stipendio") ||
-    desc.includes("tredicesima")
-  ) {
-    return "office-building";
-  }
-  if (
-    cat.includes("groceries") ||
-    cat.includes("spesa") ||
-    desc.includes("conad") ||
-    desc.includes("supermercato")
-  ) {
-    return "cart";
-  }
-  if (
-    cat.includes("home") ||
-    cat.includes("casa") ||
-    desc.includes("pellet") ||
-    desc.includes("bolletta")
-  ) {
-    return "home";
-  }
-  if (
-    cat.includes("transport") ||
-    cat.includes("trasporti") ||
-    desc.includes("benzina") ||
-    desc.includes("auto")
-  ) {
-    return "car";
-  }
-  if (cat.includes("entertainment") || cat.includes("svago")) {
-    return "gamepad-variant";
-  }
-
-  return "cash";
-};
-
-// Helper function to get color based on category/type
-const getMovementColor = (
-  type: "income" | "expense",
-  category?: string,
-): string => {
-  if (type === "income") {
-    return "#34C759";
-  }
-
-  const cat = category?.toLowerCase() || "";
-  if (cat.includes("groceries") || cat.includes("spesa")) {
-    return "#FFD60A";
-  }
-  if (cat.includes("home") || cat.includes("casa")) {
-    return "#FF9500";
-  }
-  if (cat.includes("transport") || cat.includes("trasporti")) {
-    return "#5856D6";
-  }
-
-  return "#FF3B30"; // Default expense color
-};
+import { useDataContext, type PendingRecurrence } from "@/state";
+import IconSymbol, { IconName } from "../ui/icon-symbol";
+import { MovementHelper } from "@/helpers/MovementHelper";
 
 interface PendingRecurrencesCardProps {
   pendingRecurrences: PendingRecurrence[];
@@ -81,6 +16,7 @@ interface PendingRecurrencesCardProps {
 const PendingRecurrencesCard: React.FC<PendingRecurrencesCardProps> = ({
   pendingRecurrences,
 }) => {
+  const {categories}=useDataContext();
   const handleQuickAdd = (pending: PendingRecurrence) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
@@ -124,8 +60,15 @@ const PendingRecurrencesCard: React.FC<PendingRecurrencesCardProps> = ({
     <Card>
       {pendingRecurrences.map((pending, index) => {
         const { template, periodLabel } = pending;
-        const icon = getMovementIcon(template.category, template.description);
-        const color = getMovementColor(template.type, template.category);
+        const icon = MovementHelper.getMovementIcon(
+          template.category,
+          categories,
+        );
+        const color = MovementHelper.getMovementColor(
+          template.type,
+          template.category,
+          categories,
+        );
         const amount = template.totalAmount;
 
         return (
@@ -161,7 +104,7 @@ const PendingRecurrencesCard: React.FC<PendingRecurrencesCardProps> = ({
               style={styles.addButton}
               activeOpacity={0.7}
             >
-              <IconSymbol name="plus-circle" size={28} color="#2F4F3F" />
+              <IconSymbol name="add-circle" size={28} color="#2F4F3F" />
             </TouchableOpacity>
           </TouchableOpacity>
         );

@@ -11,7 +11,6 @@ import React, { useState, useEffect, useRef } from "react";
 import * as Crypto from "expo-crypto";
 import { ThemedText } from "@/components/themed-text";
 import ChipButton from "@/components/ui/chip-button";
-import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import * as Haptics from "expo-haptics";
 import Input from "@/components/ui/text-box";
@@ -35,6 +34,7 @@ import { useAuthContext, useDataContext } from "@/state";
 import { TransactionsApiHelper } from "@/helpers/TransactionsApiHelper";
 import { formatDateToDDMMYYYY, parseDateFromDDMMYYYY } from "@/utils/dateUtils";
 import { useRouter } from "expo-router";
+import IconSymbol from "@/components/ui/icon-symbol";
 
 type ModalStatus = "loading" | "success" | "error";
 
@@ -685,7 +685,7 @@ const AddView: React.FC<AddViewProps> = ({
             </ThemedText>
           </View>
           <Pressable
-            onPress={handleSubmit}
+            onPress={() => handleSubmit()}
             disabled={isSubmitting}
             style={[
               styles.submitButton,

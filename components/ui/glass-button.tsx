@@ -42,16 +42,16 @@ const GlassButton = ({
     scheme === "dark" ? "rgba(255,255,255,0.24)" : "rgba(255,255,255,0.35)";
   const sheenColors =
     scheme === "dark"
-      ? [
+      ? ([
           "rgba(62, 62, 62, 0.35)",
           "rgba(255,255,255,0.12)",
           "rgba(255,255,255,0.04)",
-        ]
-      : [
+        ] as const)
+      : ([
           "rgba(144, 143, 143, 0.55)",
           "rgba(131, 131, 131, 0.15)",
           "rgba(255, 255, 255, 0.74)",
-        ];
+        ] as const);
   const handlePress = async () => {
     try {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);

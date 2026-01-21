@@ -1,7 +1,7 @@
 import { View, StyleSheet, ScrollView, Alert } from "react-native";
 import { ThemedText } from "../themed-text";
 import { useThemeColor } from "@/hooks/use-theme-color";
-import { IconSymbol } from "../ui/icon-symbol.ios";
+import { IconSymbol } from "../ui/icon-symbol";
 import { IAccount } from "@/models/Account";
 import AccountCard from "./account-card";
 import { useState } from "react";
@@ -64,7 +64,7 @@ const AccountsList: React.FC<IAccountsListProps> = ({
             {activeAccountsCount} active • {accounts.length} total
           </ThemedText>
         </View>
-        <IconSymbol name="plus.circle.fill" size={28} color="#2F4F3F" />
+        <IconSymbol name="plus-circle" size={28} color="#2F4F3F" />
       </View>
 
       {/* Total Balance Card */}
@@ -72,7 +72,7 @@ const AccountsList: React.FC<IAccountsListProps> = ({
         <View style={[styles.totalCard, { backgroundColor: "#2F4F3F" }]}>
           <View style={styles.totalHeader}>
             <IconSymbol
-              name="chart.line.uptrend.xyaxis"
+              name="chart-line"
               size={24}
               color="#fff"
             />

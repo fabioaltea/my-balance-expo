@@ -1,6 +1,6 @@
 import { View, StyleSheet, Pressable, Text, Animated } from "react-native";
 import { useThemeColor } from "@/hooks/use-theme-color";
-import { IconSymbol } from "./icon-symbol.ios";
+import { IconSymbol } from "./icon-symbol";
 import * as Haptics from "expo-haptics";
 import React, { useState, useEffect, useRef } from "react";
 
@@ -271,12 +271,12 @@ const CurrencyInput: React.FC<ICurrencyInputProps> = ({
           </KeypadButton>
         ) : (
           <KeypadButton onPress={handleBackToInteger} isActive>
-            <IconSymbol name="chevron.left" size={24} color="#fff" />
+            <IconSymbol name="chevron-left" size={24} color="#fff" />
           </KeypadButton>
         )}
         <KeypadButton onPress={() => handleNumberPress("0")}>0</KeypadButton>
         <KeypadButton onPress={handleBackspace}>
-          <IconSymbol name="delete.left" size={24} color={textColor} />
+          <IconSymbol name="backspace-outline" size={24} color={textColor} />
         </KeypadButton>
       </View>
 

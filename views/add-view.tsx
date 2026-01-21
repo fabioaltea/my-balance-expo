@@ -11,7 +11,7 @@ import React, { useState, useEffect, useRef } from "react";
 import * as Crypto from "expo-crypto";
 import { ThemedText } from "@/components/themed-text";
 import ChipButton from "@/components/ui/chip-button";
-import { IconSymbol } from "@/components/ui/icon-symbol.ios";
+import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import * as Haptics from "expo-haptics";
 import Input from "@/components/ui/text-box";
@@ -559,7 +559,7 @@ const AddView: React.FC<AddViewProps> = ({
                   <ThemedText style={styles.recurrenceValue}>
                     {recurrencePattern || "Not set"}
                   </ThemedText>
-                  <IconSymbol name="chevron.right" size={16} color={placeholderColor} />
+                  <IconSymbol name="chevron-right" size={16} color={placeholderColor} />
                 </View>
               </Pressable>
             </InputGroup>
@@ -638,7 +638,7 @@ const AddView: React.FC<AddViewProps> = ({
             {modalStatus === "success" && (
               <>
                 <IconSymbol
-                  name="checkmark.circle.fill"
+                  name="check-circle"
                   size={48}
                   color="#22c55e"
                 />
@@ -652,7 +652,7 @@ const AddView: React.FC<AddViewProps> = ({
             {modalStatus === "error" && (
               <>
                 <IconSymbol
-                  name="xmark.circle.fill"
+                  name="close-circle"
                   size={48}
                   color="#ef4444"
                 />

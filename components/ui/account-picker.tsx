@@ -38,7 +38,7 @@ const AccountPicker: React.FC<IAccountPickerProps> = ({
         <ThemedText type="title">
           {selectedAccount || "Select Account"}
         </ThemedText>
-        <IconSymbol name={"chevron.down"} color={"#2F4F3F"}></IconSymbol>
+        <IconSymbol name="chevron-down" color="#2F4F3F" />
       </Pressable>
       {menuOpen && (
         <ContextMenu

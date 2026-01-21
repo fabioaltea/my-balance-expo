@@ -75,6 +75,7 @@ export interface Category {
   name: string;
   type: "income" | "expense";
   color?: string;
+  icon?: string;
 }
 
 /**
@@ -228,6 +229,7 @@ export const useMyBalanceData = (
           name: c.name || "",
           type: (c.type as "income" | "expense") || "expense",
           color: c.color || "#2F4F3F",
+          icon: c.icon || "pricetag",
         }),
       );
 

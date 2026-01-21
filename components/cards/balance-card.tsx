@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { TouchableOpacity, StyleSheet, View, Text } from "react-native";
-import { IconSymbol } from "../ui/icon-symbol.ios";
+import { IconSymbol } from "../ui/icon-symbol";
 import Card from "../card";
 import Skeleton from "../ui/skeleton";
 import { Account } from "../../state/AppState.types";
@@ -50,7 +50,7 @@ const BalanceCard: React.FC<IBalanceCardProps> = ({ account }) => {
           disabled={showSkeleton}
         >
           <IconSymbol
-            name={isBalanceVisible ? "eye.fill" : "eye.slash.fill"}
+            name={isBalanceVisible ? "eye" : "eye-off"}
             size={24}
             color="#FFFFFF"
           />

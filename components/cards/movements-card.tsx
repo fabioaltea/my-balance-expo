@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { ThemedText } from "../themed-text";
 import { TouchableOpacity, StyleSheet, View } from "react-native";
-import { IconSymbol } from "../ui/icon-symbol.ios";
+import { IconSymbol } from "../ui/icon-symbol";
 import Card from "../card";
 import Skeleton from "../ui/skeleton";
 import { useThemeColor } from "@/hooks/use-theme-color";
@@ -10,72 +10,46 @@ import { formatDateForDisplay, compareDates } from "@/utils/dateUtils";
 import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
 import type { Movement } from "@/state";
+import type { Category } from "@/hooks/useMyBalanceData";
 
-// Helper function to get icon based on category/description
-const getMovementIcon = (category?: string, description?: string): string => {
-  const desc = description?.toLowerCase() || "";
-  const cat = category?.toLowerCase() || "";
+// Default colors for income/expense
+const DEFAULT_INCOME_COLOR = "#34C759";
+const DEFAULT_EXPENSE_COLOR = "#FF3B30";
+const DEFAULT_ICON = "cash";
 
-  if (
-    cat.includes("salary") ||
-    cat.includes("stipendio") ||
-    desc.includes("tredicesima")
-  ) {
-    return "building.2.fill";
-  }
-  if (
-    cat.includes("groceries") ||
-    cat.includes("spesa") ||
-    desc.includes("conad") ||
-    desc.includes("supermercato")
-  ) {
-    return "cart.fill";
-  }
-  if (
-    cat.includes("home") ||
-    cat.includes("casa") ||
-    desc.includes("pellet") ||
-    desc.includes("bolletta")
-  ) {
-    return "house.fill";
-  }
-  if (
-    cat.includes("transport") ||
-    cat.includes("trasporti") ||
-    desc.includes("benzina") ||
-    desc.includes("auto")
-  ) {
-    return "car.fill";
-  }
-  if (cat.includes("entertainment") || cat.includes("svago")) {
-    return "gamecontroller.fill";
-  }
+// Helper to get icon from category data or fallback
+const getMovementIcon = (
+  categoryName?: string,
+  categories?: Category[]
+): string => {
+  if (!categoryName || !categories) return DEFAULT_ICON;
 
-  // Default icons based on type
-  return desc.includes("expense") ? "minus.circle.fill" : "plus.circle.fill";
+  const category = categories.find(
+    (c) => c.name.toLowerCase() === categoryName.toLowerCase()
+  );
+
+  return category?.icon || DEFAULT_ICON;
 };
 
-// Helper function to get color based on category/type
+// Helper to get color from category data or fallback based on type
 const getMovementColor = (
   type: "income" | "expense",
-  category?: string
+  categoryName?: string,
+  categories?: Category[]
 ): string => {
-  if (type === "income") {
-    return "#34C759";
+  if (!categoryName || !categories) {
+    return type === "income" ? DEFAULT_INCOME_COLOR : DEFAULT_EXPENSE_COLOR;
   }
 
-  const cat = category?.toLowerCase() || "";
-  if (cat.includes("groceries") || cat.includes("spesa")) {
-    return "#FFD60A";
-  }
-  if (cat.includes("home") || cat.includes("casa")) {
-    return "#FF9500";
-  }
-  if (cat.includes("transport") || cat.includes("trasporti")) {
-    return "#5856D6";
+  const category = categories.find(
+    (c) => c.name.toLowerCase() === categoryName.toLowerCase()
+  );
+
+  if (category?.color) {
+    return category.color;
   }
 
-  return "#FF3B30"; // Default expense color
+  return type === "income" ? DEFAULT_INCOME_COLOR : DEFAULT_EXPENSE_COLOR;
 };
 
 const styles = StyleSheet.create({
@@ -146,7 +120,7 @@ const MovementsCard: React.FC<MovementsCardProps> = ({
   movements,
   isTransitioning = false,
 }) => {
-  const { isLoading } = useDataContext();
+  const { isLoading, categories } = useDataContext();
   const [recentMovements, setRecentMovements] = useState(
     sortMovements(movements)
   );
@@ -250,8 +224,8 @@ const MovementsCard: React.FC<MovementsCardProps> = ({
   return (
     <Card label="">
       {recentMovements?.map((movement, index) => {
-        const icon = getMovementIcon(movement.category, movement.description);
-        const color = getMovementColor(movement.type, movement.category);
+        const icon = getMovementIcon(movement.category, categories);
+        const color = getMovementColor(movement.type, movement.category, categories);
         // totalAmount is already signed (positive for income, negative for expense)
         const amount = movement.totalAmount;
 
@@ -266,7 +240,7 @@ const MovementsCard: React.FC<MovementsCardProps> = ({
           >
             <View style={[styles.movementIcon, { backgroundColor: color }]}>
               <IconSymbol
-                name={icon as keyof typeof IconSymbol}
+                name={icon}
                 size={20}
                 color="#FFFFFF"
               />

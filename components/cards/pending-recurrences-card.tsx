@@ -1,7 +1,7 @@
 import React from "react";
 import { ThemedText } from "../themed-text";
 import { TouchableOpacity, StyleSheet, View } from "react-native";
-import { IconSymbol } from "../ui/icon-symbol.ios";
+import { IconSymbol, IconName } from "../ui/icon-symbol";
 import Card from "../card";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { router } from "expo-router";
@@ -9,7 +9,7 @@ import * as Haptics from "expo-haptics";
 import type { PendingRecurrence } from "@/state";
 
 // Helper function to get icon based on category/description
-const getMovementIcon = (category?: string, description?: string): string => {
+const getMovementIcon = (category?: string, description?: string): IconName => {
   const desc = description?.toLowerCase() || "";
   const cat = category?.toLowerCase() || "";
 
@@ -18,7 +18,7 @@ const getMovementIcon = (category?: string, description?: string): string => {
     cat.includes("stipendio") ||
     desc.includes("tredicesima")
   ) {
-    return "building.2.fill";
+    return "office-building";
   }
   if (
     cat.includes("groceries") ||
@@ -26,7 +26,7 @@ const getMovementIcon = (category?: string, description?: string): string => {
     desc.includes("conad") ||
     desc.includes("supermercato")
   ) {
-    return "cart.fill";
+    return "cart";
   }
   if (
     cat.includes("home") ||
@@ -34,7 +34,7 @@ const getMovementIcon = (category?: string, description?: string): string => {
     desc.includes("pellet") ||
     desc.includes("bolletta")
   ) {
-    return "house.fill";
+    return "home";
   }
   if (
     cat.includes("transport") ||
@@ -42,13 +42,13 @@ const getMovementIcon = (category?: string, description?: string): string => {
     desc.includes("benzina") ||
     desc.includes("auto")
   ) {
-    return "car.fill";
+    return "car";
   }
   if (cat.includes("entertainment") || cat.includes("svago")) {
-    return "gamecontroller.fill";
+    return "gamepad-variant";
   }
 
-  return desc.includes("expense") ? "minus.circle.fill" : "plus.circle.fill";
+  return "cash";
 };
 
 // Helper function to get color based on category/type
@@ -141,7 +141,7 @@ const PendingRecurrencesCard: React.FC<PendingRecurrencesCardProps> = ({
           >
             <View style={[styles.iconContainer, { backgroundColor: color }]}>
               <IconSymbol
-                name={icon as keyof typeof IconSymbol}
+                name={icon}
                 size={20}
                 color="#FFFFFF"
               />
@@ -161,7 +161,7 @@ const PendingRecurrencesCard: React.FC<PendingRecurrencesCardProps> = ({
               style={styles.addButton}
               activeOpacity={0.7}
             >
-              <IconSymbol name="plus.circle.fill" size={28} color="#2F4F3F" />
+              <IconSymbol name="plus-circle" size={28} color="#2F4F3F" />
             </TouchableOpacity>
           </TouchableOpacity>
         );

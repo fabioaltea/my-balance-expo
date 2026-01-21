@@ -105,7 +105,7 @@ export default function Settings() {
         </ThemedText>
       </View>
       {showChevron && (
-        <IconSymbol name="chevron.right" size={16} color={secondaryTextColor} />
+        <IconSymbol name="chevron-right" size={16} color={secondaryTextColor} />
       )}
     </TouchableOpacity>
   );
@@ -169,12 +169,12 @@ export default function Settings() {
         <SettingsSection title="DATA">
           <InputGroup>
             <SettingsItem
-              icon="creditcard.fill"
+              icon="credit-card"
               title="Accounts"
               onPress={() => handleNavigation("/accounts")}
             />
             <SettingsItem
-              icon="folder.fill"
+              icon="folder"
               title="Categories"
               onPress={() => handleNavigation("/categories")}
             />
@@ -185,7 +185,7 @@ export default function Settings() {
         <SettingsSection>
           <InputGroup>
             <SettingsItem
-              icon="rectangle.portrait.and.arrow.right"
+              icon="logout"
               title="Logout"
               onPress={handleLogout}
               showChevron={false}

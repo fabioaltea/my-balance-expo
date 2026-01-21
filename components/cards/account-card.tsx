@@ -2,7 +2,7 @@ import React from "react";
 import { View, StyleSheet, Pressable } from "react-native";
 import { ThemedText } from "../themed-text";
 import { useThemeColor } from "@/hooks/use-theme-color";
-import { IconSymbol } from "../ui/icon-symbol.ios";
+import { IconSymbol } from "../ui/icon-symbol";
 import { IAccount } from "@/models/Account";
 import * as Haptics from "expo-haptics";
 
@@ -61,7 +61,7 @@ const AccountCard: React.FC<IAccountCardProps> = ({ account, onPress }) => {
           </ThemedText>
         </View>
         <IconSymbol
-          name="chevron.right"
+          name="chevron-right"
           size={16}
           color={useThemeColor({ light: "#666", dark: "#999" }, "text")}
         />

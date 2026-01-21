@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { ThemedText } from "../themed-text";
 import { useThemeColor } from "@/hooks/use-theme-color";
-import { IconSymbol } from "./icon-symbol.ios";
+import { IconSymbol } from "./icon-symbol";
 import * as Haptics from "expo-haptics";
 import React, { useRef } from "react";
 import {

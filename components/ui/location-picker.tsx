@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import React, { useState, useRef, useEffect } from "react";
-import { IconSymbol } from "./icon-symbol.ios";
+import { IconSymbol } from "./icon-symbol";
 import * as Haptics from "expo-haptics";
 import TextBox from "./text-box";
 import MapView, { Marker } from "react-native-maps";

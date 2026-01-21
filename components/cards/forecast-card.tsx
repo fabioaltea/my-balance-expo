@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import Card from "../card";
+import ChartSkeleton from "../charts/ChartSkeleton";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { useDataContext } from "@/state/DataProvider";
 import type { MonthlyForecast } from "@/hooks/useMyBalanceData";
@@ -72,10 +73,11 @@ const ForecastCard: React.FC<Props> = ({
   // Calculate the range for the bar (add padding around min/max)
   const minValue = Math.min(currentBalance, displayForecastBalance);
   const maxValue = Math.max(currentBalance, displayForecastBalance);
-  const range = maxValue - minValue;
+  const delta = Math.abs(displayedDelta);
 
-  // Add 20% padding on each side, minimum padding of 500
-  const padding = Math.max(range * 0.3, Math.abs(minValue) * 0.05, 500);
+  // Make padding proportional to the delta so the change is visually prominent
+  // The delta should occupy ~40-50% of the bar width
+  const padding = Math.max(delta * 0.6, 100);
   const scaleMin = minValue - padding;
   const scaleMax = maxValue + padding;
   const scaleRange = scaleMax - scaleMin;
@@ -106,11 +108,7 @@ const ForecastCard: React.FC<Props> = ({
   if (showSkeleton) {
     return (
       <Card backgroundColor={cardBackground} color={textColor}>
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: subtleTextColor }]}>
-            Loading...
-          </Text>
-        </View>
+        <ChartSkeleton variant="forecast" height={200} />
       </Card>
     );
   }

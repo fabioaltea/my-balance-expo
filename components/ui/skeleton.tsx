@@ -19,7 +19,7 @@ const Skeleton: React.FC<SkeletonProps> = ({
 
   const baseColor = useThemeColor(
     { light: "#E1E9EE", dark: "#3A3A3C" },
-    "tabIconDefault"
+    "tabIconDefault",
   );
 
   useEffect(() => {
@@ -35,7 +35,7 @@ const Skeleton: React.FC<SkeletonProps> = ({
           duration: 800,
           useNativeDriver: true,
         }),
-      ])
+      ]),
     );
 
     animation.start();

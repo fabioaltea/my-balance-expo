@@ -55,6 +55,7 @@ const HomeView: React.FC<HomeViewProps> = ({
   );
   const [isPeriodTransitioning, setIsPeriodTransitioning] =
     useState<boolean>(false);
+  const [summaryPagerIndex, setSummaryPagerIndex] = useState<number>(0);
 
   // Handle date range change with transitioning state
   const handleDateRangeChange = (
@@ -64,7 +65,20 @@ const HomeView: React.FC<HomeViewProps> = ({
     if (range.isTransitioning) {
       setIsPeriodTransitioning(true);
     }
+    // Reset pager to first page when period changes
+    setSummaryPagerIndex(0);
   };
+
+  // Check if we're viewing the current month
+  const isCurrentMonth = useMemo(() => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    // Check if the dateRange matches current month/year
+    const startDate = new Date(dateRange.startDate.split("-").reverse().join("-"));
+    return startDate.getMonth() === currentMonth && startDate.getFullYear() === currentYear;
+  }, [dateRange]);
 
   // Reset transitioning state when data finishes loading
   React.useEffect(() => {
@@ -215,7 +229,12 @@ const HomeView: React.FC<HomeViewProps> = ({
           setDateRange={handleDateRangeChange}
           isLoading={isLoading}
         />
-        <Pager style={{ height: 230, marginHorizontal: -16, marginBottom: 16 }}>
+        <Pager
+          style={{ height: 230, marginHorizontal: -16, marginBottom: 16 }}
+          selectedPage={summaryPagerIndex}
+          onPageSelected={setSummaryPagerIndex}
+          scrollEnabled={isCurrentMonth}
+        >
           <FinancialSummaryCard
             income={getTotalIncome(dateFilteredMovements)}
             expense={getTotalExpense(dateFilteredMovements)}

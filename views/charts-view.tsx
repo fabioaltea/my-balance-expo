@@ -16,12 +16,14 @@ import {
   useCategoryAccountBreakdown,
   PeriodBreakdownData,
 } from "@/hooks/useCategoryAccountBreakdown";
-import StackedBarChart from "@/components/charts/StackedBarChart";
-import IncomeExpenseChart from "@/components/charts/IncomeExpenseChart";
-import BreakdownStackedChart from "@/components/charts/BreakdownStackedChart";
+import {
+  StackedBarChart,
+  IncomeExpenseChart,
+  BreakdownStackedChart,
+  ChartSkeleton,
+} from "@/components/charts";
 import Card from "@/components/card";
 import { useThemeColor } from "@/hooks/use-theme-color";
-import Skeleton from "@/components/ui/skeleton";
 import ModalPanel from "@/components/ui/modal-panel";
 import { ThemedText } from "@/components/themed-text";
 
@@ -362,23 +364,48 @@ const ChartsView: React.FC = () => {
   // Show skeleton while loading
   if (isLoading && transactions.length === 0) {
     return (
-      <ScrollView style={styles.container}>
-        <Card
-          backgroundColor={cardBackground}
-          color={textColor}
-          label="Balance History"
-        >
-          <View style={styles.skeletonContainer}>
-            <Skeleton width="100%" height={20} borderRadius={4} />
-            <View style={styles.skeletonBars}>
-              {[120, 160, 140, 180, 150, 170].map((h, i) => (
-                <Skeleton key={i} width={30} height={h} borderRadius={4} />
-              ))}
-            </View>
-            <Skeleton width="100%" height={16} borderRadius={4} />
-          </View>
-        </Card>
-      </ScrollView>
+      <View style={styles.wrapper}>
+        {/* Page header visible during loading */}
+        <View style={styles.pageHeader}>
+          <ThemedText type="title">Charts</ThemedText>
+        </View>
+
+        <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+          {/* Balance History Skeleton */}
+          <Text style={[styles.chartLabel, { color: textColor, marginTop: 0 }]}>
+            Balance History
+          </Text>
+          <Card backgroundColor={cardBackground} color={textColor}>
+            <ChartSkeleton variant="bars" height={200} barCount={6} />
+          </Card>
+
+          {/* Income & Expenses Skeleton */}
+          <Text style={[styles.chartLabel, { color: textColor }]}>
+            Income & Expenses
+          </Text>
+          <Card backgroundColor={cardBackground} color={textColor}>
+            <ChartSkeleton variant="bars" height={200} barCount={6} />
+          </Card>
+
+          {/* Expenses Breakdown Skeleton */}
+          <Text style={[styles.chartLabel, { color: textColor }]}>
+            Expenses Breakdown
+          </Text>
+          <Card backgroundColor={cardBackground} color={textColor}>
+            <ChartSkeleton variant="bars" height={200} barCount={6} />
+          </Card>
+
+          {/* Income Breakdown Skeleton */}
+          <Text style={[styles.chartLabel, { color: textColor }]}>
+            Income Breakdown
+          </Text>
+          <Card backgroundColor={cardBackground} color={textColor}>
+            <ChartSkeleton variant="bars" height={200} barCount={6} />
+          </Card>
+
+          <View style={styles.bottomSpacer} />
+        </ScrollView>
+      </View>
     );
   }
 
@@ -904,15 +931,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
     color: "#333",
-  },
-  skeletonContainer: {
-    gap: 16,
-  },
-  skeletonBars: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "flex-end",
-    height: 180,
   },
   // Modal styles
   modalContent: {

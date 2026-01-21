@@ -3,7 +3,7 @@ import { ThemedText } from "../themed-text";
 import { TouchableOpacity, StyleSheet, View } from "react-native";
 import IconSymbol from "../ui/icon-symbol";
 import Card from "../card";
-import Skeleton from "../ui/skeleton";
+import ChartSkeleton from "../charts/ChartSkeleton";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { useDataContext } from "@/state/DataProvider";
 import { formatDateForDisplay, compareDates } from "@/utils/dateUtils";
@@ -142,33 +142,7 @@ const MovementsCard: React.FC<MovementsCardProps> = ({
   if (showSkeleton) {
     return (
       <Card label="">
-        {[...Array(5)].map((_, index) => (
-          <View
-            key={index}
-            style={[
-              styles.movementItem,
-              { borderBottomColor: borderColor },
-              index === 4 && styles.lastMovementItem,
-            ]}
-          >
-            <Skeleton
-              width={50}
-              height={50}
-              borderRadius={30}
-              style={{ marginRight: 16 }}
-            />
-            <View style={styles.movementInfo}>
-              <Skeleton
-                width={80}
-                height={12}
-                borderRadius={4}
-                style={{ marginBottom: 4 }}
-              />
-              <Skeleton width={140} height={16} borderRadius={4} />
-            </View>
-            <Skeleton width={70} height={16} borderRadius={4} />
-          </View>
-        ))}
+        <ChartSkeleton variant="list" itemCount={5} />
       </Card>
     );
   }

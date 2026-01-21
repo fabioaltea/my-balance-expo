@@ -75,14 +75,14 @@ const GlassButton = ({
           (text
             ? text
             : type === "search"
-            ? "Search"
-            : type === "confirm"
-            ? "Confirm"
-            : type === "dismiss"
-            ? "Dismiss"
-            : type === "menu"
-            ? "Menu"
-            : "Add")
+              ? "Search"
+              : type === "confirm"
+                ? "Confirm"
+                : type === "dismiss"
+                  ? "Dismiss"
+                  : type === "menu"
+                    ? "Menu"
+                    : "Add")
         }
       >
         {isLiquidGlassAvailable() ? (
@@ -118,12 +118,12 @@ const GlassButton = ({
               type === "search"
                 ? "search"
                 : type === "confirm"
-                ? "checkmark"
-                : type === "dismiss"
-                ? "close"
-                : type === "menu"
-                ? "ellipsis-vertical"
-                : "add"
+                  ? "checkmark"
+                  : type === "dismiss"
+                    ? "close"
+                    : type === "menu"
+                      ? "ellipsis-vertical"
+                      : "add"
             }
             size={size}
             color={iconColor}

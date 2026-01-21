@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import Card from "../card";
-import Skeleton from "../ui/skeleton";
+import ChartSkeleton from "../charts/ChartSkeleton";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { useDataContext } from "@/state/DataProvider";
 
@@ -11,6 +11,37 @@ type Props = {
   isTransitioning?: boolean;
 };
 
+/**
+ * FinancialSummaryCard - Displays monthly income/expense summary with a proportional bar
+ *
+ * BAR VISUALIZATION LOGIC:
+ * Visual order is always: [Income (green)][Balance (blue/yellow)][Expense (red)]
+ * - Income on the far LEFT
+ * - Savings/Loss in the CENTER
+ * - Expense on the far RIGHT
+ *
+ * The bar is conceptually divided into two halves (50% each). The "dominant" value
+ * (larger between income and expense) takes its full 50%, while the other half is
+ * divided proportionally between the smaller value and the balance (savings/loss).
+ *
+ * SAVINGS CASE (income >= expense):
+ * - Income (green) fills 50%
+ * - Expense + Savings share the other 50%
+ * - Example: income=1000, expense=500, savings=500
+ *   → [50% green][25% blue][25% red]
+ *
+ * LOSS CASE (expense > income):
+ * - Expense (red) fills 50%
+ * - Income + Loss share the other 50%
+ * - Example: income=500, expense=1000, loss=500
+ *   → [25% green][25% yellow][50% red]
+ *
+ * FLEX CALCULATION:
+ * - Dominant value: flex = 0.5
+ * - Smaller value: flex = (smallerValue / dominantValue) * 0.5
+ * - Balance: flex = (|balance| / dominantValue) * 0.5
+ * - Total always equals 1.0
+ */
 const FinancialSummaryCard: React.FC<Props> = ({
   income,
   expense,
@@ -18,20 +49,42 @@ const FinancialSummaryCard: React.FC<Props> = ({
 }) => {
   const { isLoading } = useDataContext();
   const balance = income - expense;
-  const total = income + expense;
-  const incomePercentage = balance > 0 ? (income / balance) * 100 : 0;
-  const expensePercentage = balance > 0 ? (expense / balance) * 100 : 0;
+  const isProfit = balance >= 0;
 
-  // Colori del tema
+  // Percentages relative to total money flow (for display below the bar)
+  const total = income + expense;
+  const incomePercentage = total > 0 ? (income / total) * 100 : 0;
+  const expensePercentage = total > 0 ? (expense / total) * 100 : 0;
+
+  // Theme colors
   const textColor = useThemeColor({}, "text");
   const subtleTextColor = useThemeColor({}, "tabIconDefault");
   const cardBackground = useThemeColor({}, "cardBackground");
 
-  // Calcola le proporzioni basate sul valore maggiore
-  const baseValue = Math.max(income, expense);
-  const incomeRatio = baseValue > 0 ? income / baseValue : 0;
-  const expenseRatio = income > 0 ? expense / income : 0; // Uscite proporzionate alle entrate
-  const balanceRatio = baseValue > 0 ? Math.abs(balance) / baseValue : 0;
+  // Calculate flex values for progress bar segments
+  let incomeFlex: number, expenseFlex: number, balanceFlex: number;
+
+  if (isProfit) {
+    // Savings case: Income fills left 50%, right half divided between expense and savings
+    incomeFlex = 0.5;
+    if (income > 0) {
+      expenseFlex = (expense / income) * 0.5;
+      balanceFlex = (balance / income) * 0.5;
+    } else {
+      expenseFlex = 0;
+      balanceFlex = 0;
+    }
+  } else {
+    // Loss case: Expense fills right 50%, left half divided between income and loss
+    expenseFlex = 0.5;
+    if (expense > 0) {
+      incomeFlex = (income / expense) * 0.5;
+      balanceFlex = (Math.abs(balance) / expense) * 0.5;
+    } else {
+      incomeFlex = 0;
+      balanceFlex = 0;
+    }
+  }
 
   const formatAmount = (amount: number) => {
     return `€${Math.abs(amount).toLocaleString("it-IT", {
@@ -48,45 +101,7 @@ const FinancialSummaryCard: React.FC<Props> = ({
   if (showSkeleton) {
     return (
       <Card backgroundColor={cardBackground} color={textColor}>
-        <View style={{ height: 230 }}>
-          <View style={styles.balanceRow}>
-            <Skeleton width={80} height={24} borderRadius={6} />
-            <Skeleton width={120} height={28} borderRadius={6} />
-          </View>
-          <View style={styles.progressBarContainer}>
-            <Skeleton width="100%" height={15} borderRadius={6} />
-          </View>
-          <View style={styles.detailsSection}>
-            <View style={styles.detailRow}>
-              <View style={styles.detailLabel}>
-                <Skeleton width={15} height={15} borderRadius={6} />
-                <Skeleton
-                  width={70}
-                  height={18}
-                  borderRadius={4}
-                  style={{ marginLeft: 8 }}
-                />
-              </View>
-              <View style={styles.detailValue}>
-                <Skeleton width={90} height={18} borderRadius={4} />
-              </View>
-            </View>
-            <View style={styles.detailRow}>
-              <View style={styles.detailLabel}>
-                <Skeleton width={15} height={15} borderRadius={6} />
-                <Skeleton
-                  width={80}
-                  height={18}
-                  borderRadius={4}
-                  style={{ marginLeft: 8 }}
-                />
-              </View>
-              <View style={styles.detailValue}>
-                <Skeleton width={90} height={18} borderRadius={4} />
-              </View>
-            </View>
-          </View>
-        </View>
+        <ChartSkeleton variant="summary" height={200} />
       </Card>
     );
   }
@@ -110,40 +125,31 @@ const FinancialSummaryCard: React.FC<Props> = ({
           </Text>
         </View>
 
-        {/* Progress Bar */}
+        {/* Progress Bar - Always: [Income][Balance][Expense] */}
         <View style={styles.progressBarContainer}>
           <View style={styles.progressBar}>
-            {/* Entrate - sempre 50% della barra */}
+            {/* Income (green) - always on the left */}
             <View
               style={[
                 styles.progressSegment,
                 styles.incomeSegment,
-                { flex: 0.5 * incomeRatio },
+                { flex: incomeFlex },
               ]}
             />
-
-            {/* Risparmi/Perdite - il resto del 50% */}
+            {/* Balance (blue for savings, yellow for loss) - always in the center */}
             <View
               style={[
                 styles.progressSegment,
-                balance >= 0 ? styles.savingsSegment : styles.lossSegment,
-                {
-                  flex:
-                    0.5 *
-                    (1 -
-                      (expenseRatio < incomeRatio
-                        ? expenseRatio
-                        : incomeRatio)),
-                },
+                isProfit ? styles.savingsSegment : styles.lossSegment,
+                { flex: balanceFlex },
               ]}
             />
-
-            {/* Uscite - proporzionate alle entrate nel restante 50% */}
+            {/* Expense (red) - always on the right */}
             <View
               style={[
                 styles.progressSegment,
                 styles.expenseSegment,
-                { flex: 0.5 * expenseRatio },
+                { flex: expenseFlex },
               ]}
             />
           </View>

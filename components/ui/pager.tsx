@@ -7,6 +7,7 @@ export interface IPagerProps {
   onPageSelected?: (e: any) => void;
   selectedPage?: number;
   style?: any;
+  scrollEnabled?: boolean;
 }
 
 const Pager: React.FC<IPagerProps> = ({
@@ -14,6 +15,7 @@ const Pager: React.FC<IPagerProps> = ({
   onPageSelected,
   selectedPage,
   style,
+  scrollEnabled = true,
 }) => {
   const pagerRef = useRef<PagerView>(null);
 
@@ -30,22 +32,26 @@ const Pager: React.FC<IPagerProps> = ({
     }
   }, [selectedPage]);
 
+  // Filter out falsy children (null, undefined, false)
+  const validChildren = Array.isArray(children)
+    ? children.filter(Boolean)
+    : children
+      ? [children]
+      : [];
+
   return (
     <PagerView
       ref={pagerRef}
       style={[styles.container, style]}
       initialPage={selectedPage || 0}
       onPageSelected={handlePageSelected}
+      scrollEnabled={scrollEnabled}
     >
-      {Array.isArray(children) ? (
-        children.map((child, index) => (
-          <View key={index} style={styles.page}>
-            {child}
-          </View>
-        ))
-      ) : (
-        <View style={styles.page}>{children}</View>
-      )}
+      {validChildren.map((child, index) => (
+        <View key={index} style={styles.page}>
+          {child}
+        </View>
+      ))}
     </PagerView>
   );
 };

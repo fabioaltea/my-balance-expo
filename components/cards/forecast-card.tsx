@@ -21,6 +21,13 @@ const ForecastCard: React.FC<Props> = ({
   const subtleTextColor = useThemeColor({}, "tabIconDefault");
   const cardBackground = useThemeColor({}, "cardBackground");
 
+  const formatAmount = (amount: number) => {
+    return `€${Math.abs(amount).toLocaleString("it-IT", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+  };
+
   const formatCompact = (amount: number) => {
     const abs = Math.abs(amount);
     if (abs >= 1000) {
@@ -29,14 +36,8 @@ const ForecastCard: React.FC<Props> = ({
     return amount.toFixed(0);
   };
 
-  const formatBalance = (amount: number) => {
-    return amount.toLocaleString("it-IT", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-  };
-
   const {
+    periodType,
     currentBalance,
     currentMonthIncome,
     currentMonthExpense,
@@ -45,6 +46,41 @@ const ForecastCard: React.FC<Props> = ({
     avgMonthlyIncome,
     avgMonthlyExpense,
   } = forecast;
+
+  const isYearlyForecast = periodType === "year";
+
+  // Calculate the expected end date
+  const getExpectedEndDate = () => {
+    const now = new Date();
+    const months = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+
+    if (isYearlyForecast) {
+      return "31 December";
+    } else {
+      // Last day of current month
+      const lastDay = new Date(
+        now.getFullYear(),
+        now.getMonth() + 1,
+        0,
+      ).getDate();
+      return `${lastDay} ${months[now.getMonth()]}`;
+    }
+  };
+
+  const expectedEndDate = getExpectedEndDate();
 
   // Calculate expected remaining (from historical average)
   const expectedRemainingIncome = Math.max(
@@ -67,7 +103,6 @@ const ForecastCard: React.FC<Props> = ({
   const isPositiveDelta = displayedDelta >= 0;
 
   // For the bar: show a "display forecast" that's consistent with displayedDelta
-  // This represents: current balance + (monthly income - monthly expense)
   const displayForecastBalance = currentBalance + displayedDelta;
 
   // Calculate the range for the bar (add padding around min/max)
@@ -76,7 +111,6 @@ const ForecastCard: React.FC<Props> = ({
   const delta = Math.abs(displayedDelta);
 
   // Make padding proportional to the delta so the change is visually prominent
-  // The delta should occupy ~40-50% of the bar width
   const padding = Math.max(delta * 0.6, 100);
   const scaleMin = minValue - padding;
   const scaleMax = maxValue + padding;
@@ -89,12 +123,11 @@ const ForecastCard: React.FC<Props> = ({
   const leftPos = Math.min(currentPos, forecastPos);
   const rightPos = Math.max(currentPos, forecastPos);
 
-  // Check if pills would overlap (they're ~50px wide, need ~15% minimum distance)
+  // Check if pills would overlap
   const pillDistance = Math.abs(currentPos - forecastPos);
   const pillsOverlap = pillDistance < 18;
 
   // If overlapping, offset both pills equally in opposite directions
-  // Actual goes left, Forecast goes right (or vice versa based on position)
   const pillOffset = pillsOverlap ? 20 : 0;
   const actualPillOffset = isPositiveDelta ? -pillOffset : pillOffset;
   const forecastPillOffset = isPositiveDelta ? pillOffset : -pillOffset;
@@ -105,6 +138,10 @@ const ForecastCard: React.FC<Props> = ({
 
   const showSkeleton = (isLoading && currentBalance === 0) || isTransitioning;
 
+  // Generate stripes for the dashed effect
+  const stripeCount = 12;
+  const stripes = Array.from({ length: stripeCount }, (_, i) => i);
+
   if (showSkeleton) {
     return (
       <Card backgroundColor={cardBackground} color={textColor}>
@@ -113,14 +150,35 @@ const ForecastCard: React.FC<Props> = ({
     );
   }
 
-  // Generate stripes for the dashed effect
-  const stripeCount = 12;
-  const stripes = Array.from({ length: stripeCount }, (_, i) => i);
-
   return (
     <Card backgroundColor={cardBackground} color={textColor}>
       <View style={{ height: 200 }}>
-        {/* Main balance bar */}
+        {/* Header with Forecast label and change value */}
+        <View style={styles.headerRow}>
+          <View style={{ flexDirection: "row", alignItems: "baseline" }}>
+            <Text style={[styles.forecastLabel, { color: textColor }]}>
+              Forecast
+            </Text>
+            <Text style={{color: "lightgray", fontSize: 10, marginLeft: 6}}>{expectedEndDate}</Text>
+          </View>
+
+          <View style={styles.headerRight}>
+            <Text
+              style={[
+                styles.changeAmount,
+                { color: isPositiveDelta ? "#4CAF50" : "#F44336" },
+              ]}
+            >
+              {isPositiveDelta ? "+" : ""}
+              {formatAmount(displayedDelta)}
+            </Text>
+            {/* <Text style={[styles.expectedDate, { color: subtleTextColor }]}>
+              {expectedEndDate}
+            </Text> */}
+          </View>
+        </View>
+
+        {/* Balance Bar Section */}
         <View style={styles.barSection}>
           {/* Scale labels */}
           <View style={styles.scaleLabels}>
@@ -145,7 +203,6 @@ const ForecastCard: React.FC<Props> = ({
                   left: 0,
                   width: `${currentPos}%`,
                   backgroundColor: solidColor,
-                  // Bordi stondati solo a sinistra, dritti dove tocca il delta
                   borderTopLeftRadius: 12,
                   borderBottomLeftRadius: 12,
                   borderTopRightRadius: 0,
@@ -162,8 +219,6 @@ const ForecastCard: React.FC<Props> = ({
                   {
                     left: `${isPositiveDelta ? currentPos : forecastPos}%`,
                     width: `${rightPos - leftPos}%`,
-                    // Se positivo: bordi stondati a destra (si estende oltre il solido)
-                    // Se negativo: nessun bordo stondato (si sovrappone al solido)
                     borderTopLeftRadius: 0,
                     borderBottomLeftRadius: 0,
                     borderTopRightRadius: isPositiveDelta ? 12 : 0,
@@ -268,84 +323,70 @@ const ForecastCard: React.FC<Props> = ({
           </View>
         </View>
 
-        {/* Delta summary */}
-        <View style={styles.deltaSummary}>
-          <Text style={[styles.deltaLabel, { color: textColor }]}>
-            Expected change
-          </Text>
-          <Text
-            style={[
-              styles.deltaValue,
-              { color: isPositiveDelta ? "#4CAF50" : "#F44336" },
-            ]}
-          >
-            {isPositiveDelta ? "+" : ""}
-            {formatBalance(displayedDelta)}
-          </Text>
-        </View>
-
-        {/* Forecasted monthly income/expense */}
-        <View style={styles.forecastDetails}>
-          <View style={styles.forecastRow}>
-            <Text style={[styles.forecastLabel, { color: textColor }]}>
-              Expected incomes
-            </Text>
-            <Text style={[styles.forecastValue, { color: "#4CAF50" }]}>
-              +{formatBalance(forecastedMonthlyIncome)}
-            </Text>
-          </View>
-          <View style={styles.forecastRow}>
-            <Text style={[styles.forecastLabel, { color: textColor }]}>
-              Expected outcomes
-            </Text>
-            <Text style={[styles.forecastValue, { color: "#F44336" }]}>
-              -{formatBalance(forecastedMonthlyExpense)}
-            </Text>
-          </View>
-        </View>
-
-        {/* Legend */}
-        {/* <View style={styles.legend}>
-        <View style={styles.legendItem}>
-          <View style={[styles.legendBox, { backgroundColor: solidColor }]} />
-          <Text style={[styles.legendText, { color: subtleTextColor }]}>
-            Saldo attuale
-          </Text>
-        </View>
-        <View style={styles.legendItem}>
-          <View style={styles.legendBoxStriped}>
-            {[0, 1, 2, 3].map((i) => (
+        {/* Details Section - Expected Incomes and Outcomes */}
+        <View style={styles.detailsSection}>
+          <View style={styles.detailRow}>
+            <View style={styles.detailLabel}>
               <View
-                key={i}
-                style={[
-                  styles.legendStripe,
-                  { backgroundColor: i % 2 === 0 ? deltaColor : "transparent" },
-                ]}
+                style={[styles.colorIndicator, { backgroundColor: "#4CAF50" }]}
               />
-            ))}
+              <Text style={[styles.detailText, { color: textColor }]}>
+                Expected Incomes
+              </Text>
+            </View>
+            <View style={styles.detailValue}>
+              <Text style={[styles.detailAmount, { color: textColor }]}>
+                {formatAmount(forecastedMonthlyIncome)}
+              </Text>
+            </View>
           </View>
-          <Text style={[styles.legendText, { color: subtleTextColor }]}>
-            Delta previsto
-          </Text>
+
+          <View style={styles.detailRow}>
+            <View style={styles.detailLabel}>
+              <View
+                style={[styles.colorIndicator, { backgroundColor: "#F44336" }]}
+              />
+              <Text style={[styles.detailText, { color: textColor }]}>
+                Expected Outcomes
+              </Text>
+            </View>
+            <View style={styles.detailValue}>
+              <Text style={[styles.detailAmount, { color: textColor }]}>
+                {formatAmount(forecastedMonthlyExpense)}
+              </Text>
+            </View>
+          </View>
         </View>
-      </View> */}
       </View>
     </Card>
   );
 };
 
 const styles = StyleSheet.create({
-  header: {
-    marginBottom: 16,
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    height: 28,
+    marginBottom: 10,
   },
-  title: {
-    fontSize: 14,
-    fontWeight: "600",
-    textTransform: "uppercase",
-    letterSpacing: 1,
+  forecastLabel: {
+    fontSize: 22,
+    fontWeight: "500",
+  },
+  headerRight: {
+    alignItems: "flex-end",
+  },
+  changeAmount: {
+    fontSize: 24,
+    fontWeight: "bold",
+  },
+  expectedDate: {
+    fontSize: 12,
+    marginTop: 2,
   },
   barSection: {
-    marginBottom: 12,
+    marginBottom: 0,
   },
   scaleLabels: {
     flexDirection: "row",
@@ -427,65 +468,39 @@ const styles = StyleSheet.create({
     fontSize: 9,
     marginTop: 1,
   },
-  deltaSummary: {
+  detailsSection: {
+    gap: 12,
+    paddingHorizontal: 4,
+    paddingVertical: 0,
+  },
+  detailRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 4,
-    marginBottom: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 0,
+    height: 30,
   },
-  deltaLabel: {
-    fontSize: 13,
+  detailLabel: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  colorIndicator: {
+    width: 15,
+    height: 15,
+    borderRadius: 6,
+  },
+  detailText: {
+    fontSize: 16,
     fontWeight: "500",
   },
-  deltaValue: {
+  detailValue: {
+    alignItems: "flex-end",
+  },
+  detailAmount: {
     fontSize: 16,
-    fontWeight: "bold",
-  },
-  forecastDetails: {
-    marginBottom: 0,
-    gap: 6,
-  },
-  forecastRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  forecastLabel: {
-    fontSize: 13,
-  },
-  forecastValue: {
-    fontSize: 13,
     fontWeight: "600",
-  },
-  legend: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 24,
-  },
-  legendItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  legendBox: {
-    width: 16,
-    height: 12,
-    borderRadius: 3,
-  },
-  legendBoxStriped: {
-    width: 16,
-    height: 12,
-    borderRadius: 3,
-    flexDirection: "row",
-    overflow: "hidden",
-  },
-  legendStripe: {
-    flex: 1,
-    height: "100%",
-  },
-  legendText: {
-    fontSize: 11,
   },
 });
 

@@ -416,3 +416,111 @@ export const getLast12MonthsPeriods = (): Array<{
 
   return periods;
 };
+
+/**
+ * Get the current year period (full year boundaries)
+ */
+export const getCurrentYearPeriod = (): {
+  startDate: string;
+  endDate: string;
+} => {
+  const now = new Date();
+  return {
+    startDate: getYearStart(now.getFullYear()),
+    endDate: getYearEnd(now.getFullYear()),
+  };
+};
+
+/**
+ * Get completed years for historical analysis (excludes current year)
+ * @param maxYears - Maximum number of years to look back (default 5)
+ */
+export const getPastYearsPeriods = (
+  maxYears: number = 5,
+): Array<{
+  year: number;
+  startDate: string;
+  endDate: string;
+}> => {
+  const periods: Array<{ year: number; startDate: string; endDate: string }> =
+    [];
+  const currentYear = new Date().getFullYear();
+
+  for (let i = 1; i <= maxYears; i++) {
+    const year = currentYear - i;
+    periods.push({
+      year,
+      startDate: getYearStart(year),
+      endDate: getYearEnd(year),
+    });
+  }
+
+  return periods;
+};
+
+/**
+ * Get the day of year (1-366)
+ */
+export const getDayOfYear = (date: Date): number => {
+  const start = new Date(date.getFullYear(), 0, 0);
+  const diff = date.getTime() - start.getTime();
+  const oneDay = 1000 * 60 * 60 * 24;
+  return Math.floor(diff / oneDay);
+};
+
+/**
+ * Get total days in a year (365 or 366 for leap year)
+ */
+export const getDaysInYear = (year: number): number => {
+  return ((year % 4 === 0 && year % 100 !== 0) || year % 400 === 0) ? 366 : 365;
+};
+
+/**
+ * Get date range from start of year to a specific day of year
+ * @param year - The year
+ * @param dayOfYear - The day number (1-366)
+ */
+export const getYearRangeUpToDay = (
+  year: number,
+  dayOfYear: number,
+): { startDate: string; endDate: string } => {
+  const startDate = new Date(year, 0, 1);
+  const endDate = new Date(year, 0, dayOfYear);
+
+  return {
+    startDate: formatDateToDDMMYYYY(startDate),
+    endDate: formatDateToDDMMYYYY(endDate),
+  };
+};
+
+/**
+ * Detect if a date range represents a full year vs a single month
+ * Returns 'year' if the range spans from Jan 1 to Dec 31 (or current date for current year)
+ * Returns 'month' otherwise
+ */
+export const detectPeriodType = (
+  startDate: string,
+  endDate: string,
+): "month" | "year" => {
+  const start = parseDateFromDDMMYYYY(startDate);
+  const end = parseDateFromDDMMYYYY(endDate);
+
+  if (!start || !end) {
+    return "month";
+  }
+
+  // Check if start is January 1st
+  const isJanFirst = start.getMonth() === 0 && start.getDate() === 1;
+
+  // Check if end is in December or the range spans multiple months
+  const monthsDiff =
+    (end.getFullYear() - start.getFullYear()) * 12 +
+    (end.getMonth() - start.getMonth());
+
+  // If starts Jan 1 and spans more than 2 months, it's a year view
+  if (isJanFirst && monthsDiff >= 2) {
+    return "year";
+  }
+
+  return "month";
+};

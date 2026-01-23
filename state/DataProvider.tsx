@@ -35,6 +35,7 @@ interface DataContextType {
   getTotalIncome: (filteredMovements: Movement[]) => number;
   getTotalExpense: (filteredMovements: Movement[]) => number;
   getBalance: (filteredMovements: Movement[]) => number;
+  calculateForecast: (startDate: string, endDate: string) => MonthlyForecast;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);

@@ -26,6 +26,13 @@ import {
   isDateInRange,
   getCurrentMonthPeriod,
   getLast12MonthsPeriods,
+  detectPeriodType,
+  getDayOfYear,
+  getDaysInYear,
+  getPastYearsPeriods,
+  getYearRangeUpToDay,
+  getMonthStart,
+  getMonthEnd,
 } from "../utils/dateUtils";
 import React from "react";
 
@@ -102,27 +109,34 @@ export interface PendingRecurrence {
 }
 
 /**
- * Monthly forecast data for end-of-month balance prediction
+ * Forecast data for end-of-period balance prediction
+ * Supports both monthly and yearly forecasts
  */
 export interface MonthlyForecast {
+  /** Type of forecast period */
+  periodType: "month" | "year";
   /** Current total balance (sum of all accounts) */
   currentBalance: number;
-  /** Income already recorded this month */
+  /** Income already recorded in this period */
   currentMonthIncome: number;
-  /** Expenses already recorded this month */
+  /** Expenses already recorded in this period */
   currentMonthExpense: number;
-  /** Pending recurring income for this month */
+  /** Pending recurring income for this period */
   pendingRecurringIncome: number;
-  /** Pending recurring expenses for this month */
+  /** Pending recurring expenses for this period */
   pendingRecurringExpense: number;
-  /** Average monthly income (last 12 months) */
+  /** Average income for this type of period (historical) */
   avgMonthlyIncome: number;
-  /** Average monthly expense (last 12 months) */
+  /** Average expense for this type of period (historical) */
   avgMonthlyExpense: number;
-  /** Predicted end-of-month balance */
+  /** Predicted end-of-period balance */
   forecastBalance: number;
   /** Expected change from current balance */
   forecastDelta: number;
+  /** Progress through the period (0-1) - how much of the period has passed */
+  periodProgress: number;
+  /** Historical average progress at this point in period (0-1) - how much was typically spent by now */
+  historicalProgressAtThisPoint: number;
 }
 
 /**
@@ -442,103 +456,241 @@ export const useMyBalanceData = (
   }, [recurringMovements, movements]);
 
   /**
-   * Calculate monthly forecast for end-of-month balance prediction
+   * Calculate forecast for end-of-period balance prediction
+   * Uses historical data to project remaining income/expenses
+   *
+   * For MONTHLY forecast:
+   * - Looks at same month in previous years
+   * - Calculates what % of yearly income/expense typically happens in this month
+   * - Projects based on historical patterns
+   *
+   * For YEARLY forecast:
+   * - Looks at previous complete years
+   * - Calculates what % of yearly income/expense had typically occurred by this day
+   * - Projects based on time-based progress through the year
+   */
+  const calculateForecast = useCallback(
+    (
+      periodStartDate: string,
+      periodEndDate: string,
+    ): MonthlyForecast => {
+      const periodType = detectPeriodType(periodStartDate, periodEndDate);
+      const now = new Date();
+
+      // 1. Current balance = sum of all account balances
+      const currentBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
+
+      // 2. Calculate current period income and expenses
+      const currentPeriodMovements = movements.filter((m) =>
+        isDateInRange(m.date, periodStartDate, periodEndDate),
+      );
+      const currentPeriodIncome = currentPeriodMovements
+        .filter((m) => m.type === "income")
+        .reduce((sum, m) => sum + m.totalAmount, 0);
+      const currentPeriodExpense = currentPeriodMovements
+        .filter((m) => m.type === "expense")
+        .reduce((sum, m) => sum + Math.abs(m.totalAmount), 0);
+
+      // 3. Calculate pending recurring for this period
+      const currentPeriodPending = pendingRecurrences.filter(
+        (pr) => !pr.isOverdue,
+      );
+      const pendingRecurringIncome = currentPeriodPending
+        .filter((pr) => pr.template.type === "income")
+        .reduce(
+          (sum, pr) => sum + Math.abs(pr.template.totalAmount) * pr.missingCount,
+          0,
+        );
+      const pendingRecurringExpense = currentPeriodPending
+        .filter((pr) => pr.template.type === "expense")
+        .reduce(
+          (sum, pr) => sum + Math.abs(pr.template.totalAmount) * pr.missingCount,
+          0,
+        );
+
+      let avgIncome = 0;
+      let avgExpense = 0;
+      let periodProgress = 0;
+      let historicalProgressAtThisPoint = 0;
+
+      if (periodType === "year") {
+        // YEARLY FORECAST
+        const currentYear = now.getFullYear();
+        const dayOfYear = getDayOfYear(now);
+        const totalDaysInYear = getDaysInYear(currentYear);
+        periodProgress = dayOfYear / totalDaysInYear;
+
+        // Get past years data
+        const pastYears = getPastYearsPeriods(5);
+        let totalYearlyIncome = 0;
+        let totalYearlyExpense = 0;
+        let totalProgressIncome = 0;
+        let totalProgressExpense = 0;
+        let yearsWithData = 0;
+
+        for (const yearPeriod of pastYears) {
+          // Full year totals
+          const yearMovements = movements.filter((m) =>
+            isDateInRange(m.date, yearPeriod.startDate, yearPeriod.endDate),
+          );
+
+          if (yearMovements.length > 0) {
+            yearsWithData++;
+            const yearIncome = yearMovements
+              .filter((m) => m.type === "income")
+              .reduce((sum, m) => sum + m.totalAmount, 0);
+            const yearExpense = yearMovements
+              .filter((m) => m.type === "expense")
+              .reduce((sum, m) => sum + Math.abs(m.totalAmount), 0);
+
+            totalYearlyIncome += yearIncome;
+            totalYearlyExpense += yearExpense;
+
+            // Get income/expense up to the same day of year in past years
+            const upToDay = getYearRangeUpToDay(yearPeriod.year, dayOfYear);
+            const upToDayMovements = movements.filter((m) =>
+              isDateInRange(m.date, upToDay.startDate, upToDay.endDate),
+            );
+            const upToDayIncome = upToDayMovements
+              .filter((m) => m.type === "income")
+              .reduce((sum, m) => sum + m.totalAmount, 0);
+            const upToDayExpense = upToDayMovements
+              .filter((m) => m.type === "expense")
+              .reduce((sum, m) => sum + Math.abs(m.totalAmount), 0);
+
+            // Calculate progress percentages
+            if (yearIncome > 0) {
+              totalProgressIncome += upToDayIncome / yearIncome;
+            }
+            if (yearExpense > 0) {
+              totalProgressExpense += upToDayExpense / yearExpense;
+            }
+          }
+        }
+
+        if (yearsWithData > 0) {
+          avgIncome = totalYearlyIncome / yearsWithData;
+          avgExpense = totalYearlyExpense / yearsWithData;
+          // Average of income and expense progress
+          historicalProgressAtThisPoint =
+            ((totalProgressIncome + totalProgressExpense) / yearsWithData) / 2;
+        }
+      } else {
+        // MONTHLY FORECAST
+        const currentMonth = now.getMonth();
+        const currentDay = now.getDate();
+        const daysInMonth = new Date(now.getFullYear(), currentMonth + 1, 0).getDate();
+        periodProgress = currentDay / daysInMonth;
+
+        // Look at same month in previous years to get percentage of yearly spending
+        const pastYears = getPastYearsPeriods(5);
+        let monthPercentagesIncome: number[] = [];
+        let monthPercentagesExpense: number[] = [];
+        let sameMonthTotalsIncome: number[] = [];
+        let sameMonthTotalsExpense: number[] = [];
+
+        for (const yearPeriod of pastYears) {
+          // Get same month in this past year
+          const sameMonthStart = getMonthStart(yearPeriod.year, currentMonth);
+          const sameMonthEnd = getMonthEnd(yearPeriod.year, currentMonth);
+
+          const monthMovements = movements.filter((m) =>
+            isDateInRange(m.date, sameMonthStart, sameMonthEnd),
+          );
+
+          // Get full year totals for comparison
+          const yearMovements = movements.filter((m) =>
+            isDateInRange(m.date, yearPeriod.startDate, yearPeriod.endDate),
+          );
+
+          if (monthMovements.length > 0 && yearMovements.length > 0) {
+            const monthIncome = monthMovements
+              .filter((m) => m.type === "income")
+              .reduce((sum, m) => sum + m.totalAmount, 0);
+            const monthExpense = monthMovements
+              .filter((m) => m.type === "expense")
+              .reduce((sum, m) => sum + Math.abs(m.totalAmount), 0);
+
+            const yearIncome = yearMovements
+              .filter((m) => m.type === "income")
+              .reduce((sum, m) => sum + m.totalAmount, 0);
+            const yearExpense = yearMovements
+              .filter((m) => m.type === "expense")
+              .reduce((sum, m) => sum + Math.abs(m.totalAmount), 0);
+
+            sameMonthTotalsIncome.push(monthIncome);
+            sameMonthTotalsExpense.push(monthExpense);
+
+            if (yearIncome > 0) {
+              monthPercentagesIncome.push(monthIncome / yearIncome);
+            }
+            if (yearExpense > 0) {
+              monthPercentagesExpense.push(monthExpense / yearExpense);
+            }
+          }
+        }
+
+        // Use average of same month totals from previous years
+        if (sameMonthTotalsIncome.length > 0) {
+          avgIncome =
+            sameMonthTotalsIncome.reduce((a, b) => a + b, 0) /
+            sameMonthTotalsIncome.length;
+        }
+        if (sameMonthTotalsExpense.length > 0) {
+          avgExpense =
+            sameMonthTotalsExpense.reduce((a, b) => a + b, 0) /
+            sameMonthTotalsExpense.length;
+        }
+
+        // Historical progress is based on day of month
+        historicalProgressAtThisPoint = periodProgress;
+      }
+
+      // 6. Calculate forecast
+      // Expected remaining = max(0, average - already recorded)
+      const expectedRemainingIncome = Math.max(
+        0,
+        avgIncome - currentPeriodIncome,
+      );
+      const expectedRemainingExpense = Math.max(
+        0,
+        avgExpense - currentPeriodExpense,
+      );
+
+      const forecastBalance =
+        currentBalance +
+        pendingRecurringIncome -
+        pendingRecurringExpense +
+        expectedRemainingIncome -
+        expectedRemainingExpense;
+
+      const forecastDelta = forecastBalance - currentBalance;
+
+      return {
+        periodType,
+        currentBalance,
+        currentMonthIncome: currentPeriodIncome,
+        currentMonthExpense: currentPeriodExpense,
+        pendingRecurringIncome,
+        pendingRecurringExpense,
+        avgMonthlyIncome: avgIncome,
+        avgMonthlyExpense: avgExpense,
+        forecastBalance,
+        forecastDelta,
+        periodProgress,
+        historicalProgressAtThisPoint,
+      };
+    },
+    [accounts, movements, pendingRecurrences],
+  );
+
+  /**
+   * Default monthly forecast for current month (backward compatible)
    */
   const monthlyForecast = useMemo<MonthlyForecast>(() => {
-    // 1. Current balance = sum of all account balances
-    const currentBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
-
-    // 2. Get current month period
     const currentMonth = getCurrentMonthPeriod();
-
-    // 3. Calculate current month income and expenses
-    const currentMonthMovements = movements.filter((m) =>
-      isDateInRange(m.date, currentMonth.startDate, currentMonth.endDate),
-    );
-    const currentMonthIncome = currentMonthMovements
-      .filter((m) => m.type === "income")
-      .reduce((sum, m) => sum + m.totalAmount, 0);
-    const currentMonthExpense = currentMonthMovements
-      .filter((m) => m.type === "expense")
-      .reduce((sum, m) => sum + Math.abs(m.totalAmount), 0);
-
-    // 4. Calculate pending recurring for current month
-    const currentMonthPending = pendingRecurrences.filter(
-      (pr) => !pr.isOverdue,
-    );
-    const pendingRecurringIncome = currentMonthPending
-      .filter((pr) => pr.template.type === "income")
-      .reduce(
-        (sum, pr) => sum + Math.abs(pr.template.totalAmount) * pr.missingCount,
-        0,
-      );
-    const pendingRecurringExpense = currentMonthPending
-      .filter((pr) => pr.template.type === "expense")
-      .reduce(
-        (sum, pr) => sum + Math.abs(pr.template.totalAmount) * pr.missingCount,
-        0,
-      );
-
-    // 5. Calculate historical averages (last 12 months)
-    const last12Months = getLast12MonthsPeriods();
-    let totalHistoricalIncome = 0;
-    let totalHistoricalExpense = 0;
-    let monthsWithData = 0;
-
-    for (const period of last12Months) {
-      const periodMovements = movements.filter((m) =>
-        isDateInRange(m.date, period.startDate, period.endDate),
-      );
-
-      if (periodMovements.length > 0) {
-        monthsWithData++;
-        totalHistoricalIncome += periodMovements
-          .filter((m) => m.type === "income")
-          .reduce((sum, m) => sum + m.totalAmount, 0);
-        totalHistoricalExpense += periodMovements
-          .filter((m) => m.type === "expense")
-          .reduce((sum, m) => sum + Math.abs(m.totalAmount), 0);
-      }
-    }
-
-    const avgMonthlyIncome =
-      monthsWithData > 0 ? totalHistoricalIncome / monthsWithData : 0;
-    const avgMonthlyExpense =
-      monthsWithData > 0 ? totalHistoricalExpense / monthsWithData : 0;
-
-    // 6. Calculate forecast
-    // Expected remaining income = max(0, average - already recorded)
-    // Expected remaining expense = max(0, average - already recorded)
-    const expectedRemainingIncome = Math.max(
-      0,
-      avgMonthlyIncome - currentMonthIncome,
-    );
-    const expectedRemainingExpense = Math.max(
-      0,
-      avgMonthlyExpense - currentMonthExpense,
-    );
-
-    const forecastBalance =
-      currentBalance +
-      pendingRecurringIncome -
-      pendingRecurringExpense +
-      expectedRemainingIncome -
-      expectedRemainingExpense;
-
-    const forecastDelta = forecastBalance - currentBalance;
-
-    return {
-      currentBalance,
-      currentMonthIncome,
-      currentMonthExpense,
-      pendingRecurringIncome,
-      pendingRecurringExpense,
-      avgMonthlyIncome,
-      avgMonthlyExpense,
-      forecastBalance,
-      forecastDelta,
-    };
-  }, [accounts, movements, pendingRecurrences]);
+    return calculateForecast(currentMonth.startDate, currentMonth.endDate);
+  }, [calculateForecast]);
 
   /**
    * Calculate forecast for each individual account
@@ -662,5 +814,6 @@ export const useMyBalanceData = (
     getTotalIncome,
     getTotalExpense,
     getBalance,
+    calculateForecast, // Calculate forecast for any period
   };
 };

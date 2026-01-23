@@ -17,11 +17,11 @@ export default function Home() {
     accounts,
     movements,
     pendingRecurrences,
-    monthlyForecast,
     isLoading,
     reloadData,
     getTotalIncome,
     getTotalExpense,
+    calculateForecast,
   } = useDataContext();
 
   const availableAccounts = useMemo(() => {
@@ -57,11 +57,11 @@ export default function Home() {
         setSelectedAccount={setSelectedAccount}
         movements={movements}
         pendingRecurrences={pendingRecurrences}
-        monthlyForecast={monthlyForecast}
         isLoading={isLoading}
         reloadData={reloadData}
         getTotalIncome={getTotalIncome}
         getTotalExpense={getTotalExpense}
+        calculateForecast={calculateForecast}
       />
     </ScreenView>
   );

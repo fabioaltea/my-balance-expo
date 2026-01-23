@@ -14,7 +14,7 @@ import {
 import React, { useState, useMemo } from "react";
 import Pager from "@/components/ui/pager";
 import { DATE_RANGES } from "@/state";
-import { isDateInRange } from "@/utils/dateUtils";
+import { isDateInRange, detectPeriodType } from "@/utils/dateUtils";
 import type { Account, Movement, IDateRange, PendingRecurrence } from "@/state";
 import type { MonthlyForecast } from "@/hooks/useMyBalanceData";
 import ViewModePicker from "@/components/ui/view-mode-picker";
@@ -27,11 +27,11 @@ interface HomeViewProps {
   setSelectedAccount: (account: string) => void;
   movements: Movement[];
   pendingRecurrences: PendingRecurrence[];
-  monthlyForecast: MonthlyForecast;
   isLoading: boolean;
   reloadData: () => Promise<void>;
   getTotalIncome: (filteredMovements: Movement[]) => number;
   getTotalExpense: (filteredMovements: Movement[]) => number;
+  calculateForecast: (startDate: string, endDate: string) => MonthlyForecast;
 }
 
 const HomeView: React.FC<HomeViewProps> = ({
@@ -40,11 +40,11 @@ const HomeView: React.FC<HomeViewProps> = ({
   setSelectedAccount,
   movements,
   pendingRecurrences,
-  monthlyForecast,
   isLoading,
   reloadData,
   getTotalIncome,
   getTotalExpense,
+  calculateForecast,
 }) => {
   // Local state for date range
   const [dateRange, setDateRange] = useState<IDateRange>(
@@ -65,20 +65,48 @@ const HomeView: React.FC<HomeViewProps> = ({
     if (range.isTransitioning) {
       setIsPeriodTransitioning(true);
     }
-    // Reset pager to first page when period changes
-    setSummaryPagerIndex(0);
+
+    // Check if the new range is a current period (current month or current year)
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    const startDate = new Date(range.startDate.split("-").reverse().join("-"));
+    const periodType = detectPeriodType(range.startDate, range.endDate);
+
+    const isNewPeriodCurrent =
+      periodType === "year"
+        ? startDate.getFullYear() === currentYear
+        : startDate.getMonth() === currentMonth && startDate.getFullYear() === currentYear;
+
+    // Only reset pager to first page when going to a non-current period
+    if (!isNewPeriodCurrent) {
+      setSummaryPagerIndex(0);
+    }
   };
 
-  // Check if we're viewing the current month
-  const isCurrentMonth = useMemo(() => {
+  // Check if we're viewing the current month or current year (forecast is available)
+  const isCurrentPeriod = useMemo(() => {
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
 
-    // Check if the dateRange matches current month/year
+    // Parse the dateRange start date
     const startDate = new Date(dateRange.startDate.split("-").reverse().join("-"));
-    return startDate.getMonth() === currentMonth && startDate.getFullYear() === currentYear;
+    const periodType = detectPeriodType(dateRange.startDate, dateRange.endDate);
+
+    if (periodType === "year") {
+      // For year view, check if it's the current year
+      return startDate.getFullYear() === currentYear;
+    } else {
+      // For month view, check if it's the current month
+      return startDate.getMonth() === currentMonth && startDate.getFullYear() === currentYear;
+    }
   }, [dateRange]);
+
+  // Calculate forecast for the current period
+  const currentForecast = useMemo(() => {
+    return calculateForecast(dateRange.startDate, dateRange.endDate);
+  }, [dateRange, calculateForecast]);
 
   // Reset transitioning state when data finishes loading
   React.useEffect(() => {
@@ -233,7 +261,7 @@ const HomeView: React.FC<HomeViewProps> = ({
           style={{ height: 230, marginHorizontal: -16, marginBottom: 16 }}
           selectedPage={summaryPagerIndex}
           onPageSelected={setSummaryPagerIndex}
-          scrollEnabled={isCurrentMonth}
+          scrollEnabled={isCurrentPeriod}
         >
           <FinancialSummaryCard
             income={getTotalIncome(dateFilteredMovements)}
@@ -241,7 +269,7 @@ const HomeView: React.FC<HomeViewProps> = ({
             isTransitioning={isPeriodTransitioning}
           />
           <ForecastCard
-            forecast={monthlyForecast}
+            forecast={currentForecast}
             isTransitioning={isPeriodTransitioning}
           />
         </Pager>

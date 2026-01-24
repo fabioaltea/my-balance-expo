@@ -17,6 +17,7 @@ export default function Home() {
     accounts,
     movements,
     pendingRecurrences,
+    unconfirmedMovements,
     isLoading,
     reloadData,
     getTotalIncome,
@@ -57,6 +58,7 @@ export default function Home() {
         setSelectedAccount={setSelectedAccount}
         movements={movements}
         pendingRecurrences={pendingRecurrences}
+        unconfirmedCount={unconfirmedMovements?.length || 0}
         isLoading={isLoading}
         reloadData={reloadData}
         getTotalIncome={getTotalIncome}

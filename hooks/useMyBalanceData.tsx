@@ -327,10 +327,18 @@ export const useMyBalanceData = (
     ),
   );
 
-  // Filter out recurring templates from recent movements
+  // Filter out recurring templates and unconfirmed from recent movements
   // These are identified by status "recurrent" (new) or recurrencePattern (old)
   const movements = allMovements.filter(
-    (m) => m.status?.toLowerCase() !== "recurrent" && !m.recurrencePattern,
+    (m) =>
+      m.status?.toLowerCase() !== "recurrent" &&
+      m.status?.toLowerCase() !== "unconfirmed" &&
+      !m.recurrencePattern,
+  );
+
+  // Get unconfirmed movements (from third party imports)
+  const unconfirmedMovements = allMovements.filter(
+    (m) => m.status?.toLowerCase() === "unconfirmed",
   );
 
   /**
@@ -470,15 +478,15 @@ export const useMyBalanceData = (
    * - Projects based on time-based progress through the year
    */
   const calculateForecast = useCallback(
-    (
-      periodStartDate: string,
-      periodEndDate: string,
-    ): MonthlyForecast => {
+    (periodStartDate: string, periodEndDate: string): MonthlyForecast => {
       const periodType = detectPeriodType(periodStartDate, periodEndDate);
       const now = new Date();
 
       // 1. Current balance = sum of all account balances
-      const currentBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
+      const currentBalance = accounts.reduce(
+        (sum, acc) => sum + acc.balance,
+        0,
+      );
 
       // 2. Calculate current period income and expenses
       const currentPeriodMovements = movements.filter((m) =>
@@ -498,13 +506,15 @@ export const useMyBalanceData = (
       const pendingRecurringIncome = currentPeriodPending
         .filter((pr) => pr.template.type === "income")
         .reduce(
-          (sum, pr) => sum + Math.abs(pr.template.totalAmount) * pr.missingCount,
+          (sum, pr) =>
+            sum + Math.abs(pr.template.totalAmount) * pr.missingCount,
           0,
         );
       const pendingRecurringExpense = currentPeriodPending
         .filter((pr) => pr.template.type === "expense")
         .reduce(
-          (sum, pr) => sum + Math.abs(pr.template.totalAmount) * pr.missingCount,
+          (sum, pr) =>
+            sum + Math.abs(pr.template.totalAmount) * pr.missingCount,
           0,
         );
 
@@ -573,13 +583,17 @@ export const useMyBalanceData = (
           avgExpense = totalYearlyExpense / yearsWithData;
           // Average of income and expense progress
           historicalProgressAtThisPoint =
-            ((totalProgressIncome + totalProgressExpense) / yearsWithData) / 2;
+            (totalProgressIncome + totalProgressExpense) / yearsWithData / 2;
         }
       } else {
         // MONTHLY FORECAST
         const currentMonth = now.getMonth();
         const currentDay = now.getDate();
-        const daysInMonth = new Date(now.getFullYear(), currentMonth + 1, 0).getDate();
+        const daysInMonth = new Date(
+          now.getFullYear(),
+          currentMonth + 1,
+          0,
+        ).getDate();
         periodProgress = currentDay / daysInMonth;
 
         // Look at same month in previous years to get percentage of yearly spending
@@ -799,6 +813,7 @@ export const useMyBalanceData = (
     // Derived data
     movements, // Transactions grouped into movements
     recurringMovements, // Unique recurring movement templates
+    unconfirmedMovements, // Movements from third party imports needing confirmation
     pendingRecurrences, // Missing recurring occurrences (current + overdue)
     monthlyForecast, // End-of-month balance forecast (total)
     accountForecasts, // End-of-month balance forecast per account

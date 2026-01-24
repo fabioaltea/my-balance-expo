@@ -1,6 +1,7 @@
 import BalanceCard from "@/components/cards/balance-card";
 import MovementsCard from "@/components/cards/movements-card";
 import RecurringMovementsCard from "@/components/cards/recurring-movements-card";
+import UnconfirmedMovementsCard from "@/components/cards/unconfirmed-movements-card";
 // import FinancialSummaryCard from "@/components/cards/financial-summary-card";
 import ForecastCard from "@/components/cards/forecast-card";
 import PeriodPicker from "@/components/ui/period-chips-picker";
@@ -14,11 +15,10 @@ import {
 import React, { useState, useMemo } from "react";
 import Pager from "@/components/ui/pager";
 import { DATE_RANGES } from "@/state";
-import { isDateInRange, detectPeriodType } from "@/utils/dateUtils";
+import { isDateInRange, detectPeriodType, parseDateFromDDMMYYYY } from "@/utils/dateUtils";
 import type { Account, Movement, IDateRange, PendingRecurrence } from "@/state";
 import type { MonthlyForecast } from "@/hooks/useMyBalanceData";
 import ViewModePicker from "@/components/ui/view-mode-picker";
-import PendingRecurrencesCard from "@/components/cards/pending-recurrences-card";
 import FinancialSummaryCard from "@/components/cards/financial-summary-card";
 
 interface HomeViewProps {
@@ -27,6 +27,7 @@ interface HomeViewProps {
   setSelectedAccount: (account: string) => void;
   movements: Movement[];
   pendingRecurrences: PendingRecurrence[];
+  unconfirmedCount: number;
   isLoading: boolean;
   reloadData: () => Promise<void>;
   getTotalIncome: (filteredMovements: Movement[]) => number;
@@ -40,6 +41,7 @@ const HomeView: React.FC<HomeViewProps> = ({
   setSelectedAccount,
   movements,
   pendingRecurrences,
+  unconfirmedCount,
   isLoading,
   reloadData,
   getTotalIncome,
@@ -50,7 +52,7 @@ const HomeView: React.FC<HomeViewProps> = ({
   const [dateRange, setDateRange] = useState<IDateRange>(
     DATE_RANGES.THIS_MONTH,
   );
-  const [viewMode, setViewMode] = useState<"recent" | "next" | "recurring">(
+  const [viewMode, setViewMode] = useState<"recent" | "recurring" | "unconfirmed">(
     "recent",
   );
   const [isPeriodTransitioning, setIsPeriodTransitioning] =
@@ -157,36 +159,37 @@ const HomeView: React.FC<HomeViewProps> = ({
     });
   }, [movements, selectedAccount, dateRange]);
 
-  // Filter movements based on viewMode (only for recent and next)
+  // Filter movements based on viewMode
   const filteredMovements = useMemo(() => {
-    switch (viewMode) {
-      case "next":
-        // Show upcoming/future movements
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        return dateFilteredMovements.filter((m) => {
-          const [day, month, year] = m.date.split("-").map(Number);
-          const movementDate = new Date(year, month - 1, day);
-          return movementDate >= today;
-        });
+    // Show all movements in the selected period
+    return dateFilteredMovements;
+  }, [dateFilteredMovements]);
 
-      case "recent":
-      default:
-        // Show all movements in the selected period (default behavior)
-        return dateFilteredMovements;
-    }
-  }, [dateFilteredMovements, viewMode]);
+  // Count of pending items for badge (only today and overdue)
+  const pendingCount = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-  // Filter pending recurrences to only show future (not overdue)
-  const futurePendingRecurrences = useMemo(() => {
-    return (pendingRecurrences || []).filter((p) => !p.isOverdue);
+    return (pendingRecurrences || []).filter((p) => {
+      // If already marked as overdue from period, count it
+      if (p.isOverdue) return true;
+
+      // Calculate expected date
+      const templateDate = parseDateFromDDMMYYYY(p.template.date);
+      const periodStart = parseDateFromDDMMYYYY(p.periodStart);
+      if (!templateDate || !periodStart) return false;
+
+      const day = templateDate.getDate();
+      const month = periodStart.getMonth();
+      const year = periodStart.getFullYear();
+      const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
+      const actualDay = Math.min(day, lastDayOfMonth);
+      const expectedDate = new Date(year, month, actualDay);
+
+      // Count if expected date is today or has passed
+      return expectedDate <= today;
+    }).reduce((sum, p) => sum + p.missingCount, 0);
   }, [pendingRecurrences]);
-
-  // Count of pending items for badge
-  const pendingCount = futurePendingRecurrences.reduce(
-    (sum, p) => sum + p.missingCount,
-    0,
-  );
 
   // Handle account switch
   const handleAccountSwitch = (index: number) => {
@@ -278,19 +281,16 @@ const HomeView: React.FC<HomeViewProps> = ({
           selectedMode={viewMode}
           onModeChange={setViewMode}
           pendingCount={pendingCount}
+          unconfirmedCount={unconfirmedCount}
         />
-        {viewMode === "recurring" && <RecurringMovementsCard />}
+        {viewMode === "recurring" && <RecurringMovementsCard dateRange={dateRange} />}
         {viewMode === "recent" && (
           <MovementsCard
             movements={filteredMovements}
             isTransitioning={isPeriodTransitioning}
           />
         )}
-        {viewMode === "next" && (
-          <PendingRecurrencesCard
-            pendingRecurrences={futurePendingRecurrences}
-          />
-        )}
+        {viewMode === "unconfirmed" && <UnconfirmedMovementsCard />}
         <View style={{ height: 100 }}></View>
       </ScrollView>
     </View>

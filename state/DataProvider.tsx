@@ -20,6 +20,7 @@ interface DataContextType {
   // Derived data
   movements: Movement[];
   recurringMovements: Movement[];
+  unconfirmedMovements: Movement[];
   pendingRecurrences: PendingRecurrence[];
   monthlyForecast: MonthlyForecast;
   accountForecasts: AccountForecast[];

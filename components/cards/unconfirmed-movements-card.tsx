@@ -58,12 +58,16 @@ const UnconfirmedMovementsCard: React.FC = () => {
   };
 
   const handleMenuOption = async (option: string) => {
-    setMenuVisible(false);
-
-    if (!selectedMovement) return;
+    if (!selectedMovement) {
+      setMenuVisible(false);
+      return;
+    }
 
     if (option === "Dismiss") {
+      setMenuVisible(false);
       handleDismissMovement();
+    } else {
+      setMenuVisible(false);
     }
   };
 
@@ -82,6 +86,7 @@ const UnconfirmedMovementsCard: React.FC = () => {
           text: "Dismiss",
           style: "destructive",
           onPress: async () => {
+            console.log("🗑️ Dismissing movement:", selectedMovement.id, "spreadsheetId:", selectedSpreadsheetId);
             try {
               const result = await TransactionsApiHelper.updateMovement(
                 selectedSpreadsheetId,
@@ -91,6 +96,7 @@ const UnconfirmedMovementsCard: React.FC = () => {
                 }
               );
 
+              console.log("🗑️ Dismiss result:", result);
               if (result) {
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
                 await reloadData();

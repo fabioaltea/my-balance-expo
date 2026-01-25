@@ -13,6 +13,7 @@ export interface User {
   emailVerified?: boolean;
   spreadsheetId?: string;
   lastAccess?: string;
+  pushNotificationsEnabled?: boolean;
 }
 
 export class AuthStorageHelper {

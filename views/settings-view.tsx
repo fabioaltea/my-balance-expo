@@ -4,6 +4,8 @@ import {
   View,
   TouchableOpacity,
   ActivityIndicator,
+  Switch,
+  Image,
 } from "react-native";
 import { ThemedText } from "@/components/themed-text";
 import React, { useState, useEffect } from "react";
@@ -15,11 +17,17 @@ import * as Linking from "expo-linking";
 import InputGroup from "@/components/ui/input-group";
 import IconSymbol from "@/components/ui/icon-symbol";
 import { ShortcutApiHelper } from "@/helpers/ShortcutApiHelper";
+import { NotificationsHelpers } from "@/helpers/NotificationsHelpers";
 
 const ICLOUD_SHORTCUT_URL = process.env.EXPO_PUBLIC_ICLOUD_SHORTCUT_URL || "";
 
 interface SettingsViewProps {
-  user: { email?: string } | null;
+  user: {
+    email?: string;
+    name?: string;
+    picture?: string;
+    pushNotificationsEnabled?: boolean;
+  } | null;
   logout: () => void;
 }
 
@@ -105,6 +113,10 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
 const SettingsView: React.FC<SettingsViewProps> = ({ user, logout }) => {
   const [shortcutKey, setShortcutKey] = useState<string | null>(null);
   const [isLoadingShortcut, setIsLoadingShortcut] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(
+    user?.pushNotificationsEnabled ?? false,
+  );
+  const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
 
   const textColor = useThemeColor({ light: "#000", dark: "#fff" }, "text");
   const secondaryTextColor = useThemeColor(
@@ -184,6 +196,37 @@ const SettingsView: React.FC<SettingsViewProps> = ({ user, logout }) => {
     }
   };
 
+  const handleToggleNotifications = async (enabled: boolean) => {
+    setIsLoadingNotifications(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    try {
+      if (enabled) {
+        const token =
+          await NotificationsHelpers.registerForPushNotificationsAsync();
+        if (token) {
+          setNotificationsEnabled(true);
+          console.log("Push notifications enabled with token:", token);
+        }
+      } else {
+        const removed =
+          await NotificationsHelpers.unregisterPushNotificationsAsync();
+        if (removed) {
+          setNotificationsEnabled(false);
+          console.log("Push notifications disabled");
+        }
+      }
+    } catch (error: any) {
+      console.error("Failed to toggle notifications:", error);
+      Alert.alert(
+        "Error",
+        error.message || "Failed to update notification settings",
+      );
+    } finally {
+      setIsLoadingNotifications(false);
+    }
+  };
+
   const handleLogout = () => {
     Alert.alert("Logout", "Are you sure you want to logout?", [
       {
@@ -209,14 +252,23 @@ const SettingsView: React.FC<SettingsViewProps> = ({ user, logout }) => {
       <SettingsSection secondaryTextColor={secondaryTextColor}>
         <InputGroup>
           <View style={styles.profileCard}>
-            <View style={styles.profileAvatar}>
-              <ThemedText style={styles.profileInitial}>
-                {user?.email?.charAt(0).toUpperCase() || "U"}
-              </ThemedText>
-            </View>
+            {user?.picture ? (
+              <Image
+                source={{ uri: user.picture }}
+                style={styles.profileImage}
+              />
+            ) : (
+              <View style={styles.profileAvatar}>
+                <ThemedText style={styles.profileInitial}>
+                  {user?.name?.charAt(0).toUpperCase() ||
+                    user?.email?.charAt(0).toUpperCase() ||
+                    "U"}
+                </ThemedText>
+              </View>
+            )}
             <View style={styles.profileInfo}>
               <ThemedText style={[styles.profileName, { color: textColor }]}>
-                {user?.email || "User"}
+                {user?.name || user?.email || "User"}
               </ThemedText>
               <ThemedText
                 style={[styles.profileEmail, { color: secondaryTextColor }]}
@@ -252,6 +304,47 @@ const SettingsView: React.FC<SettingsViewProps> = ({ user, logout }) => {
         </InputGroup>
       </SettingsSection>
 
+      {/* Notifications */}
+      <SettingsSection
+        title="NOTIFICATIONS"
+        secondaryTextColor={secondaryTextColor}
+      >
+        <InputGroup>
+          <View
+            style={[
+              styles.settingsItem,
+              {
+                backgroundColor: "transparent",
+                borderBottomColor: separatorColor,
+              },
+            ]}
+          >
+            <View style={styles.settingsItemLeft}>
+              <View style={styles.iconContainer}>
+                <IconSymbol name="notifications" size={20} color="#2F4F3F" />
+              </View>
+              <ThemedText
+                style={[styles.settingsItemText, { color: textColor }]}
+              >
+                Push Notifications
+              </ThemedText>
+            </View>
+            {isLoadingNotifications ? (
+              <ActivityIndicator size="small" color="#2F4F3F" />
+            ) : (
+              <Switch
+                style={{ alignSelf: "center" }}
+                trackColor={{ true: "#2F4F3F", false: "#767577" }}
+                thumbColor={notificationsEnabled ? "#ffffff" : "#f4f3f4"}
+                ios_backgroundColor="#3e3e3e"
+                onValueChange={handleToggleNotifications}
+                value={notificationsEnabled}
+              />
+            )}
+          </View>
+        </InputGroup>
+      </SettingsSection>
+
       {/* Shortcuts */}
       <SettingsSection
         title="SHORTCUTS"
@@ -274,24 +367,11 @@ const SettingsView: React.FC<SettingsViewProps> = ({ user, logout }) => {
               <View style={styles.iconContainer}>
                 <IconSymbol name="app-shortcut" size={20} color="#2F4F3F" />
               </View>
-              <View style={{ flex: 1 }}>
-                <ThemedText
-                  style={[styles.settingsItemText, { color: textColor }]}
-                >
-                  {shortcutKey ? "Update iOS Shortcut" : "Setup iOS Shortcut"}
-                </ThemedText>
-                {shortcutKey && (
-                  <ThemedText
-                    style={[
-                      styles.shortcutKeyText,
-                      { color: secondaryTextColor },
-                    ]}
-                    numberOfLines={1}
-                  >
-                    Key: {shortcutKey.substring(0, 16)}...
-                  </ThemedText>
-                )}
-              </View>
+              <ThemedText
+                style={[styles.settingsItemText, { color: textColor }]}
+              >
+                {shortcutKey ? "Update iOS Shortcut" : "Setup iOS Shortcut"}
+              </ThemedText>
             </View>
             {isLoadingShortcut ? (
               <ActivityIndicator size="small" color="#2F4F3F" />
@@ -354,11 +434,17 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 4,
   },
+  profileImage: {
+    width: 64,
+    height: 64,
+    borderRadius: 24,
+    marginRight: 12,
+  },
   profileAvatar: {
     width: 64,
     height: 64,
     borderRadius: 24,
-    backgroundColor: "#007AFF",
+    backgroundColor: "#2F4F3F",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
@@ -394,7 +480,7 @@ const styles = StyleSheet.create({
   iconContainer: {
     width: 40,
     height: 40,
-    borderRadius: 12,
+    borderRadius: 14,
     backgroundColor: "#00ffbf08",
     justifyContent: "center",
     alignItems: "center",

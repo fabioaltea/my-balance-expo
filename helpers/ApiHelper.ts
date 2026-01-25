@@ -85,7 +85,24 @@ export class ApiHelper {
     }
   }
 
-  
+  // Push notifications methods
+  static async savePushToken(pushToken: string): Promise<boolean> {
+    try {
+      const response = await HttpHelper.post("/auth/push-token", { pushToken });
+      return response.success;
+    } catch (error) {
+      console.error("Save push token error:", error);
+      return false;
+    }
+  }
 
-  
+  static async removePushToken(): Promise<boolean> {
+    try {
+      const response = await HttpHelper.delete("/auth/push-token");
+      return response.success;
+    } catch (error) {
+      console.error("Remove push token error:", error);
+      return false;
+    }
+  }
 }

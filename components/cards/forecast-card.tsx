@@ -83,13 +83,14 @@ const ForecastCard: React.FC<Props> = ({
   const expectedEndDate = getExpectedEndDate();
 
   // Calculate expected remaining (from historical average)
+  // Subtract both current and pending from the average to avoid double counting
   const expectedRemainingIncome = Math.max(
     0,
-    avgMonthlyIncome - currentMonthIncome,
+    avgMonthlyIncome - currentMonthIncome - pendingRecurringIncome,
   );
   const expectedRemainingExpense = Math.max(
     0,
-    avgMonthlyExpense - currentMonthExpense,
+    avgMonthlyExpense - currentMonthExpense - pendingRecurringExpense,
   );
 
   // Total expected income/expense at end of month

@@ -49,9 +49,17 @@ const ForecastCard: React.FC<Props> = ({
 
   const isYearlyForecast = periodType === "year";
 
+  // Get current date info
+  const now = new Date();
+  const currentDay = now.getDate();
+  const daysInMonth = new Date(
+    now.getFullYear(),
+    now.getMonth() + 1,
+    0
+  ).getDate();
+
   // Calculate the expected end date
   const getExpectedEndDate = () => {
-    const now = new Date();
     const months = [
       "January",
       "February",
@@ -70,13 +78,7 @@ const ForecastCard: React.FC<Props> = ({
     if (isYearlyForecast) {
       return "31 December";
     } else {
-      // Last day of current month
-      const lastDay = new Date(
-        now.getFullYear(),
-        now.getMonth() + 1,
-        0,
-      ).getDate();
-      return `${lastDay} ${months[now.getMonth()]}`;
+      return `${daysInMonth} ${months[now.getMonth()]}`;
     }
   };
 
@@ -86,11 +88,11 @@ const ForecastCard: React.FC<Props> = ({
   // Subtract both current and pending from the average to avoid double counting
   const expectedRemainingIncome = Math.max(
     0,
-    avgMonthlyIncome - currentMonthIncome - pendingRecurringIncome,
+    avgMonthlyIncome - currentMonthIncome - pendingRecurringIncome
   );
   const expectedRemainingExpense = Math.max(
     0,
-    avgMonthlyExpense - currentMonthExpense - pendingRecurringExpense,
+    avgMonthlyExpense - currentMonthExpense - pendingRecurringExpense
   );
 
   // Total expected income/expense at end of month
@@ -103,45 +105,66 @@ const ForecastCard: React.FC<Props> = ({
   const displayedDelta = forecastedMonthlyIncome - forecastedMonthlyExpense;
   const isPositiveDelta = displayedDelta >= 0;
 
-  // For the bar: show a "display forecast" that's consistent with displayedDelta
+  // For the forecast: balance at end of month
   const displayForecastBalance = currentBalance + displayedDelta;
 
-  // Calculate the range for the bar (add padding around min/max)
-  const minValue = Math.min(currentBalance, displayForecastBalance);
-  const maxValue = Math.max(currentBalance, displayForecastBalance);
-  const delta = Math.abs(displayedDelta);
+  // Calculate daily progression for remaining days (from today to end of month)
+  const remainingDays = daysInMonth - currentDay + 1; // Including today
+  
+  // Distribute pending recurring and expected remaining across future days
+  const futureIncome = pendingRecurringIncome + expectedRemainingIncome;
+  const futureExpense = pendingRecurringExpense + expectedRemainingExpense;
+  const futureNetChange = futureIncome - futureExpense;
+  const dailyFutureChange = remainingDays > 1 ? futureNetChange / (remainingDays - 1) : 0;
 
-  // Make padding proportional to the delta so the change is visually prominent
-  const padding = Math.max(delta * 0.6, 100);
-  const scaleMin = minValue - padding;
-  const scaleMax = maxValue + padding;
+  // Calculate what happened in the past
+  const pastDays = currentDay - 1;
+  const pastNetChange = currentMonthIncome - currentMonthExpense;
+  
+  // Starting balance at beginning of month (work backwards from current balance)
+  const monthStartBalance = currentBalance - pastNetChange;
+  
+  // For past days, distribute the change linearly (we don't have daily details)
+  const dailyPastChange = pastDays > 0 ? pastNetChange / pastDays : 0;
+
+  // Create array of daily data points for the ENTIRE month
+  const dailyData = Array.from({ length: daysInMonth }, (_, i) => {
+    const day = i + 1;
+    const isToday = day === currentDay;
+    const isPast = day < currentDay;
+    const isFuture = day > currentDay;
+    
+    let balance: number;
+    
+    if (isPast) {
+      // Past days: linear progression from start to yesterday
+      balance = monthStartBalance + (dailyPastChange * day);
+    } else if (isToday) {
+      balance = currentBalance;
+    } else {
+      // Future days: linear progression from today to end of month
+      const daysFromToday = day - currentDay;
+      balance = currentBalance + (dailyFutureChange * daysFromToday);
+    }
+    
+    return { day, balance, isToday, isPast, isFuture };
+  });
+
+  // Calculate scale for the chart
+  const allBalances = dailyData.map((d) => d.balance);
+  const minBalance = Math.min(...allBalances);
+  const maxBalance = Math.max(...allBalances);
+  const balanceRange = maxBalance - minBalance;
+  const padding = Math.max(balanceRange * 0.2, 100);
+  const scaleMin = minBalance - padding;
+  const scaleMax = maxBalance + padding;
   const scaleRange = scaleMax - scaleMin;
-
-  // Calculate positions as percentages
-  const currentPos = ((currentBalance - scaleMin) / scaleRange) * 100;
-  const forecastPos = ((displayForecastBalance - scaleMin) / scaleRange) * 100;
-
-  const leftPos = Math.min(currentPos, forecastPos);
-  const rightPos = Math.max(currentPos, forecastPos);
-
-  // Check if pills would overlap
-  const pillDistance = Math.abs(currentPos - forecastPos);
-  const pillsOverlap = pillDistance < 18;
-
-  // If overlapping, offset both pills equally in opposite directions
-  const pillOffset = pillsOverlap ? 20 : 0;
-  const actualPillOffset = isPositiveDelta ? -pillOffset : pillOffset;
-  const forecastPillOffset = isPositiveDelta ? pillOffset : -pillOffset;
-
-  // Colors
-  const solidColor = "#4CAF50"; // Current balance (green)
-  const deltaColor = isPositiveDelta ? "#81C784" : "#E57373"; // Forecast delta
 
   const showSkeleton = (isLoading && currentBalance === 0) || isTransitioning;
 
-  // Generate stripes for the dashed effect
-  const stripeCount = 12;
-  const stripes = Array.from({ length: stripeCount }, (_, i) => i);
+  // Determine bar width based on number of days in month (more space without Y-axis)
+  const barWidth = Math.max(4, Math.min(12, 320 / daysInMonth - 1));
+  const barGap = 0.5;
 
   if (showSkeleton) {
     return (
@@ -160,7 +183,11 @@ const ForecastCard: React.FC<Props> = ({
             <Text style={[styles.forecastLabel, { color: textColor }]}>
               Forecast
             </Text>
-            <Text style={{color: "lightgray", fontSize: 10, marginLeft: 6}}>{expectedEndDate}</Text>
+            <Text
+              style={{ color: "lightgray", fontSize: 10, marginLeft: 6 }}
+            >
+              {expectedEndDate}
+            </Text>
           </View>
 
           <View style={styles.headerRight}>
@@ -173,155 +200,74 @@ const ForecastCard: React.FC<Props> = ({
               {isPositiveDelta ? "+" : ""}
               {formatAmount(displayedDelta)}
             </Text>
-            {/* <Text style={[styles.expectedDate, { color: subtleTextColor }]}>
-              {expectedEndDate}
-            </Text> */}
           </View>
         </View>
 
-        {/* Balance Bar Section */}
-        <View style={styles.barSection}>
-          {/* Scale labels */}
-          <View style={styles.scaleLabels}>
-            <Text style={[styles.scaleLabel, { color: subtleTextColor }]}>
-              {formatCompact(scaleMin)}
-            </Text>
-            <Text style={[styles.scaleLabel, { color: subtleTextColor }]}>
-              {formatCompact(scaleMax)}
-            </Text>
-          </View>
+        {/* Daily Bar Chart */}
+        <View style={styles.chartSection}>
+          {/* Chart area - no Y-axis labels for more width */}
+          <View style={styles.chartArea}>
+            {/* Bars container */}
+            <View style={styles.barsContainer}>
+              {dailyData.map((data, index) => {
+                const heightPercent =
+                  ((data.balance - scaleMin) / scaleRange) * 100;
+                
+                // Color logic:
+                // - Past days: Green (completed/actual data)
+                // - Today: Dark green (current position)
+                // - Future days: Light gray/green if positive, light red if negative
+                let barColor: string;
+                let opacity: number;
+                
+                if (data.isPast) {
+                  barColor = "#66BB6A"; // Green for past days
+                  opacity = 0.85;
+                } else if (data.isToday) {
+                  barColor = "#2E7D32"; // Dark green for today
+                  opacity = 1;
+                } else {
+                  // Future days - light colors based on forecast
+                  barColor = isPositiveDelta ? "#A5D6A7" : "#EF9A9A";
+                  opacity = 0.7;
+                }
 
-          {/* The bar */}
-          <View style={styles.barContainer}>
-            {/* Neutral background */}
-            <View style={styles.barBackground} />
-
-            {/* Solid part: from left edge to current balance */}
-            <View
-              style={[
-                styles.barSegmentSolid,
-                {
-                  left: 0,
-                  width: `${currentPos}%`,
-                  backgroundColor: solidColor,
-                  borderTopLeftRadius: 12,
-                  borderBottomLeftRadius: 12,
-                  borderTopRightRadius: 0,
-                  borderBottomRightRadius: 0,
-                },
-              ]}
-            />
-
-            {/* Dashed/striped part: delta between current and forecast */}
-            {displayedDelta !== 0 && (
-              <View
-                style={[
-                  styles.barSegmentDashed,
-                  {
-                    left: `${isPositiveDelta ? currentPos : forecastPos}%`,
-                    width: `${rightPos - leftPos}%`,
-                    borderTopLeftRadius: 0,
-                    borderBottomLeftRadius: 0,
-                    borderTopRightRadius: isPositiveDelta ? 12 : 0,
-                    borderBottomRightRadius: isPositiveDelta ? 12 : 0,
-                  },
-                ]}
-              >
-                {stripes.map((i) => (
+                return (
                   <View
-                    key={i}
+                    key={data.day}
                     style={[
-                      styles.stripe,
-                      {
-                        backgroundColor:
-                          i % 2 === 0 ? deltaColor : "transparent",
-                      },
+                      styles.barWrapper,
+                      { width: barWidth, marginHorizontal: barGap / 2 },
                     ]}
-                  />
-                ))}
-              </View>
-            )}
-
-            {/* Current balance marker */}
-            <View
-              style={[
-                styles.marker,
-                styles.currentMarker,
-                { left: `${currentPos}%` },
-              ]}
-            />
-
-            {/* Forecast marker */}
-            <View
-              style={[
-                styles.marker,
-                styles.forecastMarker,
-                {
-                  left: `${forecastPos}%`,
-                  borderColor: isPositiveDelta ? "#4CAF50" : "#F44336",
-                },
-              ]}
-            />
-          </View>
-
-          {/* Value labels below bar */}
-          <View style={styles.valueLabels}>
-            {/* Current balance label */}
-            <View
-              style={[
-                styles.valueLabelContainer,
-                {
-                  left: `${currentPos}%`,
-                  transform: [{ translateX: -25 + actualPillOffset }],
-                },
-              ]}
-            >
-              <View
-                style={[
-                  styles.valueLabelBubble,
-                  { backgroundColor: solidColor },
-                ]}
-              >
-                <Text style={styles.valueLabelText}>
-                  {formatCompact(currentBalance)}
-                </Text>
-              </View>
-              <Text
-                style={[styles.valueLabelCaption, { color: subtleTextColor }]}
-              >
-                Actual
-              </Text>
-            </View>
-
-            {/* Forecast label */}
-            <View
-              style={[
-                styles.valueLabelContainer,
-                {
-                  left: `${forecastPos}%`,
-                  transform: [{ translateX: -25 + forecastPillOffset }],
-                },
-              ]}
-            >
-              <View
-                style={[
-                  styles.valueLabelBubble,
-                  {
-                    backgroundColor: isPositiveDelta ? "#4CAF50" : "#F44336",
-                  },
-                ]}
-              >
-                <Text style={styles.valueLabelText}>
-                  {formatCompact(displayForecastBalance)}
-                </Text>
-              </View>
-              <Text
-                style={[styles.valueLabelCaption, { color: subtleTextColor }]}
-              >
-                Forecast
-              </Text>
+                  >
+                    <View
+                      style={[
+                        styles.bar,
+                        {
+                          height: `${Math.max(heightPercent, 2)}%`,
+                          backgroundColor: barColor,
+                          opacity: opacity,
+                        },
+                      ]}
+                    />
+                  </View>
+                );
+              })}
             </View>
           </View>
+        </View>
+
+        {/* Month Timeline Labels */}
+        <View style={styles.timelineLabels}>
+          <Text style={[styles.timelineLabel, { color: subtleTextColor }]}>
+            1 {now.toLocaleDateString("en-US", { month: "short" })}: {formatCompact(monthStartBalance)}
+          </Text>
+          <Text style={[styles.timelineLabel, { color: textColor, fontWeight: "600" }]}>
+            Today: {formatCompact(currentBalance)}
+          </Text>
+          <Text style={[styles.timelineLabel, { color: subtleTextColor }]}>
+            {daysInMonth} {now.toLocaleDateString("en-US", { month: "short" })}: {formatCompact(displayForecastBalance)}
+          </Text>
         </View>
 
         {/* Details Section - Expected Incomes and Outcomes */}
@@ -369,7 +315,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     height: 28,
-    marginBottom: 10,
+    marginBottom: 8,
   },
   forecastLabel: {
     fontSize: 22,
@@ -382,105 +328,76 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
   },
-  expectedDate: {
-    fontSize: 12,
-    marginTop: 2,
-  },
-  barSection: {
-    marginBottom: 0,
-  },
-  scaleLabels: {
+  chartSection: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    height: 70,
     marginBottom: 4,
   },
-  scaleLabel: {
+  yAxisLabels: {
+    width: 35,
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+    paddingRight: 4,
+  },
+  axisLabel: {
+    fontSize: 9,
+  },
+  chartArea: {
+    flex: 1,
+  },
+  barsContainer: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "center",
+  },
+  barWrapper: {
+    height: "100%",
+    justifyContent: "flex-end",
+  },
+  bar: {
+    width: "100%",
+    borderTopLeftRadius: 2,
+    borderTopRightRadius: 2,
+  },
+  timelineLabels: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 8,
+    marginTop: 6,
+    marginBottom: 4,
+  },
+  timelineLabel: {
     fontSize: 10,
   },
-  barContainer: {
-    height: 20,
-    borderRadius: 10,
-    overflow: "hidden",
-    position: "relative",
-  },
-  barBackground: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "#E8E8E8",
-    borderRadius: 12,
-  },
-  barSegmentSolid: {
-    position: "absolute",
-    top: 0,
-    bottom: 0,
-  },
-  barSegmentDashed: {
-    position: "absolute",
-    top: 0,
-    bottom: 0,
+  balanceLabels: {
     flexDirection: "row",
-    overflow: "hidden",
+    justifyContent: "space-around",
+    marginBottom: 8,
   },
-  stripe: {
-    flex: 1,
-    height: "100%",
-  },
-  marker: {
-    position: "absolute",
-    top: -2,
-    width: 3,
-    height: 24,
-    borderRadius: 1.5,
-    marginLeft: -1.5,
-  },
-  currentMarker: {
-    backgroundColor: "#2E7D32",
-  },
-  forecastMarker: {
-    backgroundColor: "#fff",
-    borderWidth: 2,
-  },
-  valueLabels: {
-    position: "relative",
-    height: 44,
-    marginTop: 6,
-  },
-  valueLabelContainer: {
-    position: "absolute",
+  balanceLabelItem: {
+    flexDirection: "row",
     alignItems: "center",
-    transform: [{ translateX: -25 }],
+    gap: 4,
   },
-  valueLabelBubble: {
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    borderRadius: 8,
-    minWidth: 45,
-    alignItems: "center",
+  balanceDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
-  valueLabelText: {
-    color: "#fff",
+  balanceLabelText: {
     fontSize: 11,
-    fontWeight: "bold",
-  },
-  valueLabelCaption: {
-    fontSize: 9,
-    marginTop: 1,
   },
   detailsSection: {
-    gap: 12,
+    gap: 8,
     paddingHorizontal: 4,
-    paddingVertical: 0,
   },
   detailRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 8,
-    paddingVertical: 0,
-    height: 30,
+    height: 24,
   },
   detailLabel: {
     flexDirection: "row",
@@ -488,19 +405,19 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   colorIndicator: {
-    width: 15,
-    height: 15,
+    width: 12,
+    height: 12,
     borderRadius: 6,
   },
   detailText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "500",
   },
   detailValue: {
     alignItems: "flex-end",
   },
   detailAmount: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
   },
 });

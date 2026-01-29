@@ -1,4 +1,4 @@
-import { ThemedText } from "../themed-text";
+import { ThemedText } from "../core/themed-text";
 import { View, StyleSheet, Pressable } from "react-native";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { Picker } from "@react-native-picker/picker";

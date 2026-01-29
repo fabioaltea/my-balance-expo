@@ -22,10 +22,10 @@ import {
   BreakdownStackedChart,
   ChartSkeleton,
 } from "@/components/charts";
-import Card from "@/components/card";
+import Card from "@/components/core/card";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import ModalPanel from "@/components/ui/modal-panel";
-import { ThemedText } from "@/components/themed-text";
+import { ThemedText } from "@/components/core/themed-text";
 
 const MONTHS_TO_SHOW = 12;
 const YEARS_TO_SHOW = 6;

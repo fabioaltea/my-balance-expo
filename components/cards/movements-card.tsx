@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { ThemedText } from "../themed-text";
+import { ThemedText } from "../core/themed-text";
 import { TouchableOpacity, StyleSheet, View } from "react-native";
 import IconSymbol from "../ui/icon-symbol";
-import Card from "../card";
-import ChartSkeleton from "../charts/ChartSkeleton";
+import Card from "../core/card";
+import ChartSkeleton from "../charts/chart-skeleton";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { useDataContext } from "@/state/DataProvider";
 import { formatDateForDisplay, compareDates } from "@/utils/dateUtils";

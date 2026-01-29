@@ -7,7 +7,7 @@ import {
   Switch,
   Image,
 } from "react-native";
-import { ThemedText } from "@/components/themed-text";
+import { ThemedText } from "@/components/core/themed-text";
 import React, { useState, useEffect } from "react";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { router } from "expo-router";

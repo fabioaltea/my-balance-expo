@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import Card from "../card";
-import ChartSkeleton from "../charts/ChartSkeleton";
+import Card from "../core/card";
+import ChartSkeleton from "../charts/chart-skeleton";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { useDataContext } from "@/state/DataProvider";
 import type { MonthlyForecast } from "@/hooks/useMyBalanceData";
@@ -52,10 +52,11 @@ const ForecastCard: React.FC<Props> = ({
   // Get current date info
   const now = new Date();
   const currentDay = now.getDate();
+  const currentMonth = now.getMonth(); // 0-11
   const daysInMonth = new Date(
     now.getFullYear(),
     now.getMonth() + 1,
-    0
+    0,
   ).getDate();
 
   // Calculate the expected end date
@@ -88,11 +89,11 @@ const ForecastCard: React.FC<Props> = ({
   // Subtract both current and pending from the average to avoid double counting
   const expectedRemainingIncome = Math.max(
     0,
-    avgMonthlyIncome - currentMonthIncome - pendingRecurringIncome
+    avgMonthlyIncome - currentMonthIncome - pendingRecurringIncome,
   );
   const expectedRemainingExpense = Math.max(
     0,
-    avgMonthlyExpense - currentMonthExpense - pendingRecurringExpense
+    avgMonthlyExpense - currentMonthExpense - pendingRecurringExpense,
   );
 
   // Total expected income/expense at end of month
@@ -105,66 +106,123 @@ const ForecastCard: React.FC<Props> = ({
   const displayedDelta = forecastedMonthlyIncome - forecastedMonthlyExpense;
   const isPositiveDelta = displayedDelta >= 0;
 
-  // For the forecast: balance at end of month
-  const displayForecastBalance = currentBalance + displayedDelta;
+  // For the forecast: balance at end of month/year
+  const displayForecastBalance = isYearlyForecast
+    ? currentBalance + displayedDelta * (12 - currentMonth)
+    : currentBalance + displayedDelta;
 
-  // Calculate daily progression for remaining days (from today to end of month)
-  const remainingDays = daysInMonth - currentDay + 1; // Including today
-  
-  // Distribute pending recurring and expected remaining across future days
-  const futureIncome = pendingRecurringIncome + expectedRemainingIncome;
-  const futureExpense = pendingRecurringExpense + expectedRemainingExpense;
-  const futureNetChange = futureIncome - futureExpense;
-  const dailyFutureChange = remainingDays > 1 ? futureNetChange / (remainingDays - 1) : 0;
+  let chartData: Array<{
+    period: number;
+    balance: number;
+    isCurrent: boolean;
+    isPast: boolean;
+    isFuture: boolean;
+  }>;
+  let scaleMin: number;
+  let scaleMax: number;
+  let scaleRange: number;
+  let barWidth: number;
+  let barGap: number;
+  let startLabel: string;
+  let currentLabel: string;
+  let endLabel: string;
 
-  // Calculate what happened in the past
-  const pastDays = currentDay - 1;
-  const pastNetChange = currentMonthIncome - currentMonthExpense;
-  
-  // Starting balance at beginning of month (work backwards from current balance)
-  const monthStartBalance = currentBalance - pastNetChange;
-  
-  // For past days, distribute the change linearly (we don't have daily details)
-  const dailyPastChange = pastDays > 0 ? pastNetChange / pastDays : 0;
+  if (isYearlyForecast) {
+    // YEARLY VIEW - 12 bars (one per month)
+    const monthlyDelta = displayedDelta; // Expected monthly change
+    
+    // Calculate how much of the current month has passed
+    const progressInCurrentMonth = currentDay / daysInMonth;
+    const currentMonthAccrued = monthlyDelta * progressInCurrentMonth;
+    
+    // Year start balance (1 January) - subtract what's already happened this month
+    const yearStartBalance = currentBalance - currentMonthAccrued;
+    
+    // End of year balance (31 December)
+    const yearEndBalance = yearStartBalance + (monthlyDelta * 12);
+    
+    // Create 12 monthly data points
+    chartData = Array.from({ length: 12 }, (_, i) => {
+      const month = i;
+      const isCurrent = month === currentMonth;
+      const isPast = month < currentMonth;
+      const isFuture = month > currentMonth;
+      
+      let balance: number;
+      
+      if (isPast) {
+        // Past months: end-of-month balance (linear progression)
+        balance = yearStartBalance + (monthlyDelta * (month + 1));
+      } else if (isCurrent) {
+        // Current month: use actual current balance
+        balance = currentBalance;
+      } else {
+        // Future months: end-of-month balance (linear progression from current)
+        balance = currentBalance + (monthlyDelta * (month - currentMonth));
+      }
+      
+      return { period: month, balance, isCurrent, isPast, isFuture };
+    });
 
-  // Create array of daily data points for the ENTIRE month
-  const dailyData = Array.from({ length: daysInMonth }, (_, i) => {
-    const day = i + 1;
-    const isToday = day === currentDay;
-    const isPast = day < currentDay;
-    const isFuture = day > currentDay;
+    barWidth = Math.max(10, Math.min(24, 320 / 12 - 2));
+    barGap = 2;
     
-    let balance: number;
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    startLabel = `${monthNames[0]}: ${formatCompact(yearStartBalance + monthlyDelta)}`;
+    currentLabel = `${monthNames[currentMonth]}: ${formatCompact(currentBalance)}`;
+    endLabel = `${monthNames[11]}: ${formatCompact(yearEndBalance)}`;
+  } else {
+    // MONTHLY VIEW - bars for each day
+    const remainingDays = daysInMonth - currentDay + 1;
+    const futureIncome = pendingRecurringIncome + expectedRemainingIncome;
+    const futureExpense = pendingRecurringExpense + expectedRemainingExpense;
+    const futureNetChange = futureIncome - futureExpense;
+    const dailyFutureChange = remainingDays > 1 ? futureNetChange / (remainingDays - 1) : 0;
     
-    if (isPast) {
-      // Past days: linear progression from start to yesterday
-      balance = monthStartBalance + (dailyPastChange * day);
-    } else if (isToday) {
-      balance = currentBalance;
-    } else {
-      // Future days: linear progression from today to end of month
-      const daysFromToday = day - currentDay;
-      balance = currentBalance + (dailyFutureChange * daysFromToday);
-    }
+    const pastDays = currentDay - 1;
+    const pastNetChange = currentMonthIncome - currentMonthExpense;
+    const monthStartBalance = currentBalance - pastNetChange;
+    const dailyPastChange = pastDays > 0 ? pastNetChange / pastDays : 0;
+
+    chartData = Array.from({ length: daysInMonth }, (_, i) => {
+      const day = i + 1;
+      const isCurrent = day === currentDay;
+      const isPast = day < currentDay;
+      const isFuture = day > currentDay;
+
+      let balance: number;
+
+      if (isPast) {
+        balance = monthStartBalance + dailyPastChange * day;
+      } else if (isCurrent) {
+        balance = currentBalance;
+      } else {
+        const daysFromToday = day - currentDay;
+        balance = currentBalance + dailyFutureChange * daysFromToday;
+      }
+
+      return { period: day, balance, isCurrent, isPast, isFuture };
+    });
+
+    barWidth = Math.max(4, Math.min(12, 320 / daysInMonth - 1));
+    barGap = 0.5;
     
-    return { day, balance, isToday, isPast, isFuture };
-  });
+    startLabel = `1 ${now.toLocaleDateString("en-US", { month: "short" })}: ${formatCompact(monthStartBalance)}`;
+    currentLabel = `Today: ${formatCompact(currentBalance)}`;
+    endLabel = `${daysInMonth} ${now.toLocaleDateString("en-US", { month: "short" })}: ${formatCompact(displayForecastBalance)}`;
+  }
 
   // Calculate scale for the chart
-  const allBalances = dailyData.map((d) => d.balance);
-  const minBalance = Math.min(...allBalances);
-  const maxBalance = Math.max(...allBalances);
-  const balanceRange = maxBalance - minBalance;
+  const allBalances = chartData.map((d) => d.balance);
+  scaleMin = Math.min(...allBalances);
+  scaleMax = Math.max(...allBalances);
+  const balanceRange = scaleMax - scaleMin;
   const padding = Math.max(balanceRange * 0.2, 100);
-  const scaleMin = minBalance - padding;
-  const scaleMax = maxBalance + padding;
-  const scaleRange = scaleMax - scaleMin;
+  scaleMin = scaleMin - padding;
+  scaleMax = scaleMax + padding;
+  scaleRange = scaleMax - scaleMin;
 
   const showSkeleton = (isLoading && currentBalance === 0) || isTransitioning;
-
-  // Determine bar width based on number of days in month (more space without Y-axis)
-  const barWidth = Math.max(4, Math.min(12, 320 / daysInMonth - 1));
-  const barGap = 0.5;
 
   if (showSkeleton) {
     return (
@@ -183,9 +241,7 @@ const ForecastCard: React.FC<Props> = ({
             <Text style={[styles.forecastLabel, { color: textColor }]}>
               Forecast
             </Text>
-            <Text
-              style={{ color: "lightgray", fontSize: 10, marginLeft: 6 }}
-            >
+            <Text style={{ color: "lightgray", fontSize: 10, marginLeft: 6 }}>
               {expectedEndDate}
             </Text>
           </View>
@@ -209,32 +265,32 @@ const ForecastCard: React.FC<Props> = ({
           <View style={styles.chartArea}>
             {/* Bars container */}
             <View style={styles.barsContainer}>
-              {dailyData.map((data, index) => {
+              {chartData.map((data, index) => {
                 const heightPercent =
                   ((data.balance - scaleMin) / scaleRange) * 100;
-                
+
                 // Color logic:
-                // - Past days: Green (completed/actual data)
-                // - Today: Dark green (current position)
-                // - Future days: Light gray/green if positive, light red if negative
+                // - Past periods: Green (completed/actual data)
+                // - Current period: Dark green (current position)
+                // - Future periods: Light gray/green if positive, light red if negative
                 let barColor: string;
                 let opacity: number;
-                
+
                 if (data.isPast) {
-                  barColor = "#66BB6A"; // Green for past days
+                  barColor = "#66BB6A"; // Green for past
                   opacity = 0.85;
-                } else if (data.isToday) {
-                  barColor = "#2E7D32"; // Dark green for today
+                } else if (data.isCurrent) {
+                  barColor = "#2E7D32"; // Dark green for current
                   opacity = 1;
                 } else {
-                  // Future days - light colors based on forecast
+                  // Future - light colors based on forecast
                   barColor = isPositiveDelta ? "#A5D6A7" : "#EF9A9A";
                   opacity = 0.7;
                 }
 
                 return (
                   <View
-                    key={data.day}
+                    key={data.period}
                     style={[
                       styles.barWrapper,
                       { width: barWidth, marginHorizontal: barGap / 2 },
@@ -257,16 +313,21 @@ const ForecastCard: React.FC<Props> = ({
           </View>
         </View>
 
-        {/* Month Timeline Labels */}
+        {/* Timeline Labels */}
         <View style={styles.timelineLabels}>
           <Text style={[styles.timelineLabel, { color: subtleTextColor }]}>
-            1 {now.toLocaleDateString("en-US", { month: "short" })}: {formatCompact(monthStartBalance)}
+            {startLabel}
           </Text>
-          <Text style={[styles.timelineLabel, { color: textColor, fontWeight: "600" }]}>
-            Today: {formatCompact(currentBalance)}
+          <Text
+            style={[
+              styles.timelineLabel,
+              { color: textColor, fontWeight: "600" },
+            ]}
+          >
+            {currentLabel}
           </Text>
           <Text style={[styles.timelineLabel, { color: subtleTextColor }]}>
-            {daysInMonth} {now.toLocaleDateString("en-US", { month: "short" })}: {formatCompact(displayForecastBalance)}
+            {endLabel}
           </Text>
         </View>
 

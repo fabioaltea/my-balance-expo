@@ -8,7 +8,7 @@ import {
   Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useAuthContext } from "../state/AuthProvider";
+import { useAuthContext } from "@/state/AuthProvider";
 
 const DashboardHeader: React.FC = () => {
   const { user, logout } = useAuthContext();

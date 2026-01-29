@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { TouchableOpacity, StyleSheet, View, Text } from "react-native";
 // import { IconSymbol } from "../ui/icon-symbol";
-import Card from "../card";
+import Card from "../core/card";
 import Skeleton from "../ui/skeleton";
 import { Account } from "../../state/AppState.types";
 import { useDataContext } from "../../state/DataProvider";

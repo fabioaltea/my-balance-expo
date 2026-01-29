@@ -1,7 +1,7 @@
 import { StyleSheet, View, ScrollView, Pressable, Dimensions, Alert, TextInput } from 'react-native';
-import { ThemedText } from '@/components/themed-text';
+import { ThemedText } from '@/components/core/themed-text';
 import React, { useState } from 'react';
-import Card from '@/components/card';
+import Card from '@/components/core/card';
 import List from '@/components/ui/list';
 import ModalPanel from '@/components/ui/modal-panel';
 import { Account } from '@/hooks/useMyBalanceData';

@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { useState, useRef, useEffect, ReactNode } from "react";
-import { ThemedText } from "../themed-text";
+import { ThemedText } from "../core/themed-text";
 import * as Haptics from "expo-haptics";
 import GlassButton from "./glass-button";
 import React from "react";

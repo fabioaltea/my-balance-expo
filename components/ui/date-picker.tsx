@@ -1,4 +1,4 @@
-import { ThemedText } from "../themed-text";
+import { ThemedText } from "../core/themed-text";
 import { View, StyleSheet, Pressable, Platform } from "react-native";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import DateTimePicker from "@react-native-community/datetimepicker";

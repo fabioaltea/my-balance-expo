@@ -1,5 +1,5 @@
 import { View, StyleSheet, ScrollView, Alert } from "react-native";
-import { ThemedText } from "../themed-text";
+import { ThemedText } from "../core/themed-text";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { IAccount } from "@/models/Account";
 import AccountCard from "./account-card";

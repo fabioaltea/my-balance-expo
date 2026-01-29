@@ -1,7 +1,7 @@
 import React from "react";
-import { ThemedText } from "../themed-text";
+import { ThemedText } from "../core/themed-text";
 import { TouchableOpacity, StyleSheet, View } from "react-native";
-import Card from "../card";
+import Card from "../core/card";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { router } from "expo-router";
 import * as Haptics from "expo-haptics";

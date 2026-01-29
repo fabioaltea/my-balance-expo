@@ -1,7 +1,7 @@
 import React, { useState, useRef, useMemo } from "react";
-import { ThemedText } from "../themed-text";
+import { ThemedText } from "../core/themed-text";
 import { TouchableOpacity, StyleSheet, View, Alert } from "react-native";
-import Card from "../card";
+import Card from "../core/card";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { useAuthContext, useDataContext, type PendingRecurrence, type IDateRange } from "@/state";
 import { router } from "expo-router";

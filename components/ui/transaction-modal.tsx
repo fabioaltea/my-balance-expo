@@ -6,7 +6,7 @@ import {
   Switch,
   Dimensions,
 } from "react-native";
-import { ThemedText } from "../themed-text";
+import { ThemedText } from "../core/themed-text";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { useEffect, useState } from "react";
 import ListPicker, { IListPickerItem } from "./list-picker";

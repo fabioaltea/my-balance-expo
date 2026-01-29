@@ -1,5 +1,5 @@
 import { StyleSheet, View } from "react-native";
-import { ThemedText } from "@/components/themed-text";
+import { ThemedText } from "@/components/core/themed-text";
 import ScreenView from "@/layout/screen-view";
 import React from "react";
 import { useAuthContext } from "@/state";

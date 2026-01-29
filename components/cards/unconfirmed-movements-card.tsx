@@ -1,8 +1,8 @@
 import React, { useState, useRef } from "react";
-import { ThemedText } from "../themed-text";
+import { ThemedText } from "../core/themed-text";
 import { TouchableOpacity, StyleSheet, View, Alert } from "react-native";
 import IconSymbol from "../ui/icon-symbol";
-import Card from "../card";
+import Card from "../core/card";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { useDataContext } from "@/state/DataProvider";
 import { useAuthContext } from "@/state/AuthProvider";

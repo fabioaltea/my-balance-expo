@@ -1,6 +1,6 @@
 import React from "react";
 import { View, StyleSheet, Pressable } from "react-native";
-import { ThemedText } from "../themed-text";
+import { ThemedText } from "../core/themed-text";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { IAccount } from "@/models/Account";
 import * as Haptics from "expo-haptics";

@@ -9,13 +9,13 @@ import {
 } from "react-native";
 import React, { useState, useEffect, useRef } from "react";
 import * as Crypto from "expo-crypto";
-import { ThemedText } from "@/components/themed-text";
+import { ThemedText } from "@/components/core/themed-text";
 import ChipButton from "@/components/ui/chip-button";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import * as Haptics from "expo-haptics";
 import Input from "@/components/ui/text-box";
 import TextBox from "@/components/ui/text-box";
-import Card from "@/components/card";
+import Card from "@/components/core/card";
 import List from "@/components/ui/list";
 import InputGroup from "@/components/ui/input-group";
 import DatePicker from "@/components/ui/date-picker";

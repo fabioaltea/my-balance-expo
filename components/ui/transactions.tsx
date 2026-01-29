@@ -7,7 +7,7 @@ import {
   Platform,
   UIManager,
 } from "react-native";
-import { ThemedText } from "../themed-text";
+import { ThemedText } from "../core/themed-text";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import * as Haptics from "expo-haptics";
 import React, { useRef } from "react";

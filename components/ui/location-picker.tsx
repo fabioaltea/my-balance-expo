@@ -1,4 +1,4 @@
-import { ThemedText } from "../themed-text";
+import { ThemedText } from "../core/themed-text";
 import {
   View,
   StyleSheet,

@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   Switch,
   Image,
+  Platform,
 } from "react-native";
 import { ThemedText } from "@/components/core/themed-text";
 import React, { useState, useEffect } from "react";
@@ -228,17 +229,24 @@ const SettingsView: React.FC<SettingsViewProps> = ({ user, logout }) => {
   };
 
   const handleLogout = () => {
-    Alert.alert("Logout", "Are you sure you want to logout?", [
-      {
-        text: "Cancel",
-        style: "cancel",
-      },
-      {
-        text: "Logout",
-        style: "destructive",
-        onPress: logout,
-      },
-    ]);
+    if (Platform.OS === "web") {
+      // Use window.confirm on web since Alert.alert doesn't exist
+      if (window.confirm("Are you sure you want to logout?")) {
+        logout();
+      }
+    } else {
+      Alert.alert("Logout", "Are you sure you want to logout?", [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Logout",
+          style: "destructive",
+          onPress: logout,
+        },
+      ]);
+    }
   };
 
   const handleNavigation = (route: string) => {

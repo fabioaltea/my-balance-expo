@@ -13,6 +13,7 @@ import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { AuthProvider, useAuthContext } from "@/state/AuthProvider";
 import { DataProvider } from "@/state/DataProvider";
+import { PlatformProvider } from "@/state/PlatformProvider";
 import LoginScreen from "@/views/login-view";
 
 export const unstable_settings = {
@@ -139,8 +140,10 @@ const styles = StyleSheet.create({
 // Root layout with authentication provider
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <AppRouter />
-    </AuthProvider>
+    <PlatformProvider>
+      <AuthProvider>
+        <AppRouter />
+      </AuthProvider>
+    </PlatformProvider>
   );
 }

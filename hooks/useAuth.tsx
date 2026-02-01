@@ -17,6 +17,9 @@ import * as AuthSession from "expo-auth-session";
 import * as Crypto from "expo-crypto";
 import { NotificationsHelpers } from "@/helpers/NotificationsHelpers";
 
+// Required for web OAuth - completes the auth session when the popup redirects back
+WebBrowser.maybeCompleteAuthSession();
+
 export interface AuthState {
   isAuthenticated: boolean;
   user: User | null;
@@ -329,17 +332,27 @@ export const useAuth = () => {
       // setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
 
       const deviceId = await AuthStorageHelper.getOrCreateDeviceId();
+      const isWeb = Platform.OS === "web";
 
       // Generate PKCE parameters
       const codeVerifier = generateCodeVerifier();
       const codeChallenge = await generateCodeChallenge(codeVerifier);
 
-      // Use custom scheme for iOS - from env var (reversed Google client ID)
-      const redirectUri = `${process.env.EXPO_PUBLIC_GOOGLE_REDIRECT_SCHEME}:/oauthredirect`;
+      // Use different client ID and redirect URI based on platform
+      const clientId = isWeb
+        ? process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID!
+        : process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID!;
+
+      // For web, use makeRedirectUri which handles the current origin; for native, use custom scheme
+      const redirectUri = isWeb
+        ? makeRedirectUri({ useProxy: false })
+        : `${process.env.EXPO_PUBLIC_GOOGLE_REDIRECT_SCHEME}:/oauthredirect`;
+
+      console.log("🔑 OAuth config:", { isWeb, clientId: clientId?.substring(0, 20) + "...", redirectUri });
 
       // Create OAuth request with PKCE
       const request = new AuthSession.AuthRequest({
-        clientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID!,
+        clientId,
         scopes: [
           "openid",
           "profile",
@@ -351,6 +364,7 @@ export const useAuth = () => {
         codeChallengeMethod: AuthSession.CodeChallengeMethod.S256,
         extraParams: {
           access_type: "offline",
+          prompt: "consent", // Force Google to always return refresh token
         },
         usePKCE: true,
       });
@@ -376,7 +390,8 @@ export const useAuth = () => {
           authorizationCode: (result as any).params.code,
           codeVerifier: codeVerifier,
           deviceId,
-          deviceType: Platform.OS === "ios" ? "ios" : "android",
+          deviceType: Platform.OS === "web" ? "web" : Platform.OS === "ios" ? "ios" : "android",
+          redirectUri, // Pass redirectUri for web token exchange
         });
 
         if (authResponse.success) {

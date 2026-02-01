@@ -1,13 +1,15 @@
-import React, { useMemo, useState } from "react";
-import { View, Text, StyleSheet, Pressable } from "react-native";
+import React from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  ScrollView,
+} from "react-native";
 import { useRouter, usePathname, Slot } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { usePlatformContext } from "@/state/PlatformProvider";
 import { useThemeColor } from "@/hooks/use-theme-color";
-import { useDataContext } from "@/state";
-
-// Layout components
-import DashboardLandscapeLayout from "@/components/layout/dashboard-landscape-layout";
 
 interface NavItem {
   name: string;
@@ -17,20 +19,12 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  {
-    name: "charts",
-    route: "/dashboard/charts",
-    icon: "bar-chart",
-    label: "Charts",
-  },
+  { name: "charts", route: "/dashboard/charts", icon: "bar-chart", label: "Charts" },
   { name: "home", route: "/dashboard/home", icon: "home", label: "Home" },
-  {
-    name: "settings",
-    route: "/dashboard/settings",
-    icon: "person",
-    label: "Profile",
-  },
+  { name: "settings", route: "/dashboard/settings", icon: "person", label: "Profile" },
 ];
+
+
 
 /**
  * Bottom tab navigation for mobile web or portrait mode.
@@ -73,51 +67,78 @@ function BottomTabs() {
 }
 
 /**
- * Portrait layout - standard navigation with bottom tabs
+ * Web-safe dashboard layout that adapts to screen size and orientation.
+ * - Desktop landscape: sidebar navigation
+ * - Mobile/tablet or portrait: bottom tabs
  */
-function PortraitLayout() {
+export function WebDashboardLayout() {
+  const { showSidebar, showBottomTabs } = usePlatformContext();
   const backgroundColor = useThemeColor({}, "background");
 
   return (
     <View style={[styles.container, { backgroundColor }]}>
-      <View style={styles.content}>
-        <Slot />
+      <View style={styles.layoutContainer}>
+        {/* {showSidebar && <Sidebar />} */}
+        <View style={styles.content}>
+          <Slot />
+        </View>
       </View>
-      <BottomTabs />
+      {showBottomTabs && <BottomTabs />}
     </View>
   );
-}
-
-/**
- * Web-safe dashboard layout that adapts to screen size and orientation.
- * - Portrait: bottom tabs with page navigation
- * - Landscape: unified dashboard with all components visible
- */
-export function TabLayout() {
-  const { orientation } = usePlatformContext();
-
-  // Landscape mode: unified dashboard
-  if (orientation === "landscape") {
-    return <DashboardLandscapeLayout />;
-  }
-
-  // Portrait mode: standard tab navigation
-  return <PortraitLayout />;
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  layoutContainer: {
+    flex: 1,
+    flexDirection: "row",
+  },
   content: {
     flex: 1,
+  },
+  // Sidebar styles
+  sidebar: {
+    width: 240,
+    borderRightWidth: 1,
+    borderRightColor: "#e0e0e0",
+  },
+  sidebarHeader: {
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e0e0e0",
+  },
+  sidebarTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+  },
+  sidebarNav: {
+    flex: 1,
+    paddingTop: 8,
+  },
+  sidebarItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    marginHorizontal: 8,
+    marginVertical: 2,
+    borderRadius: 8,
+  },
+  sidebarLabel: {
+    marginLeft: 12,
+    fontSize: 16,
+  },
+  sidebarLabelActive: {
+    fontWeight: "600",
   },
   // Bottom tabs styles
   bottomTabs: {
     flexDirection: "row",
     borderTopWidth: 1,
     borderTopColor: "#e0e0e0",
-    paddingBottom: 20,
+    paddingBottom: 20, // Extra padding for web safe area
     paddingTop: 8,
   },
   bottomTabItem: {
@@ -129,11 +150,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
   },
-  // Landscape layout styles
-  landscapeContainer: {
-    flex: 1,
-    flexDirection: "column",
-  },
 });
 
-export default TabLayout;
+export default WebDashboardLayout;

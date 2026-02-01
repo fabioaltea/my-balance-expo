@@ -25,7 +25,8 @@ Questa guida ti aiuterà a creare una development build per abilitare l'autentic
 Modifica il file `.env` con i tuoi valori:
 
 ```env
-EXPO_PUBLIC_GOOGLE_CLIENT_ID=your_google_oauth_client_id_here
+EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=your_ios_google_oauth_client_id_here
+EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=your_web_google_oauth_client_id_here
 EXPO_PUBLIC_API_URL=your_api_url_here
 ```
 

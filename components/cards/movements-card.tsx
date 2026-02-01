@@ -1,21 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { ThemedText } from "../core/themed-text";
-import { TouchableOpacity, StyleSheet, View } from "react-native";
+import { TouchableOpacity, StyleSheet, View, ScrollView } from "react-native";
 import IconSymbol from "../ui/icon-symbol";
 import Card from "../core/card";
 import ChartSkeleton from "../charts/chart-skeleton";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { useDataContext } from "@/state/DataProvider";
+import { usePlatformContext } from "@/state/PlatformProvider";
 import { formatDateForDisplay, compareDates } from "@/utils/dateUtils";
 import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
 import type { Movement } from "@/state";
 import type { Category } from "@/hooks/useMyBalanceData";
 import { MovementHelper } from "@/helpers/MovementHelper";
-
-
-
-
 
 const styles = StyleSheet.create({
   // Movements
@@ -54,7 +51,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
   },
-
+  scrollView: {
+    maxHeight: 500,
+  },
   emptyState: {
     paddingVertical: 40,
     alignItems: "center",
@@ -86,9 +85,12 @@ const MovementsCard: React.FC<MovementsCardProps> = ({
   isTransitioning = false,
 }) => {
   const { isLoading, categories } = useDataContext();
+  const { orientation } = usePlatformContext();
   const [recentMovements, setRecentMovements] = useState(
-    sortMovements(movements)
+    sortMovements(movements),
   );
+
+  const isLandscape = orientation === "landscape";
 
   const handleMovementPress = (movement: Movement) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -104,7 +106,7 @@ const MovementsCard: React.FC<MovementsCardProps> = ({
     console.log(
       "💳 MovementsCard: Updating with",
       movements?.length,
-      "movements"
+      "movements",
     );
     const sorted = sortMovements(movements);
 
@@ -114,11 +116,11 @@ const MovementsCard: React.FC<MovementsCardProps> = ({
   // Colori del tema per la movements card
   const borderColor = useThemeColor(
     { light: "#F0F0F0", dark: "#333333" },
-    "tabIconDefault"
+    "tabIconDefault",
   );
   const positiveAmountColor = useThemeColor(
     { light: "#107c2bff", dark: "#34C759" },
-    "tint"
+    "tint",
   );
 
   const dynamicStyles = StyleSheet.create({
@@ -162,48 +164,57 @@ const MovementsCard: React.FC<MovementsCardProps> = ({
 
   return (
     <Card label="">
-      {recentMovements?.map((movement, index) => {
-        const icon = MovementHelper.getMovementIcon(movement.category, categories);
-        const color = MovementHelper.getMovementColor(movement.type, movement.category, categories);
-        // totalAmount is already signed (positive for income, negative for expense)
-        const amount = movement.totalAmount;
+      <ScrollView
+        style={isLandscape ? styles.scrollView : undefined}
+        showsVerticalScrollIndicator={isLandscape}
+        nestedScrollEnabled={true}
+      >
+        {recentMovements?.map((movement, index) => {
+          const icon = MovementHelper.getMovementIcon(
+            movement.category,
+            categories,
+          );
+          const color = MovementHelper.getMovementColor(
+            movement.type,
+            movement.category,
+            categories,
+          );
+          // totalAmount is already signed (positive for income, negative for expense)
+          const amount = movement.totalAmount;
 
-        return (
-          <TouchableOpacity
-            key={movement.id}
-            onPress={() => handleMovementPress(movement)}
-            style={[
-              dynamicStyles.movementItem,
-              index === recentMovements.length - 1 && styles.lastMovementItem,
-            ]}
-          >
-            <View style={[styles.movementIcon, { backgroundColor: color }]}>
-              <IconSymbol
-                name={icon}
-                size={20}
-                color="#FFFFFF"
-              />
-            </View>
-            <View style={styles.movementInfo}>
-              <ThemedText style={[styles.movementDate]}>
-                {formatDateForDisplay(movement.date, "it-IT")}
-              </ThemedText>
-              <ThemedText style={[styles.movementDescription]}>
-                {movement.description}
-              </ThemedText>
-            </View>
-            <ThemedText
+          return (
+            <TouchableOpacity
+              key={movement.id}
+              onPress={() => handleMovementPress(movement)}
               style={[
-                styles.movementAmount,
-                amount > 0 ? dynamicStyles.positiveAmount : "",
+                dynamicStyles.movementItem,
+                index === recentMovements.length - 1 && styles.lastMovementItem,
               ]}
             >
-              {amount > 0 ? "+" : ""}
-              {amount.toFixed(2).replace(".", ",")}€
-            </ThemedText>
-          </TouchableOpacity>
-        );
-      })}
+              <View style={[styles.movementIcon, { backgroundColor: color }]}>
+                <IconSymbol name={icon} size={20} color="#FFFFFF" />
+              </View>
+              <View style={styles.movementInfo}>
+                <ThemedText style={[styles.movementDate]}>
+                  {formatDateForDisplay(movement.date, "it-IT")}
+                </ThemedText>
+                <ThemedText style={[styles.movementDescription]}>
+                  {movement.description}
+                </ThemedText>
+              </View>
+              <ThemedText
+                style={[
+                  styles.movementAmount,
+                  amount > 0 ? dynamicStyles.positiveAmount : "",
+                ]}
+              >
+                {amount > 0 ? "+" : ""}
+                {amount.toFixed(2).replace(".", ",")}€
+              </ThemedText>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
     </Card>
   );
 };

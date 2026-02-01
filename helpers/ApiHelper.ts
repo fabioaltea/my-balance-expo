@@ -7,12 +7,16 @@ export class ApiHelper {
     authorizationCode: string;
     codeVerifier?: string;
     deviceId: string;
-    deviceType: "ios" | "android";
+    deviceType: "ios" | "android" | "web";
+    redirectUri?: string;
   }): Promise<HttpResponse> {
     try {
       const requestBody = {
-        ...data,
-        deviceType: "ios",
+        authorizationCode: data.authorizationCode,
+        codeVerifier: data.codeVerifier,
+        deviceId: data.deviceId,
+        deviceType: data.deviceType,
+        redirectUri: data.redirectUri,
       };
 
       const response = await fetch(

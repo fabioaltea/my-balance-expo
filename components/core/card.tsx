@@ -1,7 +1,5 @@
 import { useThemeColor } from "@/hooks/use-theme-color";
-import { useTheme } from "@react-navigation/native";
-import { use } from "react";
-import { StyleSheet, View, Text } from "react-native";
+import { StyleSheet, View, Text, Platform } from "react-native";
 import React from "react";
 
 interface ICardProps {
@@ -18,7 +16,7 @@ const Card: React.FC<ICardProps> = ({
   children,
 }) => {
   const themeBackground = useThemeColor({}, "cardBackground");
-  const themeColor= useThemeColor({}, "cardColor");
+  const themeColor = useThemeColor({}, "cardColor");
   const styles = StyleSheet.create({
     //Card
     card: {
@@ -27,9 +25,20 @@ const Card: React.FC<ICardProps> = ({
       borderRadius: 30,
       paddingHorizontal: 24,
       paddingVertical: 15,
-      marginBottom: 20,
-      flexGrow:2,
-      minHeight:100,
+      flex: 1,
+      minHeight: 120,
+      ...(Platform.OS === "web"
+        ? {
+            boxShadow:
+              "0 2px 8px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.06)",
+          }
+        : {
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.08,
+            shadowRadius: 8,
+            elevation: 4,
+          }),
     },
 
     cardLabel: {
@@ -42,7 +51,7 @@ const Card: React.FC<ICardProps> = ({
   });
 
   return (
-    <View>
+    <View style={{ flex: 1 }}>
       {label && (
         <View>
           <Text style={styles.cardLabel}>{label}</Text>

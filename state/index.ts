@@ -3,6 +3,15 @@
 // Authentication
 export { AuthProvider, useAuthContext } from "./AuthProvider";
 
+// Platform detection
+export {
+  PlatformProvider,
+  usePlatformContext,
+  PlatformSwitch,
+  DeviceSwitch,
+  OrientationSwitch,
+} from "./PlatformProvider";
+
 // Data management - Centralized context
 export { DataProvider, useDataContext } from "./DataProvider";
 export type {

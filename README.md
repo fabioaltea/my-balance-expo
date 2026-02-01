@@ -9,7 +9,8 @@ Before running the app, you need to configure authentication:
 1. Create `.env.local` with:
    ```bash
    EXPO_PUBLIC_API_URL=http://localhost:8080
-   EXPO_PUBLIC_GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+   EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=your-ios-google-client-id.apps.googleusercontent.com
+   EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=your-web-google-client-id.apps.googleusercontent.com
    ```
 
 ## Get started

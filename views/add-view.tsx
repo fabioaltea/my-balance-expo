@@ -20,7 +20,6 @@ import List from "@/components/ui/list";
 import InputGroup from "@/components/ui/input-group";
 import DatePicker from "@/components/ui/date-picker";
 import ListPicker from "@/components/ui/list-picker";
-import LocationPicker, { ILocation } from "@/components/ui/location-picker";
 import Transactions, { ITransaction } from "@/components/ui/transactions";
 import TransactionModal, {
   ITransactionData,
@@ -35,6 +34,7 @@ import { TransactionsApiHelper } from "@/helpers/TransactionsApiHelper";
 import { formatDateToDDMMYYYY, parseDateFromDDMMYYYY } from "@/utils/dateUtils";
 import { useRouter } from "expo-router";
 import IconSymbol from "@/components/ui/icon-symbol";
+import LocationPicker, { ILocation } from "@/components/ui/location-picker.native";
 
 type ModalStatus = "loading" | "success" | "error";
 
@@ -49,16 +49,19 @@ const AddView: React.FC<AddViewProps> = ({
 }) => {
   const router = useRouter();
   const { selectedSpreadsheetId } = useAuthContext();
-  const { accounts, categories, movements, recurringMovements, reloadData } =
+  const { accounts, categories, movements, recurringMovements, unconfirmedMovements, reloadData } =
     useDataContext();
 
   // Find the movement being edited from the global movements list
   // Also search in recurringMovements for editing recurring templates
+  // Also search in unconfirmedMovements for editing unconfirmed movements
   const editingMovement = editingMovementId
-    ? movements.find((m) => m.id === editingMovementId) ||
-      recurringMovements.find((m) => m.id === editingMovementId)
+    ? movements?.find((m) => m.id === editingMovementId) ||
+      recurringMovements?.find((m) => m.id === editingMovementId) ||
+      unconfirmedMovements?.find((m) => m.id === editingMovementId)
     : undefined;
 
+ 
   // Find the recurring movement template if recurrenceId is provided
   const recurringTemplate = recurrenceId
     ? recurringMovements.find((m) => m.recurrenceId === recurrenceId)

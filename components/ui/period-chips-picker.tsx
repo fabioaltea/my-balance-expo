@@ -3,7 +3,7 @@ import ChipButton from "./chip-button";
 import { useState, useMemo, useEffect } from "react";
 import React from "react";
 import { formatDateToDDMMYYYY } from "@/utils/dateUtils";
-import type { IDateRange } from "@/state";
+import { usePlatformContext, type IDateRange } from "@/state";
 import { useThemeColor } from "@/hooks/use-theme-color";
 
 function monthStartEnd(year: number, monthIndex: number) {
@@ -44,6 +44,10 @@ const PeriodPicker: React.FC<PeriodPickerProps> = ({
     ],
     []
   );
+
+  const { orientation } = usePlatformContext();
+  
+  const isLandscape = orientation === "landscape";
 
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
   const [selectedMonthIndex, setSelectedMonthIndex] =
@@ -198,25 +202,30 @@ const PeriodPicker: React.FC<PeriodPickerProps> = ({
    });
 
   return (
-    <View style={styles.wrapper}>
+    <View style={[styles.wrapper, !isLandscape && { marginBottom: 16 }]}>
       <TouchableOpacity
         style={[styles.arrowButton, dynamicStyles.chipButton]}
         onPress={goToPreviousMonth}
       >
-        <Text style={styles.arrowText}>←</Text>
+        <Text style={[styles.arrowText, isLandscape && { fontSize: 13 }]}>
+          ←
+        </Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={[
           styles.arrowButton,
           !canGoNext() && styles.arrowButtonDisabled,
-          ,
           dynamicStyles.chipButton,
         ]}
         onPress={goToNextMonth}
         disabled={!canGoNext()}
       >
         <Text
-          style={[styles.arrowText, !canGoNext() && styles.arrowTextDisabled]}
+          style={[
+            styles.arrowText,
+            !canGoNext() && styles.arrowTextDisabled,
+            isLandscape && { fontSize: 13 },
+          ]}
         >
           →
         </Text>
@@ -249,7 +258,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 16,
     gap: 8,
   },
   arrowButton: {

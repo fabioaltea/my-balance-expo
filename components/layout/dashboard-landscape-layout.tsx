@@ -2,18 +2,19 @@ import React, { useMemo, useState } from "react";
 import { View, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { useThemeColor } from "@/hooks/use-theme-color";
-import { useDataContext } from "@/state";
-import { useAuth } from "@/hooks/useAuth";
+import {  useDataContext } from "@/state";
+import type { Account } from "@/state";
 
 // Layout components
 import { LayoutContainer } from "@/components/layout/layout-container";
 import { LayoutRow } from "@/components/layout/layout-row";
 import { LayoutColumn } from "@/components/layout/layout-column";
-import { SimpleCommandBar } from "@/components/layout/simple-command-bar";
+import { LandscapeCommandBar } from "@/components/layout/landscape-command-bar";
 
 // UI components
 import GlassButton from "@/components/ui/glass-button";
-import AccountPicker from "@/components/ui/account-picker";
+import CompactAccountPicker from "@/components/ui/compact-account-picker";
+import CompactPeriodPicker from "@/components/ui/compact-period-picker";
 
 // Card components
 import BalanceCard from "@/components/cards/balance-card";
@@ -22,6 +23,8 @@ import MovementsCard from "@/components/cards/movements-card";
 import PendingRecurrencesCard from "@/components/cards/pending-recurrences-card";
 import UnconfirmedMovementsCard from "@/components/cards/unconfirmed-movements-card";
 import ForecastCard from "@/components/cards/forecast-card";
+import PeriodPicker from "../ui/period-chips-picker";
+import ChipButton from "../ui/chip-button";
 
 /**
  * Dashboard Landscape Layout
@@ -30,20 +33,16 @@ import ForecastCard from "@/components/cards/forecast-card";
 export function DashboardLandscapeLayout() {
   const backgroundColor = useThemeColor({}, "background");
   const router = useRouter();
-  const { user } = useAuth();
 
   // Get data from centralized context
   const {
     accounts,
     movements,
-    categories,
     pendingRecurrences,
-    unconfirmedMovements,
-    isLoading,
-    reloadData,
     getTotalIncome,
     getTotalExpense,
     calculateForecast,
+    isLoading,
   } = useDataContext();
 
   const availableAccounts = useMemo(() => {
@@ -63,63 +62,92 @@ export function DashboardLandscapeLayout() {
 
   const [selectedAccount, setSelectedAccount] = useState<string>("All");
 
+  // Date range state for period filtering
+  const [dateRange, setDateRange] = useState(() => {
+    const now = new Date();
+    const startDate = `01-${String(now.getMonth() + 1).padStart(2, "0")}-${now.getFullYear()}`;
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const endDate = `${lastDay}-${String(now.getMonth() + 1).padStart(2, "0")}-${now.getFullYear()}`;
+    return { startDate, endDate, label: "" };
+  });
+
   const handleAddPress = () => {
     router.push("/add");
   };
 
-  // Filter movements by selected account (no filtering for 'All')
+  // Helper to check if a date is within the range
+  const isDateInRange = (dateStr: string, start: string, end: string): boolean => {
+    const parseDate = (str: string) => {
+      const [day, month, year] = str.split("-").map(Number);
+      return new Date(year, month - 1, day);
+    };
+    const date = parseDate(dateStr);
+    const startDate = parseDate(start);
+    const endDate = parseDate(end);
+    return date >= startDate && date <= endDate;
+  };
+
+  // Filter movements by selected account AND date range
   const filteredMovements = useMemo(() => {
-    if (selectedAccount === "All") {
-      return movements;
+    let filtered = movements;
+
+    // Filter by date range
+    if (dateRange.startDate && dateRange.endDate) {
+      filtered = filtered.filter((m) =>
+        isDateInRange(m.date, dateRange.startDate, dateRange.endDate)
+      );
     }
-    // Filter movements that have at least one transaction for the selected account
-    return movements.filter((m) =>
-      m.transactions.some((t) => t.account === selectedAccount),
-    );
-  }, [movements, selectedAccount]);
+
+    // Filter by account (no filtering for 'All')
+    if (selectedAccount !== "All") {
+      filtered = filtered.filter((m) =>
+        m.transactions.some((t) => t.account === selectedAccount)
+      );
+    }
+
+    return filtered;
+  }, [movements, selectedAccount, dateRange]);
 
   // Get the selected account object
-  const currentAccount = useMemo(() => {
+  const currentAccount: Account | undefined = useMemo(() => {
     if (selectedAccount === "All") {
       return availableAccounts[0];
     }
-    return availableAccounts.find((a) => a.accountId === selectedAccount);
+    return availableAccounts.find((a) => a.name === selectedAccount);
   }, [availableAccounts, selectedAccount]);
 
-  // Calculate forecast for current month
+  // Calculate forecast for selected date range
   const forecast = useMemo(() => {
-    const now = new Date();
-    const startDate = `01-${String(now.getMonth() + 1).padStart(2, "0")}-${now.getFullYear()}`;
-    const lastDay = new Date(
-      now.getFullYear(),
-      now.getMonth() + 1,
-      0,
-    ).getDate();
-    const endDate = `${lastDay}-${String(now.getMonth() + 1).padStart(2, "0")}-${now.getFullYear()}`;
-    return calculateForecast(startDate, endDate);
-  }, [calculateForecast]);
+    return calculateForecast(dateRange.startDate, dateRange.endDate);
+  }, [calculateForecast, dateRange]);
 
   return (
     <View style={[styles.container, { backgroundColor }]}>
       {/* Command bar */}
-      <SimpleCommandBar
-        centerContent={
-          <AccountPicker
+      <LandscapeCommandBar
+        accountSelector={
+          <CompactAccountPicker
             accounts={availableAccounts}
             selectedAccount={selectedAccount}
             setSelectedAccount={setSelectedAccount}
           />
         }
-        rightContent={<GlassButton onPress={handleAddPress} />}
+        periodSelector={
+          <PeriodPicker
+            setDateRange={setDateRange}
+            isLoading={isLoading}
+          />
+        }
+        rightContent={<ChipButton text="+" onPress={handleAddPress} />}
       />
 
       {/* Main dashboard grid */}
       <LayoutContainer padding={12} gap={12}>
         {/* Row 1: Balance cards and Financial Summary */}
-        <LayoutRow flex={1} gap={12}>
+        <LayoutRow gap={12}>
           {/* Left column: Multiple balance cards */}
           <LayoutColumn flex={1} gap={12}>
-            <BalanceCard account={currentAccount as any} />
+            <BalanceCard account={currentAccount} />
             <FinancialSummaryCard
               income={getTotalIncome(filteredMovements)}
               expense={getTotalExpense(filteredMovements)}
@@ -133,9 +161,9 @@ export function DashboardLandscapeLayout() {
         </LayoutRow>
 
         {/* Row 2: Movements and Action cards */}
-        <LayoutRow flex={2} gap={12}>
+        <LayoutRow flex={1} gap={12}>
           {/* Left column: Recent movements (2x width) */}
-          <LayoutColumn flex={2}>
+          <LayoutColumn flex={1}>
             <MovementsCard movements={filteredMovements.slice(0, 10)} />
           </LayoutColumn>
 
@@ -154,6 +182,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     flexDirection: "column",
+    overflow: "visible",
   },
 });
 

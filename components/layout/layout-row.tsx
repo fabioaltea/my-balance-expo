@@ -14,15 +14,21 @@ interface LayoutRowProps {
  */
 export function LayoutRow({
   children,
-  flex = 1,
+  flex,
   gap = 10,
   padding,
 }: LayoutRowProps) {
   const style: ViewStyle = {
-    flex,
     flexDirection: "row",
     gap,
+    minHeight: 0,
   };
+
+  if (flex !== undefined) {
+    style.flex = flex;
+    style.flexGrow = 1;
+    style.flexShrink = 1;
+  }
 
   if (padding !== undefined) {
     style.padding = padding;

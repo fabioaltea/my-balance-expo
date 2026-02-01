@@ -1,8 +1,9 @@
 import React, { useState, useRef } from "react";
 import { ThemedText } from "../core/themed-text";
-import { TouchableOpacity, StyleSheet, View, Alert } from "react-native";
+import { TouchableOpacity, StyleSheet, View, Alert, ScrollView } from "react-native";
 import IconSymbol from "../ui/icon-symbol";
 import Card from "../core/card";
+import { usePlatformContext } from "@/state/PlatformProvider";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { useDataContext } from "@/state/DataProvider";
 import { useAuthContext } from "@/state/AuthProvider";
@@ -23,6 +24,8 @@ const sortMovements = (movements: Movement[]) => {
 const UnconfirmedMovementsCard: React.FC = () => {
   const { unconfirmedMovements, categories, reloadData } = useDataContext();
   const { selectedSpreadsheetId } = useAuthContext();
+  const { orientation } = usePlatformContext();
+  const isLandscape = orientation === "landscape";
 
   const [menuVisible, setMenuVisible] = useState(false);
   const [buttonPosition, setButtonPosition] = useState<{
@@ -166,7 +169,8 @@ const UnconfirmedMovementsCard: React.FC = () => {
   }
 
   return (
-    <Card>
+    <Card label={isLandscape ? "Unconfirmed Movements" : ""} style={isLandscape ? { flex: 1 } : undefined}>
+      <ScrollView showsVerticalScrollIndicator={isLandscape} nestedScrollEnabled={true}>
       {sortedMovements.map((movement, index) => {
         const icon = MovementHelper.getMovementIcon(movement.category, categories);
         const color = MovementHelper.getMovementColor(movement.type, movement.category, categories);
@@ -222,6 +226,7 @@ const UnconfirmedMovementsCard: React.FC = () => {
           </View>
         );
       })}
+      </ScrollView>
 
       {/* Context Menu */}
       {menuVisible && buttonPosition && (

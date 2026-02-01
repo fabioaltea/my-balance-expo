@@ -1,14 +1,14 @@
 import { View, StyleSheet, ScrollView, Alert } from "react-native";
 import { ThemedText } from "../core/themed-text";
 import { useThemeColor } from "@/hooks/use-theme-color";
-import { IAccount } from "@/models/Account";
+import type { Account } from "@/state";
 import AccountCard from "./account-card";
 import { useState } from "react";
 import React from "react";
 import IconSymbol from "../ui/icon-symbol";
 
 interface IAccountsListProps {
-  accounts: IAccount[];
+  accounts: Account[];
   showTotal?: boolean;
 }
 
@@ -16,7 +16,7 @@ const AccountsList: React.FC<IAccountsListProps> = ({
   accounts,
   showTotal = true,
 }) => {
-  const [selectedAccount, setSelectedAccount] = useState<IAccount | null>(null);
+  const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
 
   const backgroundColor = useThemeColor(
     { light: "#f5f5f5", dark: "#1a1a1a" },
@@ -32,18 +32,18 @@ const AccountsList: React.FC<IAccountsListProps> = ({
     (account) => account.balance > 0
   ).length;
 
-  const handleAccountPress = (account: IAccount) => {
+  const handleAccountPress = (account: Account) => {
     setSelectedAccount(account);
     Alert.alert(
       account.name,
       `Balance: €${account.balance.toFixed(2)}\\nTransactions: ${
-        account.transactions || 0
+        (account as any).transactions || 0
       }`,
       [
         {
           text: "View Details",
           onPress: () =>
-            console.log("Navigate to account details:", account.id),
+            console.log("Navigate to account details:", account.accountId),
         },
         { text: "Cancel", style: "cancel" },
       ]
@@ -107,7 +107,7 @@ const AccountsList: React.FC<IAccountsListProps> = ({
           .sort((a, b) => b.balance - a.balance) // Sort by balance descending
           .map((account) => (
             <AccountCard
-              key={account.id}
+              key={account.accountId}
               account={account}
               onPress={handleAccountPress}
             />

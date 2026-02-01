@@ -34,7 +34,7 @@ import { TransactionsApiHelper } from "@/helpers/TransactionsApiHelper";
 import { formatDateToDDMMYYYY, parseDateFromDDMMYYYY } from "@/utils/dateUtils";
 import { useRouter } from "expo-router";
 import IconSymbol from "@/components/ui/icon-symbol";
-import LocationPicker, { ILocation } from "@/components/ui/location-picker.native";
+import LocationPicker, { ILocation } from "@/components/ui/location-picker";
 
 type ModalStatus = "loading" | "success" | "error";
 
@@ -144,7 +144,7 @@ const AddView: React.FC<AddViewProps> = ({
 
   // Theme colors
   const backgroundColor = useThemeColor(
-    { light: "transparent", dark: "#1a1a1a" },
+    { light: "transparent", dark: "transparent" },
     "background"
   );
   const cardColor = useThemeColor(

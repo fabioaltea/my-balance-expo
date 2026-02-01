@@ -2,13 +2,13 @@ import React from "react";
 import { View, StyleSheet, Pressable } from "react-native";
 import { ThemedText } from "../core/themed-text";
 import { useThemeColor } from "@/hooks/use-theme-color";
-import { IAccount } from "@/models/Account";
+import type { Account } from "@/state";
 import * as Haptics from "expo-haptics";
 import IconSymbol from "../ui/icon-symbol";
 
 interface IAccountCardProps {
-  account: IAccount;
-  onPress?: (account: IAccount) => void;
+  account: Account;
+  onPress?: (account: Account) => void;
 }
 
 const AccountCard: React.FC<IAccountCardProps> = ({ account, onPress }) => {
@@ -57,7 +57,7 @@ const AccountCard: React.FC<IAccountCardProps> = ({ account, onPress }) => {
             {account.name}
           </ThemedText>
           <ThemedText style={styles.transactionCount}>
-            {getTransactionText(account.transactions)}
+            {getTransactionText((account as any).transactions ?? 0)}
           </ThemedText>
         </View>
         <IconSymbol

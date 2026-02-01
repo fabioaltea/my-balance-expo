@@ -104,19 +104,18 @@ const ContextMenu: React.FC<IContextMenuProps> = ({
       left: (() => {
         if (!buttonPosition) return 0;
         const screenWidth = Dimensions.get("window").width;
+        
+        // Allinea il menu al bordo sinistro del bottone
         const proposedLeft = buttonPosition.x;
 
-        // Se il menu andrebbe oltre il bordo destro, allinealo a destra del button
-        if (proposedLeft + MENU_WIDTH > screenWidth) {
-          return Math.max(
-            0,
-            buttonPosition.x + buttonPosition.width - MENU_WIDTH
-          );
+        // Se il menu andrebbe oltre il bordo destro dello schermo, allinealo a destra
+        if (proposedLeft + MENU_WIDTH > screenWidth - 8) {
+          return Math.max(8, screenWidth - MENU_WIDTH - 8);
         }
 
         return proposedLeft;
       })(),
-      top: 40,
+      top: buttonPosition ? buttonPosition.y + buttonPosition.height + 4 : 40,
     },
   });
 

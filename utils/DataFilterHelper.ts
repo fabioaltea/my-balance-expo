@@ -1,3 +1,7 @@
+import FunctionHelper from "./FunctionHelper";
+import type { Transaction, Movement } from "@/state";
+
+// Legacy interface for backward compatibility with old API data format
 export interface ITransaction {
   movementID?: string;
   movementId?: string;
@@ -12,6 +16,7 @@ export interface ITransaction {
   amount: string | number;
 }
 
+// Legacy interface for backward compatibility
 export interface IMovement {
   movementId: string;
   description: string;
@@ -25,8 +30,6 @@ export interface IMovement {
   transactions: ITransaction[];
   transactionsSum: number;
 }
-
-import FunctionHelper from "./FunctionHelper";
 
 export class DataFilterHelper {
   public static groupTransactionsByMovementId(

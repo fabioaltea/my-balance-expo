@@ -51,9 +51,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
   },
-  scrollView: {
-    maxHeight: 500,
-  },
+  scrollView: {},
   emptyState: {
     paddingVertical: 40,
     alignItems: "center",
@@ -85,10 +83,10 @@ const MovementsCard: React.FC<MovementsCardProps> = ({
   isTransitioning = false,
 }) => {
   const { isLoading, categories } = useDataContext();
-  const { orientation } = usePlatformContext();
   const [recentMovements, setRecentMovements] = useState(
     sortMovements(movements),
   );
+  const { orientation } = usePlatformContext();
 
   const isLandscape = orientation === "landscape";
 
@@ -152,7 +150,7 @@ const MovementsCard: React.FC<MovementsCardProps> = ({
   // Empty state when not loading and no movements
   if (recentMovements?.length === 0) {
     return (
-      <Card label="">
+      <Card label={isLandscape ? "Recent Movements" : ""}>
         <View style={styles.emptyState}>
           <ThemedText style={styles.emptyText}>
             No movements found for the selected period
@@ -163,9 +161,11 @@ const MovementsCard: React.FC<MovementsCardProps> = ({
   }
 
   return (
-    <Card label="">
+    <Card
+      label={isLandscape ? "Recent Movements" : ""}
+      style={isLandscape ? { flex: 1 } : undefined}
+    >
       <ScrollView
-        style={isLandscape ? styles.scrollView : undefined}
         showsVerticalScrollIndicator={isLandscape}
         nestedScrollEnabled={true}
       >

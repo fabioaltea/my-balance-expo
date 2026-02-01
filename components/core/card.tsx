@@ -7,6 +7,7 @@ interface ICardProps {
   color?: string;
   label?: string;
   children: React.ReactNode;
+  style?: import("react-native").ViewStyle;
 }
 
 const Card: React.FC<ICardProps> = ({
@@ -14,6 +15,7 @@ const Card: React.FC<ICardProps> = ({
   color,
   label,
   children,
+  style,
 }) => {
   const themeBackground = useThemeColor({}, "cardBackground");
   const themeColor = useThemeColor({}, "cardColor");
@@ -25,14 +27,14 @@ const Card: React.FC<ICardProps> = ({
       borderRadius: 30,
       paddingHorizontal: 24,
       paddingVertical: 15,
-      flex: 1,
-      minHeight: 120,
+      flexShrink: 1,
       ...(Platform.OS === "web"
         ? {
             boxShadow:
               "0 2px 8px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.06)",
           }
         : {
+          minHeight:100,
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.08,
@@ -51,7 +53,7 @@ const Card: React.FC<ICardProps> = ({
   });
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={style}>
       {label && (
         <View>
           <Text style={styles.cardLabel}>{label}</Text>

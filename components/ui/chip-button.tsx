@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import ContextMenu from "./context-menu";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import React from "react";
+import { usePlatformContext } from "@/state";
 
 export interface IChipButtonProps {
   text: string;
@@ -24,6 +25,10 @@ const ChipButton: React.FC<IChipButtonProps> = ({
   onOptionSelect,
   badge,
 }) => {
+
+const { orientation } = usePlatformContext();
+  
+  const isLandscape = orientation === "landscape";
   const [menuVisible, setMenuVisible] = useState(false);
   const [selectedOption, setSelectedOption] = useState("");
   const [buttonPosition, setButtonPosition] = useState<{
@@ -56,6 +61,7 @@ const ChipButton: React.FC<IChipButtonProps> = ({
     chipText: {
       ...styles.chipText,
       color: textColor,
+      fontSize: isLandscape ? 13 : 18,
     },
   });
 

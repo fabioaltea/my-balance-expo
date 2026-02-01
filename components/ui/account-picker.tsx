@@ -2,7 +2,6 @@ import { View, StyleSheet, Pressable } from "react-native";
 import React from "react";
 import { ThemedText } from "../core/themed-text";
 import ContextMenu from "./context-menu";
-import { IAccount } from "@/models/Account";
 import type { Account } from "@/state";
 
 export interface IAccountPickerProps {

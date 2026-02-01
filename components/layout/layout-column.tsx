@@ -25,6 +25,7 @@ export function LayoutColumn({
   const style: ViewStyle = {
     flexDirection: "column",
     gap,
+    minHeight: 0,
   };
 
   if (flex !== undefined) {

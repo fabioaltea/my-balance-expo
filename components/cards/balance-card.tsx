@@ -3,7 +3,7 @@ import { TouchableOpacity, StyleSheet, View, Text } from "react-native";
 // import { IconSymbol } from "../ui/icon-symbol";
 import Card from "../core/card";
 import Skeleton from "../ui/skeleton";
-import { Account } from "../../state/AppState.types";
+import type { Account } from "@/state";
 import { useDataContext } from "../../state/DataProvider";
 import IconSymbol from "../ui/icon-symbol";
 
@@ -67,6 +67,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     flex: 1,
+    minHeight:36
   },
   balanceAmount: {
     color: "#FFFFFF",

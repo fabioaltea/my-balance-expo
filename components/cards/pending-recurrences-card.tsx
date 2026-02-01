@@ -1,7 +1,8 @@
 import React from "react";
 import { ThemedText } from "../core/themed-text";
-import { TouchableOpacity, StyleSheet, View } from "react-native";
+import { TouchableOpacity, StyleSheet, View, ScrollView } from "react-native";
 import Card from "../core/card";
+import { usePlatformContext } from "@/state/PlatformProvider";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
@@ -16,7 +17,9 @@ interface PendingRecurrencesCardProps {
 const PendingRecurrencesCard: React.FC<PendingRecurrencesCardProps> = ({
   pendingRecurrences,
 }) => {
-  const {categories}=useDataContext();
+  const { categories } = useDataContext();
+  const { orientation } = usePlatformContext();
+  const isLandscape = orientation === "landscape";
   const handleQuickAdd = (pending: PendingRecurrence) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
@@ -57,7 +60,8 @@ const PendingRecurrencesCard: React.FC<PendingRecurrencesCardProps> = ({
   };
 
   return (
-    <Card>
+    <Card label={isLandscape ? "Recurrent movements" : ""} style={isLandscape ? { flex: 1 } : undefined}>
+      <ScrollView showsVerticalScrollIndicator={isLandscape} nestedScrollEnabled={true}>
       {pendingRecurrences.map((pending, index) => {
         const { template, periodLabel } = pending;
         const icon = MovementHelper.getMovementIcon(
@@ -109,6 +113,7 @@ const PendingRecurrencesCard: React.FC<PendingRecurrencesCardProps> = ({
           </TouchableOpacity>
         );
       })}
+      </ScrollView>
     </Card>
   );
 };

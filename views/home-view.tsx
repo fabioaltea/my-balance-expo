@@ -122,24 +122,7 @@ const HomeView: React.FC<HomeViewProps> = ({
     (a) => a.name === selectedAccount,
   );
 
-  // Debug logging
-  React.useEffect(() => {
-    console.log("📊 HomeView Debug:");
-    console.log("  - Accounts:", accounts.length);
-    console.log("  - Available Accounts:", accounts.length);
-    console.log("  - Movements:", movements.length);
-    console.log("  - Pending Recurrences:", pendingRecurrences?.length || 0);
-
-    console.log("  - Selected Account:", selectedAccount);
-    console.log("  - Selected Account Index:", selectedAccountIndex);
-  }, [
-    accounts,
-    movements,
-    pendingRecurrences,
-    selectedAccount,
-    selectedAccountIndex,
-    accounts,
-  ]);
+  
 
   // Filter movements based on date range and account
   const dateFilteredMovements = useMemo(() => {
@@ -208,7 +191,6 @@ const HomeView: React.FC<HomeViewProps> = ({
     }
   }, [reloadData]);
 
-  console.log("🔍 Rendering Pager with", accounts.length, "accounts");
 
   return (
     <View style={{ flex: 1 }}>
@@ -222,9 +204,8 @@ const HomeView: React.FC<HomeViewProps> = ({
             <BalanceCard
               key={account.accountId}
               account={{
-                id: account.accountId,
+                accountId: account.accountId,
                 name: account.name,
-                type: "bank",
                 balance: account.balance,
                 color: account.color,
                 textColor: account.textColor,

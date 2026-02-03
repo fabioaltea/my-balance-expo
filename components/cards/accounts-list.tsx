@@ -20,16 +20,16 @@ const AccountsList: React.FC<IAccountsListProps> = ({
 
   const backgroundColor = useThemeColor(
     { light: "#f5f5f5", dark: "#1a1a1a" },
-    "background"
+    "background",
   );
   const textColor = useThemeColor({ light: "#000", dark: "#fff" }, "text");
 
   const totalBalance = accounts.reduce(
     (sum, account) => sum + account.balance,
-    0
+    0,
   );
   const activeAccountsCount = accounts.filter(
-    (account) => account.balance > 0
+    (account) => account.balance > 0,
   ).length;
 
   const handleAccountPress = (account: Account) => {
@@ -46,7 +46,7 @@ const AccountsList: React.FC<IAccountsListProps> = ({
             console.log("Navigate to account details:", account.accountId),
         },
         { text: "Cancel", style: "cancel" },
-      ]
+      ],
     );
   };
 
@@ -71,11 +71,7 @@ const AccountsList: React.FC<IAccountsListProps> = ({
       {showTotal && (
         <View style={[styles.totalCard, { backgroundColor: "#2F4F3F" }]}>
           <View style={styles.totalHeader}>
-            <IconSymbol
-              name="chart-line"
-              size={24}
-              color="#fff"
-            />
+            <IconSymbol name="chart-line" size={24} color="#fff" />
             <ThemedText style={styles.totalLabel}>Total Balance</ThemedText>
           </View>
           <ThemedText style={styles.totalAmount}>

@@ -71,26 +71,26 @@ const ContextMenu: React.FC<IContextMenuProps> = ({
   // Colori del tema per il context menu
   const menuBackground = useThemeColor(
     { light: "#f2f2f7", dark: "#1c1c1e" },
-    "cardBackground"
+    "cardBackground",
   );
   const borderColor = useThemeColor(
     { light: "rgba(0,0,0,0.1)", dark: "rgba(255,255,255,0.1)" },
-    "cardBorder"
+    "cardBorder",
   );
   const textColor = useThemeColor({}, "text");
   const separatorColor = useThemeColor(
     { light: "rgba(0,0,0,0.1)", dark: "rgba(255,255,255,0.1)" },
-    "tabIconDefault"
+    "tabIconDefault",
   );
   const pressedBackground = useThemeColor(
     { light: "rgba(0,0,0,0.08)", dark: "rgba(255,255,255,0.08)" },
-    "tabIconDefault"
+    "tabIconDefault",
   );
 
   // Calcola l'altezza dinamica basata sul numero di elementi
   const calculatedHeight = Math.min(
     options.length * ITEM_HEIGHT + MENU_PADDING * 2,
-    MAX_HEIGHT
+    MAX_HEIGHT,
   );
 
   const dynamicStyles = StyleSheet.create({
@@ -104,7 +104,7 @@ const ContextMenu: React.FC<IContextMenuProps> = ({
       left: (() => {
         if (!buttonPosition) return 0;
         const screenWidth = Dimensions.get("window").width;
-        
+
         // Allinea il menu al bordo sinistro del bottone
         const proposedLeft = buttonPosition.x;
 
@@ -166,7 +166,7 @@ const ContextMenu: React.FC<IContextMenuProps> = ({
   };
 
   const normalizeOption = (
-    option: string | IContextMenuOption
+    option: string | IContextMenuOption,
   ): IContextMenuOption => {
     if (typeof option === "string") {
       return { label: option };

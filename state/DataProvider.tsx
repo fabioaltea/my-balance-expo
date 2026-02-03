@@ -33,8 +33,8 @@ interface DataContextType {
   reloadData: () => Promise<void>;
 
   // Helpers
-  getTotalIncome: (filteredMovements: Movement[]) => number;
-  getTotalExpense: (filteredMovements: Movement[]) => number;
+  getTotalIncome: (filteredMovements: Movement[], accountFilter?: string) => number;
+  getTotalExpense: (filteredMovements: Movement[], accountFilter?: string) => number;
   getBalance: (filteredMovements: Movement[]) => number;
   calculateForecast: (startDate: string, endDate: string) => MonthlyForecast;
 }

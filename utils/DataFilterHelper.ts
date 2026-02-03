@@ -33,7 +33,7 @@ export interface IMovement {
 
 export class DataFilterHelper {
   public static groupTransactionsByMovementId(
-    transactions: ITransaction[]
+    transactions: ITransaction[],
   ): IMovement[] {
     const movementMap = new Map<string, ITransaction[]>();
 
@@ -64,7 +64,7 @@ export class DataFilterHelper {
           transactions: txns,
           transactionsSum,
         } as IMovement;
-      }
+      },
     );
 
     return movements.sort((a, b) => {

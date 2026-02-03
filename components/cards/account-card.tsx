@@ -14,7 +14,7 @@ interface IAccountCardProps {
 const AccountCard: React.FC<IAccountCardProps> = ({ account, onPress }) => {
   const borderColor = useThemeColor(
     { light: "#e0e0e0", dark: "#333" },
-    "tabIconDefault"
+    "tabIconDefault",
   );
 
   const formatBalance = (amount: number) => {

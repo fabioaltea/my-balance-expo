@@ -30,8 +30,8 @@ interface HomeViewProps {
   unconfirmedCount: number;
   isLoading: boolean;
   reloadData: () => Promise<void>;
-  getTotalIncome: (filteredMovements: Movement[]) => number;
-  getTotalExpense: (filteredMovements: Movement[]) => number;
+  getTotalIncome: (filteredMovements: Movement[], accountFilter?: string) => number;
+  getTotalExpense: (filteredMovements: Movement[], accountFilter?: string) => number;
   calculateForecast: (startDate: string, endDate: string) => MonthlyForecast;
 }
 
@@ -248,8 +248,8 @@ const HomeView: React.FC<HomeViewProps> = ({
           scrollEnabled={isCurrentPeriod}
         >
           <FinancialSummaryCard
-            income={getTotalIncome(dateFilteredMovements)}
-            expense={getTotalExpense(dateFilteredMovements)}
+            income={getTotalIncome(dateFilteredMovements, selectedAccount)}
+            expense={getTotalExpense(dateFilteredMovements, selectedAccount)}
             isTransitioning={isPeriodTransitioning}
           />
           <ForecastCard

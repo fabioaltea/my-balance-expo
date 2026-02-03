@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { View, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { useThemeColor } from "@/hooks/use-theme-color";
-import {  useDataContext } from "@/state";
+import { useDataContext } from "@/state";
 import type { Account } from "@/state";
 
 // Layout components
@@ -66,7 +66,11 @@ export function DashboardLandscapeLayout() {
   const [dateRange, setDateRange] = useState(() => {
     const now = new Date();
     const startDate = `01-${String(now.getMonth() + 1).padStart(2, "0")}-${now.getFullYear()}`;
-    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const lastDay = new Date(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      0,
+    ).getDate();
     const endDate = `${lastDay}-${String(now.getMonth() + 1).padStart(2, "0")}-${now.getFullYear()}`;
     return { startDate, endDate, label: "" };
   });
@@ -76,7 +80,11 @@ export function DashboardLandscapeLayout() {
   };
 
   // Helper to check if a date is within the range
-  const isDateInRange = (dateStr: string, start: string, end: string): boolean => {
+  const isDateInRange = (
+    dateStr: string,
+    start: string,
+    end: string,
+  ): boolean => {
     const parseDate = (str: string) => {
       const [day, month, year] = str.split("-").map(Number);
       return new Date(year, month - 1, day);
@@ -94,14 +102,14 @@ export function DashboardLandscapeLayout() {
     // Filter by date range
     if (dateRange.startDate && dateRange.endDate) {
       filtered = filtered.filter((m) =>
-        isDateInRange(m.date, dateRange.startDate, dateRange.endDate)
+        isDateInRange(m.date, dateRange.startDate, dateRange.endDate),
       );
     }
 
     // Filter by account (no filtering for 'All')
     if (selectedAccount !== "All") {
       filtered = filtered.filter((m) =>
-        m.transactions.some((t) => t.account === selectedAccount)
+        m.transactions.some((t) => t.account === selectedAccount),
       );
     }
 
@@ -133,10 +141,7 @@ export function DashboardLandscapeLayout() {
           />
         }
         periodSelector={
-          <PeriodPicker
-            setDateRange={setDateRange}
-            isLoading={isLoading}
-          />
+          <PeriodPicker setDateRange={setDateRange} isLoading={isLoading} />
         }
         rightContent={<ChipButton text="+" onPress={handleAddPress} />}
       />
@@ -149,8 +154,8 @@ export function DashboardLandscapeLayout() {
           <LayoutColumn flex={1} gap={12}>
             <BalanceCard account={currentAccount} />
             <FinancialSummaryCard
-              income={getTotalIncome(filteredMovements)}
-              expense={getTotalExpense(filteredMovements)}
+              income={getTotalIncome(filteredMovements, selectedAccount)}
+              expense={getTotalExpense(filteredMovements, selectedAccount)}
             />
           </LayoutColumn>
 

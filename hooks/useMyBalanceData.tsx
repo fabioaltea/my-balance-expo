@@ -343,17 +343,45 @@ export const useMyBalanceData = (
 
   /**
    * Helper functions
+   *
+   * When accountFilter is provided (and not "All"), these functions sum only
+   * the transactions belonging to that specific account, not the movement totals.
+   * This allows accurate income/expense reporting when filtering by account.
    */
-  const getTotalIncome = (filteredMovements: Movement[]) => {
-    return filteredMovements
-      .filter((m) => m.type === "income")
-      .reduce((sum, m) => sum + m.totalAmount, 0);
+  const getTotalIncome = (filteredMovements: Movement[], accountFilter?: string) => {
+    return filteredMovements.reduce((sum, m) => {
+      if (accountFilter && accountFilter !== "All") {
+        // Sum only income transactions for the selected account
+        const accountIncome = m.transactions
+          .filter(t => t.account === accountFilter && t.type === "income")
+          .reduce((s, t) => s + t.amount, 0);
+        return sum + accountIncome;
+      } else {
+        // Sum all income transactions across all accounts
+        const totalIncome = m.transactions
+          .filter(t => t.type === "income")
+          .reduce((s, t) => s + t.amount, 0);
+        return sum + totalIncome;
+      }
+    }, 0);
   };
 
-  const getTotalExpense = (filteredMovements: Movement[]) => {
-    return filteredMovements
-      .filter((m) => m.type === "expense")
-      .reduce((sum, m) => sum + Math.abs(m.totalAmount), 0);
+  const getTotalExpense = (filteredMovements: Movement[], accountFilter?: string) => {
+    return filteredMovements.reduce((sum, m) => {
+      if (accountFilter && accountFilter !== "All") {
+        // Sum only expense transactions for the selected account
+        const accountExpense = m.transactions
+          .filter(t => t.account === accountFilter && t.type === "expense")
+          .reduce((s, t) => s + t.amount, 0);
+        return sum + accountExpense;
+      } else {
+        // Sum all expense transactions across all accounts
+        const totalExpense = m.transactions
+          .filter(t => t.type === "expense")
+          .reduce((s, t) => s + t.amount, 0);
+        return sum + totalExpense;
+      }
+    }, 0);
   };
 
   const getBalance = (filteredMovements: Movement[]) => {

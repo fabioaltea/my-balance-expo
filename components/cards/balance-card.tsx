@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     flex: 1,
-    minHeight:36
+    minHeight: 36,
   },
   balanceAmount: {
     color: "#FFFFFF",

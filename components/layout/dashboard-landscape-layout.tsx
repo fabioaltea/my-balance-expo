@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from "react";
 import { View, StyleSheet } from "react-native";
-import { useRouter } from "expo-router";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { useDataContext } from "@/state";
 import type { Account } from "@/state";
@@ -15,6 +14,7 @@ import { LandscapeCommandBar } from "@/components/layout/landscape-command-bar";
 import GlassButton from "@/components/ui/glass-button";
 import CompactAccountPicker from "@/components/ui/compact-account-picker";
 import CompactPeriodPicker from "@/components/ui/compact-period-picker";
+import SideDrawer from "@/components/ui/side-drawer";
 
 // Card components
 import BalanceCard from "@/components/cards/balance-card";
@@ -32,7 +32,6 @@ import ChipButton from "../ui/chip-button";
  */
 export function DashboardLandscapeLayout() {
   const backgroundColor = useThemeColor({}, "background");
-  const router = useRouter();
 
   // Get data from centralized context
   const {
@@ -61,6 +60,7 @@ export function DashboardLandscapeLayout() {
   }, [accounts]);
 
   const [selectedAccount, setSelectedAccount] = useState<string>("All");
+  const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
 
   // Date range state for period filtering
   const [dateRange, setDateRange] = useState(() => {
@@ -76,7 +76,7 @@ export function DashboardLandscapeLayout() {
   });
 
   const handleAddPress = () => {
-    router.push("/add");
+    setIsDrawerOpen(true);
   };
 
   // Helper to check if a date is within the range
@@ -179,6 +179,13 @@ export function DashboardLandscapeLayout() {
           </LayoutColumn>
         </LayoutRow>
       </LayoutContainer>
+
+      {/* Side Drawer */}
+      <SideDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        width="40%"
+      />
     </View>
   );
 }

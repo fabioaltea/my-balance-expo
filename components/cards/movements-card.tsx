@@ -76,11 +76,14 @@ const sortMovements = (movements: Movement[]) => {
 interface MovementsCardProps {
   movements: Movement[];
   isTransitioning?: boolean;
+  /** Optional callback to override default navigation behavior */
+  onMovementPress?: (movement: Movement) => void;
 }
 
 const MovementsCard: React.FC<MovementsCardProps> = ({
   movements,
   isTransitioning = false,
+  onMovementPress,
 }) => {
   const { isLoading, categories } = useDataContext();
   const [recentMovements, setRecentMovements] = useState(
@@ -92,12 +95,16 @@ const MovementsCard: React.FC<MovementsCardProps> = ({
 
   const handleMovementPress = (movement: Movement) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.push({
-      pathname: "/add",
-      params: {
-        movementId: movement.id,
-      },
-    });
+    if (onMovementPress) {
+      onMovementPress(movement);
+    } else {
+      router.push({
+        pathname: "/add",
+        params: {
+          movementId: movement.id,
+        },
+      });
+    }
   };
 
   useEffect(() => {

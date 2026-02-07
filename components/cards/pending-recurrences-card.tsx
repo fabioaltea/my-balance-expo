@@ -12,10 +12,13 @@ import { MovementHelper } from "@/helpers/MovementHelper";
 
 interface PendingRecurrencesCardProps {
   pendingRecurrences: PendingRecurrence[];
+  /** Optional callback to override default navigation behavior */
+  onRecurrencePress?: (pending: PendingRecurrence) => void;
 }
 
 const PendingRecurrencesCard: React.FC<PendingRecurrencesCardProps> = ({
   pendingRecurrences,
+  onRecurrencePress,
 }) => {
   const { categories } = useDataContext();
   const { orientation } = usePlatformContext();
@@ -23,13 +26,17 @@ const PendingRecurrencesCard: React.FC<PendingRecurrencesCardProps> = ({
   const handleQuickAdd = (pending: PendingRecurrence) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-    // Navigate to add screen with recurrenceId to load template
-    router.push({
-      pathname: "/add",
-      params: {
-        recurrenceId: pending.template.recurrenceId || "",
-      },
-    });
+    if (onRecurrencePress) {
+      onRecurrencePress(pending);
+    } else {
+      // Navigate to add screen with recurrenceId to load template
+      router.push({
+        pathname: "/add",
+        params: {
+          recurrenceId: pending.template.recurrenceId || "",
+        },
+      });
+    }
   };
 
   // Theme colors

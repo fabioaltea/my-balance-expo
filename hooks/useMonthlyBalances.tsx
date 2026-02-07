@@ -1,6 +1,9 @@
 /**
  * Hook to calculate monthly account balances for charts
  *
+ * NOTE: This hook currently uses client-side calculation.
+ * Future optimization: Backend can provide pre-calculated monthly balance snapshots
+ * 
  * Calculates the cumulative balance for each account at the end of each month.
  * This is done by:
  * 1. Getting all transactions

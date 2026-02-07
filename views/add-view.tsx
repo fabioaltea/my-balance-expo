@@ -30,11 +30,11 @@ import ContextMenu, { IContextMenuOption } from "@/components/ui/context-menu";
 import RecurrencyPicker from "@/components/ui/recurrency-picker";
 import ScreenView from "@/layout/screen-view";
 import { useAuthContext, useDataContext } from "@/state";
-import { TransactionsApiHelper } from "@/helpers/TransactionsApiHelper";
 import { formatDateToDDMMYYYY, parseDateFromDDMMYYYY } from "@/utils/dateUtils";
 import { useRouter } from "expo-router";
 import IconSymbol from "@/components/ui/icon-symbol";
 import LocationPicker, { ILocation } from "@/components/ui/location-picker";
+import { useAddMovement, useUpdateMovement, useDeleteMovement } from "@/hooks/mutations";
 
 type ModalStatus = "loading" | "success" | "error";
 
@@ -49,8 +49,13 @@ const AddView: React.FC<AddViewProps> = ({
 }) => {
   const router = useRouter();
   const { selectedSpreadsheetId } = useAuthContext();
-  const { accounts, categories, movements, recurringMovements, unconfirmedMovements, reloadData } =
+  const { accounts, categories, movements, recurringMovements, unconfirmedMovements } =
     useDataContext();
+
+  // React Query mutations
+  const addMovement = useAddMovement();
+  const updateMovement = useUpdateMovement();
+  const deleteMovement = useDeleteMovement();
 
   // Find the movement being edited from the global movements list
   // Also search in recurringMovements for editing recurring templates
@@ -66,7 +71,10 @@ const AddView: React.FC<AddViewProps> = ({
   const recurringTemplate = recurrenceId
     ? recurringMovements.find((m) => m.recurrenceId === recurrenceId)
     : undefined;
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Derive submitting state from mutations
+  const isSubmitting = addMovement.isPending || updateMovement.isPending || deleteMovement.isPending;
+
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [modalStatus, setModalStatus] = useState<ModalStatus>("loading");
   const [description, setDescription] = useState("");
@@ -298,34 +306,26 @@ const AddView: React.FC<AddViewProps> = ({
           onPress: async () => {
             if (!selectedSpreadsheetId || !editingMovementId) return;
 
-            setIsSubmitting(true);
             setModalStatus("loading");
             setShowStatusModal(true);
 
             try {
-              const result = await TransactionsApiHelper.deleteMovement(
-                selectedSpreadsheetId,
-                editingMovementId
-              );
+              // Use React Query mutation for delete
+              await deleteMovement.mutateAsync({
+                movementId: editingMovementId,
+              });
 
-              if (result) {
-                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                setModalStatus("success");
-                setTimeout(() => {
-                  setShowStatusModal(false);
-                  router.back();
-                }, 100);
-                                await reloadData();
-              } else {
-                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-                setModalStatus("error");
-              }
+              // Success - mutation handles cache invalidation automatically
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              setModalStatus("success");
+              setTimeout(() => {
+                setShowStatusModal(false);
+                router.back();
+              }, 100);
             } catch (error) {
               console.error("Error deleting movement:", error);
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
               setModalStatus("error");
-            } finally {
-              setIsSubmitting(false);
             }
           },
         },
@@ -362,8 +362,6 @@ const AddView: React.FC<AddViewProps> = ({
       (t) => t.accountName && t.amount > 0
     );
 
-    setIsSubmitting(true);
-    setModalStatus("loading");
     setShowStatusModal(true);
 
     try {
@@ -397,75 +395,55 @@ const AddView: React.FC<AddViewProps> = ({
       }
 
       // If this is a new movement created from a recurring template, link it to the template
-      // This allows tracking of how many occurrences have been recorded for the template
       if (recurrenceId && recurringTemplate && !isEditing && !asRecurrent) {
         movementData.recurrenceId = recurrenceId;
-        // Don't set status to "recurrent" - this is a regular movement, not a template
       }
 
       // If editing a recurring movement, preserve recurrence data
-      // Use the state variable recurrencePattern (not the parameter)
       if (isEditingRecurring && editingMovement) {
         movementData.recurrenceId = editingMovement.recurrenceId;
         movementData.status = "recurrent";
         movementData.recurrencePattern = recurrencePattern;
       }
 
-      let result;
       if (isEditing && editingMovementId) {
-        // Update existing movement
-        result = await TransactionsApiHelper.updateMovement(
-          selectedSpreadsheetId??"",
-          editingMovementId,
-          movementData
-        );
+        // Update existing movement using React Query mutation
+        await updateMovement.mutateAsync({
+          movementId: editingMovementId,
+          ...movementData,
+        });
       } else {
-        // Create new movement
-        result = await TransactionsApiHelper.createTransaction(
-          selectedSpreadsheetId??"",
-          movementData
-        );
+        // Create new movement using React Query mutation
+        await addMovement.mutateAsync(movementData);
       }
 
-      const allSuccessful = result !== null;
+      // Success - mutation hooks handle cache invalidation automatically
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setModalStatus("success");
 
-      if (allSuccessful) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        setModalStatus("success");
-
-        // For recurring saves, stay on page with form still filled
-        // For normal saves, reset form and go back
-        if (asRecurrent && !isEditing) {
-          // Stay on page, just close modal quickly
-          setTimeout(() => {
-            setShowStatusModal(false);
-          }, 100);
-        } else {
-          // Reset form
-          setDescription("");
-          setSelectedCategory("");
-          setSelectedDate(new Date());
-          setTransactions([]);
-          setSelectedLocation({ address: "" });
-
-          // Quick close and go back to dashboard
-          setTimeout(() => {
-            setShowStatusModal(false);
-            router.back();
-          }, 100);
-        }
-        // Reload data
-        await reloadData();
+      // For recurring saves, stay on page with form still filled
+      // For normal saves, reset form and go back
+      if (asRecurrent && !isEditing) {
+        setTimeout(() => {
+          setShowStatusModal(false);
+        }, 100);
       } else {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-        setModalStatus("error");
+        // Reset form
+        setDescription("");
+        setSelectedCategory("");
+        setSelectedDate(new Date());
+        setTransactions([]);
+        setSelectedLocation({ address: "" });
+
+        setTimeout(() => {
+          setShowStatusModal(false);
+          router.back();
+        }, 100);
       }
     } catch (error) {
       console.error("Error saving movement:", error);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       setModalStatus("error");
-    } finally {
-      setIsSubmitting(false);
     }
   };
 

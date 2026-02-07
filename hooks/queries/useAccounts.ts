@@ -23,6 +23,7 @@ export interface AccountData {
 /**
  * Hook to fetch all accounts
  * Accounts are cached longer as they change less frequently than transactions
+ * Transforms backend data to frontend format
  */
 export function useAccounts(): UseQueryResult<AccountData[], Error> {
   const { selectedSpreadsheetId } = useAuthContext();
@@ -33,7 +34,21 @@ export function useAccounts(): UseQueryResult<AccountData[], Error> {
       if (!selectedSpreadsheetId) {
         throw new Error('No spreadsheet selected');
       }
-      return await AccountsApiHelper.getAccounts(selectedSpreadsheetId);
+
+      const rawAccounts = await AccountsApiHelper.getAccounts(selectedSpreadsheetId);
+
+      // Transform backend data to frontend format
+      const transformedAccounts: AccountData[] = (rawAccounts || []).map((a: any) => ({
+        accountId: a.accountId || a.id || Math.random().toString(),
+        name: a.name || '',
+        balance: typeof a.balance === 'number'
+          ? a.balance
+          : parseFloat(a.balance?.replace?.(/[€\s]/g, '')?.replace?.(',', '.') || '0'),
+        color: a.color || '#2F4F3F',
+        textColor: a.textColor || '#FFFFFF',
+      }));
+
+      return transformedAccounts;
     },
     enabled: !!selectedSpreadsheetId,
     staleTime: 1000 * 60 * 60, // 1 hour - accounts don't change often

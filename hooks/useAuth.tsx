@@ -345,7 +345,7 @@ export const useAuth = () => {
 
       // For web, use makeRedirectUri which handles the current origin; for native, use custom scheme
       const redirectUri = isWeb
-        ? makeRedirectUri({ useProxy: false })
+        ? makeRedirectUri()
         : `${process.env.EXPO_PUBLIC_GOOGLE_REDIRECT_SCHEME}:/oauthredirect`;
 
       console.log("🔑 OAuth config:", { isWeb, clientId: clientId?.substring(0, 20) + "...", redirectUri });

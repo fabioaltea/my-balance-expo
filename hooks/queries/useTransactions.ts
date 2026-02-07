@@ -1,11 +1,12 @@
 /**
  * React Query hook for transactions
- * 
+ *
  * Features:
  * - Intelligent caching with 5 minute stale time
  * - Offline capability through cache persistence
  * - Automatic refetch on reconnect
  * - Type-safe query keys
+ * - Data transformation from backend format to frontend format
  */
 
 import { useQuery, UseQueryResult } from '@tanstack/react-query';
@@ -14,11 +15,11 @@ import { TransactionsApiHelper } from '@/helpers/TransactionsApiHelper';
 import { useAuthContext } from '@/state/AuthProvider';
 
 export interface TransactionData {
-  transactionId: string;
   movementId: string;
-  date: string;
+  transactionId: string;
+  date: string; // dd-MM-yyyy format
   description: string;
-  amount: number;
+  amount: number; // Always positive, use type for direction
   type: 'income' | 'expense';
   account: string;
   category: string;
@@ -26,11 +27,17 @@ export interface TransactionData {
   recurrenceId?: string;
   recurrencePattern?: string;
   status?: string;
+  transactions?: Array<{
+    amount: string;
+    account: string;
+    type: 'in' | 'out';
+  }>;
 }
 
 /**
  * Hook to fetch all transactions
  * Uses React Query for caching and automatic refetching
+ * Transforms backend data to frontend format
  */
 export function useTransactions(
   filters?: TransactionFilters
@@ -43,7 +50,35 @@ export function useTransactions(
       if (!selectedSpreadsheetId) {
         throw new Error('No spreadsheet selected');
       }
-      return await TransactionsApiHelper.getTransactions(selectedSpreadsheetId);
+
+      const rawTransactions = await TransactionsApiHelper.getTransactions(selectedSpreadsheetId);
+
+      // Transform backend data to frontend format
+      const transformedTransactions: TransactionData[] = (rawTransactions || []).map((t: any) => {
+        const amountStr = t.amount
+          ?.replace?.(/[€\s]/g, '')
+          ?.replace('.', '')
+          .replace?.(',', '.') || '0';
+        const amount = parseFloat(amountStr);
+
+        return {
+          movementId: t.movementId,
+          transactionId: t.transactionId || t.id || Math.random().toString(),
+          date: t.date,
+          description: t.description || '',
+          amount: Math.abs(amount), // Always positive
+          type: amount >= 0 ? ('income' as const) : ('expense' as const),
+          account: t.account || '',
+          category: t.category || '',
+          location: t.location || '',
+          recurrenceId: t.recurrenceId || undefined,
+          recurrencePattern: t.recurrencePattern || undefined,
+          status: t.status || 'Confirmed',
+          transactions: t.transactions,
+        };
+      });
+
+      return transformedTransactions;
     },
     enabled: !!selectedSpreadsheetId,
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -79,3 +114,4 @@ export function useTransaction(
     gcTime: 1000 * 60 * 60, // 1 hour
   });
 }
+

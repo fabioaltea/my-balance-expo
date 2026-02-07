@@ -20,6 +20,8 @@ import type { Account, Movement, IDateRange, PendingRecurrence } from "@/state";
 import type { MonthlyForecast } from "@/hooks/useMyBalanceData";
 import ViewModePicker from "@/components/ui/view-mode-picker";
 import FinancialSummaryCard from "@/components/cards/financial-summary-card";
+import { useQueryClient } from '@tanstack/react-query';
+import { QUERY_KEYS } from '@/hooks/queries/queryKeys';
 
 interface HomeViewProps {
   accounts: Account[];
@@ -29,7 +31,6 @@ interface HomeViewProps {
   pendingRecurrences: PendingRecurrence[];
   unconfirmedCount: number;
   isLoading: boolean;
-  reloadData: () => Promise<void>;
   getTotalIncome: (filteredMovements: Movement[], accountFilter?: string) => number;
   getTotalExpense: (filteredMovements: Movement[], accountFilter?: string) => number;
   calculateForecast: (startDate: string, endDate: string) => MonthlyForecast;
@@ -43,11 +44,13 @@ const HomeView: React.FC<HomeViewProps> = ({
   pendingRecurrences,
   unconfirmedCount,
   isLoading,
-  reloadData,
   getTotalIncome,
   getTotalExpense,
   calculateForecast,
 }) => {
+  // React Query client for invalidating queries
+  const queryClient = useQueryClient();
+
   // Local state for date range
   const [dateRange, setDateRange] = useState<IDateRange>(
     DATE_RANGES.THIS_MONTH,
@@ -182,14 +185,19 @@ const HomeView: React.FC<HomeViewProps> = ({
     }
   };
 
-  // Handle refresh
+  // Handle refresh - invalidate all queries to trigger refetch
   const onRefresh = React.useCallback(async () => {
     try {
-      await reloadData();
+      // Invalidate all main data queries to trigger fresh data fetch
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.transactions.all }),
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.accounts.all }),
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.aggregations.all }),
+      ]);
     } catch (error) {
       console.error("Error refreshing data:", error);
     }
-  }, [reloadData]);
+  }, [queryClient]);
 
 
   return (

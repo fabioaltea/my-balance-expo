@@ -6,13 +6,12 @@ import List from '@/components/ui/list';
 import ModalPanel from '@/components/ui/modal-panel';
 import { Account } from '@/hooks/useMyBalanceData';
 import * as Haptics from 'expo-haptics';
-import { AccountsApiHelper } from '@/helpers/AccountsApiHelper';
 import { COLOR_PALETTE, DEFAULT_COLOR, DEFAULT_TEXT_COLOR } from '@/constants/colors';
+import { useUpdateAccount } from '@/hooks/mutations';
 
 interface AccountsViewProps {
   accounts: Account[];
   selectedSpreadsheetId: string | null;
-  reloadData: () => Promise<void>;
 }
 
 const formatCurrency = (amount: number): string => {
@@ -25,13 +24,14 @@ const formatCurrency = (amount: number): string => {
 const AccountsView: React.FC<AccountsViewProps> = ({
   accounts,
   selectedSpreadsheetId,
-  reloadData,
 }) => {
+  // React Query mutation
+  const updateAccount = useUpdateAccount();
+
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
   const [selectedColor, setSelectedColor] = useState<string>(DEFAULT_COLOR);
   const [editedName, setEditedName] = useState<string>('');
-  const [isUpdating, setIsUpdating] = useState(false);
 
   const handleAccountLongPress = (account: Account) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -50,23 +50,19 @@ const AccountsView: React.FC<AccountsViewProps> = ({
   const performUpdate = async () => {
     if (!selectedAccount || !selectedSpreadsheetId) return;
 
-    setIsUpdating(true);
     try {
-      await AccountsApiHelper.updateAccount(
-        selectedSpreadsheetId,
-        selectedAccount.accountId,
-        {
-          name: editedName,
-          color: selectedColor,
-        }
-      );
-      await reloadData();
+      // Use React Query mutation
+      await updateAccount.mutateAsync({
+        accountId: selectedAccount.accountId,
+        name: editedName,
+        color: selectedColor,
+      });
+
+      // Success - mutation handles cache invalidation automatically
       handleCloseModal();
     } catch (error) {
       console.error('Error updating account:', error);
       Alert.alert('Errore', 'Impossibile aggiornare il conto');
-    } finally {
-      setIsUpdating(false);
     }
   };
 

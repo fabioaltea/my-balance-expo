@@ -8,11 +8,11 @@ import PeriodPicker from "@/components/ui/period-chips-picker";
 import {
   View,
   StyleSheet,
-  ScrollView,
+  Animated,
   RefreshControl,
   Text,
 } from "react-native";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import Pager from "@/components/ui/pager";
 import { DATE_RANGES } from "@/state";
 import { isDateInRange, detectPeriodType, parseDateFromDDMMYYYY } from "@/utils/dateUtils";
@@ -20,6 +20,9 @@ import type { Account, Movement, IDateRange, PendingRecurrence } from "@/state";
 import type { MonthlyForecast } from "@/hooks/useMyBalanceData";
 import ViewModePicker from "@/components/ui/view-mode-picker";
 import FinancialSummaryCard from "@/components/cards/financial-summary-card";
+import { useDataContext } from '@/state';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useThemeColor } from '@/hooks/use-theme-color';
 
 interface HomeViewProps {
   accounts: Account[];
@@ -29,7 +32,6 @@ interface HomeViewProps {
   pendingRecurrences: PendingRecurrence[];
   unconfirmedCount: number;
   isLoading: boolean;
-  reloadData: () => Promise<void>;
   getTotalIncome: (filteredMovements: Movement[], accountFilter?: string) => number;
   getTotalExpense: (filteredMovements: Movement[], accountFilter?: string) => number;
   calculateForecast: (startDate: string, endDate: string) => MonthlyForecast;
@@ -43,11 +45,27 @@ const HomeView: React.FC<HomeViewProps> = ({
   pendingRecurrences,
   unconfirmedCount,
   isLoading,
-  reloadData,
   getTotalIncome,
   getTotalExpense,
   calculateForecast,
 }) => {
+  const { reloadData } = useDataContext();
+  const menuBackground = useThemeColor({}, 'menuBackground');
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const [stickyOffset, setStickyOffset] = useState(300);
+
+  const balanceFadeOpacity = scrollY.interpolate({
+    inputRange: [0, 30, Math.max(31, stickyOffset - 20), Math.max(32, stickyOffset)],
+    outputRange: [0, 1, 1, 0],
+    extrapolate: 'clamp',
+  });
+
+  const vpFadeOpacity = scrollY.interpolate({
+    inputRange: [Math.max(0, stickyOffset - 20), Math.max(1, stickyOffset)],
+    outputRange: [0, 1],
+    extrapolate: 'clamp',
+  });
+
   // Local state for date range
   const [dateRange, setDateRange] = useState<IDateRange>(
     DATE_RANGES.THIS_MONTH,
@@ -182,14 +200,14 @@ const HomeView: React.FC<HomeViewProps> = ({
     }
   };
 
-  // Handle refresh
-  const onRefresh = React.useCallback(async () => {
+  // Handle refresh - invalidate all queries to trigger refetch
+  const onRefresh = async () => {
     try {
       await reloadData();
     } catch (error) {
       console.error("Error refreshing data:", error);
     }
-  }, [reloadData]);
+  };
 
 
   return (
@@ -198,7 +216,7 @@ const HomeView: React.FC<HomeViewProps> = ({
         <Pager
           selectedPage={selectedAccountIndex}
           onPageSelected={handleAccountSwitch}
-          style={{ height: 110, marginBottom: 12 }}
+          style={{ height: 110, marginBottom: 5 }}
         >
           {accounts.map((account) => (
             <BalanceCard
@@ -224,10 +242,24 @@ const HomeView: React.FC<HomeViewProps> = ({
           <Text>Loading accounts...</Text>
         </View>
       )}
-      {/* <BlurView intensity={100} tint="default" style={styles.blurOverlay} /> */}
-      <ScrollView
+      <Animated.View
+        style={{ height: 20, marginBottom: -20, zIndex: 1, opacity: balanceFadeOpacity }}
+        pointerEvents="none"
+      >
+        <LinearGradient
+          colors={[menuBackground, menuBackground + '00']}
+          style={{ flex: 1 }}
+        />
+      </Animated.View>
+      <Animated.ScrollView
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
+        stickyHeaderIndices={[1]}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: true },
+        )}
+        scrollEventThrottle={16}
         refreshControl={
           <RefreshControl
             refreshing={isLoading}
@@ -237,32 +269,35 @@ const HomeView: React.FC<HomeViewProps> = ({
           />
         }
       >
-        <PeriodPicker
-          setDateRange={handleDateRangeChange}
-          isLoading={isLoading}
-        />
-        <Pager
-          style={{ height: 230, marginHorizontal: -16, marginBottom: 16 }}
-          selectedPage={summaryPagerIndex}
-          onPageSelected={setSummaryPagerIndex}
-          scrollEnabled={isCurrentPeriod}
-        >
-          <FinancialSummaryCard
-            income={getTotalIncome(dateFilteredMovements, selectedAccount)}
-            expense={getTotalExpense(dateFilteredMovements, selectedAccount)}
-            isTransitioning={isPeriodTransitioning}
+        <View onLayout={(e) => setStickyOffset(e.nativeEvent.layout.height)}>
+          <PeriodPicker
+            setDateRange={handleDateRangeChange}
+            isLoading={isLoading}
           />
-          <ForecastCard
-            forecast={currentForecast}
-            isTransitioning={isPeriodTransitioning}
-          />
-        </Pager>
+          <Pager
+            style={{ height: 230, marginHorizontal: -16, marginBottom: 16 }}
+            selectedPage={summaryPagerIndex}
+            onPageSelected={setSummaryPagerIndex}
+            scrollEnabled={isCurrentPeriod}
+          >
+            <FinancialSummaryCard
+              income={getTotalIncome(dateFilteredMovements, selectedAccount)}
+              expense={getTotalExpense(dateFilteredMovements, selectedAccount)}
+              isTransitioning={isPeriodTransitioning}
+            />
+            <ForecastCard
+              forecast={currentForecast}
+              isTransitioning={isPeriodTransitioning}
+            />
+          </Pager>
+        </View>
 
         <ViewModePicker
           selectedMode={viewMode}
           onModeChange={setViewMode}
           pendingCount={pendingCount}
           unconfirmedCount={unconfirmedCount}
+          fadeOpacity={vpFadeOpacity}
         />
         {viewMode === "recurring" && <RecurringMovementsCard dateRange={dateRange} />}
         {viewMode === "recent" && (
@@ -273,7 +308,7 @@ const HomeView: React.FC<HomeViewProps> = ({
         )}
         {viewMode === "unconfirmed" && <UnconfirmedMovementsCard />}
         <View style={{ height: 100 }}></View>
-      </ScrollView>
+      </Animated.ScrollView>
     </View>
   );
 };

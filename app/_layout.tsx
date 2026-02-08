@@ -14,6 +14,7 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { AuthProvider, useAuthContext } from "@/state/AuthProvider";
 import { DataProvider } from "@/state/DataProvider";
 import { PlatformProvider } from "@/state/PlatformProvider";
+import { QueryProvider } from "@/providers/QueryProvider";
 import LoginScreen from "@/views/login-view";
 
 export const unstable_settings = {
@@ -128,7 +129,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f5f5f5",
   },
   loadingText: {
     marginTop: 16,
@@ -141,9 +141,11 @@ const styles = StyleSheet.create({
 export default function RootLayout() {
   return (
     <PlatformProvider>
-      <AuthProvider>
-        <AppRouter />
-      </AuthProvider>
+      <QueryProvider>
+        <AuthProvider>
+          <AppRouter />
+        </AuthProvider>
+      </QueryProvider>
     </PlatformProvider>
   );
 }

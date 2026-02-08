@@ -8,10 +8,10 @@ import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
 import type { Movement } from "@/state";
 import ContextMenu, { IContextMenuOption } from "../ui/context-menu";
-import { TransactionsApiHelper } from "@/helpers/TransactionsApiHelper";
 import IconSymbol from "../ui/icon-symbol";
 import { MovementHelper } from "@/helpers/MovementHelper";
 import { isDateInRange, parseDateFromDDMMYYYY } from "@/utils/dateUtils";
+import { useDeleteMovement } from "@/hooks/mutations";
 
 type BadgeStatus = "upcoming" | "soon" | "today" | "overdue" | null;
 
@@ -32,8 +32,11 @@ interface RecurringMovementsCardProps {
 
 
 const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({ dateRange }) => {
-  const { recurringMovements, categories, reloadData, pendingRecurrences, movements } = useDataContext();
+  const { recurringMovements, categories, pendingRecurrences, movements } = useDataContext();
   const { selectedSpreadsheetId } = useAuthContext();
+
+  // React Query mutation
+  const deleteMovement = useDeleteMovement();
 
   const [menuVisible, setMenuVisible] = useState(false);
   const [buttonPosition, setButtonPosition] = useState<{
@@ -212,18 +215,13 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({ dateRan
           style: "destructive",
           onPress: async () => {
             try {
-              const result = await TransactionsApiHelper.deleteMovement(
-                selectedSpreadsheetId,
-                selectedMovement.id
-              );
+              // Use React Query mutation
+              await deleteMovement.mutateAsync({
+                movementId: selectedMovement.id,
+              });
 
-              if (result) {
-                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                await reloadData();
-              } else {
-                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-                Alert.alert("Error", "Failed to delete movement");
-              }
+              // Success - mutation handles cache invalidation automatically
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             } catch (error) {
               console.error("Error deleting movement:", error);
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);

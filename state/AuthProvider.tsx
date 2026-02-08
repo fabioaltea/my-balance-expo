@@ -7,13 +7,6 @@ interface AuthContextType extends AuthState {
   logout: () => Promise<void>;
   initializeAuth: () => Promise<void>;
   clearError: () => void;
-  // App data exposed by useAuth
-  allTransactions: any;
-  accountsList: any;
-  personalCategories: any;
-  totalBalance: any;
-  userProfile: any;
-  // Data reload helper
   reloadData: () => Promise<void>;
 }
 

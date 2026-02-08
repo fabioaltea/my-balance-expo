@@ -7,12 +7,16 @@ import {
   Icon,
   VectorIcon,
 } from "expo-router/unstable-native-tabs";
+import { useAuthContext } from "@/state/AuthProvider";
 
 /**
  * Native tab layout for iOS and Android.
  * Uses NativeTabs which provides native tab bar experience.
  */
 export default function TabLayout() {
+  const { user } = useAuthContext();
+  const firstName = user?.name?.split(" ")[0] || "Profile";
+
   return (
     <NativeTabs minimizeBehavior="onScrollDown" iconColor="#2F4F3F">
       <NativeTabs.Trigger name="charts">
@@ -36,18 +40,8 @@ export default function TabLayout() {
         })}
       </NativeTabs.Trigger>
 
-      {/* <NativeTabs.Trigger name="movements">
-        <Label>Movements</Label>
-        {Platform.select({
-          ios: <Icon sf="list.bullet" />,
-          android: (
-            <Icon src={<VectorIcon family={MaterialIcons} name="list" />} />
-          ),
-        })}
-      </NativeTabs.Trigger>*/}
-
       <NativeTabs.Trigger name="settings">
-        <Label>Fabio</Label>
+        <Label>{firstName}</Label>
         {Platform.select({
           ios: <Icon sf="person.fill" />,
           android: (

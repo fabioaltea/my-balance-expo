@@ -5,6 +5,7 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { usePlatformContext } from "@/state/PlatformProvider";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { useDataContext } from "@/state";
+import { useAuthContext } from "@/state/AuthProvider";
 
 // Layout components
 import DashboardLandscapeLayout from "@/components/layout/dashboard-landscape-layout";
@@ -16,7 +17,7 @@ interface NavItem {
   label: string;
 }
 
-const NAV_ITEMS: NavItem[] = [
+const BASE_NAV_ITEMS: NavItem[] = [
   {
     name: "charts",
     route: "/dashboard/charts",
@@ -41,10 +42,16 @@ function BottomTabs() {
   const backgroundColor = useThemeColor({}, "menuBackground");
   const textColor = useThemeColor({}, "text");
   const accentColor = "#2F4F3F";
+  const { user } = useAuthContext();
+  const firstName = user?.name?.split(" ")[0] || "Profile";
+
+  const navItems = BASE_NAV_ITEMS.map((item) =>
+    item.name === "settings" ? { ...item, label: firstName } : item
+  );
 
   return (
     <View style={[styles.bottomTabs, { backgroundColor }]}>
-      {NAV_ITEMS.map((item) => {
+      {navItems.map((item) => {
         const isActive = pathname.includes(item.name);
         return (
           <Pressable

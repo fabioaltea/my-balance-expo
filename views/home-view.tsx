@@ -20,8 +20,7 @@ import type { Account, Movement, IDateRange, PendingRecurrence } from "@/state";
 import type { MonthlyForecast } from "@/hooks/useMyBalanceData";
 import ViewModePicker from "@/components/ui/view-mode-picker";
 import FinancialSummaryCard from "@/components/cards/financial-summary-card";
-import { useQueryClient } from '@tanstack/react-query';
-import { QUERY_KEYS } from '@/hooks/queries/queryKeys';
+import { useDataContext } from '@/state';
 
 interface HomeViewProps {
   accounts: Account[];
@@ -48,8 +47,7 @@ const HomeView: React.FC<HomeViewProps> = ({
   getTotalExpense,
   calculateForecast,
 }) => {
-  // React Query client for invalidating queries
-  const queryClient = useQueryClient();
+  const { reloadData } = useDataContext();
 
   // Local state for date range
   const [dateRange, setDateRange] = useState<IDateRange>(
@@ -186,18 +184,13 @@ const HomeView: React.FC<HomeViewProps> = ({
   };
 
   // Handle refresh - invalidate all queries to trigger refetch
-  const onRefresh = React.useCallback(async () => {
+  const onRefresh = async () => {
     try {
-      // Invalidate all main data queries to trigger fresh data fetch
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.transactions.all }),
-        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.accounts.all }),
-        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.aggregations.all }),
-      ]);
+      await reloadData();
     } catch (error) {
       console.error("Error refreshing data:", error);
     }
-  }, [queryClient]);
+  };
 
 
   return (

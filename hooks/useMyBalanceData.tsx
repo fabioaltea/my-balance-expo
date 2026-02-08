@@ -769,7 +769,7 @@ export const useMyBalanceData = (
     error,
 
     // Actions
-    // reloadData: loadAllData,
+    reloadData,
 
     // Helpers
     getTotalIncome,

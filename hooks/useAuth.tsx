@@ -2,20 +2,13 @@ import { useState, useEffect, useCallback } from "react";
 import { Platform } from "react-native";
 import {
   AuthStorageHelper,
-  AuthTokens,
   User,
 } from "../helpers/AuthStorageHelper";
 import { ApiHelper } from "../helpers/ApiHelper";
-import FunctionHelper from "../utils/FunctionHelper";
-import { DataFilterHelper } from "../utils/DataFilterHelper";
-import { TransactionsApiHelper } from "../helpers/TransactionsApiHelper";
-import { AccountsApiHelper } from "../helpers/AccountsApiHelper";
-import { CategoriesApiHelper } from "../helpers/CategoriesApiHelper";
 import * as WebBrowser from "expo-web-browser";
 import { makeRedirectUri } from "expo-auth-session";
 import * as AuthSession from "expo-auth-session";
 import * as Crypto from "expo-crypto";
-import { NotificationsHelpers } from "@/helpers/NotificationsHelpers";
 
 // Required for web OAuth - completes the auth session when the popup redirects back
 WebBrowser.maybeCompleteAuthSession();
@@ -41,20 +34,6 @@ export const useAuth = () => {
     selectedSpreadsheetId: null,
   });
 
-  // App data states
-  const [allTransactions, setAllTransactions] = useState<any>(null);
-  const [confirmedTransactions, setConfirmedTransactions] = useState<any>(null);
-  const [unconfirmedTransactions, setUnconfirmedTransactions] =
-    useState<any>(null);
-  const [recurrentTransactions, setRecurrentTransactions] = useState<any>(null);
-  const [accountsList, setAccountsList] = useState<any>(null);
-  const [personalCategories, setPersonalCategories] = useState<any>(null);
-  const [totalBalance, setTotalBalance] = useState<any>(null);
-  const [userProfile, setUserProfile] = useState<any>(null);
-  const [confirmedMovements, setConfirmedMovements] = useState<any>(null);
-  const [unconfirmedMovements, setUnconfirmedMovements] = useState<any>(null);
-  const [recurrentMovements, setRecurrentMovements] = useState<any>(null);
-
   const clearError = useCallback(() => {
     setAuthState((prev) => ({ ...prev, error: null }));
   }, []);
@@ -74,9 +53,10 @@ export const useAuth = () => {
     });
   }, []);
 
-  // Load user profile and app data - single entry point after authentication
-  const loadUserDataAndProfile = useCallback(async () => {
-    console.log("🚀 LOAD USER DATA AND PROFILE");
+  // Load user profile - single entry point after authentication
+  // App data (transactions, accounts, categories) is loaded by DataProvider via React Query
+  const loadUserProfile = useCallback(async () => {
+    console.log("🚀 LOAD USER PROFILE");
     try {
       console.log("📡 Getting user profile...");
 
@@ -95,106 +75,14 @@ export const useAuth = () => {
         return;
       }
 
-      // Store user profile in state
-      setUserProfile(profile.user);
       await AuthStorageHelper.storeUser(profile.user);
 
-      // Check if user has a configured spreadsheet
       if (profile.user.spreadsheetId) {
         console.log(
           "✅ User has spreadsheet configured:",
           profile.user.spreadsheetId
         );
 
-        // Load app data
-        console.log("📦 Loading app data...");
-        const [transactions, accounts, categories] = await Promise.all([
-          TransactionsApiHelper.getTransactions(profile.user.spreadsheetId),
-          AccountsApiHelper.getAccounts(profile.user.spreadsheetId),
-          CategoriesApiHelper.getCategories(profile.user.spreadsheetId),
-        ]);
-
-        // Filter transactions by status and not deleted
-        const confirmedTxns = (transactions || []).filter(
-          (t: any) =>
-            (t.status === "Confirmed" || t.status === "") && !t.dateDeleted
-        );
-        const unconfirmedTxns = (transactions || []).filter(
-          (t: any) => t.status === "Pending" && !t.dateDeleted
-        );
-        const recurrentTxns = (transactions || []).filter(
-          (t: any) => t.status === "Recurrent" && !t.dateDeleted
-        );
-
-        setConfirmedTransactions(confirmedTxns);
-        setUnconfirmedTransactions(unconfirmedTxns);
-        setRecurrentTransactions(recurrentTxns);
-
-        // Use shared helpers for currency conversion
-
-        // // Map confirmed transactions to accounts and compute running balances
-        // const parsedAccounts = (accounts || []).map((account: any) => {
-        //   const parsed = confirmedTxns
-        //     .filter((t: any) =>
-        //       account.isTotal === 1 ? true : t.account === account.name
-        //     )
-        //     .sort((a: any, b: any) => (a.date < b.date ? -1 : 1));
-
-        //   let prevAmount = 0;
-        //   const withPrev = parsed.map((t: any, idx: number) => {
-        //     const cur = FunctionHelper.ConvertCurrencyToNumber(t.amount);
-        //     const running = prevAmount + cur;
-        //     prevAmount = running;
-        //     return { ...t, previousTransactionsAmount: running };
-        //   });
-
-        //   const balance =
-        //     withPrev.length > 0
-        //       ? withPrev[withPrev.length - 1].previousTransactionsAmount
-        //       : 0;
-        //   return {
-        //     ...account,
-        //     transactions: withPrev,
-        //     balance: FunctionHelper.ConvertNumberToCurrency(balance),
-        //   };
-        // });
-
-        // Compute total balance as sum of non-total accounts (exclude "All")
-        // const totalAmount = (parsedAccounts || []).reduce(
-        //   (sum: number, a: any) => {
-        //     const last =
-        //       a.transactions?.[a.transactions.length - 1]
-        //         ?.previousTransactionsAmount;
-        //     return sum + (last || 0);
-        //   },
-        //   0
-        // );
-
-        // Group transactions into movements by movementId
-        setConfirmedMovements(
-          DataFilterHelper.groupTransactionsByMovementId(confirmedTxns)
-        );
-        setUnconfirmedMovements(
-          DataFilterHelper.groupTransactionsByMovementId(unconfirmedTxns)
-        );
-        setRecurrentMovements(
-          DataFilterHelper.groupTransactionsByMovementId(recurrentTxns)
-        );
-
-        // Store the loaded data
-        setAllTransactions(confirmedTxns);
-        setAccountsList(accounts);
-        setPersonalCategories(categories);
-        // setTotalBalance(FunctionHelper.ConvertNumberToCurrency(totalAmount));
-
-        console.log("✅ Data loaded successfully:", {
-          transactionsCount: transactions?.length || 0,
-          accountsCount: accounts?.length || 0,
-          categoriesCount: categories?.length || 0,
-          // totalBalance: FunctionHelper.ConvertNumberToCurrency(totalAmount),
-        });
-
-        // Set authenticated state with data ready
         setAuthState({
           isAuthenticated: true,
           user: profile.user,
@@ -207,7 +95,6 @@ export const useAuth = () => {
       } else {
         console.log("🆕 Quickstart mode - no spreadsheet configured");
 
-        // Set authenticated state in quickstart mode
         setAuthState({
           isAuthenticated: true,
           user: profile.user,
@@ -219,7 +106,7 @@ export const useAuth = () => {
         });
       }
     } catch (error) {
-      console.error("❌ Error loading user data and profile:", error);
+      console.error("❌ Error loading user profile:", error);
 
       const is401Error =
         (error as any)?.message?.includes("401") ||
@@ -231,7 +118,7 @@ export const useAuth = () => {
         console.log("🔄 Session expired, logging out...");
         await handleSessionExpired();
       } else {
-        console.log("🚪 General error during data load");
+        console.log("🚪 General error during profile load");
         setAuthState((prev) => ({
           ...prev,
           isLoading: false,
@@ -257,7 +144,7 @@ export const useAuth = () => {
       if (tokens && user) {
         console.log("✅ Stored credentials found, loading data...");
         // We have stored credentials, load user data
-        await loadUserDataAndProfile();
+        await loadUserProfile();
         // await NotificationsHelpers.registerForPushNotificationsAsync();
       } else {
         console.log("❌ No stored credentials, showing login");
@@ -287,7 +174,7 @@ export const useAuth = () => {
         selectedSpreadsheetId: null,
       });
     }
-  }, [loadUserDataAndProfile]);
+  }, [loadUserProfile]);
 
   // PKCE utility functions for OAuth2 security - Following Google specifications
   const generateCodeVerifier = () => {
@@ -407,7 +294,7 @@ export const useAuth = () => {
 
           // Load user profile and data after successful login
           console.log("🚀 Loading user data after successful login");
-          await loadUserDataAndProfile();
+          await loadUserProfile();
           // await NotificationsHelpers.registerForPushNotificationsAsync();
 
         } else {
@@ -480,18 +367,11 @@ export const useAuth = () => {
 
   return {
     ...authState,
-    // Data states
-    allTransactions,
-    accountsList,
-    personalCategories,
-    totalBalance,
-    userProfile,
     // Auth functions
     loginWithGoogle,
     logout,
     initializeAuth,
     clearError,
-    // Data functions
-    reloadData: loadUserDataAndProfile,
+    reloadData: loadUserProfile,
   };
 };

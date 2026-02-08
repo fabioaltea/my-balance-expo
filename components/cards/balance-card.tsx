@@ -51,7 +51,7 @@ const BalanceCard: React.FC<IBalanceCardProps> = ({ account }) => {
           disabled={showSkeleton}
         >
           <IconSymbol
-            name={isBalanceVisible ? "remove-red-eye" : "hide-image"}
+            name={isBalanceVisible ? "remove-red-eye" : "visibility-off"}
             size={24}
             color="#FFFFFF"
           />

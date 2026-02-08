@@ -19,7 +19,6 @@ export default function Home() {
     pendingRecurrences,
     unconfirmedMovements,
     isLoading,
-    reloadData,
     getTotalIncome,
     getTotalExpense,
     calculateForecast,
@@ -60,7 +59,6 @@ export default function Home() {
         pendingRecurrences={pendingRecurrences}
         unconfirmedCount={unconfirmedMovements?.length || 0}
         isLoading={isLoading}
-        reloadData={reloadData}
         getTotalIncome={getTotalIncome}
         getTotalExpense={getTotalExpense}
         calculateForecast={calculateForecast}

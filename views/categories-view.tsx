@@ -1,6 +1,8 @@
-import { StyleSheet, View, ScrollView, Pressable, Dimensions } from 'react-native';
+import { StyleSheet, View, ScrollView, Animated, Pressable, Dimensions } from 'react-native';
 import { ThemedText } from '@/components/core/themed-text';
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useThemeColor } from '@/hooks/use-theme-color';
 import Card from '@/components/core/card';
 import List from '@/components/ui/list';
 import ModalPanel from '@/components/ui/modal-panel';
@@ -15,6 +17,14 @@ interface CategoriesViewProps {
 }
 
 const CategoriesView: React.FC<CategoriesViewProps> = ({ categories }) => {
+  const menuBackground = useThemeColor({}, 'menuBackground');
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const fadeOpacity = scrollY.interpolate({
+    inputRange: [0, 30],
+    outputRange: [0, 1],
+    extrapolate: 'clamp',
+  });
+
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [selectedIcon, setSelectedIcon] = useState<IconName>(DEFAULT_ICON as IconName);
@@ -40,8 +50,25 @@ const CategoriesView: React.FC<CategoriesViewProps> = ({ categories }) => {
   };
 
   return (
-    <>
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+    <View style={{ flex: 1 }}>
+      <Animated.View
+        style={{ height: 20, marginBottom: -20, zIndex: 1, opacity: fadeOpacity }}
+        pointerEvents="none"
+      >
+        <LinearGradient
+          colors={[menuBackground, menuBackground + '00']}
+          style={{ flex: 1 }}
+        />
+      </Animated.View>
+      <Animated.ScrollView
+        style={styles.content}
+        showsVerticalScrollIndicator={false}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: true },
+        )}
+        scrollEventThrottle={16}
+      >
         <Card>
           <List>
             {categories.map((category) => (
@@ -70,7 +97,7 @@ const CategoriesView: React.FC<CategoriesViewProps> = ({ categories }) => {
             ))}
           </List>
         </Card>
-      </ScrollView>
+      </Animated.ScrollView>
 
       <ModalPanel
         isVisible={modalVisible}
@@ -132,7 +159,7 @@ const CategoriesView: React.FC<CategoriesViewProps> = ({ categories }) => {
           </View>
         </ScrollView>
       </ModalPanel>
-    </>
+    </View>
   );
 };
 

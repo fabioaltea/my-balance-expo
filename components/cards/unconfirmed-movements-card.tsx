@@ -12,8 +12,8 @@ import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
 import type { Movement } from "@/state";
 import { MovementHelper } from "@/helpers/MovementHelper";
-import { TransactionsApiHelper } from "@/helpers/TransactionsApiHelper";
 import ContextMenu, { IContextMenuOption } from "../ui/context-menu";
+import { useUpdateMovement } from "@/hooks/mutations";
 
 const sortMovements = (movements: Movement[]) => {
   return movements?.sort((a, b) => {
@@ -33,6 +33,9 @@ const UnconfirmedMovementsCard: React.FC<UnconfirmedMovementsCardProps> = ({
   const { selectedSpreadsheetId } = useAuthContext();
   const { orientation } = usePlatformContext();
   const isLandscape = orientation === "landscape";
+
+  // React Query mutation
+  const updateMovement = useUpdateMovement();
 
   const [menuVisible, setMenuVisible] = useState(false);
   const [buttonPosition, setButtonPosition] = useState<{
@@ -102,26 +105,19 @@ const UnconfirmedMovementsCard: React.FC<UnconfirmedMovementsCardProps> = ({
           onPress: async () => {
             console.log("🗑️ Dismissing movement:", selectedMovement.id, "spreadsheetId:", selectedSpreadsheetId);
             try {
-              const result = await TransactionsApiHelper.updateMovement(
-                selectedSpreadsheetId,
-                selectedMovement.id,
-                {
-                  status: "DELETED",
-                }
-              );
+              // Use React Query mutation to update movement status
+              await updateMovement.mutateAsync({
+                movementId: selectedMovement.id,
+                status: "DELETED",
+              });
 
-              console.log("🗑️ Dismiss result:", result);
-              if (result) {
-                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                await reloadData();
-              } else {
-                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-                Alert.alert("Error", "Failed to dismiss movement");
-              }
+              // Success - mutation handles cache invalidation automatically
+              console.log("🗑️ Dismiss successful");
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             } catch (error) {
               console.error("Error dismissing movement:", error);
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-              Alert.alert("Error", "Something went wrong");
+              Alert.alert("Error", "Failed to dismiss movement");
             }
           },
         },

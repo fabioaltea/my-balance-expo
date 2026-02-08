@@ -2,23 +2,24 @@
  * Single unified hook for MyBalance data management
  *
  * This hook:
- * - Loads transactions, accounts, and categories from backend
- * - Transforms backend data to frontend format
- * - Groups transactions into movements (1 transaction = 1 movement for now)
+ * - Uses React Query hooks for data fetching (useTransactions, useAccounts, useCategories)
+ * - Transforms transactions into movements
  * - Provides helper functions for calculations
+ * - Supports optimistic updates through React Query mutations
  *
  * Architecture:
  * - Backend: Stores individual transactions
  * - Frontend: Groups transactions into movements for display
  * - Movement = one or more transactions (currently 1:1 mapping)
+ * - React Query: Manages caching, optimistic updates, and data synchronization
  */
 
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { TransactionsApiHelper } from "../helpers/TransactionsApiHelper";
-import { AccountsApiHelper } from "../helpers/AccountsApiHelper";
-import { CategoriesApiHelper } from "../helpers/CategoriesApiHelper";
-import { AuthStorageHelper } from "../helpers/AuthStorageHelper";
-import { AuthenticationError } from "../helpers/HttpHelper";
+import { useCallback, useMemo } from "react";
+import { useTransactions } from './queries/useTransactions';
+import { useAccounts } from './queries/useAccounts';
+import { useCategories } from './queries/useCategories';
+import { useQueryClient } from '@tanstack/react-query';
+import { QUERY_KEYS } from './queries/queryKeys';
 import {
   convertISOToLocalFormat,
   calculateExpectedOccurrences,
@@ -158,127 +159,44 @@ export const useMyBalanceData = (
   spreadsheetId: string | null,
   onAuthError?: () => Promise<void>,
 ) => {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+
+  // Use React Query hooks for data fetching
+  const {
+    data: transactions = [],
+    isLoading: isLoadingTransactions,
+    error: transactionsError,
+  } = useTransactions();
+
+  const {
+    data: accounts = [],
+    isLoading: isLoadingAccounts,
+    error: accountsError,
+  } = useAccounts();
+
+  const {
+    data: categories = [],
+    isLoading: isLoadingCategories,
+    error: categoriesError,
+  } = useCategories();
+
+  // Combine loading states
+  const isLoading = isLoadingTransactions || isLoadingAccounts || isLoadingCategories;
+
+  // Combine errors
+  const error = transactionsError?.message || accountsError?.message || categoriesError?.message || null;
 
   /**
-   * Load all data from backend
+   * Reload data by invalidating all queries
+   * This will trigger a refetch of all data
    */
-  const loadAllData = useCallback(async () => {
-    if (!spreadsheetId) {
-      console.warn("⚠️ useMyBalanceData: No spreadsheetId, skipping load");
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const tokens = await AuthStorageHelper.getTokens();
-      if (!tokens?.accessToken) {
-        throw new Error("No access token");
-      }
-
-      console.log("📥 useMyBalanceData: Loading all data...");
-
-      // ===== Load Transactions =====
-      const rawTransactions =
-        await TransactionsApiHelper.getTransactions(spreadsheetId);
-
-      const transformedTransactions: Transaction[] = (
-        rawTransactions || []
-      ).map((t: any) => {
-        const amountStr =
-          t.amount
-            ?.replace?.(/[€\s]/g, "")
-            ?.replace(".", "")
-            .replace?.(",", ".") || "0";
-        const amount = parseFloat(amountStr);
-
-        return {
-          movementId: t.movementId,
-          transactionId: t.transactionId || t.id || Math.random().toString(),
-          date: t.date,
-          description: t.description || "",
-          amount: Math.abs(amount), // Always positive
-          type: amount >= 0 ? ("income" as const) : ("expense" as const),
-          account: t.account || "",
-          category: t.category || "",
-          location: t.location || "",
-          recurrenceId: t.recurrenceId || undefined,
-          recurrencePattern: t.recurrencePattern || undefined,
-          status: t.status || "Confirmed",
-        };
-      });
-
-      console.log("✅ Transactions loaded:", transformedTransactions.length);
-
-      // ===== Load Accounts =====
-      const rawAccounts = await AccountsApiHelper.getAccounts(spreadsheetId);
-
-      const transformedAccounts: Account[] = (rawAccounts || []).map(
-        (a: any) => ({
-          accountId: a.accountId || a.id || Math.random().toString(),
-          name: a.name || "",
-          balance: parseFloat(
-            a.balance?.replace?.(/[€\s]/g, "")?.replace?.(",", ".") || "0",
-          ),
-          color: a.color || "#2F4F3F",
-          textColor: a.textColor || "#FFFFFF",
-        }),
-      );
-
-      console.log("✅ Accounts loaded:", transformedAccounts.length);
-
-      // ===== Load Categories =====
-      const rawCategories =
-        await CategoriesApiHelper.getCategories(spreadsheetId);
-
-      const transformedCategories: Category[] = (rawCategories || []).map(
-        (c: any) => ({
-          id: c.id || Math.random().toString(),
-          name: c.name || "",
-          type: (c.type as "income" | "expense") || "expense",
-          color: c.color || "#2F4F3F",
-          icon: c.icon || "pricetag",
-        }),
-      );
-
-      console.log("✅ Categories loaded:", transformedCategories.length);
-
-      // Update state
-      setTransactions(transformedTransactions);
-      setAccounts(transformedAccounts);
-      setCategories(transformedCategories);
-
-      console.log("✅ useMyBalanceData: All data loaded successfully");
-    } catch (err: any) {
-      console.error("❌ useMyBalanceData: Error loading data:", err);
-
-      // If authentication error, trigger logout
-      if (err instanceof AuthenticationError) {
-        console.log("🔐 Authentication error detected, triggering logout...");
-        setError("Session expired. Please login again.");
-        if (onAuthError) {
-          await onAuthError();
-        }
-      } else {
-        setError(err.message || "Failed to load data");
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  }, [spreadsheetId, onAuthError]);
-
-  // Auto-load on mount and spreadsheetId change
-  useEffect(() => {
-    if (spreadsheetId) {
-      loadAllData();
-    }
-  }, [spreadsheetId, loadAllData]);
+  const reloadData = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.transactions.all }),
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.accounts.all }),
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.categories.all }),
+    ]);
+  };
 
   /**
    * Group transactions into movements by movementId
@@ -851,7 +769,7 @@ export const useMyBalanceData = (
     error,
 
     // Actions
-    reloadData: loadAllData,
+    reloadData,
 
     // Helpers
     getTotalIncome,

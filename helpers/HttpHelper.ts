@@ -2,8 +2,11 @@ import { User, AuthStorageHelper } from "./AuthStorageHelper";
 
 // Get API URL from environment or use default
 const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8080";
+// Auth service URL - separate service for authentication
+const AUTH_URL = process.env.EXPO_PUBLIC_AUTH_URL || "http://localhost:8082";
 
 console.log("🌐 API_URL configured as:", API_URL);
+console.log("🔐 AUTH_URL configured as:", AUTH_URL);
 
 /**
  * Custom error for authentication failures that require re-login
@@ -26,6 +29,7 @@ export interface HttpResponse<T = any> {
 
 export class HttpHelper {
   public static endpointUri = API_URL;
+  public static authUri = AUTH_URL;
 
   /**
    * Private method to refresh tokens via API
@@ -36,10 +40,10 @@ export class HttpHelper {
   ): Promise<{ accessToken: string; refreshToken: string } | null> {
     try {
       console.log("🔄 Calling refresh token API...");
-      console.log("🔄 Endpoint:", `${this.endpointUri}/auth/refresh`);
+      console.log("🔄 Endpoint:", `${this.authUri}/auth/refresh`);
       console.log("🔄 Device ID:", deviceId);
 
-      const response = await fetch(`${this.endpointUri}/auth/refresh`, {
+      const response = await fetch(`${this.authUri}/auth/refresh`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

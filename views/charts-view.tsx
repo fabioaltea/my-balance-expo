@@ -1,8 +1,9 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import {
   View,
   StyleSheet,
   ScrollView,
+  Animated,
   TouchableOpacity,
   Text,
 } from "react-native";
@@ -24,6 +25,7 @@ import {
 } from "@/components/charts";
 import Card from "@/components/core/card";
 import { useThemeColor } from "@/hooks/use-theme-color";
+import { LinearGradient } from "expo-linear-gradient";
 import ModalPanel from "@/components/ui/modal-panel";
 import { ThemedText } from "@/components/core/themed-text";
 
@@ -53,6 +55,13 @@ const ChartsView: React.FC = () => {
   const cardBackground = useThemeColor({}, "cardBackground");
   const textColor = useThemeColor({}, "text");
   const subtleTextColor = useThemeColor({}, "tabIconDefault");
+  const menuBackground = useThemeColor({}, "menuBackground");
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const fadeOpacity = scrollY.interpolate({
+    inputRange: [0, 30],
+    outputRange: [0, 1],
+    extrapolate: 'clamp',
+  });
 
   // State for view mode (months or years)
   const [viewMode, setViewMode] = useState<ViewMode>("months");
@@ -467,7 +476,24 @@ const ChartsView: React.FC = () => {
         </View>
       </View>
 
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <Animated.View
+        style={{ height: 20, marginBottom: -20, zIndex: 1, opacity: fadeOpacity }}
+        pointerEvents="none"
+      >
+        <LinearGradient
+          colors={[menuBackground, menuBackground + '00']}
+          style={{ flex: 1 }}
+        />
+      </Animated.View>
+      <Animated.ScrollView
+        style={styles.container}
+        showsVerticalScrollIndicator={false}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: true },
+        )}
+        scrollEventThrottle={16}
+      >
         {/* Balance History Chart */}
         <Text style={[styles.chartLabel, { color: textColor, marginTop: 0 }]}>
           Balance History
@@ -847,7 +873,7 @@ const ChartsView: React.FC = () => {
 
         {/* Bottom spacer for scroll */}
         <View style={styles.bottomSpacer} />
-      </ScrollView>
+      </Animated.ScrollView>
     </View>
   );
 };

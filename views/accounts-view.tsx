@@ -1,6 +1,8 @@
-import { StyleSheet, View, ScrollView, Pressable, Dimensions, Alert, TextInput } from 'react-native';
+import { StyleSheet, View, ScrollView, Animated, Pressable, Dimensions, Alert, TextInput } from 'react-native';
 import { ThemedText } from '@/components/core/themed-text';
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useThemeColor } from '@/hooks/use-theme-color';
 import Card from '@/components/core/card';
 import List from '@/components/ui/list';
 import ModalPanel from '@/components/ui/modal-panel';
@@ -27,6 +29,13 @@ const AccountsView: React.FC<AccountsViewProps> = ({
 }) => {
   // React Query mutation
   const updateAccount = useUpdateAccount();
+  const menuBackground = useThemeColor({}, 'menuBackground');
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const fadeOpacity = scrollY.interpolate({
+    inputRange: [0, 30],
+    outputRange: [0, 1],
+    extrapolate: 'clamp',
+  });
 
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
@@ -86,8 +95,25 @@ const AccountsView: React.FC<AccountsViewProps> = ({
   };
 
   return (
-    <>
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+    <View style={{ flex: 1 }}>
+      <Animated.View
+        style={{ height: 20, marginBottom: -20, zIndex: 1, opacity: fadeOpacity }}
+        pointerEvents="none"
+      >
+        <LinearGradient
+          colors={[menuBackground, menuBackground + '00']}
+          style={{ flex: 1 }}
+        />
+      </Animated.View>
+      <Animated.ScrollView
+        style={styles.content}
+        showsVerticalScrollIndicator={false}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: true },
+        )}
+        scrollEventThrottle={16}
+      >
         <Card>
           <List>
             {accounts.map((account) => (
@@ -117,7 +143,7 @@ const AccountsView: React.FC<AccountsViewProps> = ({
             ))}
           </List>
         </Card>
-      </ScrollView>
+      </Animated.ScrollView>
 
       <ModalPanel
         isVisible={modalVisible}
@@ -172,7 +198,7 @@ const AccountsView: React.FC<AccountsViewProps> = ({
           </ScrollView>
         </View>
       </ModalPanel>
-    </>
+    </View>
   );
 };
 

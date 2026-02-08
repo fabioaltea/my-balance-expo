@@ -1,18 +1,19 @@
-import { StyleSheet, View, ScrollView, Pressable, Dimensions, Alert, TextInput } from 'react-native';
+import { StyleSheet, View, ScrollView, Animated, Pressable, Dimensions, Alert, TextInput } from 'react-native';
 import { ThemedText } from '@/components/core/themed-text';
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useThemeColor } from '@/hooks/use-theme-color';
 import Card from '@/components/core/card';
 import List from '@/components/ui/list';
 import ModalPanel from '@/components/ui/modal-panel';
 import { Account } from '@/hooks/useMyBalanceData';
 import * as Haptics from 'expo-haptics';
-import { AccountsApiHelper } from '@/helpers/AccountsApiHelper';
 import { COLOR_PALETTE, DEFAULT_COLOR, DEFAULT_TEXT_COLOR } from '@/constants/colors';
+import { useUpdateAccount } from '@/hooks/mutations';
 
 interface AccountsViewProps {
   accounts: Account[];
   selectedSpreadsheetId: string | null;
-  reloadData: () => Promise<void>;
 }
 
 const formatCurrency = (amount: number): string => {
@@ -25,13 +26,21 @@ const formatCurrency = (amount: number): string => {
 const AccountsView: React.FC<AccountsViewProps> = ({
   accounts,
   selectedSpreadsheetId,
-  reloadData,
 }) => {
+  // React Query mutation
+  const updateAccount = useUpdateAccount();
+  const menuBackground = useThemeColor({}, 'menuBackground');
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const fadeOpacity = scrollY.interpolate({
+    inputRange: [0, 30],
+    outputRange: [0, 1],
+    extrapolate: 'clamp',
+  });
+
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
   const [selectedColor, setSelectedColor] = useState<string>(DEFAULT_COLOR);
   const [editedName, setEditedName] = useState<string>('');
-  const [isUpdating, setIsUpdating] = useState(false);
 
   const handleAccountLongPress = (account: Account) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -50,23 +59,19 @@ const AccountsView: React.FC<AccountsViewProps> = ({
   const performUpdate = async () => {
     if (!selectedAccount || !selectedSpreadsheetId) return;
 
-    setIsUpdating(true);
     try {
-      await AccountsApiHelper.updateAccount(
-        selectedSpreadsheetId,
-        selectedAccount.accountId,
-        {
-          name: editedName,
-          color: selectedColor,
-        }
-      );
-      await reloadData();
+      // Use React Query mutation
+      await updateAccount.mutateAsync({
+        accountId: selectedAccount.accountId,
+        name: editedName,
+        color: selectedColor,
+      });
+
+      // Success - mutation handles cache invalidation automatically
       handleCloseModal();
     } catch (error) {
       console.error('Error updating account:', error);
       Alert.alert('Errore', 'Impossibile aggiornare il conto');
-    } finally {
-      setIsUpdating(false);
     }
   };
 
@@ -90,8 +95,25 @@ const AccountsView: React.FC<AccountsViewProps> = ({
   };
 
   return (
-    <>
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+    <View style={{ flex: 1 }}>
+      <Animated.View
+        style={{ height: 20, marginBottom: -20, zIndex: 1, opacity: fadeOpacity }}
+        pointerEvents="none"
+      >
+        <LinearGradient
+          colors={[menuBackground, menuBackground + '00']}
+          style={{ flex: 1 }}
+        />
+      </Animated.View>
+      <Animated.ScrollView
+        style={styles.content}
+        showsVerticalScrollIndicator={false}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: true },
+        )}
+        scrollEventThrottle={16}
+      >
         <Card>
           <List>
             {accounts.map((account) => (
@@ -121,7 +143,7 @@ const AccountsView: React.FC<AccountsViewProps> = ({
             ))}
           </List>
         </Card>
-      </ScrollView>
+      </Animated.ScrollView>
 
       <ModalPanel
         isVisible={modalVisible}
@@ -176,7 +198,7 @@ const AccountsView: React.FC<AccountsViewProps> = ({
           </ScrollView>
         </View>
       </ModalPanel>
-    </>
+    </View>
   );
 };
 

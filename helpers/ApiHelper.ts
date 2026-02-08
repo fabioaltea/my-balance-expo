@@ -1,5 +1,5 @@
 import { HttpHelper, HttpResponse } from "./HttpHelper";
-import { AuthStorageHelper, AuthTokens, User } from "./AuthStorageHelper";
+import { AuthStorageHelper, User } from "./AuthStorageHelper";
 
 export class ApiHelper {
   // Authentication methods
@@ -20,7 +20,7 @@ export class ApiHelper {
       };
 
       const response = await fetch(
-        `${HttpHelper.endpointUri}/auth/google/callback`,
+        `${HttpHelper.authUri}/auth/google/callback`,
         {
           method: "POST",
           headers: {
@@ -60,7 +60,7 @@ export class ApiHelper {
 
   static async logout(deviceId: string, refreshToken: string): Promise<void> {
     try {
-      await fetch(`${HttpHelper.endpointUri}/auth/logout`, {
+      await fetch(`${HttpHelper.authUri}/auth/logout`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -76,10 +76,29 @@ export class ApiHelper {
 
   static async getUserProfile(): Promise<HttpResponse<User> | null> {
     try {
-      const response = await HttpHelper.get("/auth/profile");
+      // Get valid access token (with automatic refresh if expired)
+      const accessToken = await HttpHelper.getValidAccessToken();
+      if (!accessToken) {
+        console.error("No valid access token available for profile request");
+        return null;
+      }
 
-      if (response.success) {
-        return response;
+      const response = await fetch(`${HttpHelper.authUri}/auth/profile`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        console.error("Get profile failed:", response.status);
+        return null;
+      }
+
+      const result = await response.json();
+      if (result.success) {
+        return result;
       }
 
       return null;
@@ -92,8 +111,23 @@ export class ApiHelper {
   // Push notifications methods
   static async savePushToken(pushToken: string): Promise<boolean> {
     try {
-      const response = await HttpHelper.post("/auth/push-token", { pushToken });
-      return response.success;
+      const tokens = await AuthStorageHelper.getTokens();
+      if (!tokens?.accessToken) {
+        console.error("No access token available for push token request");
+        return false;
+      }
+
+      const response = await fetch(`${HttpHelper.authUri}/auth/push-token`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${tokens.accessToken}`,
+        },
+        body: JSON.stringify({ pushToken }),
+      });
+
+      const result = await response.json();
+      return result.success;
     } catch (error) {
       console.error("Save push token error:", error);
       return false;
@@ -102,8 +136,22 @@ export class ApiHelper {
 
   static async removePushToken(): Promise<boolean> {
     try {
-      const response = await HttpHelper.delete("/auth/push-token");
-      return response.success;
+      const tokens = await AuthStorageHelper.getTokens();
+      if (!tokens?.accessToken) {
+        console.error("No access token available for push token removal");
+        return false;
+      }
+
+      const response = await fetch(`${HttpHelper.authUri}/auth/push-token`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${tokens.accessToken}`,
+        },
+      });
+
+      const result = await response.json();
+      return result.success;
     } catch (error) {
       console.error("Remove push token error:", error);
       return false;

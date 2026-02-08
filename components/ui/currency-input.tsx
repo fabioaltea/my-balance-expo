@@ -276,7 +276,7 @@ const CurrencyInput: React.FC<ICurrencyInputProps> = ({
         )}
         <KeypadButton onPress={() => handleNumberPress("0")}>0</KeypadButton>
         <KeypadButton onPress={handleBackspace}>
-          <IconSymbol name="backspace-outline" size={24} color={textColor} />
+          <IconSymbol name="backspace" size={24} color={textColor} />
         </KeypadButton>
       </View>
 

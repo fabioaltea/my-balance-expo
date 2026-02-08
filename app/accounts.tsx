@@ -8,7 +8,7 @@ import { useAuthContext } from '@/state/AuthProvider';
 import AccountsView from '@/views/accounts-view';
 
 export default function Accounts() {
-  const { accounts, reloadData } = useDataContext();
+  const { accounts } = useDataContext();
   const { selectedSpreadsheetId } = useAuthContext();
 
   const handleButtonPress = () => {
@@ -24,7 +24,6 @@ export default function Accounts() {
       <AccountsView
         accounts={accounts}
         selectedSpreadsheetId={selectedSpreadsheetId}
-        reloadData={reloadData}
       />
     </ScreenView>
   );

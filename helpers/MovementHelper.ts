@@ -2,7 +2,7 @@ import { Category } from "@/state";
 // Default colors for income/expense
 const DEFAULT_INCOME_COLOR = "#34C759";
 const DEFAULT_EXPENSE_COLOR = "#FF3B30";
-const DEFAULT_ICON = "cash";
+const DEFAULT_ICON = "label";
 export class MovementHelper {
    
    public static getMovementIcon = (

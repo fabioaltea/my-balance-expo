@@ -1,5 +1,5 @@
 import { HttpHelper, HttpResponse } from "./HttpHelper";
-import { AuthStorageHelper, AuthTokens, User } from "./AuthStorageHelper";
+import { AuthStorageHelper, User } from "./AuthStorageHelper";
 
 export class ApiHelper {
   // Authentication methods
@@ -76,10 +76,10 @@ export class ApiHelper {
 
   static async getUserProfile(): Promise<HttpResponse<User> | null> {
     try {
-      // Get valid access token
-      const tokens = await AuthStorageHelper.getTokens();
-      if (!tokens?.accessToken) {
-        console.error("No access token available for profile request");
+      // Get valid access token (with automatic refresh if expired)
+      const accessToken = await HttpHelper.getValidAccessToken();
+      if (!accessToken) {
+        console.error("No valid access token available for profile request");
         return null;
       }
 
@@ -87,7 +87,7 @@ export class ApiHelper {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${tokens.accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       });
 

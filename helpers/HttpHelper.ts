@@ -83,7 +83,7 @@ export class HttpHelper {
   /**
    * Get a valid access token, automatically refreshing if needed
    */
-  private static async getValidAccessToken(): Promise<string | null> {
+  static async getValidAccessToken(): Promise<string | null> {
     try {
       let tokens = await AuthStorageHelper.getTokens();
 

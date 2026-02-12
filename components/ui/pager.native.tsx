@@ -39,6 +39,19 @@ const Pager: React.FC<IPagerProps> = ({
       ? [children]
       : [];
 
+  // Workaround: react-native-pager-view ignores scrollEnabled={false} on initial render.
+  // When scroll is disabled, render only the current page in a plain View.
+  if (!scrollEnabled) {
+    const pageIndex = selectedPage || 0;
+    return (
+      <View style={[styles.container, style]}>
+        <View style={styles.page}>
+          {validChildren[pageIndex]}
+        </View>
+      </View>
+    );
+  }
+
   return (
     <PagerView
       ref={pagerRef}

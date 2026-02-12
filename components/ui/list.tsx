@@ -25,22 +25,25 @@ const List: React.FC<IListProps> = ({ children }) => {
     },
   });
 
+  const validChildren = Array.isArray(children)
+    ? children.filter(Boolean)
+    : children
+      ? [children]
+      : [];
+
   return (
     <View>
-      {children &&
-        Array.isArray(children) ?
-        children.map((child, index) => (
-          <View
-            key={index}
-            style={[
-              dynamicStyles.item,
-              index == children.length - 1 && dynamicStyles.lastItem,
-            ]}
-          >
-            {child}
-          </View>
-        )): <View style={[dynamicStyles.item, dynamicStyles.lastItem]}>{children}</View>
-      }
+      {validChildren.map((child, index) => (
+        <View
+          key={index}
+          style={[
+            dynamicStyles.item,
+            index === validChildren.length - 1 && dynamicStyles.lastItem,
+          ]}
+        >
+          {child}
+        </View>
+      ))}
     </View>
   );
 };

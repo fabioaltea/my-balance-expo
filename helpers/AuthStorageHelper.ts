@@ -12,6 +12,7 @@ export interface User {
   picture?: string;
   emailVerified?: boolean;
   spreadsheetId?: string;
+  schemaVersion?: number;
   lastAccess?: string;
   pushNotificationsEnabled?: boolean;
 }

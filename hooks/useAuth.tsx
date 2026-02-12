@@ -5,6 +5,8 @@ import {
   User,
 } from "../helpers/AuthStorageHelper";
 import { ApiHelper } from "../helpers/ApiHelper";
+import { HttpHelper } from "../helpers/HttpHelper";
+import { queryClient } from "../providers/QueryProvider";
 import * as WebBrowser from "expo-web-browser";
 import { makeRedirectUri } from "expo-auth-session";
 import * as AuthSession from "expo-auth-session";
@@ -12,6 +14,9 @@ import * as Crypto from "expo-crypto";
 
 // Required for web OAuth - completes the auth session when the popup redirects back
 WebBrowser.maybeCompleteAuthSession();
+
+// Must match LATEST_SCHEMA_VERSION in api/src/helpers/mybalance/migration.helper.ts
+const LATEST_SCHEMA_VERSION = 3;
 
 export interface AuthState {
   isAuthenticated: boolean;
@@ -67,6 +72,7 @@ export const useAuth = () => {
         success: !!profile,
         hasUser: !!profile?.user,
         spreadsheetId: profile?.user?.spreadsheetId,
+        schemaVersion: profile?.user?.schemaVersion,
       });
 
       if (!profile || !profile.user) {
@@ -83,13 +89,23 @@ export const useAuth = () => {
           profile.user.spreadsheetId
         );
 
+        // Check if schema migration is needed
+        const schemaVersion = profile.user.schemaVersion ?? 1;
+        const migrationNeeded = schemaVersion < LATEST_SCHEMA_VERSION;
+
+        if (migrationNeeded) {
+          console.log(
+            `🔄 Schema migration needed: v${schemaVersion} → v${LATEST_SCHEMA_VERSION}`
+          );
+        }
+
         setAuthState({
           isAuthenticated: true,
           user: profile.user,
           isLoading: false,
           error: null,
-          mode: "dashboard",
-          dashboardReady: true,
+          mode: migrationNeeded ? "migration" : "dashboard",
+          dashboardReady: !migrationNeeded,
           selectedSpreadsheetId: profile.user.spreadsheetId,
         });
       } else {
@@ -365,6 +381,57 @@ export const useAuth = () => {
     initializeAuth();
   }, [initializeAuth]);
 
+  // Execute pending schema migrations
+  const executeMigration = useCallback(async () => {
+    try {
+      setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
+      console.log("🔄 Starting schema migration...");
+
+      const result = await HttpHelper.post("/spreadsheet/migrate", {});
+
+      if (result.success) {
+        console.log("✅ Migration completed:", result.data);
+        // Clear React Query cache to avoid serving stale data with old column layout
+        queryClient.clear();
+        // The migration API confirmed success — transition to dashboard directly
+        // instead of relying on loadUserProfile to re-check schemaVersion
+        // (the auth service profile may return stale data).
+        setAuthState((prev) => ({
+          ...prev,
+          isLoading: false,
+          error: null,
+          mode: "dashboard",
+          dashboardReady: true,
+        }));
+      } else {
+        console.error("❌ Migration failed:", result);
+        setAuthState((prev) => ({
+          ...prev,
+          isLoading: false,
+          error: "Migration failed. Please try again later.",
+        }));
+      }
+    } catch (error) {
+      console.error("❌ Migration error:", error);
+      // The migration may have succeeded on the backend even if the request
+      // failed (e.g. network timeout on a long-running migration).
+      // Try reloading the profile — if schemaVersion is now up to date,
+      // loadUserProfile will transition to dashboard mode automatically.
+      console.log("🔄 Attempting profile reload after migration error...");
+      try {
+        queryClient.clear();
+        await loadUserProfile();
+      } catch (reloadError) {
+        console.error("❌ Profile reload also failed:", reloadError);
+        setAuthState((prev) => ({
+          ...prev,
+          isLoading: false,
+          error: "Migration failed. Please try again later.",
+        }));
+      }
+    }
+  }, [loadUserProfile]);
+
   return {
     ...authState,
     // Auth functions
@@ -373,5 +440,6 @@ export const useAuth = () => {
     initializeAuth,
     clearError,
     reloadData: loadUserProfile,
+    executeMigration,
   };
 };

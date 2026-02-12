@@ -13,6 +13,9 @@ import { Movement } from "./useMyBalanceData";
 import { parseDateFromDDMMYYYY } from "../utils/dateUtils";
 import { useMonthlyAggregations } from "./queries/useAggregations";
 
+// Categories excluded from income/expense (only affect balances)
+const EXCLUDED_CATEGORIES = ["Initial Balance"];
+
 export interface IncomeExpenseData {
   month: string; // "MM/YYYY" format for display
   year: number;
@@ -114,13 +117,15 @@ export const useIncomeExpenses = ({
       let income = 0;
       let expenses = 0;
 
-      monthMovements.forEach((m) => {
-        if (m.totalAmount >= 0) {
-          income += m.totalAmount;
-        } else {
-          expenses += Math.abs(m.totalAmount);
-        }
-      });
+      monthMovements
+        .filter((m) => !EXCLUDED_CATEGORIES.includes(m.category))
+        .forEach((m) => {
+          if (m.totalAmount >= 0) {
+            income += m.totalAmount;
+          } else {
+            expenses += Math.abs(m.totalAmount);
+          }
+        });
 
       const monthLabel = `${String(month + 1).padStart(2, "0")}/${year}`;
 

@@ -1,14 +1,14 @@
-import { StyleSheet, View, ScrollView, Animated, Pressable, Dimensions, Alert, TextInput } from 'react-native';
+import { StyleSheet, View, Animated, Pressable, Alert } from 'react-native';
 import { ThemedText } from '@/components/core/themed-text';
 import React, { useState, useRef } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import Card from '@/components/core/card';
 import List from '@/components/ui/list';
-import ModalPanel from '@/components/ui/modal-panel';
+import AccountModal from '@/components/ui/account-modal';
 import { Account } from '@/hooks/useMyBalanceData';
 import * as Haptics from 'expo-haptics';
-import { COLOR_PALETTE, DEFAULT_COLOR, DEFAULT_TEXT_COLOR } from '@/constants/colors';
+import { DEFAULT_COLOR, DEFAULT_TEXT_COLOR } from '@/constants/colors';
 import { useUpdateAccount } from '@/hooks/mutations';
 
 interface AccountsViewProps {
@@ -39,35 +39,27 @@ const AccountsView: React.FC<AccountsViewProps> = ({
 
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
-  const [selectedColor, setSelectedColor] = useState<string>(DEFAULT_COLOR);
-  const [editedName, setEditedName] = useState<string>('');
 
   const handleAccountLongPress = (account: Account) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setSelectedAccount(account);
-    setSelectedColor(account.color || DEFAULT_COLOR);
-    setEditedName(account.name);
     setModalVisible(true);
   };
 
   const handleCloseModal = () => {
     setModalVisible(false);
     setSelectedAccount(null);
-    setEditedName('');
   };
 
-  const performUpdate = async () => {
+  const performUpdate = async (name: string, color: string) => {
     if (!selectedAccount || !selectedSpreadsheetId) return;
 
     try {
-      // Use React Query mutation
       await updateAccount.mutateAsync({
         accountId: selectedAccount.accountId,
-        name: editedName,
-        color: selectedColor,
+        name,
+        color,
       });
-
-      // Success - mutation handles cache invalidation automatically
       handleCloseModal();
     } catch (error) {
       console.error('Error updating account:', error);
@@ -75,22 +67,22 @@ const AccountsView: React.FC<AccountsViewProps> = ({
     }
   };
 
-  const handleConfirm = async () => {
+  const handleAccountModalConfirm = (data: { name: string; color: string; balance: number }) => {
     if (!selectedAccount) return;
 
-    const nameChanged = editedName !== selectedAccount.name;
+    const nameChanged = data.name !== selectedAccount.name;
 
     if (nameChanged) {
-      await Alert.alert(
+      Alert.alert(
         'Conferma modifica',
-        `Stai per rinominare il conto da "${selectedAccount.name}" a "${editedName}".\n\nTutte le transazioni associate a questo conto saranno aggiornate con il nuovo nome.`,
+        `Stai per rinominare il conto da "${selectedAccount.name}" a "${data.name}".\n\nTutte le transazioni associate a questo conto saranno aggiornate con il nuovo nome.`,
         [
           { text: 'Annulla', style: 'cancel' },
-          { text: 'Conferma', onPress: performUpdate },
+          { text: 'Conferma', onPress: () => performUpdate(data.name, data.color) },
         ]
       );
     } else {
-      performUpdate();
+      performUpdate(data.name, data.color);
     }
   };
 
@@ -145,59 +137,13 @@ const AccountsView: React.FC<AccountsViewProps> = ({
         </Card>
       </Animated.ScrollView>
 
-      <ModalPanel
+      <AccountModal
         isVisible={modalVisible}
         onClose={handleCloseModal}
-        onConfirm={handleConfirm}
+        onConfirm={handleAccountModalConfirm}
         title="Edit Account"
-        maxHeight={Dimensions.get('window').height * 0.7}
-      >
-        <View>
-          {/* Preview */}
-          <View style={styles.previewContainer}>
-            <View style={styles.previewRow}>
-              <View
-                style={[
-                  styles.previewDot,
-                  { backgroundColor: selectedColor, borderColor: DEFAULT_TEXT_COLOR },
-                ]}
-              />
-              <ThemedText style={styles.previewName}>{editedName || 'Account Name'}</ThemedText>
-            </View>
-          </View>
-
-          {/* Name input */}
-          <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>Name</ThemedText>
-          <TextInput
-            style={styles.nameInput}
-            value={editedName}
-            onChangeText={setEditedName}
-            placeholder="Account Name"
-            placeholderTextColor="#999"
-          />
-
-          {/* Color selection */}
-          <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>Color</ThemedText>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.colorScrollView}
-            contentContainerStyle={styles.colorScrollContent}
-          >
-            {COLOR_PALETTE.map((color) => (
-              <Pressable
-                key={color}
-                onPress={() => setSelectedColor(color)}
-                style={[
-                  styles.colorItem,
-                  { backgroundColor: color },
-                  selectedColor === color && styles.selectedItem,
-                ]}
-              />
-            ))}
-          </ScrollView>
-        </View>
-      </ModalPanel>
+        initialData={selectedAccount ? { name: selectedAccount.name, color: selectedAccount.color || DEFAULT_COLOR } : undefined}
+      />
     </View>
   );
 };
@@ -233,55 +179,5 @@ const styles = StyleSheet.create({
   balanceText: {
     fontSize: 18,
     fontWeight: "700",
-  },
-  previewContainer: {
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  previewRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  previewDot: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 1,
-    marginRight: 10,
-  },
-  previewName: {
-    fontSize: 18,
-    fontWeight: "600",
-  },
-  sectionTitle: {
-    marginBottom: 12,
-    marginTop: 8,
-  },
-  nameInput: {
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: "#FFFFFF",
-    marginBottom: 16,
-  },
-  colorScrollView: {
-    marginBottom: 20,
-    marginHorizontal: -20,
-  },
-  colorScrollContent: {
-    flexDirection: "row",
-    gap: 12,
-    paddingHorizontal: 20,
-  },
-  colorItem: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-  },
-  selectedItem: {
-    borderWidth: 3,
-    borderColor: "#007AFF",
   },
 });

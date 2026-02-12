@@ -9,6 +9,9 @@ import { useMemo } from "react";
 import { Transaction, Movement, Account } from "./useMyBalanceData";
 import { parseDateFromDDMMYYYY } from "../utils/dateUtils";
 
+// Categories excluded from income/expense breakdown (only affect balances)
+const EXCLUDED_CATEGORIES = ["Initial Balance"];
+
 export interface BreakdownItem {
   id: string;
   name: string;
@@ -99,19 +102,23 @@ export const useCategoryAccountBreakdown = ({
     // Track all unique categories/accounts for consistent coloring
     const allGroupKeys = new Set<string>();
     if (groupBy === "category") {
-      movements.forEach((m) => {
-        // Filter by type based on totalAmount sign
-        const isIncome = m.totalAmount >= 0;
-        if ((type === "expense" && !isIncome) || (type === "income" && isIncome)) {
-          allGroupKeys.add(m.category || "Altro");
-        }
-      });
+      movements
+        .filter((m) => !EXCLUDED_CATEGORIES.includes(m.category))
+        .forEach((m) => {
+          // Filter by type based on totalAmount sign
+          const isIncome = m.totalAmount >= 0;
+          if ((type === "expense" && !isIncome) || (type === "income" && isIncome)) {
+            allGroupKeys.add(m.category || "Altro");
+          }
+        });
     } else {
-      transactions.forEach((t) => {
-        if ((type === "expense" && t.type === "expense") || (type === "income" && t.type === "income")) {
-          allGroupKeys.add(t.account);
-        }
-      });
+      transactions
+        .filter((t) => !EXCLUDED_CATEGORIES.includes(t.category))
+        .forEach((t) => {
+          if ((type === "expense" && t.type === "expense") || (type === "income" && t.type === "income")) {
+            allGroupKeys.add(t.account);
+          }
+        });
     }
     const groupKeyArray = Array.from(allGroupKeys);
 
@@ -122,6 +129,7 @@ export const useCategoryAccountBreakdown = ({
       if (groupBy === "category") {
         // Use movements and their totalAmount (delta)
         const monthMovements = movements.filter((m) => {
+          if (EXCLUDED_CATEGORIES.includes(m.category)) return false;
           const movementDate = parseDateFromDDMMYYYY(m.date);
           if (!movementDate) return false;
           if (movementDate < startDate || movementDate > endDate) return false;
@@ -139,6 +147,7 @@ export const useCategoryAccountBreakdown = ({
       } else {
         // Use transactions (original logic for account breakdown)
         const monthTransactions = transactions.filter((t) => {
+          if (EXCLUDED_CATEGORIES.includes(t.category)) return false;
           const txDate = parseDateFromDDMMYYYY(t.date);
           if (!txDate) return false;
           if (txDate < startDate || txDate > endDate) return false;

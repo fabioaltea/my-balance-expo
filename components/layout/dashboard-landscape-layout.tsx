@@ -189,9 +189,11 @@ export function DashboardLandscapeLayout() {
           </LayoutColumn>
 
           {/* Right column: Forecast card */}
-          <LayoutColumn flex={1}>
-            <ForecastCard forecast={forecast} />
-          </LayoutColumn>
+          {forecast.hasEnoughData && (
+            <LayoutColumn flex={1}>
+              <ForecastCard forecast={forecast} />
+            </LayoutColumn>
+          )}
         </LayoutRow>
 
         {/* Row 2: Movements and Action cards */}

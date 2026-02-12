@@ -21,8 +21,15 @@ const sortMovements = (movements: Movement[]) => {
   });
 };
 
-const UnconfirmedMovementsCard: React.FC = () => {
-  const { unconfirmedMovements, categories } = useDataContext();
+interface UnconfirmedMovementsCardProps {
+  /** Optional callback to override default navigation behavior */
+  onMovementPress?: (movement: Movement) => void;
+}
+
+const UnconfirmedMovementsCard: React.FC<UnconfirmedMovementsCardProps> = ({
+  onMovementPress,
+}) => {
+  const { unconfirmedMovements, categories, reloadData } = useDataContext();
   const { selectedSpreadsheetId } = useAuthContext();
   const { orientation } = usePlatformContext();
   const isLandscape = orientation === "landscape";
@@ -42,12 +49,16 @@ const UnconfirmedMovementsCard: React.FC = () => {
 
   const handleMovementPress = (movement: Movement) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.push({
-      pathname: "/add",
-      params: {
-        movementId: movement.id,
-      },
-    });
+    if (onMovementPress) {
+      onMovementPress(movement);
+    } else {
+      router.push({
+        pathname: "/add",
+        params: {
+          movementId: movement.id,
+        },
+      });
+    }
   };
 
   const handleLongPress = (movement: Movement) => {

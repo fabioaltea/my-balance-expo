@@ -8,6 +8,7 @@ interface AuthContextType extends AuthState {
   initializeAuth: () => Promise<void>;
   clearError: () => void;
   reloadData: () => Promise<void>;
+  executeMigration: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);

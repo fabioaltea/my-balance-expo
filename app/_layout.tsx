@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   DarkTheme,
   DefaultTheme,
@@ -9,13 +9,14 @@ import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
-import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, ActivityIndicator, Alert, BackHandler } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { AuthProvider, useAuthContext } from "@/state/AuthProvider";
 import { DataProvider } from "@/state/DataProvider";
 import { PlatformProvider } from "@/state/PlatformProvider";
 import { QueryProvider } from "@/providers/QueryProvider";
 import LoginScreen from "@/views/login-view";
+import Onboarding from "./onboarding";
 
 export const unstable_settings = {
   anchor: "dashboard",
@@ -81,6 +82,14 @@ const AuthenticatedApp: React.FC = () => {
             }}
           />
           <Stack.Screen
+            name="onboarding"
+            options={{
+              presentation: "card",
+              title: "Onboarding",
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
             name="modal"
             options={{ presentation: "modal", title: "Modal" }}
           />
@@ -93,20 +102,41 @@ const AuthenticatedApp: React.FC = () => {
 
 // App router component that handles authentication state
 const AppRouter: React.FC = () => {
-  const { isAuthenticated, isLoading, user, error } = useAuthContext();
+  const { isAuthenticated, isLoading, error, mode, executeMigration } = useAuthContext();
 
-  console.log("🔀 AppRouter render:", {
-    isAuthenticated,
-    isLoading,
-    hasUser: !!user,
-    error,
-  });
+  // Show migration alert when migration mode is detected.
+  // Also re-show when isLoading transitions to false while still in migration mode
+  // (e.g. after a failed migration attempt, so the user can retry).
+  useEffect(() => {
+    if (mode === "migration" && !isLoading) {
+      Alert.alert(
+        "Update Available",
+        error
+          ? "The upgrade could not be completed. Would you like to try again?"
+          : "A data format update is available. Would you like to upgrade now? Your existing data will be preserved.",
+        [
+          {
+            text: "Esci",
+            style: "cancel",
+            onPress: () => BackHandler.exitApp(),
+          },
+          {
+            text: error ? "Retry" : "Upgrade Now",
+            onPress: () => executeMigration(),
+          },
+        ],
+        { cancelable: false },
+      );
+    }
+  }, [mode, isLoading, error, executeMigration]);
 
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#2F4F3F" />
-        <Text style={styles.loadingText}>Loading...</Text>
+        <Text style={styles.loadingText}>
+          {mode === "migration" ? "Upgrading your data..." : "Loading..."}
+        </Text>
       </View>
     );
   }
@@ -114,6 +144,21 @@ const AppRouter: React.FC = () => {
   if (!isAuthenticated) {
     console.log("📱 Showing LoginScreen");
     return <LoginScreen />;
+  }
+
+  if (mode === "quickstart") {
+    console.log("📱 Showing onboarding");
+    return <Onboarding />;
+  }
+
+  if (mode === "migration") {
+    // Show loading while Alert is visible (before user taps)
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#2F4F3F" />
+        <Text style={styles.loadingText}>Checking for updates...</Text>
+      </View>
+    );
   }
 
   console.log("✅ Showing AuthenticatedApp");

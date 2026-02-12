@@ -278,17 +278,19 @@ const HomeView: React.FC<HomeViewProps> = ({
             style={{ height: 230, marginHorizontal: -16, marginBottom: 16 }}
             selectedPage={summaryPagerIndex}
             onPageSelected={setSummaryPagerIndex}
-            scrollEnabled={isCurrentPeriod}
+            scrollEnabled={isCurrentPeriod && currentForecast.hasEnoughData}
           >
             <FinancialSummaryCard
               income={getTotalIncome(dateFilteredMovements, selectedAccount)}
               expense={getTotalExpense(dateFilteredMovements, selectedAccount)}
               isTransitioning={isPeriodTransitioning}
             />
-            <ForecastCard
-              forecast={currentForecast}
-              isTransitioning={isPeriodTransitioning}
-            />
+            {currentForecast.hasEnoughData && (
+              <ForecastCard
+                forecast={currentForecast}
+                isTransitioning={isPeriodTransitioning}
+              />
+            )}
           </Pager>
         </View>
 

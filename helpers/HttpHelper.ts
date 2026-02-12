@@ -206,6 +206,11 @@ export class HttpHelper {
       if (!response.ok) {
         const errorText = await response.text();
         console.error("POST error response:", errorText);
+        if (response.status === 401) {
+          throw new AuthenticationError(
+            errorText || "Authentication failed",
+          );
+        }
         throw new Error(
           `POST request failed: ${response.status} ${
             response.statusText

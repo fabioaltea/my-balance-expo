@@ -37,6 +37,9 @@ import {
 } from "../utils/dateUtils";
 import React from "react";
 
+// Categories excluded from income/expense breakdown (only affect balances)
+const EXCLUDED_CATEGORIES = ["Initial Balance"];
+
 // ===========================
 // Types
 // ===========================
@@ -138,6 +141,8 @@ export interface MonthlyForecast {
   periodProgress: number;
   /** Historical average progress at this point in period (0-1) - how much was typically spent by now */
   historicalProgressAtThisPoint: number;
+  /** Whether there is enough historical data to show the forecast (at least 2 months) */
+  hasEnoughData: boolean;
 }
 
 /**
@@ -267,39 +272,43 @@ export const useMyBalanceData = (
    * This allows accurate income/expense reporting when filtering by account.
    */
   const getTotalIncome = (filteredMovements: Movement[], accountFilter?: string) => {
-    return filteredMovements.reduce((sum, m) => {
-      if (accountFilter && accountFilter !== "All") {
-        // Sum only income transactions for the selected account
-        const accountIncome = m.transactions
-          .filter(t => t.account === accountFilter && t.type === "income")
-          .reduce((s, t) => s + t.amount, 0);
-        return sum + accountIncome;
-      } else {
-        // Sum all income transactions across all accounts
-        const totalIncome = m.transactions
-          .filter(t => t.type === "income")
-          .reduce((s, t) => s + t.amount, 0);
-        return sum + totalIncome;
-      }
-    }, 0);
+    return filteredMovements
+      .filter(m => !EXCLUDED_CATEGORIES.includes(m.category))
+      .reduce((sum, m) => {
+        if (accountFilter && accountFilter !== "All") {
+          // Sum only income transactions for the selected account
+          const accountIncome = m.transactions
+            .filter(t => t.account === accountFilter && t.type === "income")
+            .reduce((s, t) => s + t.amount, 0);
+          return sum + accountIncome;
+        } else {
+          // Sum all income transactions across all accounts
+          const totalIncome = m.transactions
+            .filter(t => t.type === "income")
+            .reduce((s, t) => s + t.amount, 0);
+          return sum + totalIncome;
+        }
+      }, 0);
   };
 
   const getTotalExpense = (filteredMovements: Movement[], accountFilter?: string) => {
-    return filteredMovements.reduce((sum, m) => {
-      if (accountFilter && accountFilter !== "All") {
-        // Sum only expense transactions for the selected account
-        const accountExpense = m.transactions
-          .filter(t => t.account === accountFilter && t.type === "expense")
-          .reduce((s, t) => s + t.amount, 0);
-        return sum + accountExpense;
-      } else {
-        // Sum all expense transactions across all accounts
-        const totalExpense = m.transactions
-          .filter(t => t.type === "expense")
-          .reduce((s, t) => s + t.amount, 0);
-        return sum + totalExpense;
-      }
-    }, 0);
+    return filteredMovements
+      .filter(m => !EXCLUDED_CATEGORIES.includes(m.category))
+      .reduce((sum, m) => {
+        if (accountFilter && accountFilter !== "All") {
+          // Sum only expense transactions for the selected account
+          const accountExpense = m.transactions
+            .filter(t => t.account === accountFilter && t.type === "expense")
+            .reduce((s, t) => s + t.amount, 0);
+          return sum + accountExpense;
+        } else {
+          // Sum all expense transactions across all accounts
+          const totalExpense = m.transactions
+            .filter(t => t.type === "expense")
+            .reduce((s, t) => s + t.amount, 0);
+          return sum + totalExpense;
+        }
+      }, 0);
   };
 
   const getBalance = (filteredMovements: Movement[]) => {
@@ -435,8 +444,10 @@ export const useMyBalanceData = (
       );
 
       // 2. Calculate current period income and expenses
-      const currentPeriodMovements = movements.filter((m) =>
-        isDateInRange(m.date, periodStartDate, periodEndDate),
+      const currentPeriodMovements = movements.filter(
+        (m) =>
+          isDateInRange(m.date, periodStartDate, periodEndDate) &&
+          !EXCLUDED_CATEGORIES.includes(m.category),
       );
       const currentPeriodIncome = currentPeriodMovements
         .filter((m) => m.type === "income")
@@ -486,8 +497,10 @@ export const useMyBalanceData = (
 
         for (const yearPeriod of pastYears) {
           // Full year totals
-          const yearMovements = movements.filter((m) =>
-            isDateInRange(m.date, yearPeriod.startDate, yearPeriod.endDate),
+          const yearMovements = movements.filter(
+            (m) =>
+              isDateInRange(m.date, yearPeriod.startDate, yearPeriod.endDate) &&
+              !EXCLUDED_CATEGORIES.includes(m.category),
           );
 
           if (yearMovements.length > 0) {
@@ -504,8 +517,10 @@ export const useMyBalanceData = (
 
             // Get income/expense up to the same day of year in past years
             const upToDay = getYearRangeUpToDay(yearPeriod.year, dayOfYear);
-            const upToDayMovements = movements.filter((m) =>
-              isDateInRange(m.date, upToDay.startDate, upToDay.endDate),
+            const upToDayMovements = movements.filter(
+              (m) =>
+                isDateInRange(m.date, upToDay.startDate, upToDay.endDate) &&
+                !EXCLUDED_CATEGORIES.includes(m.category),
             );
             const upToDayIncome = upToDayMovements
               .filter((m) => m.type === "income")
@@ -554,13 +569,17 @@ export const useMyBalanceData = (
           const sameMonthStart = getMonthStart(yearPeriod.year, currentMonth);
           const sameMonthEnd = getMonthEnd(yearPeriod.year, currentMonth);
 
-          const monthMovements = movements.filter((m) =>
-            isDateInRange(m.date, sameMonthStart, sameMonthEnd),
+          const monthMovements = movements.filter(
+            (m) =>
+              isDateInRange(m.date, sameMonthStart, sameMonthEnd) &&
+              !EXCLUDED_CATEGORIES.includes(m.category),
           );
 
           // Get full year totals for comparison
-          const yearMovements = movements.filter((m) =>
-            isDateInRange(m.date, yearPeriod.startDate, yearPeriod.endDate),
+          const yearMovements = movements.filter(
+            (m) =>
+              isDateInRange(m.date, yearPeriod.startDate, yearPeriod.endDate) &&
+              !EXCLUDED_CATEGORIES.includes(m.category),
           );
 
           if (monthMovements.length > 0 && yearMovements.length > 0) {
@@ -626,6 +645,18 @@ export const useMyBalanceData = (
 
       const forecastDelta = forecastBalance - currentBalance;
 
+      // Check if there's enough data: at least 2 distinct months with movements
+      const distinctMonths = new Set(
+        movements
+          .filter((m) => !EXCLUDED_CATEGORIES.includes(m.category))
+          .map((m) => {
+            const parts = m.date.split("-");
+            return parts.length === 3 ? `${parts[2]}-${parts[1]}` : null;
+          })
+          .filter(Boolean),
+      );
+      const hasEnoughData = distinctMonths.size >= 2;
+
       return {
         periodType,
         currentBalance,
@@ -639,6 +670,7 @@ export const useMyBalanceData = (
         forecastDelta,
         periodProgress,
         historicalProgressAtThisPoint,
+        hasEnoughData,
       };
     },
     [accounts, movements, pendingRecurrences],

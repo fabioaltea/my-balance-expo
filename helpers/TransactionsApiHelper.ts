@@ -33,6 +33,31 @@ export class TransactionsApiHelper {
   }
 
   /**
+   * Create a new movement (with multiple transactions)
+   */
+  static async createMovement(spreadsheetId: string, movementData: any) {
+    try {
+      console.log("➕ Creating new movement...");
+
+      const response = await HttpHelper.post(
+        `/movements?spreadsheet_id=${spreadsheetId}`,
+        { ...movementData },
+      );
+
+      if (response.success) {
+        console.log("✅ Movement created successfully");
+        return response.data;
+      } else {
+        console.error("❌ Failed to create movement:", response.error);
+        return null;
+      }
+    } catch (error) {
+      console.error("❌ Error creating movement:", error);
+      return null;
+    }
+  }
+
+  /**
    * Create a new transaction
    */
   static async createTransaction(spreadsheetId: string, transactionData: any) {

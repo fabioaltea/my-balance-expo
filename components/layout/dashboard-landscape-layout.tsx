@@ -1,7 +1,7 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import { View, StyleSheet } from "react-native";
 import { useThemeColor } from "@/hooks/use-theme-color";
-import { useDataContext } from "@/state";
+import { useDataContext, useAuthContext } from "@/state";
 import type { Account } from "@/state";
 
 // Layout components
@@ -26,6 +26,21 @@ import ForecastCard from "@/components/cards/forecast-card";
 import PeriodPicker from "../ui/period-chips-picker";
 import ChipButton from "../ui/chip-button";
 
+// View components for drawer content
+import AddView from "@/views/add-view";
+import SettingsView from "@/views/settings-view";
+
+// Drawer content types
+type DrawerContentType = "add" | "edit" | "settings" | null;
+
+interface DrawerState {
+  type: DrawerContentType;
+  props?: {
+    movementId?: string;
+    recurrenceId?: string;
+  };
+}
+
 /**
  * Dashboard Landscape Layout
  * Layout completo per la modalità landscape con tutte le card disposte in griglia flessibile
@@ -44,6 +59,8 @@ export function DashboardLandscapeLayout() {
     isLoading,
   } = useDataContext();
 
+  const { user, logout } = useAuthContext();
+
   const availableAccounts = useMemo(() => {
     const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
     const sortedAccounts = [...accounts].sort((a, b) => b.balance - a.balance);
@@ -60,7 +77,19 @@ export function DashboardLandscapeLayout() {
   }, [accounts]);
 
   const [selectedAccount, setSelectedAccount] = useState<string>("All");
-  const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
+
+  // Drawer state
+  const [drawerContent, setDrawerContent] = useState<DrawerState | null>(null);
+  const isDrawerOpen = drawerContent !== null;
+
+  // Drawer actions
+  const openDrawer = useCallback((type: DrawerContentType, props?: DrawerState["props"]) => {
+    setDrawerContent({ type, props });
+  }, []);
+
+  const closeDrawer = useCallback(() => {
+    setDrawerContent(null);
+  }, []);
 
   // Date range state for period filtering
   const [dateRange, setDateRange] = useState(() => {
@@ -76,7 +105,7 @@ export function DashboardLandscapeLayout() {
   });
 
   const handleAddPress = () => {
-    setIsDrawerOpen(true);
+    openDrawer("add");
   };
 
   // Helper to check if a date is within the range
@@ -160,22 +189,32 @@ export function DashboardLandscapeLayout() {
           </LayoutColumn>
 
           {/* Right column: Forecast card */}
-          <LayoutColumn flex={1}>
-            <ForecastCard forecast={forecast} />
-          </LayoutColumn>
+          {forecast.hasEnoughData && (
+            <LayoutColumn flex={1}>
+              <ForecastCard forecast={forecast} />
+            </LayoutColumn>
+          )}
         </LayoutRow>
 
         {/* Row 2: Movements and Action cards */}
         <LayoutRow flex={1} gap={12}>
           {/* Left column: Recent movements (2x width) */}
           <LayoutColumn flex={1}>
-            <MovementsCard movements={filteredMovements.slice(0, 10)} />
+            <MovementsCard
+              movements={filteredMovements.slice(0, 10)}
+              onMovementPress={(movement) => openDrawer("edit", { movementId: movement.id })}
+            />
           </LayoutColumn>
 
           {/* Right column: Pending and Unconfirmed */}
           <LayoutColumn flex={1} gap={12}>
-            <PendingRecurrencesCard pendingRecurrences={pendingRecurrences} />
-            <UnconfirmedMovementsCard />
+            <PendingRecurrencesCard
+              pendingRecurrences={pendingRecurrences}
+              onRecurrencePress={(pending) => openDrawer("add", { recurrenceId: pending.template.recurrenceId })}
+            />
+            <UnconfirmedMovementsCard
+              onMovementPress={(movement) => openDrawer("edit", { movementId: movement.id })}
+            />
           </LayoutColumn>
         </LayoutRow>
       </LayoutContainer>
@@ -183,9 +222,25 @@ export function DashboardLandscapeLayout() {
       {/* Side Drawer */}
       <SideDrawer
         isOpen={isDrawerOpen}
-        onClose={() => setIsDrawerOpen(false)}
+        onClose={closeDrawer}
         width="40%"
-      />
+      >
+        {drawerContent?.type === "add" && (
+          <AddView
+            editingMovementId={drawerContent.props?.movementId}
+            recurrenceId={drawerContent.props?.recurrenceId}
+          />
+        )}
+        {drawerContent?.type === "edit" && (
+          <AddView
+            editingMovementId={drawerContent.props?.movementId}
+            recurrenceId={drawerContent.props?.recurrenceId}
+          />
+        )}
+        {drawerContent?.type === "settings" && (
+          <SettingsView user={user} logout={logout} />
+        )}
+      </SideDrawer>
     </View>
   );
 }

@@ -28,6 +28,7 @@ npm install @tanstack/react-query @tanstack/react-query-persist-client
 ```
 
 **Motivazione**:
+
 - Gestione cache automatica con TTL
 - Supporto optimistic updates built-in
 - DevTools eccellenti per debugging
@@ -40,6 +41,7 @@ npm install @tanstack/react-query @tanstack/react-query-persist-client
 **File nuovo**: `/expo/providers/QueryProvider.tsx`
 
 Setup QueryClient con:
+
 - **TTL differenziati**:
   - Transazioni recenti (< 3 mesi): staleTime 30s, cacheTime 5min
   - Transazioni vecchie (> 3 mesi): staleTime 1h, cacheTime 24h
@@ -47,11 +49,12 @@ Setup QueryClient con:
 - **Persistenza**: AsyncStorage (React Native) per cache offline
 
 **Implementazione**:
+
 ```typescript
-import { QueryClient } from '@tanstack/react-query'
-import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
-import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister'
-import AsyncStorage from '@react-native-async-storage/async-storage'
+import { QueryClient } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -60,11 +63,11 @@ const queryClient = new QueryClient({
       staleTime: 1000 * 60 * 5, // 5 minutes
     },
   },
-})
+});
 
 const persister = createAsyncStoragePersister({
   storage: AsyncStorage,
-})
+});
 ```
 
 **Stime**: ~100 linee di codice
@@ -76,22 +79,23 @@ const persister = createAsyncStoragePersister({
 ```typescript
 export const QUERY_KEYS = {
   transactions: {
-    all: ['transactions'] as const,
-    filtered: (filters: TransactionFilters) => ['transactions', 'filtered', filters] as const,
-    summary: (period: string) => ['transactions', 'summary', period] as const,
+    all: ["transactions"] as const,
+    filtered: (filters: TransactionFilters) =>
+      ["transactions", "filtered", filters] as const,
+    summary: (period: string) => ["transactions", "summary", period] as const,
   },
   accounts: {
-    all: ['accounts'] as const,
-    balances: ['accounts', 'balances'] as const,
+    all: ["accounts"] as const,
+    balances: ["accounts", "balances"] as const,
   },
   categories: {
-    all: ['categories'] as const,
+    all: ["categories"] as const,
   },
   aggregations: {
     monthly: (fromDate: string, toDate: string) =>
-      ['aggregations', 'monthly', fromDate, toDate] as const,
+      ["aggregations", "monthly", fromDate, toDate] as const,
   },
-}
+};
 ```
 
 **Benefici**: Type-safe keys, evita typo, centralizzato
@@ -101,6 +105,7 @@ export const QUERY_KEYS = {
 ### 2.4 Query Hooks
 
 **Files nuovi**:
+
 1. `/expo/hooks/queries/useTransactions.ts`
 2. `/expo/hooks/queries/useAccounts.ts`
 3. `/expo/hooks/queries/useCategories.ts`
@@ -109,9 +114,9 @@ export const QUERY_KEYS = {
 #### Esempio: useTransactions.ts
 
 ```typescript
-import { useQuery } from '@tanstack/react-query'
-import { QUERY_KEYS } from './queryKeys'
-import ApiHelper from '@/helpers/mybalance/ApiHelper'
+import { useQuery } from "@tanstack/react-query";
+import { QUERY_KEYS } from "./queryKeys";
+import ApiHelper from "@/helpers/mybalance/ApiHelper";
 
 export function useTransactions(filters?: TransactionFilters) {
   return useQuery({
@@ -119,7 +124,7 @@ export function useTransactions(filters?: TransactionFilters) {
     queryFn: () => ApiHelper.listTransactions(filters),
     staleTime: 1000 * 60 * 5, // 5 min
     cacheTime: 1000 * 60 * 60, // 1 hour
-  })
+  });
 }
 ```
 
@@ -130,6 +135,7 @@ export function useTransactions(filters?: TransactionFilters) {
 **File da modificare**: `/expo/hooks/useMyBalanceData.tsx`
 
 **Strategia transitoria**:
+
 - Mantenere hook esistente
 - Internamente usare nuove queries React Query
 - Permette migrazione graduale componenti senza breaking changes
@@ -138,9 +144,9 @@ export function useTransactions(filters?: TransactionFilters) {
 ```typescript
 // Esempio migrazione interna
 export function useMyBalanceData() {
-  const { data: transactions } = useTransactions()
-  const { data: accounts } = useAccounts()
-  const { data: categories } = useCategories()
+  const { data: transactions } = useTransactions();
+  const { data: accounts } = useAccounts();
+  const { data: categories } = useCategories();
 
   // Mantenere interfaccia originale per backward compatibility
   return {
@@ -149,11 +155,12 @@ export function useMyBalanceData() {
     categories,
     loadAllData: () => {}, // Deprecato, React Query gestisce automaticamente
     // ... altri metodi
-  }
+  };
 }
 ```
 
 **Benefici**:
+
 - Load istantaneo da cache (0.2s vs 3s)
 - Offline capability
 - Riduzione re-renders inutili
@@ -185,6 +192,7 @@ export default function App() {
 ### 3.1 Mutation Hooks
 
 **Files nuovi**:
+
 1. `/expo/hooks/mutations/useAddTransaction.ts`
 2. `/expo/hooks/mutations/useUpdateTransaction.ts`
 3. `/expo/hooks/mutations/useDeleteTransaction.ts`
@@ -192,44 +200,50 @@ export default function App() {
 #### Pattern Optimistic Update
 
 ```typescript
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { QUERY_KEYS } from '../queries/queryKeys'
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { QUERY_KEYS } from "../queries/queryKeys";
 
 export function useAddTransaction() {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (data) => ApiHelper.createTransaction(data),
 
     // 1. OPTIMISTIC: Aggiorna UI immediatamente
     onMutate: async (newTx) => {
-      await queryClient.cancelQueries({ queryKey: QUERY_KEYS.transactions.all })
-      const previous = queryClient.getQueryData(QUERY_KEYS.transactions.filtered({}))
+      await queryClient.cancelQueries({
+        queryKey: QUERY_KEYS.transactions.all,
+      });
+      const previous = queryClient.getQueryData(
+        QUERY_KEYS.transactions.filtered({}),
+      );
 
       // Aggiungi ottimisticamente con ID temporaneo
-      queryClient.setQueryData(
-        QUERY_KEYS.transactions.filtered({}),
-        (old) => [...(old ?? []), { ...newTx, id: `temp-${Date.now()}`, isPending: true }]
-      )
+      queryClient.setQueryData(QUERY_KEYS.transactions.filtered({}), (old) => [
+        ...(old ?? []),
+        { ...newTx, id: `temp-${Date.now()}`, isPending: true },
+      ]);
 
-      return { previous } // Per rollback
+      return { previous }; // Per rollback
     },
 
     // 2. ROLLBACK: Se errore, ripristina stato
     onError: (err, newTx, context) => {
       queryClient.setQueryData(
         QUERY_KEYS.transactions.filtered({}),
-        context.previous
-      )
+        context.previous,
+      );
     },
 
     // 3. SYNC: Conferma successo e refetch
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.transactions.all })
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.accounts.balances })
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.aggregations.monthly })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.transactions.all });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.accounts.balances });
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.aggregations.monthly,
+      });
     },
-  })
+  });
 }
 ```
 
@@ -239,13 +253,14 @@ export function useAddTransaction() {
 
 **Regole per tipo operazione**:
 
-| Operazione | Invalidate | Refetch |
-|------------|-----------|---------|
-| ADD transaction recente | transactions.filtered (current), accounts.balances, aggregations (current month) | immediate |
-| UPDATE transaction vecchia | transactions.all, accounts.balances, aggregations (impacted months) | lazy (solo se già in cache) |
-| DELETE transaction | transactions.all, accounts.balances, aggregations | immediate |
+| Operazione                 | Invalidate                                                                       | Refetch                     |
+| -------------------------- | -------------------------------------------------------------------------------- | --------------------------- |
+| ADD transaction recente    | transactions.filtered (current), accounts.balances, aggregations (current month) | immediate                   |
+| UPDATE transaction vecchia | transactions.all, accounts.balances, aggregations (impacted months)              | lazy (solo se già in cache) |
+| DELETE transaction         | transactions.all, accounts.balances, aggregations                                | immediate                   |
 
 **Dependency Graph**:
+
 ```
 Transaction modificata
   ├─→ Query transactions (per quel periodo)
@@ -259,10 +274,12 @@ Transaction modificata
 ### 4.1 Migrazione a Aggregazioni Pre-calcolate
 
 **Files da modificare**:
+
 - `/expo/hooks/useIncomeExpenses.tsx`
 - `/expo/hooks/useMonthlyBalances.tsx`
 
 #### Prima (calcoli pesanti):
+
 ```typescript
 // Itera su TUTTE le transactions per calcolare income/expense mensili
 useMemo(() => {
@@ -271,16 +288,18 @@ useMemo(() => {
 ```
 
 #### Dopo (aggregazioni backend):
+
 ```typescript
 // Usa aggregazioni pre-calcolate dal backend
 const { data } = useQuery({
   queryKey: QUERY_KEYS.aggregations.monthly(fromDate, toDate),
   queryFn: () => AggregationsApiHelper.getMonthlyAggregations(fromDate, toDate),
   staleTime: 300000, // 5 min
-})
+});
 ```
 
 **Benefici**:
+
 - Zero calcoli pesanti sul client
 - Memoization automatica via React Query
 - Cache riutilizzata tra componenti
@@ -293,6 +312,7 @@ const { data } = useQuery({
 **File da creare/modificare**: `/expo/helpers/mybalance/ApiHelper.ts`
 
 Aggiungere metodo:
+
 ```typescript
 async getMonthlyAggregations(fromDate: string, toDate: string) {
   const response = await axios.get('/aggregations/monthly', {
@@ -354,6 +374,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 ## File da Modificare/Creare
 
 ### File da Creare (nuovi)
+
 1. `/expo/providers/QueryProvider.tsx` - Setup React Query (~100 linee)
 2. `/expo/hooks/queries/queryKeys.ts` - Query keys (~80 linee)
 3. `/expo/hooks/queries/useTransactions.ts` - Query transactions (~150 linee)
@@ -365,6 +386,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 9. `/expo/hooks/mutations/useDeleteTransaction.ts` - Optimistic delete (~150 linee)
 
 ### File da Modificare
+
 10. `/expo/hooks/useMyBalanceData.tsx` - Refactor con React Query (transitorio, -200 linee)
 11. `/expo/hooks/useIncomeExpenses.tsx` - Usa aggregazioni backend (-50 linee)
 12. `/expo/hooks/useMonthlyBalances.tsx` - Usa aggregazioni backend (-70 linee)
@@ -373,15 +395,16 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
 ## Metriche di Successo
 
-| Metrica | Baseline | Target |
-|---------|----------|--------|
-| Load iniziale (cold) | 3-5s | 1-2s |
-| Load iniziale (warm) | 3-5s | 0.2s |
-| Reload dopo modifica | 3-5s | 0.5s |
-| Render grafici | 200-300ms | 50-100ms |
-| Re-renders per modifica | 5-10 | 1-2 |
+| Metrica                 | Baseline  | Target   |
+| ----------------------- | --------- | -------- |
+| Load iniziale (cold)    | 3-5s      | 1-2s     |
+| Load iniziale (warm)    | 3-5s      | 0.2s     |
+| Reload dopo modifica    | 3-5s      | 0.5s     |
+| Render grafici          | 200-300ms | 50-100ms |
+| Re-renders per modifica | 5-10      | 1-2      |
 
 **UX Improvements**:
+
 - ✅ UI risponde immediatamente (optimistic updates)
 - ✅ Dati disponibili offline (cache persistence)
 - ✅ Riduzione -80% data transfer per uso tipico
@@ -397,20 +420,25 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 ## Rischi
 
 ### Rischio 1: Cache Invalidation Bugs
+
 **Problema**: Invalidazione incompleta causa UI inconsistente
 **Mitigazione**:
+
 - Unit test per ogni mutation
 - E2E test per flussi critici
 - DevTools per ispezionare cache
 - Conservative invalidation (in dubbio, invalida più queries)
 
 ### Rischio 2: Bundle Size
+
 **Problema**: React Query +45KB gzipped
 **Mitigazione**: Accettabile (app già >500KB, +10% per UX significativo)
 
 ### Rischio 3: Backward Compatibility Ionic
+
 **Problema**: Versione Ionic separata potrebbe rompersi
 **Mitigazione**:
+
 - Testing su entrambe versioni
 - Release flag per rollback
 - Migrazione graduale
@@ -452,6 +480,7 @@ Dopo implementazione, testare:
 ## Prossimi Step
 
 Dopo completamento frontend:
+
 1. Testing integrato con backend
 2. Performance profiling end-to-end
 3. User acceptance testing

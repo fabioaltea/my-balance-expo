@@ -47,12 +47,14 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
   );
   const [isLoading, setIsLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [mapRegion, setMapRegion] = useState({
+  const mapRef = useRef<MapView>(null);
+
+  const defaultRegion = {
     latitude: 39.2238,
     longitude: 9.1217,
     latitudeDelta: 0.0922,
     longitudeDelta: 0.0421,
-  });
+  };
 
   useEffect(() => {
     setSelectedLocation(searchResults[0] || null);
@@ -113,15 +115,15 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
             }));
 
           setSearchResults(locations);
-          
+
           // Center map on first result
           if (locations.length > 0 && locations[0].latitude && locations[0].longitude) {
-            setMapRegion({
+            mapRef.current?.animateToRegion({
               latitude: locations[0].latitude,
               longitude: locations[0].longitude,
               latitudeDelta: 0.01,
               longitudeDelta: 0.01,
-            });
+            }, 300);
           }
         } else {
           setSearchResults([]);
@@ -141,15 +143,15 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
           },
         ];
         setSearchResults(mockResults);
-        
+
         // Center map on first result
         if (mockResults.length > 0) {
-          setMapRegion({
+          mapRef.current?.animateToRegion({
             latitude: mockResults[0].latitude!,
             longitude: mockResults[0].longitude!,
             latitudeDelta: 0.01,
             longitudeDelta: 0.01,
-          });
+          }, 300);
         }
       }
     } catch (error) {
@@ -189,12 +191,12 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
     
     // Center map on selected location
     if (location.latitude && location.longitude) {
-      setMapRegion({
+      mapRef.current?.animateToRegion({
         latitude: location.latitude,
         longitude: location.longitude,
         latitudeDelta: 0.005,
         longitudeDelta: 0.005,
-      });
+      }, 300);
     }
     
     collapseCard();
@@ -227,10 +229,11 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
         <View style={styles.expandedContent}>
           {/* Map Placeholder */}
           <View style={[styles.mapContainer, { backgroundColor: "#f0f0f0" }]}>
-            <MapView 
-              style={{width:"100%", height: "100%"}} 
-              provider="google" 
-              region={mapRegion}
+            <MapView
+              ref={mapRef}
+              style={{width:"100%", height: "100%"}}
+              provider="google"
+              initialRegion={defaultRegion}
               showsUserLocation={true}
               showsMyLocationButton={false}
             >

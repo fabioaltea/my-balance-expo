@@ -9,7 +9,7 @@ import {
 import React, { useState } from "react";
 import { ThemedText } from "@/components/core/themed-text";
 import { useThemeColor } from "@/hooks/use-theme-color";
-import Pager from "@/components/ui/pager.native";
+import Pager from "@/components/ui/pager";
 import Card from "@/components/core/card";
 import List from "@/components/ui/list";
 import AccountModal from "@/components/ui/account-modal";

@@ -11,9 +11,7 @@ import { LayoutColumn } from "@/components/layout/layout-column";
 import { LandscapeCommandBar } from "@/components/layout/landscape-command-bar";
 
 // UI components
-import GlassButton from "@/components/ui/glass-button";
 import CompactAccountPicker from "@/components/ui/compact-account-picker";
-import CompactPeriodPicker from "@/components/ui/compact-period-picker";
 import SideDrawer from "@/components/ui/side-drawer";
 
 // Card components

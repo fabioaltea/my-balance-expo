@@ -30,6 +30,7 @@ const InputGroup: React.FC<ICardProps> = ({
       flexGrow:2,
       paddingHorizontal:5,
       paddingVertical:5,
+      overflow: "visible" as const,
     },
 
     cardLabel: {

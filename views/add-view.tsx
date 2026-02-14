@@ -505,7 +505,7 @@ const AddView: React.FC<AddViewProps> = ({
             />
           )}
         </View>
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <ScrollView showsVerticalScrollIndicator={false} style={{ overflow: "visible" }}>
           <InputGroup>
             <TextBox
               value={description}

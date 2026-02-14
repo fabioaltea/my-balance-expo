@@ -103,6 +103,7 @@ const AuthenticatedApp: React.FC = () => {
 // App router component that handles authentication state
 const AppRouter: React.FC = () => {
   const { isAuthenticated, isLoading, error, mode, executeMigration } = useAuthContext();
+  const colorScheme = useColorScheme();
 
   // Show migration alert when migration mode is detected.
   // Also re-show when isLoading transitions to false while still in migration mode
@@ -132,12 +133,15 @@ const AppRouter: React.FC = () => {
 
   if (isLoading) {
     return (
+            <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#2F4F3F" />
         <Text style={styles.loadingText}>
           {mode === "migration" ? "Upgrading your data..." : "Loading..."}
         </Text>
       </View>
+      </ThemeProvider>
     );
   }
 
@@ -154,10 +158,12 @@ const AppRouter: React.FC = () => {
   if (mode === "migration") {
     // Show loading while Alert is visible (before user taps)
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2F4F3F" />
-        <Text style={styles.loadingText}>Checking for updates...</Text>
-      </View>
+      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#2F4F3F" />
+          <Text style={styles.loadingText}>Checking for updates...</Text>
+        </View>
+      </ThemeProvider>
     );
   }
 
@@ -174,6 +180,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+
   },
   loadingText: {
     marginTop: 16,

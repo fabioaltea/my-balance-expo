@@ -32,13 +32,14 @@ const List: React.FC<IListProps> = ({ children }) => {
       : [];
 
   return (
-    <View>
+    <View style={{ overflow: "visible" }}>
       {validChildren.map((child, index) => (
         <View
           key={index}
           style={[
             dynamicStyles.item,
             index === validChildren.length - 1 && dynamicStyles.lastItem,
+            { overflow: "visible" },
           ]}
         >
           {child}

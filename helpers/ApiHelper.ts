@@ -83,7 +83,7 @@ export class ApiHelper {
         return null;
       }
 
-      const response = await fetch(`${HttpHelper.authUri}/auth/profile`, {
+      const response = await fetch(`${HttpHelper.authUri}/auth/profile?product=MyBalance`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

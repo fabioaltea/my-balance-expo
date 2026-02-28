@@ -163,7 +163,7 @@ const UnconfirmedMovementsCard: React.FC<UnconfirmedMovementsCardProps> = ({
   // Empty state when no unconfirmed movements
   if (!sortedMovements || sortedMovements.length === 0) {
     return (
-      <Card>
+      <Card label={isLandscape ? "Unconfirmed Movements" : ""} style={isLandscape ? { flex: 1 } : undefined}>
         <View style={styles.emptyState}>
           <IconSymbol name="check-circle" size={48} color="#2F4F3F" />
           <ThemedText style={styles.emptyTitle}>You're all set!</ThemedText>

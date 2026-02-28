@@ -9,6 +9,7 @@ type Props = {
   income: number;
   expense: number;
   isTransitioning?: boolean;
+  flexible?: boolean;
 };
 
 /**
@@ -46,6 +47,7 @@ const FinancialSummaryCard: React.FC<Props> = ({
   income,
   expense,
   isTransitioning = false,
+  flexible = false,
 }) => {
   const { isLoading } = useDataContext();
   const balance = income - expense;
@@ -107,8 +109,8 @@ const FinancialSummaryCard: React.FC<Props> = ({
   }
 
   return (
-    <Card backgroundColor={cardBackground} color={textColor}>
-      <View style={{ height: 200 }}>
+    <Card backgroundColor={cardBackground} color={textColor} style={flexible ? { flex: 1 } : undefined}>
+      <View style={flexible ? { flex: 1 } : { height: 200 }}>
         {/* Balance Display */}
         <View style={styles.balanceRow}>
           <Text style={[styles.balanceLabel, { color: textColor }]}>

@@ -19,6 +19,7 @@ type GlassButtonType = "add" | "search" | "confirm" | "dismiss" | "menu";
 
 type Props = {
   onPress: () => void;
+  onLongPress?: () => void;
   style?: ViewStyle;
   type?: GlassButtonType;
   text?: string;
@@ -28,6 +29,7 @@ type Props = {
 
 const GlassButton = ({
   onPress,
+  onLongPress,
   style,
   type = "add",
   text,
@@ -69,6 +71,7 @@ const GlassButton = ({
           { backgroundColor: dynamicBackground, borderColor: dynamicBorder },
         ]}
         onPress={handlePress}
+        onLongPress={onLongPress}
         accessibilityRole="button"
         accessibilityLabel={
           accessibilityLabel ??

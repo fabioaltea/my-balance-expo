@@ -1,12 +1,30 @@
 import AddView from "@/views/add-view";
-import React from "react";
+import React, { useMemo } from "react";
 import { useLocalSearchParams } from "expo-router";
+import type { Movement } from "@/state";
 
 export default function Add() {
-  const { movementId, recurrenceId } = useLocalSearchParams<{
-    movementId?: string;
-    recurrenceId?: string;
-  }>();
+  const { movementId, recurrenceId, initialMovement: initialMovementJson } =
+    useLocalSearchParams<{
+      movementId?: string;
+      recurrenceId?: string;
+      initialMovement?: string;
+    }>();
 
-  return <AddView editingMovementId={movementId} recurrenceId={recurrenceId} />;
+  const initialMovement = useMemo<Partial<Movement> | undefined>(() => {
+    if (!initialMovementJson) return undefined;
+    try {
+      return JSON.parse(initialMovementJson);
+    } catch {
+      return undefined;
+    }
+  }, [initialMovementJson]);
+
+  return (
+    <AddView
+      editingMovementId={movementId}
+      recurrenceId={recurrenceId}
+      initialMovement={initialMovement}
+    />
+  );
 }

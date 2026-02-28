@@ -8,6 +8,7 @@ interface ICardProps {
   label?: string;
   children: React.ReactNode;
   style?: import("react-native").ViewStyle;
+  compact?: boolean;
 }
 
 const Card: React.FC<ICardProps> = ({
@@ -16,6 +17,7 @@ const Card: React.FC<ICardProps> = ({
   label,
   children,
   style,
+  compact = false,
 }) => {
   const themeBackground = useThemeColor({}, "cardBackground");
   const themeColor = useThemeColor({}, "cardColor");
@@ -52,6 +54,8 @@ const Card: React.FC<ICardProps> = ({
     },
   });
 
+  const hasFlex = style && "flex" in style;
+
   return (
     <View style={style}>
       {label && (
@@ -59,7 +63,7 @@ const Card: React.FC<ICardProps> = ({
           <Text style={styles.cardLabel}>{label}</Text>
         </View>
       )}
-      <View style={styles.card}>{children}</View>
+      <View style={[styles.card, hasFlex && { flex: 1 }, compact && { paddingLeft: 8, paddingRight: 12 }]}>{children}</View>
     </View>
   );
 };

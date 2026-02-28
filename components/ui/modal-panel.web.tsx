@@ -45,10 +45,7 @@ const ModalPanel: React.FC<IModalPanelProps> = ({
     { light: "#e0e0e0", dark: "#333" },
     "tabIconDefault",
   );
-  const overlayColor = useThemeColor(
-    { light: "rgba(0,0,0,0.4)", dark: "rgba(0,0,0,0.6)" },
-    "tabIconDefault",
-  );
+  const overlayColor = "transparent";
 
   useEffect(() => {
     if (isVisible) {
@@ -141,8 +138,8 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
   },
   panel: {
-    borderRadius: 16,
-    borderWidth: 1,
+    borderRadius: 30,
+    borderWidth: 0,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,

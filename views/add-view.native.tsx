@@ -35,17 +35,22 @@ import { useRouter } from "expo-router";
 import IconSymbol from "@/components/ui/icon-symbol";
 import LocationPicker, { ILocation } from "@/components/ui/location-picker";
 import { useAddMovement, useUpdateMovement, useDeleteMovement } from "@/hooks/mutations";
+import type { Movement } from "@/state";
 
 type ModalStatus = "loading" | "success" | "error";
 
 interface AddViewProps {
   editingMovementId?: string;
   recurrenceId?: string;
+  initialMovement?: Partial<Movement>;
+  onClose?: () => void;
+  onToast?: (status: "loading" | "success" | "error") => void;
 }
 
 const AddView: React.FC<AddViewProps> = ({
   editingMovementId,
   recurrenceId,
+  initialMovement,
 }) => {
   const router = useRouter();
   const { selectedSpreadsheetId } = useAuthContext();
@@ -149,6 +154,32 @@ const AddView: React.FC<AddViewProps> = ({
     setTransactions(mappedTransactions);
     setSelectedLocation({ address: recurringTemplate.location || "" });
   }, [recurringTemplate, editingMovement]);
+
+  // Pre-populate form from OCR/initial movement data
+  useEffect(() => {
+    if (!initialMovement || editingMovement || recurringTemplate) return;
+
+    if (initialMovement.description) setDescription(initialMovement.description);
+    if (initialMovement.category) setSelectedCategory(initialMovement.category);
+    if (initialMovement.date) {
+      const parsedDate = parseDateFromDDMMYYYY(initialMovement.date);
+      if (parsedDate) setSelectedDate(parsedDate);
+    }
+    if (initialMovement.location) {
+      setSelectedLocation({ address: initialMovement.location });
+    }
+    if (initialMovement.transactions && initialMovement.transactions.length > 0) {
+      const mappedTransactions: ITransaction[] = initialMovement.transactions.map(
+        (t, index) => ({
+          id: index + 1,
+          accountName: t.account,
+          amount: t.amount,
+          type: t.type,
+        })
+      );
+      setTransactions(mappedTransactions);
+    }
+  }, [initialMovement]);
 
   // Theme colors
   const backgroundColor = useThemeColor(
@@ -333,6 +364,18 @@ const AddView: React.FC<AddViewProps> = ({
     );
   };
 
+  const isFormValid = (): boolean => {
+    if (!description.trim()) return false;
+    if (!selectedCategory) return false;
+    if (!selectedDate) return false;
+    const validTransactions = transactions.filter(
+      (t) => t.accountName && t.amount > 0
+    );
+    if (validTransactions.length === 0) return false;
+    if (!selectedSpreadsheetId) return false;
+    return true;
+  };
+
   const getMenuOptions = (): IContextMenuOption[] => {
     if (isEditing) {
       return [
@@ -347,6 +390,7 @@ const AddView: React.FC<AddViewProps> = ({
       {
         label: "Save as recurring",
         icon: "repeat-outline",
+        disabled: !isFormValid(),
       },
     ];
   };

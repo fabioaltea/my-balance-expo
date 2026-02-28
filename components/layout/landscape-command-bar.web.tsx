@@ -1,7 +1,8 @@
-import React, { ReactNode } from "react";
+import React, { ReactNode, useState, useRef } from "react";
 import { View, Text, StyleSheet, Image, Pressable } from "react-native";
 import { useThemeColor } from "@/hooks/use-theme-color";
-import { BlurView } from "expo-blur";
+import { useAuthContext } from "@/state";
+import ContextMenu from "@/components/ui/context-menu";
 
 interface LandscapeCommandBarProps {
   accountSelector: ReactNode;
@@ -10,7 +11,7 @@ interface LandscapeCommandBarProps {
 }
 
 /**
- * Compact iOS 26 style command bar for landscape mode
+ * Compact iOS 26 style command bar for landscape mode (Web version)
  * Low height, glass morphism effect, with logo + account + period selectors
  */
 export function LandscapeCommandBar({
@@ -21,15 +22,51 @@ export function LandscapeCommandBar({
   const textColor = useThemeColor({}, "text");
   const borderColor = useThemeColor(
     { light: "rgba(0,0,0,0.08)", dark: "rgba(255,255,255,0.1)" },
-    "cardBorder"
+    "cardBorder",
   );
+
+  const { logout } = useAuthContext();
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [buttonPosition, setButtonPosition] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null>(null);
+  const logoRef = useRef<View>(null);
+
+  const handleLogoPress = () => {
+    if (logoRef.current) {
+      logoRef.current.measureInWindow((x, y, width, height) => {
+        setButtonPosition({ x, y, width, height });
+        setMenuVisible(true);
+      });
+    }
+  };
+
+  const handleLogout = () => {
+   
+      logout();
+    
+  };
+
+  const handleMenuOption = (option: string) => {
+    setMenuVisible(false);
+    if (option.toLowerCase() === "logout") {
+      handleLogout();
+    }
+  };
 
   return (
     <View style={[styles.container]}>
       <View style={styles.content}>
         {/* Logo section */}
 
-        <View style={styles.logoSection}>
+        <Pressable
+          ref={logoRef}
+          style={styles.logoSection}
+          onPress={handleLogoPress}
+        >
           <Image
             source={require("@/assets/images/icon.png")}
             style={styles.logo}
@@ -38,7 +75,7 @@ export function LandscapeCommandBar({
           <Text style={[styles.brandText, { color: "#2F4F3F" }]}>
             MyBalance
           </Text>
-        </View>
+        </Pressable>
 
         {/* Divider */}
         <View style={[styles.divider, { backgroundColor: borderColor }]} />
@@ -52,17 +89,32 @@ export function LandscapeCommandBar({
         {/* Period selector */}
         <View style={styles.periodSection}>{periodSelector}</View>
 
-        {/* Divider */}
-        <View style={[styles.divider, { backgroundColor: borderColor }]} />
-
         {/* Right content (optional) */}
         {rightContent && (
           <>
             <View style={styles.spacer} />
+            <View style={[styles.divider, { backgroundColor: borderColor }]} />
             <View style={styles.rightSection}>{rightContent}</View>
           </>
         )}
       </View>
+
+      {/* Context Menu */}
+      {menuVisible && buttonPosition && (
+        <ContextMenu
+          options={[
+            {
+              label: "Logout",
+              icon: "log-out-outline",
+              destructive: true,
+            },
+          ]}
+          selectedOption=""
+          onSelectOption={handleMenuOption}
+          onDismiss={() => setMenuVisible(false)}
+          buttonPosition={buttonPosition}
+        />
+      )}
     </View>
   );
 }

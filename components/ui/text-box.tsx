@@ -10,6 +10,12 @@ interface ITextBoxProps {
 }
 
 const TextBox: React.FC<ITextBoxProps> = ({ value, onChange, label, placeholder }) => {
+  const textColor = useThemeColor({ light: "#000", dark: "#fff" }, "text");
+  const placeholderColor = useThemeColor(
+    { light: "#aaa", dark: "#666" },
+    "tabIconDefault"
+  );
+
   return (
     <View style={styles.container}>
       {label && (
@@ -18,10 +24,11 @@ const TextBox: React.FC<ITextBoxProps> = ({ value, onChange, label, placeholder 
         </ThemedText>
       )}
       <TextInput
-        style={[styles.textInput, { color: useThemeColor({ light: "#000", dark: "#fff" }, "text") }]}
+        style={[styles.textInput, { color: textColor }]}
         value={value}
         onChangeText={onChange}
         placeholder={placeholder || ""}
+        placeholderTextColor={placeholderColor}
       />
     </View>
   );

@@ -6,6 +6,7 @@ interface LayoutRowProps {
   flex?: number;
   gap?: number;
   padding?: number;
+  height?: number | string;
 }
 
 /**
@@ -17,12 +18,17 @@ export function LayoutRow({
   flex,
   gap = 10,
   padding,
+  height,
 }: LayoutRowProps) {
   const style: ViewStyle = {
     flexDirection: "row",
     gap,
     minHeight: 0,
   };
+
+  if (height !== undefined) {
+    style.height = height as any;
+  }
 
   if (flex !== undefined) {
     style.flex = flex;

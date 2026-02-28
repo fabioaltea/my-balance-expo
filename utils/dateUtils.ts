@@ -312,18 +312,16 @@ export const getMonthPeriodsFromStartDate = (
   let currentYear = startDate.getFullYear();
   let currentMonth = startDate.getMonth();
 
-  // Calculate the earliest month we want to check (maxMonthsBack months before current)
-  const earliestYear = now.getFullYear();
-  const earliestMonth = now.getMonth() - maxMonthsBack + 1;
-  const earliestDate = new Date(earliestYear, earliestMonth, 1);
+  // Calculate the earliest month we want to check
+  if (maxMonthsBack !== Infinity) {
+    const earliestMonth = now.getMonth() - maxMonthsBack + 1;
+    const earliestDate = new Date(now.getFullYear(), earliestMonth, 1);
 
-  // If template start is after the earliest date we care about, start from template
-  if (startDate > earliestDate) {
-    currentYear = startDate.getFullYear();
-    currentMonth = startDate.getMonth();
-  } else {
-    currentYear = earliestDate.getFullYear();
-    currentMonth = earliestDate.getMonth();
+    // If template start is after the earliest date we care about, start from template
+    if (startDate <= earliestDate) {
+      currentYear = earliestDate.getFullYear();
+      currentMonth = earliestDate.getMonth();
+    }
   }
 
   // Iterate through months until current month

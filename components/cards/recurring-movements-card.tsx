@@ -1,9 +1,10 @@
 import React, { useState, useRef, useMemo } from "react";
 import { ThemedText } from "../core/themed-text";
-import { TouchableOpacity, StyleSheet, View, Alert } from "react-native";
+import { TouchableOpacity, StyleSheet, View, Alert, ScrollView } from "react-native";
 import Card from "../core/card";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { useAuthContext, useDataContext, type PendingRecurrence, type IDateRange } from "@/state";
+import { usePlatformContext } from "@/state/PlatformProvider";
 import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
 import type { Movement } from "@/state";
@@ -25,14 +26,18 @@ interface RecurringMovementWithPending {
 
 interface RecurringMovementsCardProps {
   dateRange: IDateRange;
+  onRecurrencePress?: (movement: Movement) => void;
+  onMovementLongPress?: (movement: Movement) => void;
 }
 
 
 
 
 
-const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({ dateRange }) => {
+const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({ dateRange, onRecurrencePress, onMovementLongPress }) => {
   const { recurringMovements, categories, pendingRecurrences, movements } = useDataContext();
+  const { orientation } = usePlatformContext();
+  const isLandscape = orientation === "landscape";
   const { selectedSpreadsheetId } = useAuthContext();
 
   // React Query mutation
@@ -159,13 +164,16 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({ dateRan
   const handleQuickAdd = (movement: Movement) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-    // Navigate to add screen with recurrenceId to load template
-    router.push({
-      pathname: "/add",
-      params: {
-        recurrenceId: movement.recurrenceId || "",
-      },
-    });
+    if (onRecurrencePress) {
+      onRecurrencePress(movement);
+    } else {
+      router.push({
+        pathname: "/add",
+        params: {
+          recurrenceId: movement.recurrenceId || "",
+        },
+      });
+    }
   };
 
   const handleLongPress = (movement: Movement) => {
@@ -358,7 +366,8 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({ dateRan
   };
 
   return (
-    <Card>
+    <Card label={isLandscape ? "Recurring Movements" : ""} style={isLandscape ? { flex: 1 } : undefined}>
+      <ScrollView showsVerticalScrollIndicator={isLandscape} nestedScrollEnabled={true}>
       {sortedMovements.map(({ movement, pending, badgeStatus, occurrencesInPeriod }, index) => {
         const icon = MovementHelper.getMovementIcon(movement.category, categories);
         const color = MovementHelper.getMovementColor(
@@ -422,6 +431,7 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({ dateRan
           </View>
         );
       })}
+      </ScrollView>
 
       {/* Context Menu */}
       {menuVisible && buttonPosition && (

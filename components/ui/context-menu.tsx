@@ -18,6 +18,7 @@ export interface IContextMenuOption {
   icon?: keyof typeof Ionicons.glyphMap;
   color?: string;
   destructive?: boolean;
+  disabled?: boolean;
 }
 
 export interface IContextMenuProps {
@@ -105,17 +106,24 @@ const ContextMenu: React.FC<IContextMenuProps> = ({
         if (!buttonPosition) return 0;
         const screenWidth = Dimensions.get("window").width;
 
-        // Allinea il menu al bordo sinistro del bottone
-        const proposedLeft = buttonPosition.x;
+        // Centra il menu rispetto al bottone
+        const buttonCenter = buttonPosition.x + buttonPosition.width / 2;
+        const menuCenter = MENU_WIDTH / 2;
+        let proposedLeft = buttonCenter - menuCenter;
 
-        // Se il menu andrebbe oltre il bordo destro dello schermo, allinealo a destra
+        // Assicurati che non vada oltre il bordo destro
         if (proposedLeft + MENU_WIDTH > screenWidth - 8) {
-          return Math.max(8, screenWidth - MENU_WIDTH - 8);
+          proposedLeft = screenWidth - MENU_WIDTH - 8;
+        }
+
+        // Assicurati che non vada oltre il bordo sinistro
+        if (proposedLeft < 8) {
+          proposedLeft = 8;
         }
 
         return proposedLeft;
       })(),
-      top: buttonPosition ? buttonPosition.y + buttonPosition.height + 4 : 40,
+      top: buttonPosition ? buttonPosition.y + buttonPosition.height + 8 : 40,
     },
   });
 
@@ -199,9 +207,12 @@ const ContextMenu: React.FC<IContextMenuProps> = ({
           {options?.map((option, index) => {
             const normalizedOption = normalizeOption(option);
             const isDestructive = normalizedOption.destructive;
-            const itemColor = isDestructive
-              ? "#ff3b30"
-              : normalizedOption.color || textColor;
+            const isDisabled = normalizedOption.disabled;
+            const itemColor = isDisabled
+              ? "rgba(128,128,128,0.4)"
+              : isDestructive
+                ? "#ff3b30"
+                : normalizedOption.color || textColor;
             const isSelected = selectedOption === normalizedOption.label;
             const isLast = index === options.length - 1;
 
@@ -210,9 +221,13 @@ const ContextMenu: React.FC<IContextMenuProps> = ({
                 <Pressable
                   style={({ pressed }) => [
                     styles.menuItemContainer,
-                    pressed && { backgroundColor: pressedBackground },
+                    pressed &&
+                      !isDisabled && { backgroundColor: pressedBackground },
                   ]}
-                  onPress={() => handleSelect(normalizedOption.label)}
+                  onPress={() =>
+                    !isDisabled && handleSelect(normalizedOption.label)
+                  }
+                  disabled={isDisabled}
                 >
                   <Text
                     style={[

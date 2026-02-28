@@ -363,8 +363,8 @@ export const useMyBalanceData = (
         continue;
       }
 
-      // Get all periods from template start date to now (max 3 months back)
-      const periods = getMonthPeriodsFromStartDate(templateStartDate, 3);
+      // Get all periods from template start date to now (no limit)
+      const periods = getMonthPeriodsFromStartDate(templateStartDate, Infinity);
 
       for (const period of periods) {
         // Calculate expected occurrences for this period based on pattern

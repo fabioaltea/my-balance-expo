@@ -18,11 +18,13 @@ function monthStartEnd(year: number, monthIndex: number) {
 interface PeriodPickerProps {
   setDateRange: (range: IDateRange & { isTransitioning?: boolean }) => void;
   isLoading?: boolean;
+  onModeChange?: (mode: "month" | "year") => void;
 }
 
 const PeriodPicker: React.FC<PeriodPickerProps> = ({
   setDateRange,
   isLoading = false,
+  onModeChange,
 }) => {
   const now = new Date();
   const currentYear = now.getFullYear();
@@ -169,11 +171,13 @@ const PeriodPicker: React.FC<PeriodPickerProps> = ({
   const handleMonthModeClick = () => {
     setMode("month");
     updateMonthRange(selectedYear, selectedMonthIndex);
+    onModeChange?.("month");
   };
 
   const handleYearModeClick = () => {
     setMode("year");
     updateYearRange(selectedYear);
+    onModeChange?.("year");
   };
 
   const availableMonths = useMemo(() => {

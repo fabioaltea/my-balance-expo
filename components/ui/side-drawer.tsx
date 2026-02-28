@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
   drawerContent: {
     flex: 1,
     padding: 20,
-    borderRadius: 30,
+    borderRadius: 35,
     // Shadow follows the borderRadius
     shadowColor: "#000",
     shadowOffset: { width: -2, height: 0 },

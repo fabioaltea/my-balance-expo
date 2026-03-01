@@ -214,47 +214,83 @@ export const parseRecurrencePattern = (
  */
 export const calculateExpectedOccurrences = (
   pattern: string,
-  startDate: string,
-  endDate: string,
+  periodStartDate: string,
+  periodEndDate: string,
+  templateStartDate?: string,
 ): number => {
   const parsed = parseRecurrencePattern(pattern);
   if (!parsed) {
     return 0;
   }
 
-  const start = parseDateFromDDMMYYYY(startDate);
-  const end = parseDateFromDDMMYYYY(endDate);
+  const periodStart = parseDateFromDDMMYYYY(periodStartDate);
+  const periodEnd = parseDateFromDDMMYYYY(periodEndDate);
 
-  if (!start || !end) {
+  if (!periodStart || !periodEnd) {
     return 0;
   }
 
-  // Calculate total days in the period
-  const totalDays =
-    Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-
   const { unit, frequency } = parsed;
+
+  // If we have the template start date, enumerate actual occurrences
+  // that fall within the period for accurate calculation
+  const templateStart = templateStartDate
+    ? parseDateFromDDMMYYYY(templateStartDate)
+    : null;
+
+  if (templateStart) {
+    let count = 0;
+    const current = new Date(templateStart);
+
+    // Iterate through occurrences starting from the template date
+    while (current <= periodEnd) {
+      if (current >= periodStart && current <= periodEnd) {
+        count++;
+      }
+
+      // Advance to next occurrence
+      switch (unit) {
+        case "D":
+          current.setDate(current.getDate() + frequency);
+          break;
+        case "W":
+          current.setDate(current.getDate() + frequency * 7);
+          break;
+        case "M":
+          current.setMonth(current.getMonth() + frequency);
+          break;
+        case "Y":
+          current.setFullYear(current.getFullYear() + frequency);
+          break;
+      }
+    }
+
+    return count;
+  }
+
+  // Fallback: estimate based on period length (less accurate)
+  const totalDays =
+    Math.floor(
+      (periodEnd.getTime() - periodStart.getTime()) / (1000 * 60 * 60 * 24),
+    ) + 1;
 
   switch (unit) {
     case "D":
-      // Daily: every N days
       return Math.floor(totalDays / frequency);
     case "W":
-      // Weekly: every N weeks (N * 7 days)
       return Math.floor(totalDays / (frequency * 7));
-    case "M":
-      // Monthly: calculate months in period
-      const startYear = start.getFullYear();
-      const startMonth = start.getMonth();
-      const endYear = end.getFullYear();
-      const endMonth = end.getMonth();
+    case "M": {
       const totalMonths =
-        (endYear - startYear) * 12 + (endMonth - startMonth) + 1;
+        (periodEnd.getFullYear() - periodStart.getFullYear()) * 12 +
+        (periodEnd.getMonth() - periodStart.getMonth()) +
+        1;
       return Math.floor(totalMonths / frequency);
-    case "Y":
-      // Yearly: calculate years in period
-      const years = end.getFullYear() - start.getFullYear() + 1;
+    }
+    case "Y": {
+      const years =
+        periodEnd.getFullYear() - periodStart.getFullYear() + 1;
       return Math.floor(years / frequency);
+    }
     default:
       return 0;
   }

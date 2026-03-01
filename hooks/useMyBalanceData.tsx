@@ -366,6 +366,7 @@ export const useMyBalanceData = (
           recurrencePattern,
           period.startDate,
           period.endDate,
+          templateStartDate,
         );
 
         // Count actual occurrences: movements with same recurrenceId in this period

@@ -44,11 +44,11 @@ const PeriodPicker: React.FC<PeriodPickerProps> = ({
       "November",
       "December",
     ],
-    []
+    [],
   );
 
   const { orientation } = usePlatformContext();
-  
+
   const isLandscape = orientation === "landscape";
 
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
@@ -66,13 +66,13 @@ const PeriodPicker: React.FC<PeriodPickerProps> = ({
 
   const availableYears = useMemo(
     () => Array.from({ length: 6 }, (_, i) => String(currentYear - i)),
-    [currentYear]
+    [currentYear],
   );
 
   const setCustomRange = (
     startDate: string,
     endDate: string,
-    label?: string
+    label?: string,
   ) => {
     setIsTransitioning(true);
     setDateRange({
@@ -189,21 +189,21 @@ const PeriodPicker: React.FC<PeriodPickerProps> = ({
     return [];
   }, [selectedYear, currentYear, currentMonthIndex, months]);
 
-   const inactiveBackground = useThemeColor(
-     { light: "#a8a8a8ff", dark: "#4a4a4a" },
-     "tabIconDefault",
-   );
-   const activeBackground = useThemeColor(
-     { light: "#000", dark: "#fff" },
-     "text",
-   );
+  const inactiveBackground = useThemeColor(
+    { light: "#a8a8a8ff", dark: "#4a4a4a" },
+    "tabIconDefault",
+  );
+  const activeBackground = useThemeColor(
+    { light: "#000", dark: "#fff" },
+    "text",
+  );
 
-   const dynamicStyles = StyleSheet.create({
-     chipButton: {
-       ...styles.chipButton,
-       backgroundColor: inactiveBackground,
-     },
-   });
+  const dynamicStyles = StyleSheet.create({
+    chipButton: {
+      ...styles.chipButton,
+      backgroundColor: inactiveBackground,
+    },
+  });
 
   return (
     <View style={[styles.wrapper, !isLandscape && { marginBottom: 16 }]}>
@@ -291,15 +291,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     display: "flex",
   },
-}
-
-
-
-);
+});
 
 export default PeriodPicker;
-
-
-
- 
-

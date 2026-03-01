@@ -53,12 +53,18 @@ const styles = StyleSheet.create({
   },
   scrollView: {},
   emptyState: {
-    paddingVertical: 40,
     alignItems: "center",
     justifyContent: "center",
+    gap: 8,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    marginTop: 8,
   },
   emptyText: {
-    fontSize: 16,
+    fontSize: 14,
+    textAlign: "center",
     color: "inherit",
     opacity: 0.6,
   },
@@ -157,11 +163,20 @@ const MovementsCard: React.FC<MovementsCardProps> = ({
   // Empty state when not loading and no movements
   if (recentMovements?.length === 0) {
     return (
-      <Card label={isLandscape ? "Recent Movements" : ""}>
+      <Card
+        label={isLandscape ? "Recent Movements" : ""}
+        style={isLandscape ? { flex: 1 } : undefined}
+      >
         <View style={styles.emptyState}>
-          <ThemedText style={styles.emptyText}>
-            No movements found for the selected period
-          </ThemedText>
+          <IconSymbol name="search-off" size={48} color="#999" />
+          <View style={styles.emptyState}>
+            <ThemedText style={[styles.emptyTitle, { color: "#999" }]}>
+              No movements
+            </ThemedText>
+            <ThemedText style={styles.emptyText}>
+              No movements found for the selected period
+            </ThemedText>
+          </View>
         </View>
       </Card>
     );

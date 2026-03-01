@@ -13,7 +13,7 @@ export interface CompactAccountPickerProps {
 
 /**
  * Compact account picker for landscape command bar
- * Native version with modal picker
+ * Base version - use .native.tsx or .web.tsx for platform-specific implementations
  */
 const CompactAccountPicker: React.FC<CompactAccountPickerProps> = ({
   accounts,

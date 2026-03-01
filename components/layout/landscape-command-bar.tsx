@@ -1,6 +1,7 @@
 import React, { ReactNode, useState, useRef } from "react";
-import { View, Text, StyleSheet, Image, Pressable } from "react-native";
+import { View, Text, StyleSheet, Image, Pressable, Alert } from "react-native";
 import { useThemeColor } from "@/hooks/use-theme-color";
+import { BlurView } from "expo-blur";
 import { useAuthContext } from "@/state";
 import ContextMenu from "@/components/ui/context-menu";
 
@@ -11,7 +12,7 @@ interface LandscapeCommandBarProps {
 }
 
 /**
- * Compact iOS 26 style command bar for landscape mode (Web version)
+ * Compact iOS 26 style command bar for landscape mode
  * Low height, glass morphism effect, with logo + account + period selectors
  */
 export function LandscapeCommandBar({
@@ -45,7 +46,17 @@ export function LandscapeCommandBar({
   };
 
   const handleLogout = () => {
-    logout();
+    Alert.alert("Logout", "Sei sicuro di voler uscire?", [
+      {
+        text: "Annulla",
+        style: "cancel",
+      },
+      {
+        text: "Logout",
+        style: "destructive",
+        onPress: logout,
+      },
+    ]);
   };
 
   const handleMenuOption = (option: string) => {

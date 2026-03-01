@@ -271,9 +271,19 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({ dateRan
     },
   });
 
-  // Don't show if no recurring movements
+  // Empty state when no recurring movements
   if (!recurringMovements || recurringMovements.length === 0) {
-    return null;
+    return (
+      <Card label={isLandscape ? "Recurring Movements" : ""} style={isLandscape ? { flex: 1 } : undefined}>
+        <View style={styles.emptyState}>
+          <IconSymbol name="repeat" size={48} color="#999" />
+          <ThemedText style={[styles.emptyTitle, { color: "#999" }]}>No recurring movements</ThemedText>
+          <ThemedText style={[styles.emptyText, { color: subtextColor }]}>
+            Add a recurring movement to track it here
+          </ThemedText>
+        </View>
+      </Card>
+    );
   }
 
   // Format amount for display
@@ -487,6 +497,20 @@ const styles = StyleSheet.create({
   statusBadgeText: {
     fontSize: 10,
     fontWeight: "600",
+  },
+  emptyState: {
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    marginTop: 8,
+  },
+  emptyText: {
+    fontSize: 14,
+    textAlign: "center",
   },
 });
 

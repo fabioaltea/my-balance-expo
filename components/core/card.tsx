@@ -29,6 +29,7 @@ const Card: React.FC<ICardProps> = ({
       borderRadius: 30,
       paddingHorizontal: 24,
       paddingVertical: 15,
+      justifyContent: "center",
       flexShrink: 1,
       ...(Platform.OS === "web"
         ? {

@@ -25,10 +25,20 @@ import PeriodPicker from "../ui/period-chips-picker";
 import ChipButton from "../ui/chip-button";
 
 // Chart components
-import { BreakdownStackedChart, IncomeExpenseChart, StackedBarChart } from "@/components/charts";
+import {
+  BreakdownStackedChart,
+  IncomeExpenseChart,
+  StackedBarChart,
+} from "@/components/charts";
 import Card from "@/components/core/card";
-import { useIncomeExpenses, IncomeExpenseData } from "@/hooks/useIncomeExpenses";
-import { useCategoryAccountBreakdown, PeriodBreakdownData } from "@/hooks/useCategoryAccountBreakdown";
+import {
+  useIncomeExpenses,
+  IncomeExpenseData,
+} from "@/hooks/useIncomeExpenses";
+import {
+  useCategoryAccountBreakdown,
+  PeriodBreakdownData,
+} from "@/hooks/useCategoryAccountBreakdown";
 import { useMonthlyBalances, MonthlyData } from "@/hooks/useMonthlyBalances";
 
 // View components for drawer content
@@ -88,16 +98,21 @@ export function DashboardLandscapeLayout() {
   const [selectedAccount, setSelectedAccount] = useState<string>("All");
 
   // Chart view mode state (months or years)
-  const [chartViewMode, setChartViewMode] = useState<"months" | "years">("months");
+  const [chartViewMode, setChartViewMode] = useState<"months" | "years">(
+    "months",
+  );
 
   // Drawer state
   const [drawerContent, setDrawerContent] = useState<DrawerState | null>(null);
   const isDrawerOpen = drawerContent !== null;
 
   // Drawer actions
-  const openDrawer = useCallback((type: DrawerContentType, props?: DrawerState["props"]) => {
-    setDrawerContent({ type, props });
-  }, []);
+  const openDrawer = useCallback(
+    (type: DrawerContentType, props?: DrawerState["props"]) => {
+      setDrawerContent({ type, props });
+    },
+    [],
+  );
 
   const closeDrawer = useCallback(() => {
     setDrawerContent(null);
@@ -106,7 +121,9 @@ export function DashboardLandscapeLayout() {
   // Toast state
   const [toastVisible, setToastVisible] = useState(false);
   const [toastStatus, setToastStatus] = useState<ToastStatus>("loading");
-  const [toastMessage, setToastMessage] = useState<string | undefined>(undefined);
+  const [toastMessage, setToastMessage] = useState<string | undefined>(
+    undefined,
+  );
 
   const handleToast = useCallback((status: ToastStatus, message?: string) => {
     setToastStatus(status);
@@ -136,7 +153,8 @@ export function DashboardLandscapeLayout() {
       const t = new Date(y, mo - 1, d).getTime();
       if (t < oldest) oldest = t;
     }
-    const months = Math.ceil((Date.now() - oldest) / (30.44 * 24 * 60 * 60 * 1000)) + 1;
+    const months =
+      Math.ceil((Date.now() - oldest) / (30.44 * 24 * 60 * 60 * 1000)) + 1;
     return Math.max(months, 6);
   }, [movements]);
 
@@ -155,8 +173,12 @@ export function DashboardLandscapeLayout() {
     monthOffset: 0,
   });
 
-  const [breakdownType, setBreakdownType] = useState<"expense" | "income">("expense");
-  const [breakdownGroupBy, setBreakdownGroupBy] = useState<"category" | "account">("category");
+  const [breakdownType, setBreakdownType] = useState<"expense" | "income">(
+    "expense",
+  );
+  const [breakdownGroupBy, setBreakdownGroupBy] = useState<
+    "category" | "account"
+  >("category");
 
   const breakdownMonthly = useCategoryAccountBreakdown({
     movements,
@@ -171,9 +193,9 @@ export function DashboardLandscapeLayout() {
   // Aggregate monthly data into yearly for "years" view mode
   const balanceHistoryYearly = useMemo((): MonthlyData[] => {
     if (balanceHistoryMonthly.length === 0) return [];
-    
+
     const yearMap = new Map<number, MonthlyData>();
-    
+
     balanceHistoryMonthly.forEach((monthData) => {
       // Take the latest month for each year (end-of-year balance)
       yearMap.set(monthData.year, {
@@ -182,15 +204,15 @@ export function DashboardLandscapeLayout() {
         monthIndex: monthData.year,
       });
     });
-    
+
     return Array.from(yearMap.values()).sort((a, b) => a.year - b.year);
   }, [balanceHistoryMonthly]);
 
   const incomeExpenseYearly = useMemo((): IncomeExpenseData[] => {
     if (incomeExpenseMonthly.length === 0) return [];
-    
+
     const yearMap = new Map<number, IncomeExpenseData>();
-    
+
     incomeExpenseMonthly.forEach((monthData) => {
       const existing = yearMap.get(monthData.year);
       if (existing) {
@@ -204,15 +226,15 @@ export function DashboardLandscapeLayout() {
         });
       }
     });
-    
+
     return Array.from(yearMap.values()).sort((a, b) => a.year - b.year);
   }, [incomeExpenseMonthly]);
 
   const breakdownYearly = useMemo((): PeriodBreakdownData[] => {
     if (breakdownMonthly.length === 0) return [];
-    
+
     const yearMap = new Map<number, PeriodBreakdownData>();
-    
+
     breakdownMonthly.forEach((monthData) => {
       const existing = yearMap.get(monthData.year);
       if (existing) {
@@ -234,19 +256,22 @@ export function DashboardLandscapeLayout() {
         });
       }
     });
-    
+
     // Sort items in each year by amount
     yearMap.forEach((data) => {
       data.items.sort((a, b) => b.amount - a.amount);
     });
-    
+
     return Array.from(yearMap.values()).sort((a, b) => a.year - b.year);
   }, [breakdownMonthly]);
 
   // Select data based on chart view mode
-  const balanceHistoryData = chartViewMode === "months" ? balanceHistoryMonthly : balanceHistoryYearly;
-  const incomeExpenseData = chartViewMode === "months" ? incomeExpenseMonthly : incomeExpenseYearly;
-  const breakdownData = chartViewMode === "months" ? breakdownMonthly : breakdownYearly;
+  const balanceHistoryData =
+    chartViewMode === "months" ? balanceHistoryMonthly : balanceHistoryYearly;
+  const incomeExpenseData =
+    chartViewMode === "months" ? incomeExpenseMonthly : incomeExpenseYearly;
+  const breakdownData =
+    chartViewMode === "months" ? breakdownMonthly : breakdownYearly;
 
   const cardBackground = useThemeColor({}, "cardBackground");
   const textColor = useThemeColor({}, "text");
@@ -336,10 +361,12 @@ export function DashboardLandscapeLayout() {
           />
         }
         periodSelector={
-          <PeriodPicker 
-            setDateRange={setDateRange} 
+          <PeriodPicker
+            setDateRange={setDateRange}
             isLoading={isLoading}
-            onModeChange={(mode) => setChartViewMode(mode === "month" ? "months" : "years")}
+            onModeChange={(mode) =>
+              setChartViewMode(mode === "month" ? "months" : "years")
+            }
           />
         }
         rightContent={
@@ -414,7 +441,11 @@ export function DashboardLandscapeLayout() {
               <View style={chartControlStyles.controlsRow}>
                 <Pressable
                   style={chartControlStyles.pill}
-                  onPress={() => setBreakdownType(breakdownType === "expense" ? "income" : "expense")}
+                  onPress={() =>
+                    setBreakdownType(
+                      breakdownType === "expense" ? "income" : "expense",
+                    )
+                  }
                 >
                   <RNText style={chartControlStyles.pillText}>
                     {breakdownType === "expense" ? "Expenses" : "Income"}
@@ -422,10 +453,16 @@ export function DashboardLandscapeLayout() {
                 </Pressable>
                 <Pressable
                   style={chartControlStyles.pill}
-                  onPress={() => setBreakdownGroupBy(breakdownGroupBy === "category" ? "account" : "category")}
+                  onPress={() =>
+                    setBreakdownGroupBy(
+                      breakdownGroupBy === "category" ? "account" : "category",
+                    )
+                  }
                 >
                   <RNText style={chartControlStyles.pillText}>
-                    {breakdownGroupBy === "category" ? "Categories" : "Accounts"}
+                    {breakdownGroupBy === "category"
+                      ? "Categories"
+                      : "Accounts"}
                   </RNText>
                 </Pressable>
               </View>

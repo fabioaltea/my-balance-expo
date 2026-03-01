@@ -163,13 +163,20 @@ const UnconfirmedMovementsCard: React.FC<UnconfirmedMovementsCardProps> = ({
   // Empty state when no unconfirmed movements
   if (!sortedMovements || sortedMovements.length === 0) {
     return (
-      <Card label={isLandscape ? "Unconfirmed Movements" : ""} style={isLandscape ? { flex: 1 } : undefined}>
+      <Card
+        label={isLandscape ? "Unconfirmed Movements" : ""}
+        style={isLandscape ? { flex: 1 } : undefined}
+      >
         <View style={styles.emptyState}>
-          <IconSymbol name="check-circle" size={48} color="#2F4F3F" />
-          <ThemedText style={styles.emptyTitle}>You're all set!</ThemedText>
-          <ThemedText style={[styles.emptyText, { color: subtextColor }]}>
-            No unconfirmed movements to review
-          </ThemedText>
+          <IconSymbol name="check-circle" size={48} color="#999" />
+          <View style={styles.emptyState}>
+            <ThemedText style={[styles.emptyTitle, { color: "#999" }]}>
+              You're all set!
+            </ThemedText>
+            <ThemedText style={[styles.emptyText, { color: subtextColor }]}>
+              No unconfirmed movements to review
+            </ThemedText>
+          </View>
         </View>
       </Card>
     );
@@ -289,7 +296,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   emptyState: {
-    paddingVertical: 40,
     alignItems: "center",
     justifyContent: "center",
     gap: 8,

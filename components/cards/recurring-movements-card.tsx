@@ -1,6 +1,6 @@
-import React, { useState, useRef, useMemo } from "react";
+import React, { useMemo } from "react";
 import { ThemedText } from "../core/themed-text";
-import { TouchableOpacity, StyleSheet, View, Alert, ScrollView } from "react-native";
+import { TouchableOpacity, StyleSheet, View, ScrollView } from "react-native";
 import Card from "../core/card";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { useAuthContext, useDataContext, type PendingRecurrence, type IDateRange } from "@/state";
@@ -8,11 +8,11 @@ import { usePlatformContext } from "@/state/PlatformProvider";
 import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
 import type { Movement } from "@/state";
-import ContextMenu, { IContextMenuOption } from "../ui/context-menu";
 import IconSymbol from "../ui/icon-symbol";
 import { MovementHelper } from "@/helpers/MovementHelper";
 import { isDateInRange, parseDateFromDDMMYYYY } from "@/utils/dateUtils";
 import { useDeleteMovement } from "@/hooks/mutations";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 type BadgeStatus = "upcoming" | "soon" | "today" | "overdue" | null;
 
@@ -27,14 +27,14 @@ interface RecurringMovementWithPending {
 interface RecurringMovementsCardProps {
   dateRange: IDateRange;
   onRecurrencePress?: (movement: Movement) => void;
-  onMovementLongPress?: (movement: Movement) => void;
+  onEditPress?: (movement: Movement) => void;
 }
 
 
 
 
 
-const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({ dateRange, onRecurrencePress, onMovementLongPress }) => {
+const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({ dateRange, onRecurrencePress, onEditPress }) => {
   const { recurringMovements, categories, pendingRecurrences, movements } = useDataContext();
   const { orientation } = usePlatformContext();
   const isLandscape = orientation === "landscape";
@@ -42,16 +42,6 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({ dateRan
 
   // React Query mutation
   const deleteMovement = useDeleteMovement();
-
-  const [menuVisible, setMenuVisible] = useState(false);
-  const [buttonPosition, setButtonPosition] = useState<{
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  } | null>(null);
-  const [selectedMovement, setSelectedMovement] = useState<Movement | null>(null);
-  const itemRefs = useRef<Map<string, View>>(new Map());
 
   // Calculate the expected date object for a pending recurrence
   const getExpectedDateObj = (pending: PendingRecurrence): Date | null => {
@@ -176,83 +166,26 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({ dateRan
     }
   };
 
-  const handleLongPress = (movement: Movement) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    setSelectedMovement(movement);
-
-    const itemRef = itemRefs.current.get(movement.id);
-    if (itemRef) {
-      itemRef.measure((_x, _y, width, height, pageX, pageY) => {
-        setButtonPosition({ x: pageX, y: pageY, width, height });
-        setMenuVisible(true);
-      });
+  const handleMenuAction = async (movement: Movement, action: string) => {
+    if (action === "edit") {
+      if (onEditPress) {
+        onEditPress(movement);
+      } else {
+        router.push({
+          pathname: "/add",
+          params: { movementId: movement.id },
+        });
+      }
+    } else if (action === "delete") {
+      if (!selectedSpreadsheetId) return;
+      if (!confirm("Are you sure you want to delete this recurring movement? This action cannot be undone.")) return;
+      try {
+        await deleteMovement.mutateAsync({ movementId: movement.id });
+      } catch (error) {
+        console.error("Error deleting movement:", error);
+        alert("Failed to delete movement");
+      }
     }
-  };
-
-  const handleMenuOption = async (option: string) => {
-    setMenuVisible(false);
-
-    if (!selectedMovement) return;
-
-    if (option === "Edit") {
-      // Navigate to add screen with movementId to edit
-      router.push({
-        pathname: "/add",
-        params: {
-          movementId: selectedMovement.id,
-        },
-      });
-    } else if (option === "Delete") {
-      handleDeleteMovement();
-    }
-  };
-
-  const handleDeleteMovement = () => {
-    if (!selectedMovement || !selectedSpreadsheetId) return;
-
-    Alert.alert(
-      "Delete Recurring Movement",
-      "Are you sure you want to delete this recurring movement? This action cannot be undone.",
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              // Use React Query mutation
-              await deleteMovement.mutateAsync({
-                movementId: selectedMovement.id,
-              });
-
-              // Success - mutation handles cache invalidation automatically
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            } catch (error) {
-              console.error("Error deleting movement:", error);
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-              Alert.alert("Error", "Failed to delete movement");
-            }
-          },
-        },
-      ]
-    );
-  };
-
-  const getMenuOptions = (): IContextMenuOption[] => {
-    return [
-      {
-        label: "Edit",
-        icon: "pencil-outline",
-      },
-      {
-        label: "Delete",
-        icon: "trash-outline",
-        destructive: true,
-      },
-    ];
   };
 
   // Theme colors
@@ -389,19 +322,9 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({ dateRan
         const hasPending = badgeStatus !== null;
 
         return (
-          <View
-            key={movement.recurrenceId || movement.id}
-            ref={(ref) => {
-              if (ref) {
-                itemRefs.current.set(movement.id, ref);
-              }
-            }}
-            collapsable={false}
-          >
+          <View key={movement.recurrenceId || movement.id}>
             <TouchableOpacity
               onPress={() => handleQuickAdd(movement)}
-              onLongPress={() => handleLongPress(movement)}
-              delayLongPress={400}
               activeOpacity={0.6}
               style={[
                 styles.recurringItem,
@@ -436,23 +359,38 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({ dateRan
                   </ThemedText>
                 </View>
               )}
-              <IconSymbol name="chevron-right" size={20} color={subtextColor} />
+              <View style={styles.menuButton}>
+                <MaterialIcons name="more-vert" size={20} color={subtextColor} />
+                {/* @ts-ignore — HTML select for web */}
+                <select
+                  value=""
+                  onChange={(e: any) => {
+                    e.stopPropagation();
+                    handleMenuAction(movement, e.target.value);
+                    e.target.value = "";
+                  }}
+                  onClick={(e: any) => e.stopPropagation()}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    opacity: 0,
+                    cursor: "pointer",
+                  }}
+                >
+                  <option value="" disabled />
+                  <option value="edit">Edit</option>
+                  <option value="delete">Delete</option>
+                </select>
+              </View>
             </TouchableOpacity>
           </View>
         );
       })}
       </ScrollView>
 
-      {/* Context Menu */}
-      {menuVisible && buttonPosition && (
-        <ContextMenu
-          options={getMenuOptions()}
-          selectedOption=""
-          onSelectOption={handleMenuOption}
-          onDismiss={() => setMenuVisible(false)}
-          buttonPosition={buttonPosition}
-        />
-      )}
     </Card>
   );
 };
@@ -511,6 +449,11 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 14,
     textAlign: "center",
+  },
+  menuButton: {
+    padding: 6,
+    borderRadius: 20,
+    marginLeft: 4,
   },
 });
 

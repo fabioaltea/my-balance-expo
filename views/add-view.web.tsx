@@ -5,14 +5,12 @@ import {
   Pressable,
   Alert,
 } from "react-native";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import * as Crypto from "expo-crypto";
 import { ThemedText } from "@/components/core/themed-text";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import TextBox from "@/components/ui/text-box";
 import InputGroup from "@/components/ui/input-group";
-import ContextMenu, { IContextMenuOption } from "@/components/ui/context-menu";
-import RecurrencyPicker from "@/components/ui/recurrency-picker";
 import ScreenView from "@/layout/screen-view";
 import { useAuthContext, useDataContext } from "@/state";
 import { formatDateToDDMMYYYY, parseDateFromDDMMYYYY } from "@/utils/dateUtils";
@@ -70,16 +68,12 @@ const AddView: React.FC<AddViewProps> = ({
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [transactions, setTransactions] = useState<ITransaction[]>([]);
-  const [menuVisible, setMenuVisible] = useState(false);
-  const [buttonPosition, setButtonPosition] = useState<{
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  } | null>(null);
-  const [showRecurrencyPicker, setShowRecurrencyPicker] = useState(false);
-  const [recurrencePattern, setRecurrencePattern] = useState<string>("");
-  const menuButtonRef = useRef<View>(null);
+  const [isRecurrent, setIsRecurrent] = useState(false);
+  const [recurrenceSelection, setRecurrenceSelection] = useState<string>("new");
+  const [recurrenceUnit, setRecurrenceUnit] = useState<string>("M");
+  const [recurrenceFrequency, setRecurrenceFrequency] = useState<number>(1);
+
+  const recurrencePattern = `P${recurrenceFrequency}${recurrenceUnit}`;
 
   const isEditing = !!editingMovementId;
   const isEditingRecurring = isEditing && editingMovement && (editingMovement.status?.toLowerCase() === "recurrent" || editingMovement.recurrencePattern);
@@ -107,7 +101,18 @@ const AddView: React.FC<AddViewProps> = ({
       })
     );
     setTransactions(mappedTransactions);
-    setRecurrencePattern(editingMovement.recurrencePattern || "");
+    if (editingMovement.recurrencePattern) {
+      const match = editingMovement.recurrencePattern.match(/^P(\d+)([DWMY])$/);
+      if (match) {
+        setRecurrenceFrequency(parseInt(match[1], 10));
+        setRecurrenceUnit(match[2]);
+      }
+    }
+    // Pre-populate recurrence link for non-template movements
+    if (editingMovement.recurrenceId && editingMovement.status?.toLowerCase() !== "recurrent") {
+      setIsRecurrent(true);
+      setRecurrenceSelection(editingMovement.recurrenceId);
+    }
   }, [editingMovement]);
 
   // Pre-populate form when adding from recurring template
@@ -208,12 +213,11 @@ const AddView: React.FC<AddViewProps> = ({
     }
   };
 
-  // --- Menu ---
-  const handleMenuPress = () => {
-    menuButtonRef.current?.measure((x, y, width, height, pageX, pageY) => {
-      setButtonPosition({ x: pageX, y: pageY, width, height });
-    });
-    setMenuVisible(true);
+  // --- Menu action handler ---
+  const handleMenuAction = (value: string) => {
+    if (value === "delete") {
+      handleDeleteMovement();
+    }
   };
 
   const validateMovement = (): boolean => {
@@ -243,24 +247,7 @@ const AddView: React.FC<AddViewProps> = ({
     return true;
   };
 
-  const handleMenuOption = (option: string) => {
-    setMenuVisible(false);
-    if (option === "Save as recurring") {
-      if (!validateMovement()) return;
-      setShowRecurrencyPicker(true);
-    } else if (option === "Delete movement") {
-      handleDeleteMovement();
-    }
-  };
 
-  const handleRecurrencySave = async (pattern: string) => {
-    setShowRecurrencyPicker(false);
-    if (isEditingRecurring) {
-      setRecurrencePattern(pattern);
-    } else {
-      await handleSubmit(true, pattern);
-    }
-  };
 
   const handleDeleteMovement = async () => {
     if (!confirm("Are you sure you want to delete this movement? This action cannot be undone.")) return;
@@ -287,72 +274,94 @@ const AddView: React.FC<AddViewProps> = ({
     );
     if (validTransactions.length === 0) return false;
     if (!selectedSpreadsheetId) return false;
+    if (isRecurrent && recurrenceSelection === "new" && !recurrencePattern) return false;
+    if (isRecurrent && recurrenceSelection !== "new" && !recurrenceSelection) return false;
     return true;
   };
 
-  const getMenuOptions = (): IContextMenuOption[] => {
-    if (isEditing) {
-      return [{ label: "Delete movement", icon: "trash-outline", destructive: true }];
-    }
-    return [{ label: "Save as recurring", icon: "repeat-outline", disabled: !isFormValid() }];
-  };
 
-  const handleSubmit = async (asRecurrent: boolean = false, newRecurrencePattern?: string) => {
+  const handleSubmit = async () => {
     if (!validateMovement()) return;
 
     const validTransactions = transactions.filter(
       (t) => t.accountName && t.amount > 0
     );
 
-    // Capture form values before closing
     const formattedDate = formatDateToDDMMYYYY(selectedDate);
-    const movementData: Record<string, any> = {
-      movementId: isEditing && editingMovementId ? editingMovementId : undefined,
+    const transactionsData = validTransactions.map((transaction) => ({
+      amount:
+        transaction.type === "income"
+          ? String(transaction.amount).replace(".", ",")
+          : String(-transaction.amount).replace(".", ","),
+      account: transaction.accountName,
+      type: (transaction.type === "income" ? "in" : "out") as "in" | "out",
+    }));
+
+    const baseData = {
       description: description.trim(),
       category: selectedCategory,
       date: formattedDate,
       location: "",
-      transactions: validTransactions.map((transaction) => ({
-        amount:
-          transaction.type === "income"
-            ? String(transaction.amount).replace(".", ",")
-            : String(-transaction.amount).replace(".", ","),
-        account: transaction.accountName,
-        type: transaction.type === "income" ? "in" : "out",
-      })),
+      transactions: transactionsData,
     };
 
-    if (asRecurrent && !isEditing) {
-      movementData.recurrenceId = Crypto.randomUUID();
-      movementData.status = "recurrent";
-      if (newRecurrencePattern) {
-        movementData.recurrencePattern = newRecurrencePattern;
-      }
-    }
-
-    if (recurrenceId && recurringTemplate && !isEditing && !asRecurrent) {
-      movementData.recurrenceId = recurrenceId;
-    }
-
-    if (isEditingRecurring && editingMovement) {
-      movementData.recurrenceId = editingMovement.recurrenceId;
-      movementData.status = "recurrent";
-      movementData.recurrencePattern = recurrencePattern;
-    }
-
-    // Close panel immediately and show toast (except for recurring saves)
     onToast?.("loading");
-    if (!asRecurrent || isEditing) {
-      closeView();
-    }
+    closeView();
 
     try {
       if (isEditing && editingMovementId) {
+        // Editing existing movement or recurring template
+        const movementData: Record<string, any> = {
+          movementId: editingMovementId,
+          ...baseData,
+        };
+        if (isEditingRecurring && editingMovement) {
+          movementData.recurrenceId = editingMovement.recurrenceId;
+          movementData.status = "recurrent";
+          movementData.recurrencePattern = recurrencePattern;
+        } else if (isRecurrent && recurrenceSelection !== "new") {
+          // Link to existing recurrence
+          movementData.recurrenceId = recurrenceSelection;
+        } else if (isRecurrent && recurrenceSelection === "new") {
+          // Create new recurrence template, then link this movement
+          const newRecurrenceId = Crypto.randomUUID();
+          await addMovement.mutateAsync({
+            ...baseData,
+            recurrenceId: newRecurrenceId,
+            status: "recurrent",
+            recurrencePattern,
+          });
+          movementData.recurrenceId = newRecurrenceId;
+        }
         await updateMovement.mutateAsync({
           movementId: editingMovementId,
           ...movementData,
         });
+      } else if (isRecurrent && recurrenceSelection === "new") {
+        // Create new recurring template + linked movement
+        const newRecurrenceId = Crypto.randomUUID();
+        await addMovement.mutateAsync({
+          ...baseData,
+          recurrenceId: newRecurrenceId,
+          status: "recurrent",
+          recurrencePattern,
+        });
+        await addMovement.mutateAsync({
+          ...baseData,
+          recurrenceId: newRecurrenceId,
+        });
+      } else if (isRecurrent && recurrenceSelection !== "new") {
+        // Link to existing recurrence
+        await addMovement.mutateAsync({
+          ...baseData,
+          recurrenceId: recurrenceSelection,
+        });
       } else {
+        // Regular movement (or from recurring template via prop)
+        const movementData: Record<string, any> = { ...baseData };
+        if (recurrenceId && recurringTemplate) {
+          movementData.recurrenceId = recurrenceId;
+        }
         await addMovement.mutateAsync(movementData);
       }
 
@@ -371,27 +380,34 @@ const AddView: React.FC<AddViewProps> = ({
           <ThemedText type="title" style={styles.title}>
             {isEditingRecurring ? "Edit Recurrent" : isEditing ? "Edit Movement" : "New Movement"}
           </ThemedText>
-          <View ref={menuButtonRef} collapsable={false}>
-            <Pressable
-              onPress={handleMenuPress}
-              style={styles.iconButton}
-              accessibilityLabel="Menu options"
-            >
+          {isEditing && (
+            <View style={styles.iconButton}>
               <MaterialIcons name="more-vert" size={20} color={textColor} />
-            </Pressable>
-          </View>
-          {menuVisible && buttonPosition && (
-            <ContextMenu
-              options={getMenuOptions()}
-              selectedOption=""
-              onSelectOption={handleMenuOption}
-              onDismiss={() => setMenuVisible(false)}
-              buttonPosition={buttonPosition}
-            />
+              {/* @ts-ignore — HTML select element for web */}
+              <select
+                value=""
+                onChange={(e: any) => {
+                  handleMenuAction(e.target.value);
+                  e.target.value = "";
+                }}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  opacity: 0,
+                  cursor: "pointer",
+                }}
+              >
+                <option value="" disabled />
+                <option value="delete">Delete movement</option>
+              </select>
+            </View>
           )}
         </View>
 
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <ScrollView  showsVerticalScrollIndicator={false}>
           {/* Description + Category + Date */}
           <InputGroup>
             <TextBox
@@ -469,21 +485,64 @@ const AddView: React.FC<AddViewProps> = ({
 
           {/* Recurrence Pattern — only when editing recurring */}
           {isEditingRecurring && (
-            <InputGroup>
-              <Pressable
-                onPress={() => setShowRecurrencyPicker(true)}
-                style={styles.fieldRow}
-              >
+            <InputGroup label="Recurrence">
+              <View style={styles.fieldRow}>
                 <ThemedText type="default" style={styles.fieldLabel}>
-                  Recurrence
+                  Repeat
                 </ThemedText>
-                <View style={[styles.fieldValue, { flexDirection: "row", alignItems: "center", gap: 8 }]}>
-                  <ThemedText style={{ fontSize: 16, opacity: 0.7, color: textColor }}>
-                    {recurrencePattern || "Not set"}
-                  </ThemedText>
-                  <MaterialIcons name="chevron-right" size={16} color={placeholderColor} />
+                <View style={styles.fieldValue}>
+                  {/* @ts-ignore — HTML select for web */}
+                  <select
+                    value={recurrenceUnit}
+                    onChange={(e: any) => setRecurrenceUnit(e.target.value)}
+                    style={{
+                      flex: 1,
+                      fontSize: 18,
+                      textAlign: "right",
+                      color: textColor,
+                      backgroundColor: "transparent",
+                      border: "none",
+                      outline: "none",
+                      cursor: "pointer",
+                      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+                      width: "100%",
+                    }}
+                  >
+                    <option value="D">Daily</option>
+                    <option value="W">Weekly</option>
+                    <option value="M">Monthly</option>
+                    <option value="Y">Yearly</option>
+                  </select>
                 </View>
-              </Pressable>
+              </View>
+              <View style={styles.fieldRow}>
+                <ThemedText type="default" style={styles.fieldLabel}>
+                  Every
+                </ThemedText>
+                <View style={styles.fieldValue}>
+                  {/* @ts-ignore — HTML select for web */}
+                  <select
+                    value={recurrenceFrequency}
+                    onChange={(e: any) => setRecurrenceFrequency(Number(e.target.value))}
+                    style={{
+                      flex: 1,
+                      fontSize: 18,
+                      textAlign: "right",
+                      color: textColor,
+                      backgroundColor: "transparent",
+                      border: "none",
+                      outline: "none",
+                      cursor: "pointer",
+                      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+                      width: "100%",
+                    }}
+                  >
+                    {[1, 2, 3, 4, 5, 6, 7, 10, 14, 30].map((n) => (
+                      <option key={n} value={n}>{n}</option>
+                    ))}
+                  </select>
+                </View>
+              </View>
             </InputGroup>
           )}
 
@@ -561,16 +620,136 @@ const AddView: React.FC<AddViewProps> = ({
               <MaterialIcons name="add" size={24} color="#fff" />
             </Pressable>
           </InputGroup>
-        </ScrollView>
 
-        {/* Recurrency Picker Modal */}
-        <RecurrencyPicker
-          isVisible={showRecurrencyPicker}
-          onClose={() => setShowRecurrencyPicker(false)}
-          onSave={handleRecurrencySave}
-          startDate={selectedDate}
-          initialPattern={isEditingRecurring ? recurrencePattern : undefined}
-        />
+          {/* Recurrence section — for new movements and editing non-recurring */}
+          {!isEditingRecurring && !recurrenceId && (
+            <InputGroup label="Recurrence">
+              {/* Toggle */}
+              <View style={styles.fieldRow}>
+                <ThemedText type="default" style={styles.fieldLabel}>
+                  Recurrent
+                </ThemedText>
+                <Pressable
+                  onPress={() => setIsRecurrent(!isRecurrent)}
+                  style={[
+                    styles.toggle,
+                    { backgroundColor: isRecurrent ? "#2F4F3F" : "#ccc" },
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.toggleThumb,
+                      { transform: [{ translateX: isRecurrent ? 20 : 2 }] },
+                    ]}
+                  />
+                </Pressable>
+              </View>
+
+              {isRecurrent && (
+                <>
+                  {/* Recurrence select: "New" or existing recurrences */}
+                  <View style={styles.fieldRow}>
+                    <ThemedText type="default" style={styles.fieldLabel}>
+                      Recurrence
+                    </ThemedText>
+                    <View style={styles.fieldValue}>
+                      {/* @ts-ignore — HTML select for web */}
+                      <select
+                        value={recurrenceSelection}
+                        onChange={(e: any) => setRecurrenceSelection(e.target.value)}
+                        style={{
+                          flex: 1,
+                          fontSize: 18,
+                          textAlign: "right",
+                          color: textColor,
+                          backgroundColor: "transparent",
+                          border: "none",
+                          outline: "none",
+                          cursor: "pointer",
+                          fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+                          width: "100%",
+                        }}
+                      >
+                        <option value="new">New</option>
+                        {recurringMovements.map((m) => (
+                          <option key={m.recurrenceId} value={m.recurrenceId || ""}>
+                            {m.description} - {m.category}
+                          </option>
+                        ))}
+                      </select>
+                    </View>
+                  </View>
+
+                  {/* New recurrence: inline Repeat & Every selects */}
+                  {recurrenceSelection === "new" && (
+                    <>
+                      <View style={styles.fieldRow}>
+                        <ThemedText type="default" style={styles.fieldLabel}>
+                          Repeat
+                        </ThemedText>
+                        <View style={styles.fieldValue}>
+                          {/* @ts-ignore — HTML select for web */}
+                          <select
+                            value={recurrenceUnit}
+                            onChange={(e: any) => setRecurrenceUnit(e.target.value)}
+                            style={{
+                              flex: 1,
+                              fontSize: 18,
+                              textAlign: "right",
+                              color: textColor,
+                              backgroundColor: "transparent",
+                              border: "none",
+                              outline: "none",
+                              cursor: "pointer",
+                              fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+                              width: "100%",
+                            }}
+                          >
+                            <option value="D">Daily</option>
+                            <option value="W">Weekly</option>
+                            <option value="M">Monthly</option>
+                            <option value="Y">Yearly</option>
+                          </select>
+                        </View>
+                      </View>
+                      <View style={styles.fieldRow}>
+                        <ThemedText type="default" style={styles.fieldLabel}>
+                          Every
+                        </ThemedText>
+                        <View style={styles.fieldValue}>
+                          {/* @ts-ignore — HTML select for web */}
+                          <select
+                            value={recurrenceFrequency}
+                            onChange={(e: any) => setRecurrenceFrequency(Number(e.target.value))}
+                            style={{
+                              flex: 1,
+                              fontSize: 18,
+                              textAlign: "right",
+                              color: textColor,
+                              backgroundColor: "transparent",
+                              border: "none",
+                              outline: "none",
+                              cursor: "pointer",
+                              fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+                              width: "100%",
+                            }}
+                          >
+                            {[1, 2, 3, 4, 5, 6, 7, 10, 14, 30].map((n) => (
+                              <option key={n} value={n}>{n}</option>
+                            ))}
+                          </select>
+                        </View>
+                      </View>
+                    </>
+                  )}
+                </>
+              )}
+            </InputGroup>
+          )}
+
+          {/* Spacer to scroll content above the bottom section */}
+          <View style={{ height: 160 }} />
+        </ScrollView>
 
       </View>
 
@@ -604,13 +783,13 @@ export default AddView;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
   },
   headerContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 30,
+    padding:10
   },
   title: {
     flex: 1,
@@ -632,8 +811,8 @@ const styles = StyleSheet.create({
     flex: 0,
     flexShrink: 0,
     marginRight: 12,
-    minWidth: 80,
-    maxWidth: 120,
+    minWidth: 100,
+    maxWidth: 140,
   },
   fieldValue: {
     flex: 1,
@@ -721,5 +900,18 @@ const styles = StyleSheet.create({
   },
   submitButtonDisabled: {
     opacity: 0.6,
+  },
+  toggle: {
+    width: 44,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: "center" as const,
+    marginLeft: "auto" as const,
+  },
+  toggleThumb: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: "#fff",
   },
 });

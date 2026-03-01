@@ -496,6 +496,9 @@ export function DashboardLandscapeLayout() {
                   recurrenceId: movement.recurrenceId || "",
                 })
               }
+              onEditPress={(movement) =>
+                openDrawer("edit", { movementId: movement.id })
+              }
             />
           </LayoutColumn>
 

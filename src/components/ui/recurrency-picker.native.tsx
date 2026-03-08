@@ -1,5 +1,5 @@
 import { View, StyleSheet, ScrollView, Pressable } from "react-native";
-import { useThemeColor } from "@/hooks/use-theme-color";
+import { useThemeColor } from "@/src/hooks/use-theme-color";
 import { useState, useEffect } from "react";
 import { ThemedText } from "../core/themed-text.native";
 import * as Haptics from "expo-haptics";

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { View, StyleSheet, Animated } from "react-native";
-import { useThemeColor } from "@/hooks/use-theme-color";
-import { ThemedText } from "@/components/core/themed-text";
+import { useThemeColor } from "@/src/hooks/use-theme-color";
+import { ThemedText } from "@/src/components/core/themed-text";
 
 interface IInlineCurrencyInputProps {
   value: number;

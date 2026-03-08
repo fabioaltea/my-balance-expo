@@ -11,8 +11,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { GlassView, isLiquidGlassAvailable } from "expo-glass-effect";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { useColorScheme } from "@/hooks/use-color-scheme";
-import { useThemeColor } from "@/hooks/use-theme-color";
+import { useColorScheme } from "@/src/hooks/use-color-scheme";
+import { useThemeColor } from "@/src/hooks/use-theme-color";
 import React from "react";
 
 type GlassButtonType = "add" | "search" | "confirm" | "dismiss" | "menu";

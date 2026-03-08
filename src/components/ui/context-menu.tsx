@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import * as Haptics from "expo-haptics";
 import { useState, useEffect, useRef } from "react";
-import { useThemeColor } from "@/hooks/use-theme-color";
+import { useThemeColor } from "@/src/hooks/use-theme-color";
 import { Ionicons } from "@expo/vector-icons";
 
 export interface IContextMenuOption {

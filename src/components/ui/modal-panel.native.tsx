@@ -6,11 +6,11 @@ import {
   Animated,
   Dimensions,
 } from "react-native";
-import { useThemeColor } from "@/hooks/use-theme-color";
+import { useThemeColor } from "@/src/hooks/use-theme-color";
 import { useState, useRef, useEffect, ReactNode } from "react";
 import { ThemedText } from "../core/themed-text.native";
 import * as Haptics from "expo-haptics";
-import GlassButton from "./glass-button.native";
+import GlassButton from "./glass-button";
 import React from "react";
 
 interface IModalPanelProps {

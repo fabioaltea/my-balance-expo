@@ -1,8 +1,8 @@
 import { View, StyleSheet } from "react-native";
 import React from "react";
 import { ThemedText } from "../core/themed-text.native";
-import { useThemeColor } from "@/hooks/use-theme-color";
-import type { Account } from "@/state";
+import { useThemeColor } from "@/src/hooks/use-theme-color";
+import type { Account } from "@/src/state";
 
 export interface CompactAccountPickerProps {
   accounts: Account[];

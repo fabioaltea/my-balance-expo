@@ -1,10 +1,10 @@
 import { View, StyleSheet, TouchableOpacity, Text } from "react-native";
-import ChipButton from "./chip-button.native";
+import ChipButton from "./chip-button";
 import { useState, useMemo, useEffect } from "react";
 import React from "react";
-import { formatDateToDDMMYYYY } from "@/utils/dateUtils";
-import { usePlatformContext, type IDateRange } from "@/state";
-import { useThemeColor } from "@/hooks/use-theme-color";
+import { formatDateToDDMMYYYY } from "@/src/utils/dateUtils";
+import { usePlatformContext, type IDateRange } from "@/src/state";
+import { useThemeColor } from "@/src/hooks/use-theme-color";
 
 function monthStartEnd(year: number, monthIndex: number) {
   const start = new Date(year, monthIndex, 1);

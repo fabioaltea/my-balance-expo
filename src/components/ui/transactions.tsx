@@ -7,14 +7,14 @@ import {
   Platform,
   UIManager,
 } from "react-native";
-import { useThemeColor } from "@/hooks/use-theme-color";
+import { useThemeColor } from "@/src/hooks/use-theme-color";
 import * as Haptics from "expo-haptics";
 import React, { useRef } from "react";
 import {
   Swipeable,
   GestureHandlerRootView,
 } from "react-native-gesture-handler";
-import IconSymbol from "./icon-symbol.native";
+import IconSymbol from "./icon-symbol";
 import { ThemedText } from "../core/themed-text.native";
 
 export interface ITransaction {

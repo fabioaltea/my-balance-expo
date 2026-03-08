@@ -1,8 +1,8 @@
 import { View, StyleSheet, Animated } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import ChipButton from "./chip-button.native";
+import ChipButton from "./chip-button";
 import React from "react";
-import { useThemeColor } from "@/hooks/use-theme-color";
+import { useThemeColor } from "@/src/hooks/use-theme-color";
 
 export type ViewMode = "recent" | "recurring" | "unconfirmed";
 

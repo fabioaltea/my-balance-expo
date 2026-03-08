@@ -1,8 +1,8 @@
 import { View, StyleSheet, ScrollView, Pressable } from "react-native";
-import { useThemeColor } from "@/hooks/use-theme-color";
+import { useThemeColor } from "@/src/hooks/use-theme-color";
 import { useState, useEffect } from "react";
 import { ThemedText } from "../core/themed-text.native";
-import GlassButton from "./glass-button.native";
+import GlassButton from "./glass-button";
 import React from "react";
 
 interface IRecurrencyPickerProps {

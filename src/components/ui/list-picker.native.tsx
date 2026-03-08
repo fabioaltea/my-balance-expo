@@ -1,10 +1,10 @@
-import { ThemedText } from "../core/themed-text.native";
+import { ThemedText } from "../core/themed-text";
 import { View, StyleSheet, Pressable } from "react-native";
-import { useThemeColor } from "@/hooks/use-theme-color";
+import { useThemeColor } from "@/src/hooks/use-theme-color";
 import { Picker } from "@react-native-picker/picker";
 import { useState } from "react";
 import * as Haptics from "expo-haptics";
-import ModalPanel from "./modal-panel.native";
+import ModalPanel from "./modal-panel";
 import React from "react";
 
 export interface IListPickerItem {

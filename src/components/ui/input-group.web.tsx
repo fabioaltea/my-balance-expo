@@ -1,8 +1,8 @@
-import { useThemeColor } from "@/hooks/use-theme-color";
+import { useThemeColor } from "@/src/hooks/use-theme-color";
 import { useTheme } from "@react-navigation/native";
 import { use } from "react";
 import { StyleSheet, View, Text } from "react-native";
-import List from "./list.native";
+import List from "./list";
 import React from "react";
 
 interface ICardProps {

@@ -1,10 +1,10 @@
 import { View, Text, StyleSheet, Pressable, ScrollView } from "react-native";
 import * as Haptics from "expo-haptics";
 import { useEffect, useState, useRef } from "react";
-import ContextMenu from "./context-menu.native";
-import { useThemeColor } from "@/hooks/use-theme-color";
+import ContextMenu from "./context-menu";
+import { useThemeColor } from "@/src/hooks/use-theme-color";
 import React from "react";
-import { usePlatformContext } from "@/state";
+import { usePlatformContext } from "@/src/state";
 
 export interface IChipButtonProps {
   text: string;

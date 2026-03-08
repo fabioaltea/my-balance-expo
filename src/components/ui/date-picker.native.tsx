@@ -1,11 +1,11 @@
 import { View, StyleSheet, Pressable, Platform } from "react-native";
-import { useThemeColor } from "@/hooks/use-theme-color";
+import { useThemeColor } from "@/src/hooks/use-theme-color";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useState } from "react";
 import * as Haptics from "expo-haptics";
 import ModalPanel from "./modal-panel.native";
 import React from "react";
-import { ThemedText } from "../core.native";
+import { ThemedText } from "../core";
 
 interface IDatePickerProps {
   value: Date;

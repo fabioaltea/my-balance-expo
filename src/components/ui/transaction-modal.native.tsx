@@ -7,10 +7,10 @@ import {
   Dimensions,
 } from "react-native";
 import { ThemedText } from "../core/themed-text.native";
-import { useThemeColor } from "@/hooks/use-theme-color";
+import { useThemeColor } from "@/src/hooks/use-theme-color";
 import { useEffect, useState } from "react";
 import ListPicker, { IListPickerItem } from "./list-picker.native";
-import CurrencyInput from "./currency-input.native";
+import CurrencyInput from "./currency-input";
 import * as Haptics from "expo-haptics";
 import ModalPanel from "./modal-panel.native";
 import React from "react";

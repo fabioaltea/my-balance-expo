@@ -1,6 +1,6 @@
-import { ThemedText } from "../core/themed-text.native";
+import { ThemedText } from "../core/themed-text";
 import { View, StyleSheet, Pressable, ScrollView } from "react-native";
-import { useThemeColor } from "@/hooks/use-theme-color";
+import { useThemeColor } from "@/src/hooks/use-theme-color";
 import { useState, useRef } from "react";
 import React from "react";
 

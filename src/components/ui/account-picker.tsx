@@ -1,8 +1,8 @@
 import { View, StyleSheet, Pressable } from "react-native";
 import React from "react";
-import { ThemedText } from "../core/themed-text.native";
-import ContextMenu from "./context-menu.native";
-import type { Account } from "@/state";
+import { ThemedText } from "@/src/components/core/themed-text";
+import ContextMenu from "./context-menu";
+import type { Account } from "@/src/state";
 
 export interface IAccountPickerProps {
   accounts: Account[];

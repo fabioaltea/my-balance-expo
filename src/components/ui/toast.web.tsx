@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { View, StyleSheet, Animated, Text } from "react-native";
-import { useThemeColor } from "@/hooks/use-theme-color";
+import { useThemeColor } from "@/src/hooks/use-theme-color";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 type ToastStatus = "loading" | "success" | "error";

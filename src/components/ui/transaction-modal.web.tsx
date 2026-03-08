@@ -1,9 +1,9 @@
 import { View, StyleSheet, Pressable, Switch, TextInput } from "react-native";
 import { ThemedText } from "../core/themed-text.native";
-import { useThemeColor } from "@/hooks/use-theme-color";
+import { useThemeColor } from "@/src/hooks/use-theme-color";
 import { useEffect, useState } from "react";
 import ListPicker, { IListPickerItem } from "./list-picker.native";
-import GlassButton from "./glass-button.native";
+import GlassButton from "./glass-button";
 import React from "react";
 
 export interface ITransactionData {

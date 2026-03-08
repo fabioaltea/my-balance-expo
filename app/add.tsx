@@ -1,7 +1,7 @@
-import AddView from "@/views/add-view";
+import AddView from "@/src/views/add-view";
 import React, { useMemo } from "react";
 import { useLocalSearchParams } from "expo-router";
-import type { Movement } from "@/state";
+import type { Movement } from "@/src/state";
 
 export default function Add() {
   const { movementId, recurrenceId, initialMovement: initialMovementJson } =

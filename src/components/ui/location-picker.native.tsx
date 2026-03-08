@@ -10,7 +10,7 @@ import {
   Animated,
   Pressable,
 } from "react-native";
-import { useThemeColor } from "@/hooks/use-theme-color";
+import { useThemeColor } from "@/src/hooks/use-theme-color";
 import React, { useState, useRef, useEffect } from "react";
 import * as Haptics from "expo-haptics";
 import TextBox from "./text-box.native";

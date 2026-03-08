@@ -1,9 +1,9 @@
 import React from "react";
 import { View, StyleSheet, ScrollView, Pressable } from "react-native";
-import IconSymbol, { IconName } from "@/components/ui/icon-symbol";
-import TextBox from "@/components/ui/text-box";
-import { COLOR_PALETTE } from "@/constants/colors";
-import { VALID_ICONS } from "@/constants/icons";
+import IconSymbol, { IconName } from "@/src/components/ui/icon-symbol";
+import TextBox from "@/src/components/ui/text-box";
+import { COLOR_PALETTE } from "@/src/constants/colors";
+import { VALID_ICONS } from "@/src/constants/icons";
 import { ThemedText } from "../core/themed-text.native";
 
 interface CategoryPanelProps {

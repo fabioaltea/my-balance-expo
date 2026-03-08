@@ -38,7 +38,7 @@ const LoginScreen: React.FC = () => {
         {/* Logo/Title */}
         <View style={styles.header}>
           <Image
-            source={require("../assets/images/icon.png")}
+            source={require("../../assets/images/icon.png")}
             style={styles.logo}
           />
           <Text style={styles.title}>MyBalance</Text>

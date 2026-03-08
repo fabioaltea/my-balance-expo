@@ -8,8 +8,8 @@ import {
 import React, { useState, useEffect } from "react";
 import ModalPanel from "./modal-panel.native";
 import TextBox from "./text-box.native";
-import CurrencyInput from "./currency-input.native";
-import { COLOR_PALETTE, DEFAULT_TEXT_COLOR } from "@/constants/colors";
+import CurrencyInput from "./currency-input";
+import { COLOR_PALETTE, DEFAULT_TEXT_COLOR } from "@/src/constants/colors";
 import { ThemedText } from "../core/themed-text.native";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");

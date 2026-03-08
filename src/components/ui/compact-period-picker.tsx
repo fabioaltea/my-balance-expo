@@ -1,10 +1,10 @@
 import { View, StyleSheet, Pressable, Text } from "react-native";
 import { useState, useMemo, useEffect } from "react";
 import React from "react";
-import { formatDateToDDMMYYYY } from "@/utils/dateUtils";
-import type { IDateRange } from "@/state";
-import { useThemeColor } from "@/hooks/use-theme-color";
-import ContextMenu from "./context-menu.native";
+import { formatDateToDDMMYYYY } from "@/src/utils/dateUtils";
+import type { IDateRange } from "@/src/state";
+import { useThemeColor } from "@/src/hooks/use-theme-color";
+import ContextMenu from "./context-menu";
 
 function monthStartEnd(year: number, monthIndex: number) {
   const start = new Date(year, monthIndex, 1);

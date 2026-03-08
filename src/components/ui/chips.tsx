@@ -1,5 +1,5 @@
 import { View, StyleSheet } from "react-native";
-import GlassButton from "./glass-button.native";
+import GlassButton from "./glass-button";
 import React from "react";
 
 const CHIPS = ["All", "Income", "Expenses", "Transfers"];

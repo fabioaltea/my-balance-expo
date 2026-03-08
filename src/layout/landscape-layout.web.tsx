@@ -6,54 +6,54 @@ import {
   Pressable,
   Text as RNText,
 } from "react-native";
-import { useThemeColor } from "@/hooks/use-theme-color";
-import { useDataContext, useAuthContext } from "@/state";
-import type { Account } from "@/state";
+import { useThemeColor } from "@/src/hooks/use-theme-color";
+import { useDataContext, useAuthContext } from "@/src/state";
+import type { Account } from "@/src/state";
 import * as DocumentPicker from "expo-document-picker";
 import * as Crypto from "expo-crypto";
-import { OCRHelper } from "@/helpers/OCRHelper";
-import { useAddMovement } from "@/hooks/mutations";
+import { OCRHelper } from "@/src/helpers/OCRHelper";
+import { useAddMovement } from "@/src/hooks/mutations";
 
 // Layout components
-import { LayoutContainer } from "@/components/layout/layout-container";
-import { LayoutRow } from "@/components/layout/layout-row";
-import { LayoutColumn } from "@/components/layout/layout-column";
+import { LayoutContainer } from "@/src/components/layout/layout-container";
+import { LayoutRow } from "@/src/components/layout/layout-row";
+import { LayoutColumn } from "@/src/components/layout/layout-column";
 
 // UI components
-import CompactAccountPicker from "@/components/ui/compact-account-picker";
-import SideDrawer from "@/components/ui/side-drawer";
+import CompactAccountPicker from "@/src/components/ui/compact-account-picker";
+import SideDrawer from "@/src/components/ui/side-drawer";
 
 // Card components
-import BalanceCard from "@/components/cards/balance-card";
-import MovementsCard from "@/components/cards/movements-card";
-import RecurringMovementsCard from "@/components/cards/recurring-movements-card";
-import UnconfirmedMovementsCard from "@/components/cards/unconfirmed-movements-card";
+import BalanceCard from "@/src/components/cards/balance-card";
+import MovementsCard from "@/src/components/cards/movements/recent-movements-card";
+import RecurringMovementsCard from "@/src/components/cards/movements/recurring-movements-card";
+import UnconfirmedMovementsCard from "@/src/components/cards/movements/unconfirmed-movements-card";
 
 // Chart components
 import {
   BreakdownStackedChart,
   IncomeExpenseChart,
   StackedBarChart,
-} from "@/components/charts";
-import Card from "@/components/core/card";
+} from "@/src/components/charts";
+import Card from "@/src/components/core/card";
 import {
   useIncomeExpenses,
   IncomeExpenseData,
-} from "@/hooks/useIncomeExpenses";
+} from "@/src/hooks/useIncomeExpenses";
 import {
   useCategoryAccountBreakdown,
   PeriodBreakdownData,
-} from "@/hooks/useCategoryAccountBreakdown";
-import { useMonthlyBalances, MonthlyData } from "@/hooks/useMonthlyBalances";
+} from "@/src/hooks/useCategoryAccountBreakdown";
+import { useMonthlyBalances, MonthlyData } from "@/src/hooks/useMonthlyBalances";
 
 // View components for drawer content
-import AddView from "@/views/add-view";
-import Toast from "@/components/ui/toast";
-import SettingsView from "@/views/settings-view";
-import CommandBar from "./command-bar.native";
-import PeriodPicker from "@/components/ui/period-chips-picker";
-import ChipButton from "@/components/ui/chip-button";
-import { SummaryCard } from "@/components/cards";
+import AddView from "@/src/views/add-view";
+import Toast from "@/src/components/ui/toast";
+import SettingsView from "@/src/views/settings-view";
+import CommandBar from "./command-bar";
+import PeriodPicker from "@/src/components/ui/period-chips-picker";
+import ChipButton from "@/src/components/ui/chip-button";
+import { SummaryCard } from "@/src/components/cards";
 
 type ToastStatus = "loading" | "success" | "error";
 

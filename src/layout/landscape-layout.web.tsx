@@ -11,7 +11,7 @@ import { useDataContext, useAuthContext } from "@/src/state";
 import type { Account } from "@/src/state";
 import * as DocumentPicker from "expo-document-picker";
 import * as Crypto from "expo-crypto";
-import { OCRHelper } from "@/src/helpers/OCRHelper";
+import { OCRHelper } from "@/src/helpers/OCRHelper.web";
 import { useAddMovement } from "@/src/hooks/mutations";
 
 // Layout components
@@ -301,12 +301,13 @@ export function LandscapeLayout() {
   };
 
   const handleImportPress = useCallback(async () => {
+    console.log("Import statement pressed");
     const result = await DocumentPicker.getDocumentAsync({
       type: ["image/*", "application/pdf"],
       copyToCacheDirectory: true,
     });
     if (result.canceled || result.assets.length === 0) return;
-
+    console.log("Selected document:", result.assets[0]);
     const asset = result.assets[0];
     const isPdf =
       asset.mimeType === "application/pdf" ||
@@ -315,6 +316,7 @@ export function LandscapeLayout() {
     handleToast("loading", "Analisi documento...");
 
     try {
+      
       const statementData = isPdf
         ? await OCRHelper.extractStatementDataFromPDF(asset.uri)
         : await OCRHelper.extractStatementData(asset.uri);
@@ -490,8 +492,8 @@ export function LandscapeLayout() {
           <>
             <ChipButton text="↻" onPress={handleReloadPress} />
             <View style={{ width: 8 }} />
-            <ChipButton text="↑" onPress={handleImportPress} />
-            <View style={{ width: 8 }} />
+            {/* <ChipButton text="↑" onPress={handleImportPress} /> */}
+            {/* <View style={{ width: 8 }} /> */}
             <ChipButton text="+" onPress={handleAddPress} />
           </>
         }

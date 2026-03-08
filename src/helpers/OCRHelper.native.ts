@@ -1,7 +1,7 @@
-// import {
-//   recognizeText,
-//   type Text as TextRecognitionResult,
-// } from "@infinitered/react-native-mlkit-text-recognition";
+import {
+  recognizeText,
+  type Text as TextRecognitionResult,
+} from "@infinitered/react-native-mlkit-text-recognition";
 import { extractText as extractPdfText } from "expo-pdf-text-extract";
 
 export interface OCRTransactionData {

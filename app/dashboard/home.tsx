@@ -1,19 +1,21 @@
 import { Alert, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
-import ScreenView from "@/layout/screen-view";
-import HomeView from "@/views/home-view";
+import HomeView from "@/src/views/home-view";
 import React, { useCallback, useRef, useMemo, useState } from "react";
-import GlassButton from "@/components/ui/glass-button";
-import AccountPicker from "@/components/ui/account-picker";
-import ContextMenu, { IContextMenuOption } from "@/components/ui/context-menu";
-import { useDataContext } from "@/state";
-import type { Movement } from "@/state";
+import GlassButton from "@/src/components/ui/glass-button";
+import AccountPicker from "@/src/components/ui/account-picker";
+import ContextMenu, {
+  IContextMenuOption,
+} from "@/src/components/ui/context-menu";
+import { useDataContext } from "@/src/state";
+import type { Movement } from "@/src/state";
 import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
-import { OCRHelper } from "@/helpers/OCRHelper";
-import { formatDateToDDMMYYYY } from "@/utils/dateUtils";
-import { useAddMovement } from "@/hooks/mutations";
+import { OCRHelper } from "@/src/helpers/OCRHelper";
+import { formatDateToDDMMYYYY } from "@/src/utils/dateUtils";
 import * as Crypto from "expo-crypto";
+import { ScreenView } from "@/src/components/core";
+import { useAddMovement } from "@/src/hooks/mutations/useAddMovement";
 
 const contextMenuOptions: IContextMenuOption[] = [
   { label: "Fotocamera/Galleria", icon: "camera" },
@@ -84,9 +86,8 @@ export default function Home() {
     }
   }, []);
 
-  const importStatement = useCallback(async (imageUri: string) => {
+  const importStatementFromData = useCallback(async (statementData: Awaited<ReturnType<typeof OCRHelper.extractStatementData>>) => {
     try {
-      const statementData = await OCRHelper.extractStatementData(imageUri);
 
       if (statementData.transactions.length === 0) {
         Alert.alert("Nessuna transazione", "Non sono state trovate transazioni nel documento.");
@@ -96,7 +97,8 @@ export default function Home() {
       // Resolve account name: try to match OCR result with existing accounts
       let accountName = "";
       if (statementData.accountName) {
-        const match = accounts.find((a) =>
+        const match = accounts.find((a: { name: string }) =>
+           
           statementData.accountName!.toLowerCase().includes(a.name.toLowerCase())
         );
         if (match) accountName = match.name;
@@ -149,17 +151,30 @@ export default function Home() {
       }
     } else if (option === "File") {
       const result = await DocumentPicker.getDocumentAsync({
-        type: "image/*",
+        type: ["image/*", "application/pdf"],
         copyToCacheDirectory: true,
       });
       if (!result.canceled && result.assets.length > 0) {
-        await importStatement(result.assets[0].uri);
+        const asset = result.assets[0];
+        const isPdf =
+          asset.mimeType === "application/pdf" ||
+          asset.uri.toLowerCase().endsWith(".pdf");
+
+        try {
+          const statementData = isPdf
+            ? await OCRHelper.extractStatementDataFromPDF(asset.uri)
+            : await OCRHelper.extractStatementData(asset.uri);
+          await importStatementFromData(statementData);
+        } catch (error) {
+          console.error("Statement import error:", error);
+          Alert.alert("Errore", "Impossibile analizzare il documento. Riprova.");
+        }
       }
     }
-  }, [navigateWithOCR, importStatement]);
+  }, [navigateWithOCR, importStatementFromData]);
 
   const availableAccounts = useMemo(() => {
-    const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
+    const totalBalance = accounts.reduce((sum: number, acc: { balance: number; }) => sum + acc.balance, 0);
     const sortedAccounts = [...accounts].sort((a, b) => b.balance - a.balance);
     return [
       {

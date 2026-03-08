@@ -1,5 +1,6 @@
-import ChartsView from '@/views/charts-view';
-import ScreenView from '@/layout/screen-view';
+
+import { ScreenView } from "@/src/components/core";
+import ChartsView from "@/src/views/charts-view";
 import React from "react";
 
 export default function Charts() {

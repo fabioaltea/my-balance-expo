@@ -1,10 +1,10 @@
 import { StyleSheet, View } from 'react-native';
-import { ThemedText } from '@/components/core/themed-text';
-import ScreenView from '@/layout/screen-view';
+import { ThemedText } from "@/src/components/core/themed-text";
 import React from 'react';
-import GlassButton from '@/components/ui/glass-button';
-import { useDataContext } from '@/state/DataProvider';
-import CategoriesView from '@/views/categories-view';
+import GlassButton from "@/src/components/ui/glass-button";
+import { useDataContext } from "@/src/state/DataProvider";
+import CategoriesView from "@/src/views/categories-view";
+import { ScreenView } from "@/src/components/core";
 
 export default function Categories() {
   const { categories } = useDataContext();

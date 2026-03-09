@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   Text
 } from "react-native";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import * as Crypto from "expo-crypto";
 import ChipButton from "@/src/components/ui/chip-button";
 import { useThemeColor } from "@/src/hooks/use-theme-color";
@@ -95,16 +95,8 @@ const AddView: React.FC<AddViewProps> = ({
   const [showTransactionPicker, setShowTransactionPicker] = useState(false);
   const [editingTransaction, setEditingTransaction] =
     useState<ITransaction | null>(null);
-  const [menuVisible, setMenuVisible] = useState(false);
-  const [buttonPosition, setButtonPosition] = useState<{
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  } | null>(null);
   const [showRecurrencyPicker, setShowRecurrencyPicker] = useState(false);
   const [recurrencePattern, setRecurrencePattern] = useState<string>("");
-  const menuButtonRef = useRef<View>(null);
 
   const isEditing = !!editingMovementId;
   const isEditingRecurring = isEditing && editingMovement && (editingMovement.status?.toLowerCase() === "recurrent" || editingMovement.recurrencePattern);
@@ -266,13 +258,6 @@ const AddView: React.FC<AddViewProps> = ({
     }, 0);
   };
 
-  const handleMenuPress = () => {
-    menuButtonRef.current?.measure((x, y, width, height, pageX, pageY) => {
-      setButtonPosition({ x: pageX, y: pageY, width, height });
-    });
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setMenuVisible(true);
-  };
 
   const validateMovement = (): boolean => {
     if (!description.trim()) {
@@ -302,7 +287,6 @@ const AddView: React.FC<AddViewProps> = ({
   };
 
   const handleMenuOption = (option: string) => {
-    setMenuVisible(false);
     if (option === "Save as recurring") {
       if (!validateMovement()) {
         return;
@@ -538,23 +522,18 @@ const AddView: React.FC<AddViewProps> = ({
                 ? "Edit Movement"
                 : "New Movement"}
           </ThemedText>
-          <View ref={menuButtonRef} collapsable={false}>
+          <ContextMenu
+            options={getMenuOptions()}
+            selectedOption=""
+            onSelectOption={handleMenuOption}
+          >
             <GlassButton
               type="menu"
               size={20}
-              onPress={handleMenuPress}
+              onPress={() => {}}
               accessibilityLabel="Menu opzioni"
             />
-          </View>
-          {menuVisible && buttonPosition && (
-            <ContextMenu
-              options={getMenuOptions()}
-              selectedOption=""
-              onSelectOption={handleMenuOption}
-              onDismiss={() => setMenuVisible(false)}
-              buttonPosition={buttonPosition}
-            />
-          )}
+          </ContextMenu>
         </View>
         <ScrollView
           showsVerticalScrollIndicator={false}

@@ -1,4 +1,4 @@
-import { View, StyleSheet, Pressable } from "react-native";
+import { View, StyleSheet } from "react-native";
 import React from "react";
 import { ThemedText } from "@/src/components/core/themed-text";
 import ContextMenu from "./context-menu";
@@ -15,36 +15,19 @@ const AccountPicker: React.FC<IAccountPickerProps> = ({
   selectedAccount,
   setSelectedAccount,
 }) => {
-  const [menuOpen, setMenuOpen] = React.useState(false);
-
-  const handleSelectOption = (option: string) => {
-    setSelectedAccount(option);
-  };
-
-  const handleOpenMenu = () => {
-    setMenuOpen(true);
-  };
-
-  const handleDismissMenu = () => {
-    setMenuOpen(false);
-  };
-
   return (
     <View>
-      <Pressable style={styles.pressable} onPress={handleOpenMenu}>
-        <ThemedText type="title">
-          {selectedAccount || "Select Account"}
-        </ThemedText>
-        {/* <IconSymbol name="chevron-down" color="#2F4F3F" /> */}
-      </Pressable>
-      {menuOpen && (
-        <ContextMenu
-          options={accounts.map((a) => a.name) || []}
-          onSelectOption={(option) => handleSelectOption(option)}
-          onDismiss={handleDismissMenu}
-          selectedOption={selectedAccount}
-        />
-      )}
+      <ContextMenu
+        options={accounts.map((a) => a.name)}
+        selectedOption={selectedAccount}
+        onSelectOption={setSelectedAccount}
+      >
+        <View style={styles.pressable}>
+          <ThemedText type="title">
+            {selectedAccount || "Select Account"}
+          </ThemedText>
+        </View>
+      </ContextMenu>
     </View>
   );
 };

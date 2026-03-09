@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React from "react";
 import { ThemedText } from "@/src/components/core/themed-text";
 import {
   TouchableOpacity,
@@ -37,25 +37,13 @@ interface UnconfirmedMovementsCardProps {
 const UnconfirmedMovementsCard: React.FC<UnconfirmedMovementsCardProps> = ({
   onMovementPress,
 }) => {
-  const { unconfirmedMovements, categories, reloadData } = useDataContext();
+  const { unconfirmedMovements, categories } = useDataContext();
   const { selectedSpreadsheetId } = useAuthContext();
   const { orientation } = usePlatformContext();
   const isLandscape = orientation === "landscape";
 
   // React Query mutation
   const updateMovement = useUpdateMovement();
-
-  const [menuVisible, setMenuVisible] = useState(false);
-  const [buttonPosition, setButtonPosition] = useState<{
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  } | null>(null);
-  const [selectedMovement, setSelectedMovement] = useState<Movement | null>(
-    null,
-  );
-  const itemRefs = useRef<Map<string, View>>(new Map());
 
   const handleMovementPress = (movement: Movement) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -71,35 +59,14 @@ const UnconfirmedMovementsCard: React.FC<UnconfirmedMovementsCardProps> = ({
     }
   };
 
-  const handleLongPress = (movement: Movement) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    setSelectedMovement(movement);
-
-    const itemRef = itemRefs.current.get(movement.id);
-    if (itemRef) {
-      itemRef.measure((_x, _y, width, height, pageX, pageY) => {
-        setButtonPosition({ x: pageX, y: pageY, width, height });
-        setMenuVisible(true);
-      });
-    }
-  };
-
-  const handleMenuOption = async (option: string) => {
-    if (!selectedMovement) {
-      setMenuVisible(false);
-      return;
-    }
-
+  const handleMenuOption = async (option: string, movement: Movement) => {
     if (option === "Dismiss") {
-      setMenuVisible(false);
-      handleDismissMovement();
-    } else {
-      setMenuVisible(false);
+      handleDismissMovement(movement);
     }
   };
 
-  const handleDismissMovement = () => {
-    if (!selectedMovement || !selectedSpreadsheetId) return;
+  const handleDismissMovement = (movement: Movement) => {
+    if (!selectedSpreadsheetId) return;
 
     Alert.alert("Dismiss movement?", undefined, [
       {
@@ -112,14 +79,14 @@ const UnconfirmedMovementsCard: React.FC<UnconfirmedMovementsCardProps> = ({
         onPress: async () => {
           console.log(
             "🗑️ Dismissing movement:",
-            selectedMovement.id,
+            movement.id,
             "spreadsheetId:",
             selectedSpreadsheetId,
           );
           try {
             // Use React Query mutation to update movement status
             await updateMovement.mutateAsync({
-              movementId: selectedMovement.id,
+              movementId: movement.id,
               status: "DELETED",
             });
 
@@ -136,15 +103,13 @@ const UnconfirmedMovementsCard: React.FC<UnconfirmedMovementsCardProps> = ({
     ]);
   };
 
-  const getMenuOptions = (): IContextMenuOption[] => {
-    return [
-      {
-        label: "Dismiss",
-        icon: "close-circle-outline",
-        destructive: true,
-      },
-    ];
-  };
+  const menuOptions: IContextMenuOption[] = [
+    {
+      label: "Dismiss",
+      icon: "close-circle-outline",
+      destructive: true,
+    },
+  ];
 
   const borderColor = useThemeColor(
     { light: "#F0F0F0", dark: "#333333" },
@@ -215,18 +180,14 @@ const UnconfirmedMovementsCard: React.FC<UnconfirmedMovementsCardProps> = ({
           const amount = movement.totalAmount;
 
           return (
-            <View
+            <ContextMenu
               key={movement.id}
-              ref={(ref) => {
-                if (ref) {
-                  itemRefs.current.set(movement.id, ref);
-                }
-              }}
-              collapsable={false}
+              options={menuOptions}
+              selectedOption=""
+              onSelectOption={(option) => handleMenuOption(option, movement)}
             >
               <TouchableOpacity
                 onPress={() => handleMovementPress(movement)}
-                onLongPress={() => handleLongPress(movement)}
                 activeOpacity={0.6}
                 style={[
                   dynamicStyles.movementItem,
@@ -262,21 +223,10 @@ const UnconfirmedMovementsCard: React.FC<UnconfirmedMovementsCardProps> = ({
                   />
                 </View>
               </TouchableOpacity>
-            </View>
+            </ContextMenu>
           );
         })}
       </ScrollView>
-
-      {/* Context Menu */}
-      {menuVisible && buttonPosition && (
-        <ContextMenu
-          options={getMenuOptions()}
-          selectedOption=""
-          onSelectOption={handleMenuOption}
-          onDismiss={() => setMenuVisible(false)}
-          buttonPosition={buttonPosition}
-        />
-      )}
     </Card>
   );
 };

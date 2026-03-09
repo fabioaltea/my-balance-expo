@@ -1,5 +1,5 @@
-import React, { ReactNode, useState, useRef } from "react";
-import { View, Text, StyleSheet, Image, Pressable } from "react-native";
+import React, { ReactNode } from "react";
+import { View, Text, StyleSheet, Image } from "react-native";
 import { useThemeColor } from "@/src/hooks/use-theme-color";
 import { useAuthContext } from "@/src/state";
 import ContextMenu from "@/src/components/ui/context-menu";
@@ -30,32 +30,10 @@ export function CommandBar({
   );
 
   const { logout } = useAuthContext();
-  const [menuVisible, setMenuVisible] = useState(false);
-  const [buttonPosition, setButtonPosition] = useState<{
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  } | null>(null);
-  const logoRef = useRef<View>(null);
-
-  const handleLogoPress = () => {
-    if (logoRef.current) {
-      logoRef.current.measureInWindow((x, y, width, height) => {
-        setButtonPosition({ x, y, width, height });
-        setMenuVisible(true);
-      });
-    }
-  };
-
-  const handleLogout = () => {
-    logout();
-  };
 
   const handleMenuOption = (option: string) => {
-    setMenuVisible(false);
     if (option.toLowerCase() === "logout") {
-      handleLogout();
+      logout();
     }
   };
 
@@ -63,21 +41,28 @@ export function CommandBar({
     <View style={[styles.container]}>
       <View style={[styles.content, { backgroundColor, borderColor }]}>
         {/* Logo section */}
-
-        <Pressable
-          ref={logoRef}
-          style={styles.logoSection}
-          onPress={handleLogoPress}
+        <ContextMenu
+          options={[
+            {
+              label: "Logout",
+              icon: "log-out-outline",
+              destructive: true,
+            },
+          ]}
+          selectedOption=""
+          onSelectOption={handleMenuOption}
         >
-          <Image
-            source={require("@/assets/images/icon.png")}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-          <Text style={[styles.brandText, { color: "#2F4F3F" }]}>
-            MyBalance
-          </Text>
-        </Pressable>
+          <View style={styles.logoSection}>
+            <Image
+              source={require("@/assets/images/icon.png")}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+            <Text style={[styles.brandText, { color: "#2F4F3F" }]}>
+              MyBalance
+            </Text>
+          </View>
+        </ContextMenu>
 
         {/* Divider */}
         <View style={[styles.divider, { backgroundColor: borderColor }]} />
@@ -100,23 +85,6 @@ export function CommandBar({
           </>
         )}
       </View>
-
-      {/* Context Menu */}
-      {menuVisible && buttonPosition && (
-        <ContextMenu
-          options={[
-            {
-              label: "Logout",
-              icon: "log-out-outline",
-              destructive: true,
-            },
-          ]}
-          selectedOption=""
-          onSelectOption={handleMenuOption}
-          onDismiss={() => setMenuVisible(false)}
-          buttonPosition={buttonPosition}
-        />
-      )}
     </View>
   );
 }

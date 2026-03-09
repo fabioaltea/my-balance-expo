@@ -72,23 +72,6 @@ const CompactPeriodPicker: React.FC<CompactPeriodPickerProps> = ({
   const [selectedMonthIndex, setSelectedMonthIndex] =
     useState<number>(currentMonthIndex);
   const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
-  const [monthMenuOpen, setMonthMenuOpen] = useState(false);
-  const [yearMenuOpen, setYearMenuOpen] = useState(false);
-  const [monthButtonPosition, setMonthButtonPosition] = useState<{
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  }>();
-  const [yearButtonPosition, setYearButtonPosition] = useState<{
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  }>();
-
-  const monthButtonRef = React.useRef<View>(null);
-  const yearButtonRef = React.useRef<View>(null);
 
   const backgroundColor = useThemeColor(
     { light: "rgba(0,0,0,0.06)", dark: "rgba(255,255,255,0.1)" },
@@ -175,7 +158,6 @@ const CompactPeriodPicker: React.FC<CompactPeriodPickerProps> = ({
     const monthIndex = fullMonths.indexOf(opt);
     setSelectedMonthIndex(monthIndex);
     updateMonthRange(selectedYear, monthIndex);
-    setMonthMenuOpen(false);
   };
 
   const handleYearSelect = (opt: string) => {
@@ -187,21 +169,6 @@ const CompactPeriodPicker: React.FC<CompactPeriodPickerProps> = ({
       setSelectedMonthIndex(monthIndex);
     }
     updateMonthRange(y, monthIndex);
-    setYearMenuOpen(false);
-  };
-
-  const openMonthMenu = () => {
-    monthButtonRef.current?.measure((x, y, width, height, pageX, pageY) => {
-      setMonthButtonPosition({ x: pageX, y: pageY, width, height });
-    });
-    setMonthMenuOpen(true);
-  };
-
-  const openYearMenu = () => {
-    yearButtonRef.current?.measure((x, y, width, height, pageX, pageY) => {
-      setYearButtonPosition({ x: pageX, y: pageY, width, height });
-    });
-    setYearMenuOpen(true);
   };
 
   return (
@@ -215,48 +182,32 @@ const CompactPeriodPicker: React.FC<CompactPeriodPickerProps> = ({
       </Pressable>
 
       {/* Month selector */}
-      <View ref={monthButtonRef}>
-        <Pressable
-          style={[styles.selectorButton, { backgroundColor }]}
-          onPress={openMonthMenu}
-        >
+      <ContextMenu
+        options={availableMonths}
+        selectedOption={fullMonths[selectedMonthIndex]}
+        onSelectOption={handleMonthSelect}
+      >
+        <View style={[styles.selectorButton, { backgroundColor }]}>
           <Text style={[styles.selectorText, { color: arrowColor }]}>
             {months[selectedMonthIndex]}
           </Text>
           <Text style={[styles.chevron, { color: arrowColor }]}>▾</Text>
-        </Pressable>
-      </View>
-      {monthMenuOpen && monthButtonPosition && (
-        <ContextMenu
-          options={availableMonths}
-          selectedOption={fullMonths[selectedMonthIndex]}
-          onSelectOption={handleMonthSelect}
-          onDismiss={() => setMonthMenuOpen(false)}
-          buttonPosition={monthButtonPosition}
-        />
-      )}
+        </View>
+      </ContextMenu>
 
       {/* Year selector */}
-      <View ref={yearButtonRef}>
-        <Pressable
-          style={[styles.selectorButton, { backgroundColor }]}
-          onPress={openYearMenu}
-        >
+      <ContextMenu
+        options={availableYears}
+        selectedOption={String(selectedYear)}
+        onSelectOption={handleYearSelect}
+      >
+        <View style={[styles.selectorButton, { backgroundColor }]}>
           <Text style={[styles.selectorText, { color: arrowColor }]}>
             {selectedYear}
           </Text>
           <Text style={[styles.chevron, { color: arrowColor }]}>▾</Text>
-        </Pressable>
-      </View>
-      {yearMenuOpen && yearButtonPosition && (
-        <ContextMenu
-          options={availableYears}
-          selectedOption={String(selectedYear)}
-          onSelectOption={handleYearSelect}
-          onDismiss={() => setYearMenuOpen(false)}
-          buttonPosition={yearButtonPosition}
-        />
-      )}
+        </View>
+      </ContextMenu>
 
       {/* Next arrow */}
       <Pressable

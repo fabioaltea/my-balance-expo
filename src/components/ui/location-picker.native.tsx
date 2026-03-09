@@ -215,7 +215,7 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
   };
 
   return (
-    <Animated.View style={[styles.cardContent, { height: cardHeight }]}>
+    <Animated.View style={[styles.cardContent]}>
       <TextBox
         label="Location"
         value={value}
@@ -232,30 +232,31 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
 
       {/* Expanded Content */}
       {isExpanded && (
-        <View style={styles.expandedContent}>
-          {/* Map Placeholder */}
-          <View style={[styles.mapContainer, { backgroundColor: "#f0f0f0" }]}>
-            <MapView
-              ref={mapRef}
-              style={{ width: "100%", height: "100%" }}
-              provider="google"
-              initialRegion={defaultRegion}
-              showsUserLocation={true}
-              showsMyLocationButton={false}
-            >
-              {selectedLocation?.latitude && selectedLocation?.longitude && (
-                <Marker
-                  coordinate={{
-                    latitude: selectedLocation.latitude,
-                    longitude: selectedLocation.longitude,
-                  }}
-                  title={selectedLocation.address}
-                  description="Selected location"
-                />
-              )}
-            </MapView>
-          </View>
-        </View>
+        // <View style={styles.expandedContent}>
+        //   {/* Map Placeholder */}
+        //   <View style={[styles.mapContainer, { backgroundColor: "#f0f0f0" }]}>
+        //     <MapView
+        //       ref={mapRef}
+        //       style={{ width: "100%", height: "100%" }}
+        //       provider="google"
+        //       initialRegion={defaultRegion}
+        //       showsUserLocation={true}
+        //       showsMyLocationButton={false}
+        //     >
+        //       {selectedLocation?.latitude && selectedLocation?.longitude && (
+        //         <Marker
+        //           coordinate={{
+        //             latitude: selectedLocation.latitude,
+        //             longitude: selectedLocation.longitude,
+        //           }}
+        //           title={selectedLocation.address}
+        //           description="Selected location"
+        //         />
+        //       )}
+        //     </MapView>
+        //   </View>
+        // </View>
+        <></>
       )}
     </Animated.View>
   );

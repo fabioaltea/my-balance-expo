@@ -1,15 +1,10 @@
 import { ThemedText } from "../core/themed-text.native";
-import {
-  View,
-  StyleSheet,
-  ActivityIndicator,
-  ScrollView,
-  Animated,
-  Pressable,
-} from "react-native";
+import { View, StyleSheet, Animated, TextInput } from "react-native";
 import { useThemeColor } from "@/src/hooks/use-theme-color";
-import React, { useState, useRef, useEffect } from "react";
-import TextBox from "./text-box.native";
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import { GoogleMap, MarkerF, useLoadScript } from "@react-google-maps/api";
+
+const LIBRARIES: "places"[] = ["places"];
 
 export interface ILocation {
   address: string;
@@ -26,10 +21,8 @@ interface ILocationPickerProps {
   googleMapsApiKey?: string;
 }
 
-/**
- * Web version of LocationPicker.
- * Uses text input with autocomplete instead of native maps.
- */
+const DEFAULT_CENTER = { lat: 39.2238, lng: 9.1217 };
+
 const LocationPicker: React.FC<ILocationPickerProps> = ({
   value,
   onChange,
@@ -37,147 +30,141 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
   placeholder = "Enter location...",
   googleMapsApiKey,
 }) => {
-  const [searchResults, setSearchResults] = useState<ILocation[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [mapCenter, setMapCenter] = useState(DEFAULT_CENTER);
+  const [markerPos, setMarkerPos] = useState<{ lat: number; lng: number } | null>(null);
 
-  const cardHeight = useRef(new Animated.Value(40)).current;
+  const cardHeight = useRef(new Animated.Value(30)).current;
+  const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const placesServiceRef = useRef<google.maps.places.PlacesService | null>(null);
 
-  const backgroundColor = useThemeColor(
-    { light: "#f5f5f5", dark: "#1a1a1a" },
-    "background",
-  );
   const textColor = useThemeColor({ light: "#000", dark: "#fff" }, "text");
-  const borderColor = useThemeColor(
-    { light: "#e0e0e0", dark: "#333" },
+  const placeholderColor = useThemeColor(
+    { light: "#aaa", dark: "#666" },
     "tabIconDefault",
   );
 
-  const handleTextChange = async (text: string) => {
+  const { isLoaded } = useLoadScript({
+    googleMapsApiKey: googleMapsApiKey || "",
+    libraries: LIBRARIES,
+    language: "it",
+    region: "IT",
+  });
+
+  useEffect(() => {
+    if (isLoaded && !placesServiceRef.current) {
+      const div = document.createElement("div");
+      placesServiceRef.current = new google.maps.places.PlacesService(div);
+    }
+  }, [isLoaded]);
+
+  const expandCard = useCallback(() => {
+    if (!isExpanded) {
+      setIsExpanded(true);
+      Animated.timing(cardHeight, {
+        toValue: 200,
+        duration: 300,
+        useNativeDriver: false,
+      }).start();
+    }
+  }, [isExpanded, cardHeight]);
+
+  const collapseCard = useCallback(() => {
+    if (isExpanded) {
+      setIsExpanded(false);
+      setMarkerPos(null);
+      Animated.timing(cardHeight, {
+        toValue: 30,
+        duration: 300,
+        useNativeDriver: false,
+      }).start();
+    }
+  }, [isExpanded, cardHeight]);
+
+  const searchAndShow = useCallback(
+    (query: string) => {
+      if (!placesServiceRef.current) return;
+
+      placesServiceRef.current.textSearch(
+        { query, region: "it" },
+        (results, status) => {
+          if (status === google.maps.places.PlacesServiceStatus.OK && results?.length) {
+            const first = results[0];
+            const lat = first.geometry?.location?.lat();
+            const lng = first.geometry?.location?.lng();
+            if (lat != null && lng != null) {
+              setMapCenter({ lat, lng });
+              setMarkerPos({ lat, lng });
+              expandCard();
+              onChange({
+                address: query,
+                latitude: lat,
+                longitude: lng,
+                placeId: first.place_id,
+              });
+            }
+          }
+        },
+      );
+    },
+    [expandCard, onChange],
+  );
+
+  const handleTextChange = (text: string) => {
     onChange({ address: text });
+
     if (!text.trim()) {
-      setSearchResults([]);
       collapseCard();
       return;
     }
 
-    if (text.length < 3) return;
-
-    expandCard();
-    setIsLoading(true);
-
-    try {
-      if (googleMapsApiKey) {
-        const response = await fetch(
-          `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(
-            text,
-          )}&key=${googleMapsApiKey}&region=it&language=it`,
-        );
-
-        const data = await response.json();
-
-        if (data.status === "OK") {
-          const locations: ILocation[] = data.results
-            .slice(0, 5)
-            .map((place: any) => ({
-              address: place.formatted_address,
-              latitude: place.geometry.location.lat,
-              longitude: place.geometry.location.lng,
-              placeId: place.place_id,
-            }));
-
-          setSearchResults(locations);
-        } else {
-          setSearchResults([]);
-        }
-      } else {
-        // Mock search results for demo without API key
-        const mockResults: ILocation[] = [
-          {
-            address: `${text}, Sestu, CA, Italy`,
-            latitude: 39.2238,
-            longitude: 8.8203,
-          },
-          {
-            address: `${text}, Cagliari, CA, Italy`,
-            latitude: 39.2238,
-            longitude: 9.1217,
-          },
-        ];
-        setSearchResults(mockResults);
-      }
-    } catch (error) {
-      console.error("Error searching places:", error);
-      setSearchResults([]);
-    } finally {
-      setIsLoading(false);
+    if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    if (text.length >= 3) {
+      searchTimeout.current = setTimeout(() => searchAndShow(text), 600);
     }
   };
 
-  const expandCard = () => {
-    if (!isExpanded) {
-      setIsExpanded(true);
-      Animated.timing(cardHeight, {
-        toValue: 250,
-        duration: 300,
-        useNativeDriver: false,
-      }).start();
-    }
-  };
-
-  const collapseCard = () => {
-    if (isExpanded) {
-      setIsExpanded(false);
-      Animated.timing(cardHeight, {
-        toValue: 40,
-        duration: 300,
-        useNativeDriver: false,
-      }).start();
-    }
-  };
-
-  const handleLocationSelect = (location: ILocation) => {
-    onChange(location);
-    setSearchResults([]);
-    collapseCard();
-  };
+  if (!isLoaded) {
+    return (
+      <View style={styles.cardContent}>
+        <View style={styles.inputRow}>
+          <ThemedText type="default" style={styles.label}>{label}</ThemedText>
+          <TextInput
+            style={[styles.textInput, { color: textColor }]}
+            value={value}
+            placeholder={placeholder}
+            placeholderTextColor={placeholderColor}
+            editable={false}
+          />
+        </View>
+      </View>
+    );
+  }
 
   return (
     <Animated.View style={[styles.cardContent, { height: cardHeight }]}>
-      <TextBox label="Location" value={value} onChange={handleTextChange} />
+      <View style={styles.inputRow}>
+        <ThemedText type="default" style={styles.label}>{label}</ThemedText>
+        <TextInput
+          style={[styles.textInput, { color: textColor }]}
+          value={value}
+          onChangeText={handleTextChange}
+          placeholder={placeholder}
+          placeholderTextColor={placeholderColor}
+        />
+      </View>
 
-      {isExpanded && (
-        <View style={styles.expandedContent}>
-          {isLoading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="small" color={textColor} />
-            </View>
-          ) : (
-            <ScrollView style={styles.resultsContainer}>
-              {searchResults.map((location, index) => (
-                <Pressable
-                  key={index}
-                  style={[styles.resultItem, { borderColor }]}
-                  onPress={() => handleLocationSelect(location)}
-                >
-                  <ThemedText style={styles.resultText}>
-                    {location.address}
-                  </ThemedText>
-                  {location.latitude && location.longitude && (
-                    <ThemedText style={styles.coordsText}>
-                      {location.latitude.toFixed(4)},{" "}
-                      {location.longitude.toFixed(4)}
-                    </ThemedText>
-                  )}
-                </Pressable>
-              ))}
-              {searchResults.length === 0 && !isLoading && (
-                <ThemedText style={styles.noResultsText}>
-                  No locations found
-                </ThemedText>
-              )}
-            </ScrollView>
-          )}
+      {isExpanded && markerPos && (
+        <View style={styles.mapContainer}>
+          <GoogleMap
+            mapContainerStyle={{ width: "100%", height: "100%" }}
+            center={mapCenter}
+            zoom={15}
+            options={{ disableDefaultUI: true, zoomControl: true }}
+            
+          >
+            <MarkerF position={markerPos} />
+          </GoogleMap>
         </View>
       )}
     </Animated.View>
@@ -190,37 +177,35 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     justifyContent: "flex-start",
   },
-  expandedContent: {
-    flex: 1,
-    paddingTop: 8,
-  },
-  loadingContainer: {
-    padding: 20,
+  inputRow: {
+    display: "flex",
+    flexDirection: "row",
+    paddingHorizontal: 0,
+    paddingVertical: 15,
     alignItems: "center",
+    flex: 0,
   },
-  resultsContainer: {
+  label: {
+    flex: 0,
+    flexShrink: 0,
+    marginRight: 12,
+    minWidth: 120,
+    maxWidth: 200,
+  },
+  textInput: {
+    display: "flex",
     flex: 1,
+    textAlign: "right",
+    fontSize: 18,
+    paddingHorizontal: 10,
+    minWidth: 0,
+    outlineColor: "transparent",
   },
-  resultItem: {
-    padding: 12,
-    marginBottom: 4,
-    borderWidth: 1,
-    borderRadius: 8,
-    cursor: "pointer",
-  },
-  resultText: {
-    fontSize: 14,
-  },
-  coordsText: {
-    fontSize: 11,
-    opacity: 0.6,
-    marginTop: 4,
-    fontFamily: "monospace",
-  },
-  noResultsText: {
-    textAlign: "center",
-    padding: 20,
-    opacity: 0.6,
+  mapContainer: {
+    flex: 1,
+    marginTop: 8,
+    borderRadius: 20,
+    overflow: "hidden",
   },
 });
 

@@ -26,7 +26,7 @@ const SideDrawer: React.FC<SideDrawerProps> = ({
   children,
   width = "40%",
 }) => {
-  const backgroundColor = useThemeColor({}, "cardBackground");
+  const backgroundColor = useThemeColor({ light: "#FFFFFF" }, "menuBackground");
   const screenWidth = Dimensions.get("window").width;
 
   // Calculate drawer width in pixels for animation

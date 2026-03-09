@@ -1,7 +1,7 @@
 import { Alert, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
 import HomeView from "@/src/views/home-view";
-import React, { useCallback, useRef, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import GlassButton from "@/src/components/ui/glass-button";
 import AccountPicker from "@/src/components/ui/account-picker";
 import ContextMenu, {
@@ -41,16 +41,6 @@ export default function Home() {
     router.push("/add");
   };
 
-  const [showContextMenu, setShowContextMenu] = useState(false);
-  const [buttonPosition, setButtonPosition] = useState({ x: 0, y: 0, width: 0, height: 0 });
-  const buttonRef = useRef<View>(null);
-
-  const handleLongPress = useCallback(() => {
-    buttonRef.current?.measureInWindow((x, y, width, height) => {
-      setButtonPosition({ x, y, width, height });
-      setShowContextMenu(true);
-    });
-  }, []);
 
   const navigateWithOCR = useCallback(async (imageUri: string) => {
     try {
@@ -140,7 +130,6 @@ export default function Home() {
   }, [accounts, addMovement]);
 
   const handleContextMenuSelect = useCallback(async (option: string) => {
-    setShowContextMenu(false);
     if (option === "Fotocamera/Galleria") {
       const result = await ImagePicker.launchImageLibraryAsync({
         quality: 0.8,
@@ -198,18 +187,13 @@ export default function Home() {
           selectedAccount={selectedAccount}
           setSelectedAccount={setSelectedAccount}
         ></AccountPicker>
-        <View ref={buttonRef}>
-          <GlassButton onPress={handleButtonPress} onLongPress={handleLongPress} />
-          {showContextMenu && (
-            <ContextMenu
-              options={contextMenuOptions}
-              selectedOption=""
-              onSelectOption={handleContextMenuSelect}
-              onDismiss={() => setShowContextMenu(false)}
-              buttonPosition={buttonPosition}
-            />
-          )}
-        </View>
+        <ContextMenu
+          options={contextMenuOptions}
+          selectedOption=""
+          onSelectOption={handleContextMenuSelect}
+        >
+          <GlassButton onPress={handleButtonPress} />
+        </ContextMenu>
       </View>
       <HomeView
         accounts={availableAccounts}

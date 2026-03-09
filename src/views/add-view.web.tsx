@@ -15,9 +15,11 @@ import { useAuthContext, useDataContext } from "@/src/state";
 import { formatDateToDDMMYYYY, parseDateFromDDMMYYYY } from "@/src/utils/dateUtils";
 import { useRouter } from "expo-router";
 import { ITransaction } from "@/src/components/ui/transactions";
+import TransactionsWeb from "@/src/components/ui/transactions.web";
 import { useAddMovement, useUpdateMovement, useDeleteMovement } from "@/src/hooks/mutations";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import InlineCurrencyInput from "@/src/components/ui/inline-currency-input";
+import LocationPicker, { ILocation } from "@/src/components/ui/location-picker";
+import RecurrencePickerWeb from "@/src/components/ui/recurrence-picker.web";
 import { ScreenView } from "../components";
 
 export type ToastStatus = "loading" | "success" | "error";
@@ -70,6 +72,7 @@ const AddView: React.FC<AddViewProps> = ({
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [transactions, setTransactions] = useState<ITransaction[]>([]);
+  const [selectedLocation, setSelectedLocation] = useState<ILocation>({ address: "" });
   const [isRecurrent, setIsRecurrent] = useState(false);
   const [recurrenceSelection, setRecurrenceSelection] = useState<string>("new");
   const [recurrenceUnit, setRecurrenceUnit] = useState<string>("M");
@@ -91,6 +94,8 @@ const AddView: React.FC<AddViewProps> = ({
     if (parsedDate) {
       setSelectedDate(parsedDate);
     }
+
+    setSelectedLocation({ address: editingMovement.location || "" });
 
     const mappedTransactions: ITransaction[] = editingMovement.transactions.map(
       (t, index) => ({
@@ -123,6 +128,7 @@ const AddView: React.FC<AddViewProps> = ({
 
     setDescription(recurringTemplate.description);
     setSelectedCategory(recurringTemplate.category);
+    setSelectedLocation({ address: recurringTemplate.location || "" });
 
     const mappedTransactions: ITransaction[] =
       recurringTemplate.transactions.map((t, index) => ({
@@ -303,7 +309,7 @@ const AddView: React.FC<AddViewProps> = ({
       description: description.trim(),
       category: selectedCategory,
       date: formattedDate,
-      location: "",
+      location: selectedLocation.address || "",
       transactions: transactionsData,
     };
 
@@ -380,36 +386,45 @@ const AddView: React.FC<AddViewProps> = ({
         {/* Header */}
         <View style={styles.headerContainer}>
           <ThemedText type="title" style={styles.title}>
-            {isEditingRecurring ? "Edit Recurrent" : isEditing ? "Edit Movement" : "New Movement"}
+            {isEditingRecurring
+              ? "Edit Recurrent"
+              : isEditing
+                ? "Edit Movement"
+                : "New Movement"}
           </ThemedText>
-          {isEditing && (
-            <View style={styles.iconButton}>
-              <MaterialIcons name="more-vert" size={20} color={textColor} />
-              {/* @ts-ignore — HTML select element for web */}
-              <select
-                value=""
-                onChange={(e: any) => {
-                  handleMenuAction(e.target.value);
-                  e.target.value = "";
-                }}
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  height: "100%",
-                  opacity: 0,
-                  cursor: "pointer",
-                }}
-              >
-                <option value="" disabled />
-                <option value="delete">Delete movement</option>
-              </select>
-            </View>
-          )}
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            {isEditing && (
+              <View style={styles.iconButton}>
+                <MaterialIcons name="more-vert" size={20} color={textColor} />
+                {/* @ts-ignore — HTML select element for web */}
+                <select
+                  value=""
+                  onChange={(e: any) => {
+                    handleMenuAction(e.target.value);
+                    e.target.value = "";
+                  }}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    opacity: 0,
+                    cursor: "pointer",
+                  }}
+                >
+                  <option value="" disabled />
+                  <option value="delete">Delete movement</option>
+                </select>
+              </View>
+            )}
+            <Pressable onPress={closeView} style={styles.iconButton}>
+              <MaterialIcons name="close" size={20} color={textColor} />
+            </Pressable>
+          </View>
         </View>
 
-        <ScrollView  showsVerticalScrollIndicator={false}>
+        <ScrollView showsVerticalScrollIndicator={false}>
           {/* Description + Category + Date */}
           <InputGroup>
             <TextBox
@@ -438,7 +453,8 @@ const AddView: React.FC<AddViewProps> = ({
                     border: "none",
                     outline: "none",
                     cursor: "pointer",
-                    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+                    fontFamily:
+                      "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
                     width: "100%",
                   }}
                 >
@@ -469,15 +485,12 @@ const AddView: React.FC<AddViewProps> = ({
                     flex: 1,
                     textAlign: "right" as any,
                     fontSize: 18,
-                    paddingLeft: 10,
-                    paddingRight: 10,
-                    paddingTop: 4,
-                    paddingBottom: 4,
                     border: "none",
                     outline: "none",
                     backgroundColor: "transparent",
                     color: textColor,
-                    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+                    fontFamily:
+                      "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
                     cursor: "pointer",
                   }}
                 />
@@ -506,7 +519,8 @@ const AddView: React.FC<AddViewProps> = ({
                       border: "none",
                       outline: "none",
                       cursor: "pointer",
-                      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+                      fontFamily:
+                        "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
                       width: "100%",
                     }}
                   >
@@ -525,7 +539,9 @@ const AddView: React.FC<AddViewProps> = ({
                   {/* @ts-ignore — HTML select for web */}
                   <select
                     value={recurrenceFrequency}
-                    onChange={(e: any) => setRecurrenceFrequency(Number(e.target.value))}
+                    onChange={(e: any) =>
+                      setRecurrenceFrequency(Number(e.target.value))
+                    }
                     style={{
                       flex: 1,
                       fontSize: 18,
@@ -535,12 +551,15 @@ const AddView: React.FC<AddViewProps> = ({
                       border: "none",
                       outline: "none",
                       cursor: "pointer",
-                      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+                      fontFamily:
+                        "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
                       width: "100%",
                     }}
                   >
                     {[1, 2, 3, 4, 5, 6, 7, 10, 14, 30].map((n) => (
-                      <option key={n} value={n}>{n}</option>
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
                     ))}
                   </select>
                 </View>
@@ -550,209 +569,48 @@ const AddView: React.FC<AddViewProps> = ({
 
           {/* Transactions — inline list */}
           <InputGroup label="Transactions">
-            {transactions.map((t) => (
-              <View key={t.id} style={[styles.transactionRow, { borderBottomColor: borderColor }]}>
-                {/* Type toggle */}
-                <Pressable
-                  onPress={() => handleTransactionTypeToggle(t.id)}
-                  style={[
-                    styles.typeToggle,
-                    { backgroundColor: t.type === "income" ? "#22c55e20" : "#ef444420" },
-                  ]}
-                >
-                  <MaterialIcons
-                    name={t.type === "income" ? "arrow-downward" : "arrow-upward"}
-                    size={16}
-                    color={t.type === "income" ? "#22c55e" : "#ef4444"}
-                  />
-                </Pressable>
-
-                {/* Account dropdown */}
-                {/* @ts-ignore — HTML select for web */}
-                <select
-                  value={t.accountName}
-                  onChange={(e: any) =>
-                    handleTransactionAccountChange(t.id, e.target.value)
-                  }
-                  style={{
-                    flex: 1,
-                    fontSize: 15,
-                    color: t.accountName ? textColor : placeholderColor,
-                    backgroundColor: "transparent",
-                    border: "none",
-                    outline: "none",
-                    cursor: "pointer",
-                    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-                    marginLeft: 8,
-                  }}
-                >
-                  <option value="" disabled>
-                    Account
-                  </option>
-                  {allAccounts.map((acc) => (
-                    <option key={acc.value} value={acc.value}>
-                      {acc.label}
-                    </option>
-                  ))}
-                </select>
-
-                {/* Amount input */}
-                <InlineCurrencyInput
-                  value={t.amount}
-                  onChange={(amount) => handleTransactionAmountChange(t.id, amount)}
-                  placeholderColor={placeholderColor}
-                />
-
-                <ThemedText style={{ fontSize: 14, opacity: 0.5, marginRight: 8 }}>
-                  €
-                </ThemedText>
-
-                {/* Delete button */}
-                <Pressable
-                  onPress={() => handleDeleteTransaction(t.id)}
-                  style={styles.deleteButton}
-                >
-                  <MaterialIcons name="delete-outline" size={18} color="#ef4444" />
-                </Pressable>
-              </View>
-            ))}
-
-            {/* Add transaction button */}
-            <Pressable onPress={handleAddTransaction} style={styles.addButton}>
-              <MaterialIcons name="add" size={24} color="#fff" />
-            </Pressable>
+            <TransactionsWeb
+              transactions={transactions}
+              accounts={allAccounts}
+              onTypeToggle={handleTransactionTypeToggle}
+              onAccountChange={handleTransactionAccountChange}
+              onAmountChange={handleTransactionAmountChange}
+              onDelete={handleDeleteTransaction}
+              onAdd={handleAddTransaction}
+            />
           </InputGroup>
 
           {/* Recurrence section — for new movements and editing non-recurring */}
           {!isEditingRecurring && !recurrenceId && (
             <InputGroup label="Recurrence">
-              {/* Toggle */}
-              <View style={styles.fieldRow}>
-                <ThemedText type="default" style={styles.fieldLabel}>
-                  Recurrent
-                </ThemedText>
-                <Pressable
-                  onPress={() => setIsRecurrent(!isRecurrent)}
-                  style={[
-                    styles.toggle,
-                    { backgroundColor: isRecurrent ? "#2F4F3F" : "#ccc" },
-                  ]}
-                >
-                  <View
-                    style={[
-                      styles.toggleThumb,
-                      { transform: [{ translateX: isRecurrent ? 20 : 2 }] },
-                    ]}
-                  />
-                </Pressable>
-              </View>
-
-              {isRecurrent && (
-                <>
-                  {/* Recurrence select: "New" or existing recurrences */}
-                  <View style={styles.fieldRow}>
-                    <ThemedText type="default" style={styles.fieldLabel}>
-                      Recurrence
-                    </ThemedText>
-                    <View style={styles.fieldValue}>
-                      {/* @ts-ignore — HTML select for web */}
-                      <select
-                        value={recurrenceSelection}
-                        onChange={(e: any) => setRecurrenceSelection(e.target.value)}
-                        style={{
-                          flex: 1,
-                          fontSize: 18,
-                          textAlign: "right",
-                          color: textColor,
-                          backgroundColor: "transparent",
-                          border: "none",
-                          outline: "none",
-                          cursor: "pointer",
-                          fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-                          width: "100%",
-                        }}
-                      >
-                        <option value="new">New</option>
-                        {recurringMovements.map((m) => (
-                          <option key={m.recurrenceId} value={m.recurrenceId || ""}>
-                            {m.description} - {m.category}
-                          </option>
-                        ))}
-                      </select>
-                    </View>
-                  </View>
-
-                  {/* New recurrence: inline Repeat & Every selects */}
-                  {recurrenceSelection === "new" && (
-                    <>
-                      <View style={styles.fieldRow}>
-                        <ThemedText type="default" style={styles.fieldLabel}>
-                          Repeat
-                        </ThemedText>
-                        <View style={styles.fieldValue}>
-                          {/* @ts-ignore — HTML select for web */}
-                          <select
-                            value={recurrenceUnit}
-                            onChange={(e: any) => setRecurrenceUnit(e.target.value)}
-                            style={{
-                              flex: 1,
-                              fontSize: 18,
-                              textAlign: "right",
-                              color: textColor,
-                              backgroundColor: "transparent",
-                              border: "none",
-                              outline: "none",
-                              cursor: "pointer",
-                              fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-                              width: "100%",
-                            }}
-                          >
-                            <option value="D">Daily</option>
-                            <option value="W">Weekly</option>
-                            <option value="M">Monthly</option>
-                            <option value="Y">Yearly</option>
-                          </select>
-                        </View>
-                      </View>
-                      <View style={styles.fieldRow}>
-                        <ThemedText type="default" style={styles.fieldLabel}>
-                          Every
-                        </ThemedText>
-                        <View style={styles.fieldValue}>
-                          {/* @ts-ignore — HTML select for web */}
-                          <select
-                            value={recurrenceFrequency}
-                            onChange={(e: any) => setRecurrenceFrequency(Number(e.target.value))}
-                            style={{
-                              flex: 1,
-                              fontSize: 18,
-                              textAlign: "right",
-                              color: textColor,
-                              backgroundColor: "transparent",
-                              border: "none",
-                              outline: "none",
-                              cursor: "pointer",
-                              fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-                              width: "100%",
-                            }}
-                          >
-                            {[1, 2, 3, 4, 5, 6, 7, 10, 14, 30].map((n) => (
-                              <option key={n} value={n}>{n}</option>
-                            ))}
-                          </select>
-                        </View>
-                      </View>
-                    </>
-                  )}
-                </>
-              )}
+              <RecurrencePickerWeb
+                isRecurrent={isRecurrent}
+                onToggle={() => setIsRecurrent(!isRecurrent)}
+                recurrenceSelection={recurrenceSelection}
+                onSelectionChange={setRecurrenceSelection}
+                recurrenceUnit={recurrenceUnit}
+                onUnitChange={setRecurrenceUnit}
+                recurrenceFrequency={recurrenceFrequency}
+                onFrequencyChange={setRecurrenceFrequency}
+                recurringMovements={recurringMovements}
+              />
             </InputGroup>
           )}
+
+          {/* Location */}
+          <InputGroup>
+            <LocationPicker
+              value={selectedLocation.address}
+              onChange={setSelectedLocation}
+              label="Location"
+              placeholder="Enter location"
+              googleMapsApiKey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}
+            />
+          </InputGroup>
 
           {/* Spacer to scroll content above the bottom section */}
           <View style={{ height: 160 }} />
         </ScrollView>
-
       </View>
 
       {/* Bottom Total and Submit */}
@@ -771,7 +629,12 @@ const AddView: React.FC<AddViewProps> = ({
             (isSubmitting || !isFormValid()) && styles.submitButtonDisabled,
           ]}
         >
-          <ThemedText style={[styles.submitText, (isSubmitting || !isFormValid()) && { opacity: 0.6 }]}>
+          <ThemedText
+            style={[
+              styles.submitText,
+              (isSubmitting || !isFormValid()) && { opacity: 0.6 },
+            ]}
+          >
             {isSubmitting ? "Saving" : isEditing ? "Update" : "Insert"}
           </ThemedText>
         </Pressable>
@@ -798,8 +661,8 @@ const styles = StyleSheet.create({
     textAlign: "left",
   },
   iconButton: {
-    padding: 6,
-    borderRadius: 20,
+    padding: 10,
+    borderRadius: 15,
     backgroundColor: "rgba(47, 79, 63, 0.08)",
   },
   fieldRow: {
@@ -829,30 +692,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderWidth: 0,
   } as any,
-  transactionRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 10,
-  },
-  typeToggle: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  deleteButton: {
-    padding: 4,
-    borderRadius: 4,
-  },
-  addButton: {
-    backgroundColor: "#2F4F3F",
-    borderRadius: 25,
-    height: 50,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 5,
-  },
   bottomSection: {
     position: "absolute",
     bottom: 0,
@@ -902,18 +741,5 @@ const styles = StyleSheet.create({
   },
   submitButtonDisabled: {
     opacity: 0.6,
-  },
-  toggle: {
-    width: 44,
-    height: 24,
-    borderRadius: 12,
-    justifyContent: "center" as const,
-    marginLeft: "auto" as const,
-  },
-  toggleThumb: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: "#fff",
   },
 });

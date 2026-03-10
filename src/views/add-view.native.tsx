@@ -1,27 +1,22 @@
 import {
   View,
   StyleSheet,
-  ScrollView,
-  TextInput,
   Pressable,
   Alert,
-  ActivityIndicator,
-  Text
+  Switch,
+  Animated,
+  Keyboard,
+  Platform,
 } from "react-native";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import * as Crypto from "expo-crypto";
-import ChipButton from "@/src/components/ui/chip-button";
+import { LinearGradient } from "expo-linear-gradient";
 import { useThemeColor } from "@/src/hooks/use-theme-color";
 import * as Haptics from "expo-haptics";
-import Input from "@/src/components/ui/text-box";
-import Card from "@/src/components/core/card";
-import List from "@/src/components/ui/list";
 import InputGroup from "@/src/components/ui/input-group";
-import Transactions, { ITransaction } from "@/src/components/ui/transactions";
 import TransactionModal, {
   ITransactionData,
 } from "@/src/components/ui/transaction-modal";
-import ModalPanel from "@/src/components/ui/modal-panel";
 import GlassButton from "@/src/components/ui/glass-button";
 import ContextMenu, { IContextMenuOption } from "@/src/components/ui/context-menu";
 import RecurrencyPicker from "@/src/components/ui/recurrency-picker";
@@ -37,24 +32,32 @@ import ListPicker from "@/src/components/ui/list-picker.native";
 import DatePicker from "@/src/components/ui/date-picker.native";
 import { ThemedText } from "@/src/components/core/themed-text.native";
 import { ScreenView } from "../components";
+import Transactions, { ITransaction } from "../components/ui/transactions.native";
 
-type ModalStatus = "loading" | "success" | "error";
+export type ToastStatus = "loading" | "success" | "error";
 
 interface AddViewProps {
   editingMovementId?: string;
   recurrenceId?: string;
   initialMovement?: Partial<Movement>;
   onClose?: () => void;
-  onToast?: (status: "loading" | "success" | "error") => void;
+  onToast?: (status: ToastStatus) => void;
 }
 
 const AddView: React.FC<AddViewProps> = ({
   editingMovementId,
   recurrenceId,
   initialMovement,
+  onClose,
+  onToast,
 }) => {
   console.log("[AddView.native] render");
   const router = useRouter();
+
+  const closeView = () => {
+    onClose ? onClose() : router.back();
+  };
+
   const { selectedSpreadsheetId } = useAuthContext();
   const { accounts, categories, movements, recurringMovements, unconfirmedMovements } =
     useDataContext();
@@ -66,15 +69,12 @@ const AddView: React.FC<AddViewProps> = ({
   const deleteMovement = useDeleteMovement();
 
   // Find the movement being edited from the global movements list
-  // Also search in recurringMovements for editing recurring templates
-  // Also search in unconfirmedMovements for editing unconfirmed movements
   const editingMovement = editingMovementId
     ? movements?.find((m) => m.id === editingMovementId) ||
       recurringMovements?.find((m) => m.id === editingMovementId) ||
       unconfirmedMovements?.find((m) => m.id === editingMovementId)
     : undefined;
 
- 
   // Find the recurring movement template if recurrenceId is provided
   const recurringTemplate = recurrenceId
     ? recurringMovements.find((m) => m.recurrenceId === recurrenceId)
@@ -83,8 +83,6 @@ const AddView: React.FC<AddViewProps> = ({
   // Derive submitting state from mutations
   const isSubmitting = addMovement.isPending || updateMovement.isPending || deleteMovement.isPending;
 
-  const [showStatusModal, setShowStatusModal] = useState(false);
-  const [modalStatus, setModalStatus] = useState<ModalStatus>("loading");
   const [description, setDescription] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -96,7 +94,24 @@ const AddView: React.FC<AddViewProps> = ({
   const [editingTransaction, setEditingTransaction] =
     useState<ITransaction | null>(null);
   const [showRecurrencyPicker, setShowRecurrencyPicker] = useState(false);
-  const [recurrencePattern, setRecurrencePattern] = useState<string>("");
+  const [isRecurrent, setIsRecurrent] = useState(false);
+  const [recurrenceSelection, setRecurrenceSelection] = useState<string>("new");
+  const [recurrenceUnit, setRecurrenceUnit] = useState<string>("M");
+  const [recurrenceFrequency, setRecurrenceFrequency] = useState<number>(1);
+  const [recurrenceStartDate, setRecurrenceStartDate] = useState<Date>(new Date());
+  const [hasRecurrencePattern, setHasRecurrencePattern] = useState<boolean>(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const scrollViewRef = useRef<any>(null);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+    const showSub = Keyboard.addListener(showEvent, (e) => setKeyboardHeight(e.endCoordinates.height));
+    const hideSub = Keyboard.addListener(hideEvent, () => setKeyboardHeight(0));
+    return () => { showSub.remove(); hideSub.remove(); };
+  }, []);
+
+  const recurrencePattern = hasRecurrencePattern ? `P${recurrenceFrequency}${recurrenceUnit}` : null;
 
   const isEditing = !!editingMovementId;
   const isEditingRecurring = isEditing && editingMovement && (editingMovement.status?.toLowerCase() === "recurrent" || editingMovement.recurrencePattern);
@@ -126,25 +141,40 @@ const AddView: React.FC<AddViewProps> = ({
     );
     setTransactions(mappedTransactions);
     setSelectedLocation({ address: editingMovement.location || "" });
-    setRecurrencePattern(editingMovement.recurrencePattern || "");
+
+    if (editingMovement.recurrencePattern) {
+      const match = editingMovement.recurrencePattern.match(/^P(\d+)([DWMY])$/);
+      if (match) {
+        setRecurrenceFrequency(parseInt(match[1], 10));
+        setRecurrenceUnit(match[2]);
+        setHasRecurrencePattern(true);
+      }
+    }
+    // Set recurrence start date from the movement date
+    const recStartDate = parseDateFromDDMMYYYY(editingMovement.date);
+    if (recStartDate) {
+      setRecurrenceStartDate(recStartDate);
+    }
+    // Pre-populate recurrence link for non-template movements
+    if (editingMovement.recurrenceId && editingMovement.status?.toLowerCase() !== "recurrent") {
+      setIsRecurrent(true);
+      setRecurrenceSelection(editingMovement.recurrenceId);
+    }
   }, [editingMovement]);
 
   // Pre-populate form when adding from recurring template
   useEffect(() => {
-    if (!recurringTemplate || editingMovement) return; // Don't override if editing
+    if (!recurringTemplate || editingMovement) return;
 
     setDescription(recurringTemplate.description);
     setSelectedCategory(recurringTemplate.category);
-    // Keep today's date (already set in state initialization)
 
-    // Map transactions from the recurring template
     const mappedTransactions: ITransaction[] =
       recurringTemplate.transactions.map((t, index) => ({
         id: index + 1,
         accountName: t.account,
         amount: t.amount,
         type: t.type,
-        // Don't copy transactionId and movementId - these are new transactions
       }));
     setTransactions(mappedTransactions);
     setSelectedLocation({ address: recurringTemplate.location || "" });
@@ -181,19 +211,19 @@ const AddView: React.FC<AddViewProps> = ({
     { light: "transparent", dark: "transparent" },
     "background"
   );
-  const cardColor = useThemeColor(
-    { light: "#f5f5f5", dark: "#1a1a1a" },
-    "tabIconDefault"
-  );
-  const borderColor = useThemeColor(
-    { light: "#e0e0e0", dark: "#333" },
-    "tabIconDefault"
-  );
-  const textColor = useThemeColor({ light: "#000", dark: "#fff" }, "text");
   const placeholderColor = useThemeColor(
     { light: "#666", dark: "#999" },
     "tabIconDefault"
   );
+  const menuBackground = useThemeColor({}, "menuBackground");
+
+  // Scroll fade animation
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const fadeOpacity = scrollY.interpolate({
+    inputRange: [0, 30],
+    outputRange: [0, 1],
+    extrapolate: "clamp",
+  });
 
   const allCategories = categories.map((category) => ({
     label: category.name,
@@ -204,6 +234,15 @@ const AddView: React.FC<AddViewProps> = ({
     label: account.name,
     value: account.name,
   }));
+
+  // Build recurrence options for ListPicker (existing recurrences + "new")
+  const recurrenceOptions = [
+    { label: "New recurrence", value: "new" },
+    ...recurringMovements.map((m) => ({
+      label: m.description,
+      value: m.recurrenceId || m.id,
+    })),
+  ];
 
   const handleTransactionPress = (transaction: ITransaction) => {
     setEditingTransaction(transaction);
@@ -221,33 +260,25 @@ const AddView: React.FC<AddViewProps> = ({
   };
 
   const handleTransactionSave = (data: ITransactionData) => {
-    console.log("Saving transaction:", data);
-
-    // Validate data
     if (!data.accountName || data.amount <= 0) {
       Alert.alert("Error, please complete all fields with valid data");
       return;
     }
 
     if (editingTransaction) {
-      // Update existing transaction
       setTransactions(
         transactions.map((t) =>
           t.id === editingTransaction.id ? { ...t, ...data } : t
         )
       );
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } else {
-      // Add new transaction
       const newTransaction: ITransaction = {
         id: Math.max(...transactions.map((t) => t.id), 0) + 1,
         ...data,
       };
       setTransactions([...transactions, newTransaction]);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
-
-    // Close modal and reset editing state
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setShowTransactionPicker(false);
     setEditingTransaction(null);
   };
@@ -257,7 +288,6 @@ const AddView: React.FC<AddViewProps> = ({
       return sum + (t.type === "income" ? t.amount : -t.amount);
     }, 0);
   };
-
 
   const validateMovement = (): boolean => {
     if (!description.trim()) {
@@ -286,26 +316,24 @@ const AddView: React.FC<AddViewProps> = ({
     return true;
   };
 
-  const handleMenuOption = (option: string) => {
-    if (option === "Save as recurring") {
-      if (!validateMovement()) {
-        return;
-      }
-      // Open RecurrencyPicker instead of alert
-      setShowRecurrencyPicker(true);
-    } else if (option === "Delete movement") {
+  const handleMenuAction = (option: string) => {
+    if (option === "Delete movement") {
       handleDeleteMovement();
     }
   };
 
-  const handleRecurrencySave = async (pattern: string) => {
+  const handleRecurrencySave = (pattern: string | null, startDate: Date) => {
     setShowRecurrencyPicker(false);
-    // If editing a recurring movement, just update the pattern state
-    if (isEditingRecurring) {
-      setRecurrencePattern(pattern);
+    setRecurrenceStartDate(startDate);
+    if (pattern) {
+      const match = pattern.match(/^P(\d+)([DWMY])$/);
+      if (match) {
+        setRecurrenceFrequency(parseInt(match[1], 10));
+        setRecurrenceUnit(match[2]);
+        setHasRecurrencePattern(true);
+      }
     } else {
-      // Save with the recurrence pattern (new recurring movement)
-      await handleSubmit(true, pattern);
+      setHasRecurrencePattern(false);
     }
   };
 
@@ -314,36 +342,26 @@ const AddView: React.FC<AddViewProps> = ({
       "Delete Movement",
       "Are you sure you want to delete this movement? This action cannot be undone.",
       [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
+        { text: "Cancel", style: "cancel" },
         {
           text: "Delete",
           style: "destructive",
           onPress: async () => {
             if (!selectedSpreadsheetId || !editingMovementId) return;
 
-            setModalStatus("loading");
-            setShowStatusModal(true);
+            onToast?.("loading");
+            closeView();
 
             try {
-              // Use React Query mutation for delete
               await deleteMovement.mutateAsync({
                 movementId: editingMovementId,
               });
-
-              // Success - mutation handles cache invalidation automatically
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              setModalStatus("success");
-              setTimeout(() => {
-                setShowStatusModal(false);
-                router.back();
-              }, 100);
+              onToast?.("success");
             } catch (error) {
               console.error("Error deleting movement:", error);
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-              setModalStatus("error");
+              onToast?.("error");
             }
           },
         },
@@ -360,6 +378,8 @@ const AddView: React.FC<AddViewProps> = ({
     );
     if (validTransactions.length === 0) return false;
     if (!selectedSpreadsheetId) return false;
+    // recurrencePattern can be null (no pattern) — that's valid
+    if (isRecurrent && recurrenceSelection !== "new" && !recurrenceSelection) return false;
     return true;
   };
 
@@ -373,147 +393,110 @@ const AddView: React.FC<AddViewProps> = ({
         },
       ];
     }
-    return [
-      {
-        label: "Save as recurring",
-        icon: "repeat-outline",
-        disabled: !isFormValid(),
-      },
-    ];
+    return [];
   };
 
-  const handleSubmit = async (asRecurrent: boolean = false, newRecurrencePattern?: string) => {
+  const handleSubmit = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
 
-    if (!validateMovement()) {
-      return;
-    }
+    if (!validateMovement()) return;
 
     const validTransactions = transactions.filter(
       (t) => t.accountName && t.amount > 0
     );
 
-    setShowStatusModal(true);
+    const formattedDate = formatDateToDDMMYYYY(selectedDate);
+    const transactionsData = validTransactions.map((transaction) => ({
+      amount:
+        transaction.type === "income"
+          ? String(transaction.amount).replace(".", ",")
+          : String(-transaction.amount).replace(".", ","),
+      account: transaction.accountName,
+      type: (transaction.type === "income" ? "in" : "out") as "in" | "out",
+    }));
+
+    const baseData = {
+      description: description.trim(),
+      category: selectedCategory,
+      date: formattedDate,
+      location: selectedLocation.address || "",
+      transactions: transactionsData,
+    };
+
+    const formattedRecurrenceStartDate = formatDateToDDMMYYYY(recurrenceStartDate);
+
+    onToast?.("loading");
+    closeView();
 
     try {
-      const formattedDate = formatDateToDDMMYYYY(selectedDate);
-
-      // Prepare movement data with transactions array (IMovementRequest format)
-      const movementData: Record<string, any> = {
-        movementId:
-          isEditing && editingMovementId ? editingMovementId : undefined,
-        description: description.trim(),
-        category: selectedCategory,
-        date: formattedDate,
-        location: selectedLocation.address || "",
-        transactions: validTransactions.map((transaction) => ({
-          amount:
-            transaction.type === "income"
-              ? String(transaction.amount).replace(".", ",")
-              : String(-transaction.amount).replace(".", ","),
-          account: transaction.accountName,
-          type: transaction.type === "income" ? "in" : "out",
-        })),
-      };
-
-      // If the movement should be saved as recurring, add recurrenceId, status, and pattern
-      if (asRecurrent && !isEditing) {
-        movementData.recurrenceId = Crypto.randomUUID();
-        movementData.status = "recurrent";
-        if (newRecurrencePattern) {
-          movementData.recurrencePattern = newRecurrencePattern;
-        }
-      }
-
-      // If this is a new movement created from a recurring template, link it to the template
-      if (recurrenceId && recurringTemplate && !isEditing && !asRecurrent) {
-        movementData.recurrenceId = recurrenceId;
-      }
-
-      // If editing a recurring movement, preserve recurrence data
-      if (isEditingRecurring && editingMovement) {
-        movementData.recurrenceId = editingMovement.recurrenceId;
-        movementData.status = "recurrent";
-        movementData.recurrencePattern = recurrencePattern;
-      }
-
       if (isEditing && editingMovementId) {
-        // Update existing movement using React Query mutation
+        const movementData: Record<string, any> = {
+          movementId: editingMovementId,
+          ...baseData,
+        };
+        if (isEditingRecurring && editingMovement) {
+          movementData.recurrenceId = editingMovement.recurrenceId;
+          movementData.status = "recurrent";
+          movementData.recurrencePattern = recurrencePattern || undefined;
+          movementData.date = formattedRecurrenceStartDate;
+        } else if (isRecurrent && recurrenceSelection !== "new") {
+          movementData.recurrenceId = recurrenceSelection;
+        } else if (isRecurrent && recurrenceSelection === "new") {
+          const newRecurrenceId = Crypto.randomUUID();
+          await addMovement.mutateAsync({
+            ...baseData,
+            date: formattedRecurrenceStartDate,
+            recurrenceId: newRecurrenceId,
+            status: "recurrent",
+            recurrencePattern: recurrencePattern || undefined,
+          });
+          movementData.recurrenceId = newRecurrenceId;
+        }
         await updateMovement.mutateAsync({
           movementId: editingMovementId,
           ...movementData,
         });
+      } else if (isRecurrent && recurrenceSelection === "new") {
+        // Create new recurring template + linked movement
+        const newRecurrenceId = Crypto.randomUUID();
+        await addMovement.mutateAsync({
+          ...baseData,
+          date: formattedRecurrenceStartDate,
+          recurrenceId: newRecurrenceId,
+          status: "recurrent",
+          recurrencePattern: recurrencePattern || undefined,
+        });
+        await addMovement.mutateAsync({
+          ...baseData,
+          recurrenceId: newRecurrenceId,
+        });
+      } else if (isRecurrent && recurrenceSelection !== "new") {
+        // Link to existing recurrence
+        await addMovement.mutateAsync({
+          ...baseData,
+          recurrenceId: recurrenceSelection,
+        });
       } else {
-        // Create new movement using React Query mutation
+        // Regular movement (or from recurring template via prop)
+        const movementData: Record<string, any> = { ...baseData };
+        if (recurrenceId && recurringTemplate) {
+          movementData.recurrenceId = recurrenceId;
+        }
         await addMovement.mutateAsync(movementData as any);
       }
 
-      // Success - mutation hooks handle cache invalidation automatically
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      setModalStatus("success");
-
-      // For recurring saves, stay on page with form still filled
-      // For normal saves, reset form and go back
-      if (asRecurrent && !isEditing) {
-        setTimeout(() => {
-          setShowStatusModal(false);
-        }, 100);
-      } else {
-        // Reset form
-        setDescription("");
-        setSelectedCategory("");
-        setSelectedDate(new Date());
-        setTransactions([]);
-        setSelectedLocation({ address: "" });
-
-        setTimeout(() => {
-          setShowStatusModal(false);
-          router.back();
-        }, 100);
-      }
+      onToast?.("success");
     } catch (error) {
       console.error("Error saving movement:", error);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      setModalStatus("error");
+      onToast?.("error");
     }
   };
 
-  const handleModalClose = () => {
-    setShowStatusModal(false);
-  };
-
-  const dynamicStyles = StyleSheet.create({
-    container: {
-      backgroundColor: backgroundColor,
-    },
-    inputCard: {
-      backgroundColor: cardColor,
-      borderColor: borderColor,
-    },
-    input: {
-      color: textColor,
-    },
-    dateText: {
-      color: textColor,
-    },
-    totalContainer: {
-      backgroundColor: "#2F4F3F",
-      height: 180,
-      paddingTop: 20,
-      paddingBottom: 40,
-      paddingHorizontal: 20,
-    },
-    submitButton: {
-      backgroundColor: "#ffffffff",
-    },
-    submitButtonText: {
-      color: "#2F4F3F",
-    },
-  });
-
   return (
     <ScreenView>
-      <View style={[styles.container, dynamicStyles.container]}>
+      <View style={[styles.container, { backgroundColor }]}>
         <View style={styles.headerContainer}>
           <ThemedText type="title" style={styles.title}>
             {isEditingRecurring
@@ -522,22 +505,37 @@ const AddView: React.FC<AddViewProps> = ({
                 ? "Edit Movement"
                 : "New Movement"}
           </ThemedText>
-          <ContextMenu
-            options={getMenuOptions()}
-            selectedOption=""
-            onSelectOption={handleMenuOption}
-          >
+          {isEditing && (
             <GlassButton
               type="menu"
               size={20}
               onPress={() => {}}
               accessibilityLabel="Menu opzioni"
+              contextMenuActivationMethod="longPress"
+              contextMenuOptions={getMenuOptions()}
+              onContextMenuSelect={handleMenuAction}
             />
-          </ContextMenu>
+          )}
         </View>
-        <ScrollView
+
+        <Animated.View
+          style={{ height: 20, marginBottom: -20, zIndex: 1, opacity: fadeOpacity }}
+          pointerEvents="none"
+        >
+          <LinearGradient
+            colors={[menuBackground, menuBackground + "00"]}
+            style={{ flex: 1 }}
+          />
+        </Animated.View>
+
+        <Animated.ScrollView
+          ref={scrollViewRef}
           showsVerticalScrollIndicator={false}
-          style={{ overflow: "visible" }}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: true }
+          )}
+          scrollEventThrottle={16}
         >
           <InputGroup>
             <TextBox
@@ -545,8 +543,8 @@ const AddView: React.FC<AddViewProps> = ({
               onChange={setDescription}
               label="Description"
               placeholder="Insert Description"
-            ></TextBox>
-          
+            />
+
             <ListPicker
               value={selectedCategory}
               onChange={setSelectedCategory}
@@ -562,7 +560,7 @@ const AddView: React.FC<AddViewProps> = ({
             />
           </InputGroup>
 
-          {/* Recurrence Pattern - only visible when editing a recurring movement */}
+          {/* Recurrence Pattern — only when editing recurring */}
           {isEditingRecurring && (
             <InputGroup>
               <Pressable
@@ -574,7 +572,7 @@ const AddView: React.FC<AddViewProps> = ({
                 </ThemedText>
                 <View style={styles.recurrenceValueContainer}>
                   <ThemedText style={styles.recurrenceValue}>
-                    {recurrencePattern || "Not set"}
+                    {recurrencePattern ?? "Not set"}
                   </ThemedText>
                   <IconSymbol
                     name="chevron-right"
@@ -590,25 +588,79 @@ const AddView: React.FC<AddViewProps> = ({
           <InputGroup label="Transactions">
             <Transactions
               transactions={transactions}
-              onTransactionPress={handleTransactionPress}
               onAddPress={handleAddTransaction}
-              onDeletePress={handleDeleteTransaction}
-            />
+              onDeletePress={handleDeleteTransaction} 
+              onTransactionPress={handleTransactionPress}
+                          />
           </InputGroup>
 
-          {/* Location Card */}
+          {/* Recurrence section — for new movements and editing non-recurring */}
+          {!isEditingRecurring && !recurrenceId && (
+            <InputGroup label="Recurrence">
+              <View style={styles.recurrenceToggleRow}>
+                <ThemedText style={styles.recurrenceLabel}>
+                  Make recurring
+                </ThemedText>
+                <Switch
+                  trackColor={{ true: "#2F4F3F" }}
+                  ios_backgroundColor="#ccc"
+                  onValueChange={() => setIsRecurrent(!isRecurrent)}
+                  value={isRecurrent}
+                />
+              </View>
+              {isRecurrent && (
+                <>
+                  <ListPicker
+                    value={recurrenceSelection}
+                    onChange={setRecurrenceSelection}
+                    items={recurrenceOptions}
+                    label="Link to"
+                    placeholder="Select recurrence"
+                  />
+                  {recurrenceSelection === "new" && (
+                    <Pressable
+                      onPress={() => setShowRecurrencyPicker(true)}
+                      style={styles.recurrenceField}
+                    >
+                      <ThemedText style={styles.recurrenceLabel}>
+                        Pattern
+                      </ThemedText>
+                      <View style={styles.recurrenceValueContainer}>
+                        <ThemedText style={styles.recurrenceValue}>
+                          {recurrencePattern ?? "Not set"}
+                        </ThemedText>
+                        <IconSymbol
+                          name="chevron-right"
+                          size={16}
+                          color={placeholderColor}
+                        />
+                      </View>
+                    </Pressable>
+                  )}
+                </>
+              )}
+            </InputGroup>
+          )}
+
+          {/* Location */}
           <InputGroup>
             <LocationPicker
               value={selectedLocation.address}
               onChange={setSelectedLocation}
               label="Location"
               placeholder="Enter location"
-              googleMapsApiKey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}
+              googleMapsApiKey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_IOS_API_KEY}
+              onFocus={() => {
+                setTimeout(() => {
+                  scrollViewRef.current?.scrollToEnd({ animated: true });
+                }, 300);
+              }}
             />
-            
           </InputGroup>
-          
-        </ScrollView>
+
+          {/* Spacer to scroll content above the bottom section */}
+          <View style={{ height: 160 + keyboardHeight }} />
+        </Animated.ScrollView>
 
         {/* Transaction Modal */}
         <TransactionModal
@@ -628,97 +680,37 @@ const AddView: React.FC<AddViewProps> = ({
           isVisible={showRecurrencyPicker}
           onClose={() => setShowRecurrencyPicker(false)}
           onSave={handleRecurrencySave}
-          startDate={selectedDate}
-          initialPattern={isEditingRecurring ? recurrencePattern : undefined}
+          startDate={recurrenceStartDate}
+          initialPattern={recurrencePattern}
         />
-
-        <ModalPanel
-          isVisible={showStatusModal}
-          onClose={handleModalClose}
-          onConfirm={handleModalClose}
-          title={
-            modalStatus === "loading"
-              ? "Saving"
-              : modalStatus === "success"
-                ? "Completed"
-                : "Error"
-          }
-          showCancelButton={modalStatus !== "loading"}
-          showConfirmButton={modalStatus !== "loading"}
-          confirmText={modalStatus === "success" ? "OK" : "Retry"}
-          cancelText="Close"
-          maxHeight={250}
-        >
-          <View style={styles.statusModalContent}>
-            {modalStatus === "loading" && (
-              <>
-                <ActivityIndicator size="large" color="#2F4F3F" />
-                <ThemedText style={styles.statusText}>
-                  {isEditing ? "Updating movement..." : "Saving movement..."}
-                </ThemedText>
-              </>
-            )}
-            {modalStatus === "success" && (
-              <>
-                <IconSymbol name="check-circle" size={48} color="#22c55e" />
-                <ThemedText style={styles.statusText}>
-                  {isEditing
-                    ? "Movement updated successfully!"
-                    : "Movement saved successfully!"}
-                </ThemedText>
-              </>
-            )}
-            {modalStatus === "error" && (
-              <>
-                <IconSymbol name="close-circle" size={48} color="#ef4444" />
-                <ThemedText style={styles.statusText}>
-                  An error occurred while saving.
-                </ThemedText>
-              </>
-            )}
-          </View>
-        </ModalPanel>
       </View>
 
-      {/* Status Modal (Loading/Success/Error) */}
-
       {/* Bottom Total and Submit */}
-      {
-        <View style={[styles.bottomSection, dynamicStyles.totalContainer]}>
-          <View
-            style={{
-              alignItems: "center",
-              display: "flex",
-              flexDirection: "row",
-              justifyContent: "space-between",
-              width: "100%",
-            }}
-          >
-            <ThemedText style={styles.totalLabel}>Total:</ThemedText>
-            <ThemedText style={styles.totalAmount}>
-              {getTotalAmount().toFixed(2).replace(".", ",")}€
-            </ThemedText>
-          </View>
-          <Pressable
-            onPress={() => handleSubmit()}
-            disabled={isSubmitting}
+      <View style={styles.bottomSection}>
+        <View style={styles.totalRow}>
+          <ThemedText style={styles.totalLabel}>Total:</ThemedText>
+          <ThemedText style={styles.totalAmount}>
+            {getTotalAmount().toFixed(2).replace(".", ",")}€
+          </ThemedText>
+        </View>
+        <Pressable
+          onPress={handleSubmit}
+          disabled={isSubmitting || !isFormValid()}
+          style={[
+            styles.submitButton,
+            (isSubmitting || !isFormValid()) && styles.submitButtonDisabled,
+          ]}
+        >
+          <ThemedText
             style={[
-              styles.submitButton,
-              dynamicStyles.submitButton,
-              isSubmitting && styles.submitButtonDisabled,
+              styles.submitText,
+              (isSubmitting || !isFormValid()) && { opacity: 0.6 },
             ]}
           >
-            <ThemedText
-              style={[
-                styles.submitText,
-                isSubmitting && styles.submitTextDisabled,
-              ]}
-            >
-              {isSubmitting ? "Saving" : isEditing ? "Update" : "Insert"}
-            </ThemedText>
-          </Pressable>
-        </View>
-      }
+            {isSubmitting ? "Saving" : isEditing ? "Update" : "Insert"}
+          </ThemedText>
+        </Pressable>
+      </View>
     </ScreenView>
   );
 };
@@ -728,110 +720,18 @@ export default AddView;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
-  },
-  scrollContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 120,
+    paddingHorizontal: 16,
   },
   headerContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 30,
+    marginTop: 10,
   },
   title: {
     flex: 1,
     textAlign: "left",
-  },
-  inputCard: {
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 8,
-  },
-  textInput: {
-    fontSize: 16,
-    paddingVertical: 8,
-    paddingHorizontal: 0,
-    minHeight: 40,
-  },
-  dateContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 8,
-  },
-  dateText: {
-    fontSize: 16,
-  },
-  section: {
-    marginVertical: 8,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    marginBottom: 16,
-  },
-  transactionRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginBottom: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  transactionContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-  },
-  amountInput: {
-    fontSize: 16,
-    textAlign: "right",
-    flex: 1,
-    marginRight: 8,
-    paddingVertical: 4,
-  },
-  removeButton: {
-    marginLeft: 12,
-  },
-  addButton: {
-    marginLeft: 12,
-  },
-  addTransactionButton: {
-    backgroundColor: "#2F4F3F",
-    borderRadius: 25,
-    height: 50,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 12,
-  },
-  locationText: {
-    fontSize: 16,
-    marginBottom: 12,
-  },
-  mapPlaceholder: {
-    backgroundColor: "#f0f0f0",
-    borderRadius: 8,
-    height: 120,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  mapText: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  mapSubtext: {
-    fontSize: 12,
-    color: "#0066cc",
-    marginTop: 4,
   },
   bottomSection: {
     position: "absolute",
@@ -839,6 +739,17 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     alignItems: "center",
+    backgroundColor: "#2F4F3F",
+    paddingTop: 20,
+    paddingBottom: 40,
+    paddingHorizontal: 20,
+    borderRadius: 30,
+  },
+  totalRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
   },
   totalLabel: {
     fontSize: 18,
@@ -852,6 +763,7 @@ const styles = StyleSheet.create({
     marginVertical: 8,
   },
   submitButton: {
+    backgroundColor: "#fff",
     borderRadius: 25,
     paddingVertical: 16,
     paddingHorizontal: 60,
@@ -871,26 +783,17 @@ const styles = StyleSheet.create({
   submitButtonDisabled: {
     opacity: 0.6,
   },
-  submitTextDisabled: {
-    opacity: 0.6,
-  },
-  statusModalContent: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 20,
-    gap: 16,
-    height: 150,
-  },
-  statusText: {
-    fontSize: 16,
-    textAlign: "center",
-    marginTop: 8,
-  },
   recurrenceField: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingVertical: 12,
+  },
+  recurrenceToggleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 8,
   },
   recurrenceLabel: {
     fontSize: 16,

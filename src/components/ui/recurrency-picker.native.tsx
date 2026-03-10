@@ -1,17 +1,18 @@
-import { View, StyleSheet, ScrollView, Pressable } from "react-native";
+import { View, StyleSheet, ScrollView, Pressable, Platform } from "react-native";
 import { useThemeColor } from "@/src/hooks/use-theme-color";
 import { useState, useEffect } from "react";
 import { ThemedText } from "../core/themed-text.native";
 import * as Haptics from "expo-haptics";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import ModalPanel from "./modal-panel.native";
 import React from "react";
 
 interface IRecurrencyPickerProps {
   isVisible: boolean;
   onClose: () => void;
-  onSave: (pattern: string) => void;
+  onSave: (pattern: string | null, startDate: Date) => void;
   startDate: Date;
-  initialPattern?: string; // e.g., "P1M", "P2W"
+  initialPattern?: string | null; // e.g., "P1M", "P2W", or null for none
 }
 
 type RecurrencyType = "daily" | "weekly" | "monthly" | "yearly";
@@ -19,14 +20,13 @@ type RecurrencyType = "daily" | "weekly" | "monthly" | "yearly";
 interface RecurrencyOption {
   type: RecurrencyType;
   label: string;
-  pattern: string; // ISO 8601 duration prefix
 }
 
 const RECURRENCY_OPTIONS: RecurrencyOption[] = [
-  { type: "daily", label: "Daily", pattern: "P" },
-  { type: "weekly", label: "Weekly", pattern: "P" },
-  { type: "monthly", label: "Monthly", pattern: "P" },
-  { type: "yearly", label: "Yearly", pattern: "P" },
+  { type: "daily", label: "Daily" },
+  { type: "weekly", label: "Weekly" },
+  { type: "monthly", label: "Monthly" },
+  { type: "yearly", label: "Yearly" },
 ];
 
 const FREQUENCY_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 10, 14, 30];
@@ -34,10 +34,10 @@ const FREQUENCY_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 10, 14, 30];
 // Parse ISO 8601 duration pattern (e.g., "P1M", "P2W") into type and frequency
 const parsePattern = (
   pattern: string,
-): { type: RecurrencyType; frequency: number } => {
+): { type: RecurrencyType; frequency: number } | null => {
   const match = pattern.match(/^P(\d+)([DWMY])$/);
   if (!match) {
-    return { type: "monthly", frequency: 1 };
+    return null;
   }
 
   const freq = parseInt(match[1], 10);
@@ -58,7 +58,7 @@ const parsePattern = (
       type = "yearly";
       break;
     default:
-      type = "monthly";
+      return null;
   }
 
   return { type, frequency: freq };
@@ -71,17 +71,30 @@ const RecurrencyPicker: React.FC<IRecurrencyPickerProps> = ({
   startDate,
   initialPattern,
 }) => {
-  const [selectedType, setSelectedType] = useState<RecurrencyType>("monthly");
+  const [selectedType, setSelectedType] = useState<RecurrencyType | null>(null);
   const [frequency, setFrequency] = useState<number>(1);
+  const [pickerStartDate, setPickerStartDate] = useState<Date>(startDate);
 
   // Initialize state from initialPattern when modal becomes visible
   useEffect(() => {
-    if (isVisible && initialPattern) {
-      const parsed = parsePattern(initialPattern);
-      setSelectedType(parsed.type);
-      setFrequency(parsed.frequency);
+    if (isVisible) {
+      setPickerStartDate(startDate);
+      if (initialPattern) {
+        const parsed = parsePattern(initialPattern);
+        if (parsed) {
+          setSelectedType(parsed.type);
+          setFrequency(parsed.frequency);
+        } else {
+          setSelectedType(null);
+          setFrequency(1);
+        }
+      } else {
+        // New recurrence: default to blank
+        setSelectedType(null);
+        setFrequency(1);
+      }
     }
-  }, [isVisible, initialPattern]);
+  }, [isVisible, initialPattern, startDate]);
 
   // Theme colors
   const chipActiveBackground = useThemeColor(
@@ -104,8 +117,7 @@ const RecurrencyPicker: React.FC<IRecurrencyPickerProps> = ({
     { light: "#666", dark: "#999" },
     "tabIconDefault",
   );
-
-  const handleTypeSelect = (type: RecurrencyType) => {
+  const handleTypeSelect = (type: RecurrencyType | null) => {
     Haptics.selectionAsync();
     setSelectedType(type);
   };
@@ -116,8 +128,11 @@ const RecurrencyPicker: React.FC<IRecurrencyPickerProps> = ({
   };
 
   const handleSave = () => {
-    // Generate ISO 8601 duration pattern
-    // P1D = every 1 day, P1W = every 1 week, P1M = every 1 month, P1Y = every 1 year
+    if (selectedType === null) {
+      onSave(null, pickerStartDate);
+      return;
+    }
+
     let durationUnit: string;
     switch (selectedType) {
       case "daily":
@@ -137,17 +152,13 @@ const RecurrencyPicker: React.FC<IRecurrencyPickerProps> = ({
     }
 
     const pattern = `P${frequency}${durationUnit}`;
-    onSave(pattern);
-  };
-
-  const formatStartDate = (date: Date): string => {
-    const day = date.getDate().toString().padStart(2, "0");
-    const month = (date.getMonth() + 1).toString().padStart(2, "0");
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
+    onSave(pattern, pickerStartDate);
   };
 
   const getRecurrenceDescription = (): string => {
+    if (selectedType === null) {
+      return "No recurrence pattern";
+    }
     const typeLabels: Record<RecurrencyType, string> = {
       daily: frequency === 1 ? "day" : "days",
       weekly: frequency === 1 ? "week" : "weeks",
@@ -167,21 +178,58 @@ const RecurrencyPicker: React.FC<IRecurrencyPickerProps> = ({
       showConfirmButton={true}
       confirmText="Save"
       cancelText="Cancel"
-      maxHeight={450}
+      maxHeight={520}
     >
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Start Date Display */}
-        <View style={styles.sectionHorizontal}>
+        {/* Start Date - Editable */}
+        <View style={styles.section}>
           <ThemedText style={styles.sectionLabel}>Start Date</ThemedText>
-          <ThemedText style={styles.dateDisplay}>
-            {formatStartDate(startDate)}
-          </ThemedText>
+          <View style={styles.datePickerContainer}>
+            <DateTimePicker
+              value={pickerStartDate}
+              mode="date"
+              display={Platform.OS === "ios" ? "compact" : "default"}
+              onChange={(_event, selectedDate) => {
+                if (selectedDate) {
+                  setPickerStartDate(selectedDate);
+                }
+              }}
+              style={styles.datePicker}
+            />
+          </View>
         </View>
 
         {/* Recurrence Type */}
         <View style={styles.section}>
           <ThemedText style={styles.sectionLabel}>Repeat</ThemedText>
           <View style={styles.chipsContainer}>
+            {/* None option */}
+            <Pressable
+              onPress={() => handleTypeSelect(null)}
+              style={[
+                styles.chip,
+                {
+                  backgroundColor:
+                    selectedType === null
+                      ? chipActiveBackground
+                      : chipInactiveBackground,
+                },
+              ]}
+            >
+              <ThemedText
+                style={[
+                  styles.chipText,
+                  {
+                    color:
+                      selectedType === null
+                        ? chipActiveText
+                        : chipInactiveText,
+                  },
+                ]}
+              >
+                None
+              </ThemedText>
+            </Pressable>
             {RECURRENCY_OPTIONS.map((option) => {
               const isActive = selectedType === option.type;
               return (
@@ -211,42 +259,44 @@ const RecurrencyPicker: React.FC<IRecurrencyPickerProps> = ({
           </View>
         </View>
 
-        {/* Frequency */}
-        <View style={styles.section}>
-          <ThemedText style={styles.sectionLabel}>Every</ThemedText>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.frequencyContainer}
-          >
-            {FREQUENCY_OPTIONS.map((freq) => {
-              const isActive = frequency === freq;
-              return (
-                <Pressable
-                  key={freq}
-                  onPress={() => handleFrequencySelect(freq)}
-                  style={[
-                    styles.frequencyChip,
-                    {
-                      backgroundColor: isActive
-                        ? chipActiveBackground
-                        : chipInactiveBackground,
-                    },
-                  ]}
-                >
-                  <ThemedText
+        {/* Frequency - only show when a type is selected */}
+        {selectedType !== null && (
+          <View style={styles.section}>
+            <ThemedText style={styles.sectionLabel}>Every</ThemedText>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.frequencyContainer}
+            >
+              {FREQUENCY_OPTIONS.map((freq) => {
+                const isActive = frequency === freq;
+                return (
+                  <Pressable
+                    key={freq}
+                    onPress={() => handleFrequencySelect(freq)}
                     style={[
-                      styles.frequencyText,
-                      { color: isActive ? chipActiveText : chipInactiveText },
+                      styles.frequencyChip,
+                      {
+                        backgroundColor: isActive
+                          ? chipActiveBackground
+                          : chipInactiveBackground,
+                      },
                     ]}
                   >
-                    {freq}
-                  </ThemedText>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-        </View>
+                    <ThemedText
+                      style={[
+                        styles.frequencyText,
+                        { color: isActive ? chipActiveText : chipInactiveText },
+                      ]}
+                    >
+                      {freq}
+                    </ThemedText>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </View>
+        )}
 
         {/* Summary */}
         <View style={styles.summaryContainer}>
@@ -263,18 +313,16 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: 24,
   },
-  sectionHorizontal: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
   sectionLabel: {
     fontSize: 14,
     marginBottom: 12,
     letterSpacing: 0.5,
   },
-  dateDisplay: {
-    fontSize: 18,
-    fontWeight: "500",
+  datePickerContainer: {
+    alignItems: "flex-start",
+  },
+  datePicker: {
+    marginLeft: -10,
   },
   chipsContainer: {
     flexDirection: "row",

@@ -1,8 +1,5 @@
 import { useThemeColor } from "@/src/hooks/use-theme-color";
-import { useTheme } from "@react-navigation/native";
-import { use } from "react";
 import { StyleSheet, View, Text } from "react-native";
-import List from "./list";
 import React from "react";
 
 interface ICardProps {
@@ -20,27 +17,16 @@ const InputGroup: React.FC<ICardProps> = ({
 }) => {
   const themeBackground = useThemeColor({}, "cardBackground");
   const themeColor = useThemeColor({}, "cardColor");
-  const styles = StyleSheet.create({
-    //Card
-    card: {
-      backgroundColor: backgroundColor ?? themeBackground,
-      color: color ?? themeColor,
-      borderRadius: 30,
-      marginBottom: 20,
-      flexGrow: 2,
-      paddingHorizontal: 5,
-      paddingVertical: 5,
-      overflow: "visible" as const,
-    },
+  const borderBottomColor = useThemeColor(
+    { light: "#e0e0e0", dark: "#333" },
+    "tabIconDefault"
+  );
 
-    cardLabel: {
-      fontSize: 18,
-      fontWeight: "600",
-      color: "#848484ff",
-      marginBottom: 10,
-      marginLeft: 10,
-    },
-  });
+  const validChildren = Array.isArray(children)
+    ? children.filter(Boolean)
+    : children
+      ? [children]
+      : [];
 
   return (
     <View>
@@ -49,11 +35,55 @@ const InputGroup: React.FC<ICardProps> = ({
           <Text style={styles.cardLabel}>{label}</Text>
         </View>
       )}
-      <View style={styles.card}>
-        <List>{children}</List>
+      <View
+        style={[
+          styles.card,
+          {
+            backgroundColor: backgroundColor ?? themeBackground,
+          },
+        ]}
+      >
+        {validChildren.map((child, index) => (
+          <View
+            key={index}
+            style={[
+              styles.item,
+              { borderBottomColor },
+              index === validChildren.length - 1 && styles.lastItem,
+            ]}
+          >
+            {child}
+          </View>
+        ))}
       </View>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  card: {
+    borderRadius: 30,
+    marginBottom: 20,
+    paddingHorizontal: 5,
+    paddingVertical: 5,
+    overflow: "visible" as const,
+  },
+  cardLabel: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#848484ff",
+    marginBottom: 10,
+    marginLeft: 10,
+  },
+  item: {
+    borderBottomWidth: 1,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    overflow: "visible" as const,
+  },
+  lastItem: {
+    borderBottomWidth: 0,
+  },
+});
 
 export default InputGroup;

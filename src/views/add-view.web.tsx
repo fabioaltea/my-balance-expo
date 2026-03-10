@@ -604,7 +604,7 @@ const AddView: React.FC<AddViewProps> = ({
               onChange={setSelectedLocation}
               label="Location"
               placeholder="Enter location"
-              googleMapsApiKey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}
+              googleMapsApiKey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_WEB_API_KEY}
             />
           </InputGroup>
 

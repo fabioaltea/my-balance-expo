@@ -14,6 +14,10 @@ import * as Haptics from "expo-haptics";
 import { useColorScheme } from "@/src/hooks/use-color-scheme";
 import { useThemeColor } from "@/src/hooks/use-theme-color";
 import React from "react";
+import ContextMenu, {
+  type IContextMenuOption,
+} from "./context-menu";
+import type { ActivationMethod } from "@expo/ui/swift-ui";
 
 type GlassButtonType = "add" | "search" | "confirm" | "dismiss" | "menu";
 
@@ -25,6 +29,9 @@ type Props = {
   text?: string;
   size?: number; // icon/text size
   accessibilityLabel?: string;
+  contextMenuOptions?: (string | IContextMenuOption)[];
+  contextMenuActivationMethod?: ActivationMethod;
+  onContextMenuSelect?: (option: string) => void;
 };
 
 const GlassButton = ({
@@ -35,6 +42,9 @@ const GlassButton = ({
   text,
   size = 24,
   accessibilityLabel,
+  contextMenuOptions,
+  contextMenuActivationMethod = "longPress",
+  onContextMenuSelect,
 }: Props) => {
   const scheme = useColorScheme() ?? "light";
   const iconColor = useThemeColor({}, "text");
@@ -63,7 +73,7 @@ const GlassButton = ({
     onPress();
   };
 
-  return (
+  const buttonContent = (
     <View pointerEvents="box-none" style={[styles.buttonWrapper, style]}>
       <Pressable
         style={[
@@ -135,6 +145,21 @@ const GlassButton = ({
       </Pressable>
     </View>
   );
+
+  if (contextMenuOptions && contextMenuOptions.length > 0 && onContextMenuSelect) {
+    return (
+      <ContextMenu
+        options={contextMenuOptions}
+        onSelectOption={onContextMenuSelect}
+        activationMethod={contextMenuActivationMethod}
+        hostStyle={{ width: 48, height: 48 }}
+      >
+        {buttonContent}
+      </ContextMenu>
+    );
+  }
+
+  return buttonContent;
 };
 
 const styles = StyleSheet.create({

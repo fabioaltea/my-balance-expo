@@ -15,6 +15,7 @@ import React, { useState, useRef, useEffect } from "react";
 import * as Haptics from "expo-haptics";
 import TextBox from "./text-box.native";
 import MapView, { Marker } from "react-native-maps";
+import GooglePlacesSDK from "react-native-google-places-sdk";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -31,6 +32,8 @@ interface ILocationPickerProps {
   label?: string;
   placeholder?: string;
   googleMapsApiKey?: string;
+  onFocus?: () => void;
+  onBlur?: () => void;
 }
 
 const LocationPicker: React.FC<ILocationPickerProps> = ({
@@ -39,6 +42,8 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
   label = "Location",
   placeholder = "Enter location...",
   googleMapsApiKey,
+  onFocus,
+  onBlur,
 }) => {
   const [searchResults, setSearchResults] = useState<ILocation[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<ILocation | null>(
@@ -54,6 +59,15 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
     latitudeDelta: 0.0922,
     longitudeDelta: 0.0421,
   };
+
+  const sdkInitialized = useRef(false);
+
+  useEffect(() => {
+    if (googleMapsApiKey && !sdkInitialized.current) {
+      GooglePlacesSDK.initialize(googleMapsApiKey);
+      sdkInitialized.current = true;
+    }
+  }, [googleMapsApiKey]);
 
   useEffect(() => {
     setSelectedLocation(searchResults[0] || null);
@@ -92,75 +106,45 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
 
     try {
       if (googleMapsApiKey) {
-        const response = await fetch(
-          `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(
-            text,
-          )}&key=${googleMapsApiKey}&region=it&language=it`,
+        const predictions = await GooglePlacesSDK.fetchPredictions(text, {
+          countries: ["it"],
+        });
+
+        const locations: ILocation[] = await Promise.all(
+          predictions.slice(0, 5).map(async (prediction) => {
+            const place = await GooglePlacesSDK.fetchPlaceByID(
+              prediction.placeID,
+              ["coordinate", "formattedAddress"],
+            );
+            return {
+              address: place.formattedAddress || prediction.description,
+              latitude: place.coordinate?.latitude,
+              longitude: place.coordinate?.longitude,
+              placeId: prediction.placeID,
+            };
+          }),
         );
 
-        const data = await response.json();
-
-        console.log("Places API response:", data);
-
-        if (data.status === "OK") {
-          const locations: ILocation[] = data.results
-            .slice(0, 5)
-            .map((place: any) => ({
-              address: place.formatted_address,
-              latitude: place.geometry.location.lat,
-              longitude: place.geometry.location.lng,
-              placeId: place.place_id,
-            }));
-
-          setSearchResults(locations);
-
-          // Center map on first result
-          if (
-            locations.length > 0 &&
-            locations[0].latitude &&
-            locations[0].longitude
-          ) {
-            mapRef.current?.animateToRegion(
-              {
-                latitude: locations[0].latitude,
-                longitude: locations[0].longitude,
-                latitudeDelta: 0.01,
-                longitudeDelta: 0.01,
-              },
-              300,
-            );
-          }
-        } else {
-          setSearchResults([]);
-        }
-      } else {
-        // Mock search results for demo without API key
-        const mockResults: ILocation[] = [
-          {
-            address: `${text}, Sestu, CA, Italy`,
-            latitude: 39.2238,
-            longitude: 8.8203,
-          },
-          {
-            address: `${text}, Cagliari, CA, Italy`,
-            latitude: 39.2238,
-            longitude: 9.1217,
-          },
-        ];
-        setSearchResults(mockResults);
+        setSearchResults(locations);
 
         // Center map on first result
-        if (mockResults.length > 0) {
+        if (
+          locations.length > 0 &&
+          locations[0].latitude &&
+          locations[0].longitude
+        ) {
           mapRef.current?.animateToRegion(
             {
-              latitude: mockResults[0].latitude!,
-              longitude: mockResults[0].longitude!,
+              latitude: locations[0].latitude,
+              longitude: locations[0].longitude,
               latitudeDelta: 0.01,
               longitudeDelta: 0.01,
             },
             300,
           );
         }
+      } else {
+        setSearchResults([]);
       }
     } catch (error) {
       console.error("Error searching places:", error);
@@ -220,43 +204,44 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
         label="Location"
         value={value}
         onChange={handleTextChange}
-      ></TextBox>
+        onFocus={onFocus}
+        onBlur={onBlur}
+      />
 
-      {/* {isLoading && (
+      {isLoading && (
             <ActivityIndicator
               size="small"
               color={placeholderColor}
               style={styles.loadingIcon}
             />
-          )} */}
+          )}
 
       {/* Expanded Content */}
       {isExpanded && (
-        // <View style={styles.expandedContent}>
-        //   {/* Map Placeholder */}
-        //   <View style={[styles.mapContainer, { backgroundColor: "#f0f0f0" }]}>
-        //     <MapView
-        //       ref={mapRef}
-        //       style={{ width: "100%", height: "100%" }}
-        //       provider="google"
-        //       initialRegion={defaultRegion}
-        //       showsUserLocation={true}
-        //       showsMyLocationButton={false}
-        //     >
-        //       {selectedLocation?.latitude && selectedLocation?.longitude && (
-        //         <Marker
-        //           coordinate={{
-        //             latitude: selectedLocation.latitude,
-        //             longitude: selectedLocation.longitude,
-        //           }}
-        //           title={selectedLocation.address}
-        //           description="Selected location"
-        //         />
-        //       )}
-        //     </MapView>
-        //   </View>
-        // </View>
-        <></>
+        <View style={styles.expandedContent}>
+          {/* Map Placeholder */}
+          <View style={[styles.mapContainer, { backgroundColor: "#f0f0f0" }]}>
+            <MapView
+              ref={mapRef}
+              style={{ width: "100%", height: "100%" }}
+              provider="google"
+              initialRegion={defaultRegion}
+              showsUserLocation={true}
+              showsMyLocationButton={false}
+            >
+              {selectedLocation?.latitude && selectedLocation?.longitude && (
+                <Marker
+                  coordinate={{
+                    latitude: selectedLocation.latitude,
+                    longitude: selectedLocation.longitude,
+                  }}
+                  title={selectedLocation.address}
+                  description="Selected location"
+                />
+              )}
+            </MapView>
+          </View>
+        </View>
       )}
     </Animated.View>
   );
@@ -338,124 +323,3 @@ const styles = StyleSheet.create({
 });
 
 export default LocationPicker;
-
-// const styles = StyleSheet.create({
-//   label: {
-//     fontSize: 16,
-//     fontWeight: "600",
-//     marginBottom: 8,
-//   },
-//   container: {
-//     borderWidth: 1,
-//     borderRadius: 8,
-//     paddingHorizontal: 16,
-//     paddingVertical: 12,
-//   },
-//   content: {
-//     flexDirection: "row",
-//     alignItems: "center",
-//   },
-//   icon: {
-//     marginRight: 12,
-//   },
-//   valueText: {
-//     fontSize: 16,
-//     flex: 1,
-//   },
-//   chevron: {
-//     marginLeft: 8,
-//   },
-//   modalContent: {
-//     flex: 1,
-//     padding: 16,
-//   },
-//   searchContainer: {
-//     flexDirection: "row",
-//     alignItems: "center",
-//     borderWidth: 1,
-//     borderRadius: 8,
-//     paddingHorizontal: 12,
-//     paddingVertical: 8,
-//     marginBottom: 16,
-//   },
-//   searchIcon: {
-//     marginRight: 8,
-//   },
-//   searchInput: {
-//     flex: 1,
-//     fontSize: 16,
-//     paddingVertical: 4,
-//   },
-//   mapContainer: {
-//     height: 200,
-//     borderRadius: 8,
-//     marginBottom: 16,
-//     overflow: "hidden",
-//   },
-//   mapPlaceholder: {
-//     flex: 1,
-//     justifyContent: "center",
-//     alignItems: "center",
-//     padding: 20,
-//   },
-//   mapText: {
-//     fontSize: 18,
-//     fontWeight: "600",
-//     marginTop: 8,
-//     color: "#666",
-//   },
-//   mapSubtext: {
-//     fontSize: 14,
-//     color: "#888",
-//     textAlign: "center",
-//     marginTop: 4,
-//   },
-//   coordsText: {
-//     fontSize: 12,
-//     color: "#666",
-//     textAlign: "center",
-//     marginTop: 8,
-//     fontFamily: "monospace",
-//   },
-//   resultsContainer: {
-//     maxHeight: 300,
-//   },
-//   resultsHeader: {
-//     fontSize: 16,
-//     fontWeight: "600",
-//     marginBottom: 12,
-//   },
-//   resultItem: {
-//     flexDirection: "row",
-//     alignItems: "center",
-//     padding: 12,
-//     marginBottom: 8,
-//     borderWidth: 1,
-//     borderRadius: 8,
-//   },
-//   resultContent: {
-//     flex: 1,
-//     marginLeft: 12,
-//     marginRight: 8,
-//   },
-//   resultAddress: {
-//     fontSize: 14,
-//     lineHeight: 18,
-//   },
-//   warningContainer: {
-//     flexDirection: "row",
-//     alignItems: "center",
-//     padding: 16,
-//     backgroundColor: "#fff3cd",
-//     borderRadius: 8,
-//     marginTop: 16,
-//   },
-//   warningText: {
-//     fontSize: 14,
-//     color: "#856404",
-//     marginLeft: 12,
-//     flex: 1,
-//   },
-// });
-
-// export default LocationPicker;

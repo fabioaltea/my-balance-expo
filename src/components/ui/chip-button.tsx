@@ -29,6 +29,7 @@ const ChipButton: React.FC<IChipButtonProps> = ({
 
   const isLandscape = orientation === "landscape";
   const [selectedOption, setSelectedOption] = useState("");
+  const [size, setSize] = useState({ width: 0, height: 0 });
 
   // Colori del tema
   const inactiveBackground = useThemeColor(
@@ -81,36 +82,63 @@ const ChipButton: React.FC<IChipButtonProps> = ({
     onOptionSelect?.(option);
   };
 
-  const chipContent = (
-    <View style={styles.chipWrapper}>
-      <View style={dynamicStyles.chipButton}>
-        <Text style={dynamicStyles.chipText}>{selectedOption || text}</Text>
-      </View>
-      {badge !== undefined && badge > 0 && (
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>{badge}</Text>
-        </View>
-      )}
+  const chipVisual = (
+    <View style={dynamicStyles.chipButton}>
+      <Text style={dynamicStyles.chipText}>{selectedOption || text}</Text>
     </View>
   );
 
   if (options && options.length > 0) {
     return (
-      <Pressable onPress={handlePress}>
-        <ContextMenu
-          options={options}
-          selectedOption={selectedOption}
-          onSelectOption={handleSelectOption}
-        >
-          {chipContent}
-        </ContextMenu>
-      </Pressable>
+      <View
+        style={styles.chipWrapper}
+        onLayout={(e) => {
+          const { width, height } = e.nativeEvent.layout;
+          if (width !== size.width || height !== size.height) {
+            setSize({ width, height });
+          }
+        }}
+      >
+        {/* Hidden measurer for layout */}
+        <View style={{ opacity: 0 }}>
+          {chipVisual}
+        </View>
+        {/* ContextMenu with measured size, Pressable inside for tap */}
+        <View style={StyleSheet.absoluteFill}>
+          {size.width > 0 && (
+            <ContextMenu
+              options={options}
+              selectedOption={selectedOption}
+              onSelectOption={handleSelectOption}
+              hostStyle={{ width: size.width, height: size.height }}
+              activationMethod="longPress"
+            >
+              <Pressable
+                onPress={handlePress}
+                style={{ width: size.width, height: size.height }}
+              >
+                {chipVisual}
+              </Pressable>
+            </ContextMenu>
+          )}
+        </View>
+        {badge !== undefined && badge > 0 && (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{badge}</Text>
+          </View>
+        )}
+      </View>
     );
   }
 
   return (
-    <Pressable onPress={handlePress}>
-      {chipContent}
+    <Pressable onPress={handlePress} style={styles.chipWrapper}>
+      {chipVisual}
+      {badge !== undefined && badge > 0 && (
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>{badge}</Text>
+        </View>
+      )}
     </Pressable>
   );
 };
@@ -118,13 +146,14 @@ const ChipButton: React.FC<IChipButtonProps> = ({
 const styles = StyleSheet.create({
   chipWrapper: {
     position: "relative",
-    flexGrow: 1,
+    flexGrow: 2,
   },
   chipButton: {
     padding: 8,
     paddingHorizontal: 20,
     borderRadius: 20,
     display: "flex",
+    flexGrow: 1,
   },
   chipText: {
     fontSize: 18,

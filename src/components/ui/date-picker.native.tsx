@@ -112,12 +112,10 @@ const DatePicker: React.FC<IDatePickerProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    display: "flex",
     flexDirection: "row",
     paddingHorizontal: 0,
     paddingVertical: 5,
     alignItems: "center",
-    flex: 1,
   },
   label: {
     flex: 0,

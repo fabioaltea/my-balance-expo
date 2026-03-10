@@ -255,11 +255,11 @@ const styles = StyleSheet.create({
   },
   addButton: {
     backgroundColor: "#2F4F3F",
-    borderRadius: 25,
+    borderRadius: 20,
     height: 50,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 5,
+    
   },
   deleteAction: {
     backgroundColor: "#ef4444ff",

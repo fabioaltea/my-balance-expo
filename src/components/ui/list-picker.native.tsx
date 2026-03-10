@@ -118,7 +118,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 0,
     paddingVertical: 5,
     alignItems: "center",
-    flex: 1,
   },
   label: {
     flex: 0,

@@ -7,6 +7,8 @@ interface ITextBoxProps {
   onChange: (text: string) => void;
   label?: string;
   placeholder?: string;
+  onFocus?: () => void;
+  onBlur?: () => void;
 }
 
 const TextBox: React.FC<ITextBoxProps> = ({
@@ -14,6 +16,8 @@ const TextBox: React.FC<ITextBoxProps> = ({
   onChange,
   label,
   placeholder,
+  onFocus,
+  onBlur,
 }) => {
   const textColor = useThemeColor({ light: "#000", dark: "#fff" }, "text");
   const placeholderColor = useThemeColor(
@@ -34,6 +38,8 @@ const TextBox: React.FC<ITextBoxProps> = ({
         onChangeText={onChange}
         placeholder={placeholder || ""}
         placeholderTextColor={placeholderColor}
+        onFocus={onFocus}
+        onBlur={onBlur}
       />
     </View>
   );
@@ -41,12 +47,10 @@ const TextBox: React.FC<ITextBoxProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    display: "flex",
     flexDirection: "row",
     paddingHorizontal: 0,
     paddingVertical: 5,
     alignItems: "center",
-    flex: 1,
   },
   label: {
     flex: 0,

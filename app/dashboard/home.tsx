@@ -182,18 +182,23 @@ export default function Home() {
   return (
     <ScreenView>
       <View style={styles.header}>
-        <AccountPicker
-          accounts={availableAccounts}
-          selectedAccount={selectedAccount}
-          setSelectedAccount={setSelectedAccount}
-        ></AccountPicker>
-        <ContextMenu
-          options={contextMenuOptions}
-          selectedOption=""
-          onSelectOption={handleContextMenuSelect}
-        >
-          <GlassButton onPress={handleButtonPress} />
-        </ContextMenu>
+        <View style={{ flex: 1 }}>
+          <AccountPicker
+            accounts={availableAccounts}
+            selectedAccount={selectedAccount}
+            setSelectedAccount={setSelectedAccount}
+          />
+        </View>
+        <View>
+          {/* <ContextMenu
+            options={contextMenuOptions}
+            selectedOption=""
+            onSelectOption={handleContextMenuSelect}
+            activationMethod="longPress"
+          > */}
+            <GlassButton onPress={handleButtonPress} />
+          {/* </ContextMenu> */}
+        </View>
       </View>
       <HomeView
         accounts={availableAccounts}

@@ -4,10 +4,10 @@ import {
   Host,
   Button,
   Divider,
+  ActivationMethod,
 } from "@expo/ui/swift-ui";
-import { disabled } from "@expo/ui/swift-ui/modifiers";
 import type { Ionicons } from "@expo/vector-icons";
-
+import { Pressable } from "react-native";
 export interface IContextMenuOption {
   label: string;
   icon?: keyof typeof Ionicons.glyphMap;
@@ -21,6 +21,8 @@ export interface IContextMenuProps {
   selectedOption?: string;
   onSelectOption: (option: string) => void;
   children: React.ReactNode;
+  hostStyle?: { width: number; height: number };
+  activationMethod: ActivationMethod;
 }
 
 // Map commonly used Ionicons names to SF Symbols
@@ -47,11 +49,15 @@ const ContextMenu: React.FC<IContextMenuProps> = ({
   options,
   onSelectOption,
   children,
+  hostStyle,
+  activationMethod = "longPress",
 }) => {
   return (
-    <Host matchContents>
-      <ExpoContextMenu>
-        <ExpoContextMenu.Trigger>{children}</ExpoContextMenu.Trigger>
+    <Host {...(hostStyle ? { style: hostStyle } : { matchContents: true })}>
+      <ExpoContextMenu activationMethod={activationMethod} >
+        <ExpoContextMenu.Trigger>
+          <Pressable>{children}</Pressable>
+        </ExpoContextMenu.Trigger>
         <ExpoContextMenu.Items>
           {options.map((option, index) => {
             const normalized = normalizeOption(option);
@@ -62,14 +68,13 @@ const ContextMenu: React.FC<IContextMenuProps> = ({
             return (
               <Button
                 key={index}
-                label={normalized.label}
                 role={normalized.destructive ? "destructive" : "default"}
-                systemImage={sfSymbol as any}
+                {...(sfSymbol ? { systemImage: sfSymbol as any } : {})}
                 onPress={() => onSelectOption(normalized.label)}
-                modifiers={
-                  normalized.disabled ? [disabled(true)] : undefined
-                }
-              />
+                disabled={normalized.disabled}
+              >
+                {normalized.label}
+              </Button>
             );
           })}
         </ExpoContextMenu.Items>

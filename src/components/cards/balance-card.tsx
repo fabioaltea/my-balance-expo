@@ -31,10 +31,10 @@ const BalanceCard: React.FC<IBalanceCardProps> = ({ account }) => {
     }
 
     return (
-      <Text style={styles.balanceAmount}>
+      <Text style={[styles.balanceAmount, { color: account?.textColor || "#FFFFFF" }]}>
         {isBalanceVisible
           ? `€ ${account?.balance.toFixed(2).replace(".", ",") ?? ""}`
-          : "€ ****,**"}
+          : "€ *****,**"}
       </Text>
     );
   };
@@ -53,7 +53,7 @@ const BalanceCard: React.FC<IBalanceCardProps> = ({ account }) => {
           <IconSymbol
             name={isBalanceVisible ? "remove-red-eye" : "visibility-off"}
             size={24}
-            color="#FFFFFF"
+            color={account?.textColor || "#FFFFFF"}
           />
         </TouchableOpacity>
       </View>

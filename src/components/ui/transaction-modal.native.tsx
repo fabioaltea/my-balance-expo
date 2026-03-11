@@ -60,7 +60,7 @@ const TransactionModal: React.FC<ITransactionModalProps> = ({
       } else {
         // New transaction: reset to defaults
         setTransactionType("expense");
-        setSelectedAccount("");
+        setSelectedAccount(accounts.length ===1 ? accounts[0].value : ""); // Auto-select if only one account
         setAmount(0);
       }
       setShowKeyboard(false);

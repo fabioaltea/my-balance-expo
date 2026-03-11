@@ -37,7 +37,6 @@ const AddView: React.FC<AddViewProps> = ({
   onClose,
   onToast,
 }) => {
-  console.log("[AddView.web] render");
   const router = useRouter();
 
   const closeView = () => {
@@ -46,7 +45,6 @@ const AddView: React.FC<AddViewProps> = ({
   const { selectedSpreadsheetId } = useAuthContext();
   const { accounts, categories, movements, recurringMovements, unconfirmedMovements } =
     useDataContext();
-  console.log("[AddView.web] accounts:", accounts?.length, "categories:", categories?.length, "movements:", movements?.length);
 
   // React Query mutations
   const addMovement = useAddMovement();

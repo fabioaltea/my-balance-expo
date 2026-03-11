@@ -1,11 +1,10 @@
 import { StyleSheet, View } from 'react-native';
-import { ThemedText } from '@/components/core/themed-text';
-import ScreenView from '@/layout/screen-view';
 import React from 'react';
-import GlassButton from '@/components/ui/glass-button';
-import { useDataContext } from '@/state/DataProvider';
-import { useAuthContext } from '@/state/AuthProvider';
-import AccountsView from '@/views/accounts-view';
+import GlassButton from "@/src/components/ui/glass-button";
+import { useDataContext } from "@/src/state/DataProvider";
+import { useAuthContext } from "@/src/state/AuthProvider";
+import AccountsView from "@/src/views/accounts-view";
+import { ScreenView, ThemedText } from "@/src/components/core";
 
 export default function Accounts() {
   const { accounts } = useDataContext();

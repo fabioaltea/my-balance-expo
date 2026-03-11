@@ -8,14 +8,14 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 
-import { useColorScheme } from "@/hooks/use-color-scheme";
+import { useColorScheme } from "@/src/hooks/use-color-scheme";
 import { View, Text, StyleSheet, ActivityIndicator, Alert, BackHandler } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-import { AuthProvider, useAuthContext } from "@/state/AuthProvider";
-import { DataProvider } from "@/state/DataProvider";
-import { PlatformProvider } from "@/state/PlatformProvider";
-import { QueryProvider } from "@/providers/QueryProvider";
-import LoginScreen from "@/views/login-view";
+import { AuthProvider, useAuthContext } from "@/src/state/AuthProvider";
+import { DataProvider } from "@/src/state/DataProvider";
+import { PlatformProvider } from "@/src/state/PlatformProvider";
+import { QueryProvider } from "@/src/providers/QueryProvider";
+import LoginScreen from "@/src/views/login-view";
 import Onboarding from "./onboarding";
 
 export const unstable_settings = {

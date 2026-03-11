@@ -28,7 +28,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   name: getAppName(),
   slug: "mybalance",
   owner: "fabioaltea",
-  version: "1.0.0",
+  version: "0.0.2",
   orientation: "portrait",
   icon: getIcon(),
   scheme: "mybalance",
@@ -79,6 +79,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     "@react-native-community/datetimepicker",
+    [
+      "@rnmapbox/maps",
+      {
+        RNMapboxMapsVersion: "11.15.2",
+        RNMapboxMapsDownloadToken: process.env.MAPBOX_SECRET_TOKEN,
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,

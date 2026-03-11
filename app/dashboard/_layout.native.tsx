@@ -7,7 +7,7 @@ import {
   Icon,
   VectorIcon,
 } from "expo-router/unstable-native-tabs";
-import { useAuthContext } from "@/state/AuthProvider";
+import { useAuthContext } from "@/src/state";
 
 /**
  * Native tab layout for iOS and Android.

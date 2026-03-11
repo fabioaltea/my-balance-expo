@@ -27,6 +27,7 @@ import IconSymbol from "@/src/components/ui/icon-symbol";
 import LocationPicker, { ILocation } from "@/src/components/ui/location-picker";
 import { useAddMovement, useUpdateMovement, useDeleteMovement } from "@/src/hooks/mutations";
 import type { Movement } from "@/src/state";
+import { MovementHelper } from "@/src/helpers/MovementHelper";
 import TextBox from "@/src/components/ui/text-box";
 import ListPicker from "@/src/components/ui/list-picker.native";
 import DatePicker from "@/src/components/ui/date-picker.native";
@@ -100,6 +101,7 @@ const AddView: React.FC<AddViewProps> = ({
   const [hasRecurrencePattern, setHasRecurrencePattern] = useState<boolean>(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const scrollViewRef = useRef<any>(null);
+  const hasManualCategorySelection = useRef(false);
 
   useEffect(() => {
     const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
@@ -110,6 +112,22 @@ const AddView: React.FC<AddViewProps> = ({
   }, []);
 
   const recurrencePattern = hasRecurrencePattern ? `P${recurrenceFrequency}${recurrenceUnit}` : null;
+
+  // Auto-predict category when description changes (only for new movements)
+  const handleDescriptionChange = (text: string) => {
+    setDescription(text);
+    if (!hasManualCategorySelection.current && !isEditing) {
+      const predicted = MovementHelper.predictCategory(text, movements, categories);
+      if (predicted) {
+        setSelectedCategory(predicted);
+      }
+    }
+  };
+
+  const handleCategoryChange = (value: string) => {
+    hasManualCategorySelection.current = true;
+    setSelectedCategory(value);
+  };
 
   const isEditing = !!editingMovementId;
   const isEditingRecurring = isEditing && editingMovement && (editingMovement.status?.toLowerCase() === "recurrent" || editingMovement.recurrencePattern);
@@ -538,14 +556,14 @@ const AddView: React.FC<AddViewProps> = ({
           <InputGroup>
             <TextBox
               value={description}
-              onChange={setDescription}
+              onChange={handleDescriptionChange}
               label="Description"
               placeholder="Insert Description"
             />
 
             <ListPicker
               value={selectedCategory}
-              onChange={setSelectedCategory}
+              onChange={handleCategoryChange}
               items={allCategories}
               label="Category"
               placeholder="Select category"

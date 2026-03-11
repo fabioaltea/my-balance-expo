@@ -349,6 +349,8 @@ export const useMyBalanceData = (
       ),
   );
 
+  
+
   /**
    * Calculate pending recurring movements
    * For each recurring template, check each period (month) from start date to now

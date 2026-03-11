@@ -2,22 +2,17 @@ import { ThemedText } from "../core/themed-text.native";
 import {
   View,
   StyleSheet,
-  TextInput,
-  Alert,
   ActivityIndicator,
-  ScrollView,
-  Dimensions,
   Animated,
-  Pressable,
 } from "react-native";
 import { useThemeColor } from "@/src/hooks/use-theme-color";
 import React, { useState, useRef, useEffect } from "react";
 import * as Haptics from "expo-haptics";
 import TextBox from "./text-box.native";
-import MapView, { Marker } from "react-native-maps";
+import Mapbox from "@rnmapbox/maps";
 import GooglePlacesSDK from "react-native-google-places-sdk";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_PUBLIC_TOKEN || "");
 
 export interface ILocation {
   address: string;
@@ -51,16 +46,10 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
   );
   const [isLoading, setIsLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  const mapRef = useRef<MapView>(null);
-
-  const defaultRegion = {
-    latitude: 39.2238,
-    longitude: 9.1217,
-    latitudeDelta: 0.0922,
-    longitudeDelta: 0.0421,
-  };
+  const cameraRef = useRef<Mapbox.Camera>(null);
 
   const sdkInitialized = useRef(false);
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (googleMapsApiKey && !sdkInitialized.current) {
@@ -70,37 +59,32 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
   }, [googleMapsApiKey]);
 
   useEffect(() => {
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    };
+  }, []);
+
+  useEffect(() => {
     setSelectedLocation(searchResults[0] || null);
   }, [searchResults]);
 
-  const cardHeight = useRef(new Animated.Value(40)).current; // Initial collapsed height
+  // If value is already set (edit mode), expand and search on first non-empty value
+  const initialSearchDone = useRef(false);
+  useEffect(() => {
+    if (!initialSearchDone.current && value && value.trim().length >= 3) {
+      initialSearchDone.current = true;
+      searchPlaces(value);
+    }
+  }, [value]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Theme colors
-  const backgroundColor = useThemeColor(
-    { light: "#f5f5f5", dark: "#1a1a1a" },
-    "background",
-  );
-  const textColor = useThemeColor({ light: "#000", dark: "#fff" }, "text");
-  const borderColor = useThemeColor(
-    { light: "#e0e0e0", dark: "#333" },
-    "tabIconDefault",
-  );
+  const cardHeight = useRef(new Animated.Value(40)).current;
+
   const placeholderColor = useThemeColor(
     { light: "#666", dark: "#999" },
     "tabIconDefault",
   );
 
-  const handleTextChange = async (text: string) => {
-    onChange({ address: text });
-    if (!text.trim()) {
-      setSearchResults([]);
-      setSelectedLocation(null);
-      collapseCard();
-      return;
-    }
-
-    if (text.length < 3) return;
-
+  const searchPlaces = async (text: string) => {
     expandCard();
     setIsLoading(true);
 
@@ -133,15 +117,11 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
           locations[0].latitude &&
           locations[0].longitude
         ) {
-          mapRef.current?.animateToRegion(
-            {
-              latitude: locations[0].latitude,
-              longitude: locations[0].longitude,
-              latitudeDelta: 0.01,
-              longitudeDelta: 0.01,
-            },
-            300,
-          );
+          cameraRef.current?.setCamera({
+            centerCoordinate: [locations[0].longitude, locations[0].latitude],
+            zoomLevel: 15,
+            animationDuration: 300,
+          });
         }
       } else {
         setSearchResults([]);
@@ -154,11 +134,30 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
     }
   };
 
+  const handleTextChange = (text: string) => {
+    onChange({ address: text });
+
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+
+    if (!text.trim()) {
+      setSearchResults([]);
+      setSelectedLocation(null);
+      collapseCard();
+      return;
+    }
+
+    if (text.length < 3) return;
+
+    debounceTimer.current = setTimeout(() => {
+      searchPlaces(text);
+    }, 2000);
+  };
+
   const expandCard = () => {
     if (!isExpanded) {
       setIsExpanded(true);
       Animated.timing(cardHeight, {
-        toValue: 200, // Expanded height
+        toValue: 200,
         duration: 300,
         useNativeDriver: false,
       }).start();
@@ -169,7 +168,7 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
     if (isExpanded) {
       setIsExpanded(false);
       Animated.timing(cardHeight, {
-        toValue: 40, // Collapsed height
+        toValue: 40,
         duration: 300,
         useNativeDriver: false,
       }).start();
@@ -181,17 +180,12 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
     onChange(location);
     setSearchResults([]);
 
-    // Center map on selected location
     if (location.latitude && location.longitude) {
-      mapRef.current?.animateToRegion(
-        {
-          latitude: location.latitude,
-          longitude: location.longitude,
-          latitudeDelta: 0.005,
-          longitudeDelta: 0.005,
-        },
-        300,
-      );
+      cameraRef.current?.setCamera({
+        centerCoordinate: [location.longitude, location.latitude],
+        zoomLevel: 17,
+        animationDuration: 300,
+      });
     }
 
     collapseCard();
@@ -209,37 +203,45 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
       />
 
       {isLoading && (
-            <ActivityIndicator
-              size="small"
-              color={placeholderColor}
-              style={styles.loadingIcon}
-            />
-          )}
+        <ActivityIndicator
+          size="small"
+          color={placeholderColor}
+          style={styles.loadingIcon}
+        />
+      )}
 
-      {/* Expanded Content */}
       {isExpanded && (
         <View style={styles.expandedContent}>
-          {/* Map Placeholder */}
           <View style={[styles.mapContainer, { backgroundColor: "#f0f0f0" }]}>
-            <MapView
-              ref={mapRef}
-              style={{ width: "100%", height: "100%" }}
-              provider="google"
-              initialRegion={defaultRegion}
-              showsUserLocation={true}
-              showsMyLocationButton={false}
+            <Mapbox.MapView
+              style={{ flex: 1 }}
+              scrollEnabled={false}
+              pitchEnabled={false}
+              rotateEnabled={false}
+              zoomEnabled={false}
+              attributionEnabled={false}
+              logoEnabled={false}
+              compassEnabled={false}
+              scaleBarEnabled={false}
             >
+              <Mapbox.Camera
+                ref={cameraRef}
+                zoomLevel={12}
+                centerCoordinate={[9.1217, 39.2238]}
+              />
               {selectedLocation?.latitude && selectedLocation?.longitude && (
-                <Marker
-                  coordinate={{
-                    latitude: selectedLocation.latitude,
-                    longitude: selectedLocation.longitude,
-                  }}
+                <Mapbox.PointAnnotation
+                  id="selected-location"
+                  coordinate={[
+                    selectedLocation.longitude,
+                    selectedLocation.latitude,
+                  ]}
                   title={selectedLocation.address}
-                  description="Selected location"
-                />
+                >
+                  <View style={styles.marker} />
+                </Mapbox.PointAnnotation>
               )}
-            </MapView>
+            </Mapbox.MapView>
           </View>
         </View>
       )}
@@ -266,29 +268,13 @@ const styles = StyleSheet.create({
     marginBottom: 0,
     overflow: "hidden",
   },
-  mapPlaceholder: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  mapText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#666",
-    marginTop: 4,
-  },
-  mapSubtext: {
-    fontSize: 12,
-    color: "#888",
-    textAlign: "center",
-    marginTop: 2,
-  },
-  coordsText: {
-    fontSize: 10,
-    color: "#666",
-    textAlign: "center",
-    marginTop: 4,
-    fontFamily: "monospace",
+  marker: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: "#FF0000",
+    borderWidth: 2,
+    borderColor: "#FFFFFF",
   },
   resultsContainer: {
     flex: 1,
@@ -304,20 +290,6 @@ const styles = StyleSheet.create({
   resultText: {
     fontSize: 14,
     marginLeft: 12,
-    flex: 1,
-  },
-  warningContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 12,
-    backgroundColor: "#fff3cd",
-    borderRadius: 6,
-    marginTop: 8,
-  },
-  warningText: {
-    fontSize: 12,
-    color: "#856404",
-    marginLeft: 8,
     flex: 1,
   },
 });

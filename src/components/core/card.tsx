@@ -27,6 +27,7 @@ const Card: React.FC<ICardProps> = ({
       backgroundColor: backgroundColor ?? themeBackground,
       color: color ?? themeColor,
       borderRadius: 30,
+      overflow: "hidden",
       paddingLeft: 24,
       paddingRight: 10,
       paddingVertical: 15,

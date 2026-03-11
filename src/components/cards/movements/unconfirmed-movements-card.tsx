@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { ThemedText } from "@/src/components/core/themed-text";
 import {
   TouchableOpacity,
@@ -18,10 +18,9 @@ import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
 import type { Movement } from "@/src/state";
 import { MovementHelper } from "@/src/helpers/MovementHelper";
-import ContextMenu, {
-  IContextMenuOption,
-} from "@/src/components/ui/context-menu";
 import { useUpdateMovement } from "@/src/hooks/mutations/useUpdateMovement";
+import ModalPanel from "@/src/components/ui/modal-panel";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 const sortMovements = (movements: Movement[]) => {
   return movements?.sort((a, b) => {
@@ -45,6 +44,9 @@ const UnconfirmedMovementsCard: React.FC<UnconfirmedMovementsCardProps> = ({
   // React Query mutation
   const updateMovement = useUpdateMovement();
 
+  // Bottom sheet state for long press menu (portrait only)
+  const [selectedMovement, setSelectedMovement] = useState<Movement | null>(null);
+
   const handleMovementPress = (movement: Movement) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (onMovementPress) {
@@ -56,12 +58,6 @@ const UnconfirmedMovementsCard: React.FC<UnconfirmedMovementsCardProps> = ({
           movementId: movement.id,
         },
       });
-    }
-  };
-
-  const handleMenuOption = async (option: string, movement: Movement) => {
-    if (option === "Dismiss") {
-      handleDismissMovement(movement);
     }
   };
 
@@ -102,14 +98,6 @@ const UnconfirmedMovementsCard: React.FC<UnconfirmedMovementsCardProps> = ({
       },
     ]);
   };
-
-  const menuOptions: IContextMenuOption[] = [
-    {
-      label: "Dismiss",
-      icon: "close-circle-outline",
-      destructive: true,
-    },
-  ];
 
   const borderColor = useThemeColor(
     { light: "#F0F0F0", dark: "#333333" },
@@ -180,53 +168,116 @@ const UnconfirmedMovementsCard: React.FC<UnconfirmedMovementsCardProps> = ({
           const amount = movement.totalAmount;
 
           return (
-            <ContextMenu
+            <TouchableOpacity
               key={movement.id}
-              options={menuOptions}
-              selectedOption=""
-              onSelectOption={(option) => handleMenuOption(option, movement)}
+              onPress={() => handleMovementPress(movement)}
+              onLongPress={
+                !isLandscape
+                  ? () => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                      setSelectedMovement(movement);
+                    }
+                  : undefined
+              }
+              delayLongPress={300}
+              activeOpacity={0.6}
+              style={[
+                dynamicStyles.movementItem,
+                index === sortedMovements.length - 1 &&
+                  styles.lastMovementItem,
+              ]}
             >
-              <TouchableOpacity
-                onPress={() => handleMovementPress(movement)}
-                activeOpacity={0.6}
-                style={[
-                  dynamicStyles.movementItem,
-                  index === sortedMovements.length - 1 &&
-                    styles.lastMovementItem,
-                ]}
-              >
-                <View style={[styles.movementIcon, { backgroundColor: color }]}>
-                  <IconSymbol name={icon} size={20} color="#FFFFFF" />
-                </View>
-                <View style={styles.movementInfo}>
-                  <ThemedText style={styles.movementDate}>
-                    {formatDateForDisplay(movement.date, "it-IT")}
-                  </ThemedText>
-                  <ThemedText style={styles.movementDescription}>
-                    {movement.description}
-                  </ThemedText>
-                </View>
-                <View style={styles.rightSection}>
-                  <ThemedText
-                    style={[
-                      styles.movementAmount,
-                      amount > 0 ? dynamicStyles.positiveAmount : undefined,
-                    ]}
-                  >
-                    {amount > 0 ? "+" : ""}
-                    {amount.toFixed(2).replace(".", ",")}€
-                  </ThemedText>
-                  <IconSymbol
-                    name="chevron-right"
-                    size={20}
-                    color={subtextColor}
-                  />
-                </View>
-              </TouchableOpacity>
-            </ContextMenu>
+              <View style={[styles.movementIcon, { backgroundColor: color }]}>
+                <IconSymbol name={icon} size={20} color="#FFFFFF" />
+              </View>
+              <View style={styles.movementInfo}>
+                <ThemedText style={styles.movementDate}>
+                  {formatDateForDisplay(movement.date, "it-IT")}
+                </ThemedText>
+                <ThemedText style={styles.movementDescription}>
+                  {movement.description}
+                </ThemedText>
+              </View>
+              <View style={styles.rightSection}>
+                <ThemedText
+                  style={[
+                    styles.movementAmount,
+                    amount > 0 ? dynamicStyles.positiveAmount : undefined,
+                  ]}
+                >
+                  {amount > 0 ? "+" : ""}
+                  {amount.toFixed(2).replace(".", ",")}€
+                </ThemedText>
+                <IconSymbol
+                  name="chevron-right"
+                  size={20}
+                  color={subtextColor}
+                />
+              </View>
+            </TouchableOpacity>
           );
         })}
       </ScrollView>
+
+      {/* Bottom sheet for long press actions (portrait only) */}
+      <ModalPanel
+        isVisible={selectedMovement !== null}
+        onClose={() => setSelectedMovement(null)}
+        showConfirmButton={false}
+        showCancelButton={false}
+        maxHeight={280}
+      >
+        {selectedMovement && (
+          <>
+            <View style={styles.sheetHeader}>
+              <View style={styles.sheetHeaderLeft}>
+                <ThemedText style={styles.sheetTitle} numberOfLines={1}>
+                  {selectedMovement.description}
+                </ThemedText>
+                <ThemedText style={[styles.sheetSubtitle, { color: subtextColor }]}>
+                  {formatDateForDisplay(selectedMovement.date, "it-IT")} • {selectedMovement.category}
+                </ThemedText>
+              </View>
+              <ThemedText
+                style={[
+                  styles.sheetAmount,
+                  selectedMovement.totalAmount > 0 && { color: positiveAmountColor },
+                ]}
+              >
+                {selectedMovement.totalAmount > 0 ? "+" : ""}
+                {selectedMovement.totalAmount.toFixed(2).replace(".", ",")}€
+              </ThemedText>
+            </View>
+            <View style={[styles.sheetDivider, { backgroundColor: borderColor }]} />
+            <View style={styles.menuOptions}>
+              <TouchableOpacity
+                style={styles.menuOption}
+                onPress={() => {
+                  const mov = selectedMovement;
+                  setSelectedMovement(null);
+                  handleMovementPress(mov);
+                }}
+              >
+                <Ionicons name="checkmark-circle-outline" size={22} color={subtextColor} />
+                <ThemedText style={styles.menuOptionText}>Confirm Movement</ThemedText>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.menuOption}
+                onPress={() => {
+                  const mov = selectedMovement;
+                  setSelectedMovement(null);
+                  handleDismissMovement(mov);
+                }}
+              >
+                <Ionicons name="close-circle-outline" size={22} color="#DC3545" />
+                <ThemedText style={[styles.menuOptionText, { color: "#DC3545" }]}>
+                  Dismiss Movement
+                </ThemedText>
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
+      </ModalPanel>
     </Card>
   );
 };
@@ -283,6 +334,48 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 14,
     textAlign: "center",
+  },
+  sheetHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 12,
+  },
+  sheetHeaderLeft: {
+    flex: 1,
+    marginRight: 16,
+  },
+  sheetTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    textTransform: "capitalize",
+  },
+  sheetSubtitle: {
+    fontSize: 13,
+    marginTop: 2,
+    textTransform: "capitalize",
+  },
+  sheetAmount: {
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  sheetDivider: {
+    height: 1,
+    marginBottom: 8,
+  },
+  menuOptions: {
+    gap: 4,
+  },
+  menuOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 14,
+    paddingHorizontal: 8,
+    gap: 12,
+  },
+  menuOptionText: {
+    fontSize: 17,
+    fontWeight: "500",
   },
 });
 

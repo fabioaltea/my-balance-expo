@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { ThemedText } from "../../core/themed-text.native";
 import {
   TouchableOpacity,
@@ -24,6 +24,8 @@ import { MovementHelper } from "@/src/helpers/MovementHelper";
 import { isDateInRange, parseDateFromDDMMYYYY } from "@/src/utils/dateUtils";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useDeleteMovement } from "@/src/hooks/mutations/useDeleteMovement";
+import ModalPanel from "@/src/components/ui/modal-panel";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 type BadgeStatus = "upcoming" | "soon" | "today" | "overdue" | null;
 
@@ -54,6 +56,9 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
 
   // React Query mutation
   const deleteMovement = useDeleteMovement();
+
+  // Bottom sheet state for long press menu (portrait only)
+  const [selectedMovement, setSelectedMovement] = useState<Movement | null>(null);
 
   // Calculate the expected date object for a pending recurrence
   const getExpectedDateObj = (pending: PendingRecurrence): Date | null => {
@@ -374,53 +379,63 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
             const hasPending = badgeStatus !== null;
 
             return (
-              <View key={movement.recurrenceId || movement.id}>
-                <TouchableOpacity
-                  onPress={() => handleQuickAdd(movement)}
-                  activeOpacity={0.6}
-                  style={[
-                    styles.recurringItem,
-                    dynamicStyles.itemBorder,
-                    index === sortedMovements.length - 1 && styles.lastItem,
-                  ]}
+              <TouchableOpacity
+                key={movement.recurrenceId || movement.id}
+                onPress={() => handleQuickAdd(movement)}
+                onLongPress={
+                  !isLandscape
+                    ? () => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                        setSelectedMovement(movement);
+                      }
+                    : undefined
+                }
+                delayLongPress={300}
+                activeOpacity={0.6}
+                style={[
+                  styles.recurringItem,
+                  dynamicStyles.itemBorder,
+                  index === sortedMovements.length - 1 && styles.lastItem,
+                ]}
+              >
+                <View
+                  style={[styles.iconContainer, { backgroundColor: color }]}
                 >
-                  <View
-                    style={[styles.iconContainer, { backgroundColor: color }]}
+                  <IconSymbol name={icon} size={20} color="#FFFFFF" />
+                </View>
+                <View style={styles.itemInfo}>
+                  <ThemedText
+                    style={styles.itemDescription}
+                    numberOfLines={1}
                   >
-                    <IconSymbol name={icon} size={20} color="#FFFFFF" />
-                  </View>
-                  <View style={styles.itemInfo}>
+                    {movement.description}
+                  </ThemedText>
+                  <ThemedText
+                    style={[styles.itemSubtitle, { color: subtextColor }]}
+                  >
+                    {hasPending
+                      ? getSubtitleText(badgeStatus, pending, amount)
+                      : `${formatAmount(amount)} • ${occurrencesInPeriod} occurrence${occurrencesInPeriod !== 1 ? "s" : ""} this period`}
+                  </ThemedText>
+                </View>
+                {hasPending && (
+                  <View
+                    style={[
+                      styles.statusBadge,
+                      { backgroundColor: getBadgeColor(badgeStatus) },
+                    ]}
+                  >
                     <ThemedText
-                      style={styles.itemDescription}
-                      numberOfLines={1}
-                    >
-                      {movement.description}
-                    </ThemedText>
-                    <ThemedText
-                      style={[styles.itemSubtitle, { color: subtextColor }]}
-                    >
-                      {hasPending
-                        ? getSubtitleText(badgeStatus, pending, amount)
-                        : `${formatAmount(amount)} • ${occurrencesInPeriod} occurrence${occurrencesInPeriod !== 1 ? "s" : ""} this period`}
-                    </ThemedText>
-                  </View>
-                  {hasPending && (
-                    <View
                       style={[
-                        styles.statusBadge,
-                        { backgroundColor: getBadgeColor(badgeStatus) },
+                        styles.statusBadgeText,
+                        { color: getBadgeTextColor(badgeStatus) },
                       ]}
                     >
-                      <ThemedText
-                        style={[
-                          styles.statusBadgeText,
-                          { color: getBadgeTextColor(badgeStatus) },
-                        ]}
-                      >
-                        {getBadgeLabel(badgeStatus, pending)}
-                      </ThemedText>
-                    </View>
-                  )}
+                      {getBadgeLabel(badgeStatus, pending)}
+                    </ThemedText>
+                  </View>
+                )}
+                {isLandscape && (
                   <View style={styles.menuButton}>
                     <MaterialIcons
                       name="more-vert"
@@ -453,12 +468,83 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
                       </select>
                     )}
                   </View>
-                </TouchableOpacity>
-              </View>
+                )}
+              </TouchableOpacity>
             );
+
           },
         )}
       </ScrollView>
+
+      {/* Bottom sheet for long press actions (portrait only) */}
+      <ModalPanel
+        isVisible={selectedMovement !== null}
+        onClose={() => setSelectedMovement(null)}
+        showConfirmButton={false}
+        showCancelButton={false}
+        maxHeight={320}
+      >
+        {selectedMovement && (
+          <>
+            <View style={styles.sheetHeader}>
+              <View style={styles.sheetHeaderLeft}>
+                <ThemedText style={styles.sheetTitle} numberOfLines={1}>
+                  {selectedMovement.description}
+                </ThemedText>
+                <ThemedText style={[styles.sheetSubtitle, { color: subtextColor }]}>
+                  Recurring • {selectedMovement.category}
+                </ThemedText>
+              </View>
+              <ThemedText
+                style={[
+                  styles.sheetAmount,
+                  selectedMovement.totalAmount > 0 && { color: "#107c2b" },
+                ]}
+              >
+                {formatAmount(selectedMovement.totalAmount)}
+              </ThemedText>
+            </View>
+            <View style={[styles.sheetDivider, { backgroundColor: borderColor }]} />
+            <View style={styles.menuOptions}>
+              <TouchableOpacity
+                style={styles.menuOption}
+                onPress={() => {
+                  const mov = selectedMovement;
+                  setSelectedMovement(null);
+                  handleQuickAdd(mov);
+                }}
+              >
+                <Ionicons name="add-circle-outline" size={22} color={subtextColor} />
+                <ThemedText style={styles.menuOptionText}>Insert Movement</ThemedText>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.menuOption}
+                onPress={() => {
+                  const mov = selectedMovement;
+                  setSelectedMovement(null);
+                  handleMenuAction(mov, "edit");
+                }}
+              >
+                <Ionicons name="create-outline" size={22} color={subtextColor} />
+                <ThemedText style={styles.menuOptionText}>Edit Recurrence</ThemedText>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.menuOption}
+                onPress={() => {
+                  const mov = selectedMovement;
+                  setSelectedMovement(null);
+                  handleMenuAction(mov, "delete");
+                }}
+              >
+                <Ionicons name="trash-outline" size={22} color="#DC3545" />
+                <ThemedText style={[styles.menuOptionText, { color: "#DC3545" }]}>
+                  Delete Recurrence
+                </ThemedText>
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
+      </ModalPanel>
     </Card>
   );
 };
@@ -522,6 +608,48 @@ const styles = StyleSheet.create({
     padding: 6,
     borderRadius: 20,
     marginLeft: 4,
+  },
+  sheetHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 12,
+  },
+  sheetHeaderLeft: {
+    flex: 1,
+    marginRight: 16,
+  },
+  sheetTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    textTransform: "capitalize",
+  },
+  sheetSubtitle: {
+    fontSize: 13,
+    marginTop: 2,
+    textTransform: "capitalize",
+  },
+  sheetAmount: {
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  sheetDivider: {
+    height: 1,
+    marginBottom: 8,
+  },
+  menuOptions: {
+    gap: 4,
+  },
+  menuOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 14,
+    paddingHorizontal: 8,
+    gap: 12,
+  },
+  menuOptionText: {
+    fontSize: 17,
+    fontWeight: "500",
   },
 });
 

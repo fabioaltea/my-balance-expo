@@ -1,17 +1,21 @@
 import React, { useEffect, useState } from "react";
 import { ThemedText } from "@/src/components/core/themed-text";
-import { TouchableOpacity, StyleSheet, View, ScrollView } from "react-native";
+import { TouchableOpacity, StyleSheet, View, ScrollView, Alert } from "react-native";
 import IconSymbol from "@/src/components/ui/icon-symbol";
 import Card from "@/src/components/core/card";
 import ChartSkeleton from "@/src/components/charts/chart-skeleton";
 import { useThemeColor } from "@/src/hooks/use-theme-color";
 import { useDataContext } from "@/src/state/DataProvider";
+import { useAuthContext } from "@/src/state/AuthProvider";
 import { usePlatformContext } from "@//src/state/PlatformProvider";
 import { formatDateForDisplay, compareDates } from "@/src/utils/dateUtils";
 import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
 import type { Movement } from "@/src/state";
 import { MovementHelper } from "@/src/helpers/MovementHelper";
+import { useDeleteMovement } from "@/src/hooks/mutations/useDeleteMovement";
+import ModalPanel from "@/src/components/ui/modal-panel";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 const styles = StyleSheet.create({
   // Movements
@@ -67,6 +71,48 @@ const styles = StyleSheet.create({
     color: "inherit",
     opacity: 0.6,
   },
+  sheetHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 12,
+  },
+  sheetHeaderLeft: {
+    flex: 1,
+    marginRight: 16,
+  },
+  sheetTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    textTransform: "capitalize",
+  },
+  sheetSubtitle: {
+    fontSize: 13,
+    marginTop: 2,
+    textTransform: "capitalize",
+  },
+  sheetAmount: {
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  sheetDivider: {
+    height: 1,
+    marginBottom: 8,
+  },
+  menuOptions: {
+    gap: 4,
+  },
+  menuOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 14,
+    paddingHorizontal: 8,
+    gap: 12,
+  },
+  menuOptionText: {
+    fontSize: 17,
+    fontWeight: "500",
+  },
 });
 
 const sortMovements = (movements: Movement[]) => {
@@ -91,12 +137,42 @@ const MovementsCard: React.FC<MovementsCardProps> = ({
   onMovementPress,
 }) => {
   const { isLoading, categories } = useDataContext();
+  const { selectedSpreadsheetId } = useAuthContext();
   const [recentMovements, setRecentMovements] = useState(
     sortMovements(movements),
   );
   const { orientation } = usePlatformContext();
-
   const isLandscape = orientation === "landscape";
+
+  // Bottom sheet state for long press menu (portrait only)
+  const [selectedMovement, setSelectedMovement] = useState<Movement | null>(null);
+
+  // React Query mutation
+  const deleteMovement = useDeleteMovement();
+
+  const handleDeleteMovement = async (movement: Movement) => {
+    if (!selectedSpreadsheetId) return;
+    Alert.alert(
+      "Delete movement?",
+      "This action cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteMovement.mutateAsync({ movementId: movement.id });
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            } catch (error) {
+              console.error("Error deleting movement:", error);
+              Alert.alert("Error", "Failed to delete movement");
+            }
+          },
+        },
+      ],
+    );
+  };
 
   const handleMovementPress = (movement: Movement) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -131,6 +207,10 @@ const MovementsCard: React.FC<MovementsCardProps> = ({
   const positiveAmountColor = useThemeColor(
     { light: "#107c2bff", dark: "#34C759" },
     "tint",
+  );
+  const subtextColor = useThemeColor(
+    { light: "#888", dark: "#999" },
+    "tabIconDefault",
   );
 
   const dynamicStyles = StyleSheet.create({
@@ -208,6 +288,15 @@ const MovementsCard: React.FC<MovementsCardProps> = ({
             <TouchableOpacity
               key={movement.id}
               onPress={() => handleMovementPress(movement)}
+              onLongPress={
+                !isLandscape
+                  ? () => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                      setSelectedMovement(movement);
+                    }
+                  : undefined
+              }
+              delayLongPress={300}
               style={[
                 dynamicStyles.movementItem,
                 index === recentMovements.length - 1 && styles.lastMovementItem,
@@ -237,6 +326,66 @@ const MovementsCard: React.FC<MovementsCardProps> = ({
           );
         })}
       </ScrollView>
+
+      {/* Bottom sheet for long press actions (portrait only) */}
+      <ModalPanel
+        isVisible={selectedMovement !== null}
+        onClose={() => setSelectedMovement(null)}
+        showConfirmButton={false}
+        showCancelButton={false}
+        maxHeight={260}
+      >
+        {selectedMovement && (
+          <>
+            <View style={styles.sheetHeader}>
+              <View style={styles.sheetHeaderLeft}>
+                <ThemedText style={styles.sheetTitle} numberOfLines={1}>
+                  {selectedMovement.description}
+                </ThemedText>
+                <ThemedText style={[styles.sheetSubtitle, { color: subtextColor }]}>
+                  {formatDateForDisplay(selectedMovement.date, "it-IT")} • {selectedMovement.category}
+                </ThemedText>
+              </View>
+              <ThemedText
+                style={[
+                  styles.sheetAmount,
+                  selectedMovement.totalAmount > 0 && { color: positiveAmountColor },
+                ]}
+              >
+                {selectedMovement.totalAmount > 0 ? "+" : ""}
+                {selectedMovement.totalAmount.toFixed(2).replace(".", ",")}€
+              </ThemedText>
+            </View>
+            <View style={[styles.sheetDivider, { backgroundColor: borderColor }]} />
+            <View style={styles.menuOptions}>
+              <TouchableOpacity
+                style={styles.menuOption}
+                onPress={() => {
+                  const mov = selectedMovement;
+                  setSelectedMovement(null);
+                  handleMovementPress(mov);
+                }}
+              >
+                <Ionicons name="create-outline" size={22} color={subtextColor} />
+                <ThemedText style={styles.menuOptionText}>Edit</ThemedText>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.menuOption}
+                onPress={() => {
+                  const mov = selectedMovement;
+                  setSelectedMovement(null);
+                  handleDeleteMovement(mov);
+                }}
+              >
+                <Ionicons name="trash-outline" size={22} color="#DC3545" />
+                <ThemedText style={[styles.menuOptionText, { color: "#DC3545" }]}>
+                  Delete
+                </ThemedText>
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
+      </ModalPanel>
     </Card>
   );
 };

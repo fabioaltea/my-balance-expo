@@ -63,6 +63,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   web: {
     output: "static",
     favicon: "./assets/images/favicon.png",
+    title:"My Balance",
   },
   plugins: [
     "expo-router",

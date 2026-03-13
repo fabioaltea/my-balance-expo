@@ -5,6 +5,7 @@ import {
   ThemeProvider,
 } from "@react-navigation/native";
 import { Stack } from "expo-router";
+import Head from "expo-router/head";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 
@@ -193,6 +194,10 @@ const styles = StyleSheet.create({
 export default function RootLayout() {
   return (
     <PlatformProvider>
+      <Head>
+        <title>My Balance</title>
+        <link rel="icon" type="image/png" href="/favicon.png" />
+      </Head>
       <QueryProvider>
         <AuthProvider>
           <AppRouter />

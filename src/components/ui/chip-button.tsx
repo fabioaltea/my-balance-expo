@@ -159,6 +159,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "500",
     textAlign: "center",
+    wordWrap: "normal",
   },
   badge: {
     position: "absolute",

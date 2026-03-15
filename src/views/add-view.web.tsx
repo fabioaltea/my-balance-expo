@@ -16,7 +16,15 @@ import { formatDateToDDMMYYYY, parseDateFromDDMMYYYY } from "@/src/utils/dateUti
 import { useRouter } from "expo-router";
 import { ITransaction } from "@/src/components/ui/transactions";
 import TransactionsWeb from "@/src/components/ui/transactions.web";
-import { useAddMovement, useUpdateMovement, useDeleteMovement } from "@/src/hooks/mutations";
+import { useSpreadsheetMutation } from "@/src/hooks/useSpreadsheetMutation";
+import { TransactionsApiHelper } from "@/src/helpers/TransactionsApiHelper";
+import {
+  TransactionsMutationHelpers,
+  type CreateMovementData,
+  type UpdateMovementData,
+  type DeleteMovementData,
+  type OptimisticSnapshot,
+} from "@/src/helpers/TransactionsMutationHelpers";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import LocationPicker, { ILocation } from "@/src/components/ui/location-picker";
 import RecurrencePickerWeb from "@/src/components/ui/recurrence-picker.web";
@@ -47,9 +55,27 @@ const AddView: React.FC<AddViewProps> = ({
     useDataContext();
 
   // React Query mutations
-  const addMovement = useAddMovement();
-  const updateMovement = useUpdateMovement();
-  const deleteMovement = useDeleteMovement();
+  const addMovement = useSpreadsheetMutation<CreateMovementData, OptimisticSnapshot>({
+    mutationFn: (spreadsheetId, data) => TransactionsApiHelper.createTransaction(spreadsheetId, data),
+    onMutate: (qc, data) => TransactionsMutationHelpers.optimisticAddMovement(qc, data),
+    onError: (qc, ctx) => TransactionsMutationHelpers.rollback(qc, ctx),
+    onSuccess: (qc) => TransactionsMutationHelpers.invalidateMovementCaches(qc),
+  });
+  const updateMovement = useSpreadsheetMutation<UpdateMovementData, OptimisticSnapshot>({
+    mutationFn: (spreadsheetId, data) => {
+      const { movementId, ...updates } = data;
+      return TransactionsApiHelper.updateMovement(spreadsheetId, movementId, updates);
+    },
+    onMutate: (qc, data) => TransactionsMutationHelpers.optimisticUpdateMovement(qc, data),
+    onError: (qc, ctx) => TransactionsMutationHelpers.rollback(qc, ctx),
+    onSuccess: (qc) => TransactionsMutationHelpers.invalidateMovementCaches(qc),
+  });
+  const deleteMovement = useSpreadsheetMutation<DeleteMovementData, OptimisticSnapshot>({
+    mutationFn: (spreadsheetId, data) => TransactionsApiHelper.deleteMovement(spreadsheetId, data.movementId),
+    onMutate: (qc, data) => TransactionsMutationHelpers.optimisticDeleteMovement(qc, data),
+    onError: (qc, ctx) => TransactionsMutationHelpers.rollback(qc, ctx),
+    onSuccess: (qc) => TransactionsMutationHelpers.invalidateMovementCaches(qc),
+  });
 
   // Find the movement being edited
   const editingMovement = editingMovementId

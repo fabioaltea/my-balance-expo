@@ -12,7 +12,9 @@ import type { Account } from "@/src/state";
 import * as DocumentPicker from "expo-document-picker";
 import * as Crypto from "expo-crypto";
 import { OCRHelper } from "@/src/helpers/OCRHelper.web";
-import { useAddMovement } from "@/src/hooks/mutations";
+import { useSpreadsheetMutation } from "@/src/hooks/useSpreadsheetMutation";
+import { TransactionsApiHelper } from "@/src/helpers/TransactionsApiHelper";
+import { TransactionsMutationHelpers, type CreateMovementData, type OptimisticSnapshot } from "@/src/helpers/TransactionsMutationHelpers";
 
 // Layout components
 import { LayoutContainer } from "@/src/components/layout/layout-container";
@@ -36,15 +38,8 @@ import {
   StackedBarChart,
 } from "@/src/components/charts";
 import Card from "@/src/components/core/card";
-import {
-  useIncomeExpenses,
-  IncomeExpenseData,
-} from "@/src/hooks/useIncomeExpenses";
-import {
-  useCategoryAccountBreakdown,
-  PeriodBreakdownData,
-} from "@/src/hooks/useCategoryAccountBreakdown";
-import { useMonthlyBalances, MonthlyData } from "@/src/hooks/useMonthlyBalances";
+import { ChartDataHelper } from "@/src/helpers/ChartDataHelper";
+import type { MonthlyData, IncomeExpenseData, PeriodBreakdownData } from "@/src/types/charts";
 
 // View components for drawer content
 import AddView from "@/src/views/add-view";
@@ -88,7 +83,12 @@ export function LandscapeLayout() {
   } = useDataContext();
 
   const { user, logout } = useAuthContext();
-  const addMovement = useAddMovement();
+  const addMovement = useSpreadsheetMutation<CreateMovementData, OptimisticSnapshot>({
+    mutationFn: (spreadsheetId, data) => TransactionsApiHelper.createTransaction(spreadsheetId, data),
+    onMutate: (qc, data) => TransactionsMutationHelpers.optimisticAddMovement(qc, data),
+    onError: (qc, ctx) => TransactionsMutationHelpers.rollback(qc, ctx),
+    onSuccess: (qc) => TransactionsMutationHelpers.invalidateMovementCaches(qc),
+  });
 
   const availableAccounts = useMemo(() => {
     const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
@@ -170,18 +170,15 @@ export function LandscapeLayout() {
 
   // Chart data hooks - load all available periods for scrollable charts
   // Monthly data
-  const balanceHistoryMonthly = useMonthlyBalances({
-    transactions,
-    accounts,
-    monthsToShow: chartMonthsToShow,
-    monthOffset: 0,
-  });
+  const balanceHistoryMonthly = useMemo(
+    () => ChartDataHelper.computeMonthlyBalances(transactions, accounts, chartMonthsToShow, 0),
+    [transactions, accounts, chartMonthsToShow],
+  );
 
-  const incomeExpenseMonthly = useIncomeExpenses({
-    movements,
-    monthsToShow: chartMonthsToShow,
-    monthOffset: 0,
-  });
+  const incomeExpenseMonthly = useMemo(
+    () => ChartDataHelper.computeIncomeExpenses(movements, chartMonthsToShow, 0),
+    [movements, chartMonthsToShow],
+  );
 
   const [breakdownType, setBreakdownType] = useState<"expense" | "income">(
     "expense",
@@ -190,15 +187,10 @@ export function LandscapeLayout() {
     "category" | "account"
   >("category");
 
-  const breakdownMonthly = useCategoryAccountBreakdown({
-    movements,
-    transactions,
-    accounts,
-    type: breakdownType,
-    groupBy: breakdownGroupBy,
-    monthsToShow: chartMonthsToShow,
-    monthOffset: 0,
-  });
+  const breakdownMonthly = useMemo(
+    () => ChartDataHelper.computeCategoryAccountBreakdown(movements, transactions, accounts, breakdownType, breakdownGroupBy, chartMonthsToShow, 0),
+    [movements, transactions, accounts, breakdownType, breakdownGroupBy, chartMonthsToShow],
+  );
 
   // Aggregate monthly data into yearly for "years" view mode
   const balanceHistoryYearly = useMemo((): MonthlyData[] => {

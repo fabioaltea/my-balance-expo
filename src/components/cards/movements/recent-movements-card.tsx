@@ -13,7 +13,9 @@ import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
 import type { Movement } from "@/src/state";
 import { MovementHelper } from "@/src/helpers/MovementHelper";
-import { useDeleteMovement } from "@/src/hooks/mutations/useDeleteMovement";
+import { useSpreadsheetMutation } from "@/src/hooks/useSpreadsheetMutation";
+import { TransactionsApiHelper } from "@/src/helpers/TransactionsApiHelper";
+import { TransactionsMutationHelpers, type DeleteMovementData, type OptimisticSnapshot } from "@/src/helpers/TransactionsMutationHelpers";
 import ModalPanel from "@/src/components/ui/modal-panel";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
@@ -148,7 +150,12 @@ const MovementsCard: React.FC<MovementsCardProps> = ({
   const [selectedMovement, setSelectedMovement] = useState<Movement | null>(null);
 
   // React Query mutation
-  const deleteMovement = useDeleteMovement();
+  const deleteMovement = useSpreadsheetMutation<DeleteMovementData, OptimisticSnapshot>({
+    mutationFn: (spreadsheetId, data) => TransactionsApiHelper.deleteMovement(spreadsheetId, data.movementId),
+    onMutate: (qc, data) => TransactionsMutationHelpers.optimisticDeleteMovement(qc, data),
+    onError: (qc, ctx) => TransactionsMutationHelpers.rollback(qc, ctx),
+    onSuccess: (qc) => TransactionsMutationHelpers.invalidateMovementCaches(qc),
+  });
 
   const handleDeleteMovement = async (movement: Movement) => {
     if (!selectedSpreadsheetId) return;

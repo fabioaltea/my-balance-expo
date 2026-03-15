@@ -16,7 +16,7 @@ import Pager from "@/src/components/ui/pager";
 import { DATE_RANGES } from "@/src/state";
 import { isDateInRange, detectPeriodType, parseDateFromDDMMYYYY } from "@/src/utils/dateUtils";
 import type { Account, Movement, IDateRange, PendingRecurrence } from "@/src/state";
-import type { MonthlyForecast } from "@/src/hooks/useMyBalanceData";
+import type { MonthlyForecast } from "@/src/types/models";
 import ViewModePicker from "@/src/components/ui/view-mode-picker";
 import SummaryCard from "@/src/components/cards/summary-card";
 import { useDataContext } from '@/src/state';

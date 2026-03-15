@@ -1,5 +1,5 @@
 import { useThemeColor } from "@/src/hooks/use-theme-color";
-import { MonthlyForecast } from "@/src/hooks/useMyBalanceData";
+import type { MonthlyForecast } from "@/src/types/models";
 import { useDataContext } from "@/src/state";
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";

@@ -8,8 +8,8 @@ import React, { useMemo, useRef, useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView } from "react-native";
 import * as Haptics from "expo-haptics";
 import { useThemeColor } from "@/src/hooks/use-theme-color";
-import { IncomeExpenseData } from "@/src/hooks/useIncomeExpenses";
-import { getShortMonthLabel } from "@/src/hooks/useMonthlyBalances";
+import type { IncomeExpenseData } from "@/src/types/charts";
+import { getShortMonthLabel } from "@/src/helpers/ChartDataHelper";
 
 interface IncomeExpenseChartProps {
   data: IncomeExpenseData[];

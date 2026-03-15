@@ -22,7 +22,7 @@ export type {
   PendingRecurrence,
   MonthlyForecast,
   AccountForecast,
-} from "../hooks/useMyBalanceData";
+} from "../types/models";
 
 // Date utilities
 export { DATE_RANGES } from "./AppState.types";

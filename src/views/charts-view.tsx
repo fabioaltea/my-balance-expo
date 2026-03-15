@@ -8,15 +8,11 @@ import {
   Text,
 } from "react-native";
 import { useDataContext } from "@/src/state/DataProvider";
-import { useMonthlyBalances, MonthlyData } from "@/src/hooks/useMonthlyBalances";
-import {
-  useIncomeExpenses,
-  IncomeExpenseData,
-} from "@/src/hooks/useIncomeExpenses";
-import {
-  useCategoryAccountBreakdown,
-  PeriodBreakdownData,
-} from "@/src/hooks/useCategoryAccountBreakdown";
+import { ChartDataHelper } from "@/src/helpers/ChartDataHelper";
+import { useIncomeExpenses } from "@/src/hooks/useIncomeExpenses";
+import type { MonthlyData } from "@/src/types/charts";
+import type { IncomeExpenseData } from "@/src/types/charts";
+import type { PeriodBreakdownData } from "@/src/types/charts";
 import {
   StackedBarChart,
   IncomeExpenseChart,
@@ -96,20 +92,16 @@ const ChartsView: React.FC = () => {
     useState<PeriodBreakdownData | null>(null);
 
   // Calculate monthly balances with offset
-  const monthlyData = useMonthlyBalances({
-    transactions,
-    accounts,
-    monthsToShow: MONTHS_TO_SHOW,
-    monthOffset,
-  });
+  const monthlyData = useMemo(
+    () => ChartDataHelper.computeMonthlyBalances(transactions, accounts, MONTHS_TO_SHOW, monthOffset),
+    [transactions, accounts, monthOffset],
+  );
 
   // Calculate yearly data (fetch more months to aggregate into years)
-  const yearlyRawData = useMonthlyBalances({
-    transactions,
-    accounts,
-    monthsToShow: YEARS_TO_SHOW * 12,
-    monthOffset: yearOffset * 12,
-  });
+  const yearlyRawData = useMemo(
+    () => ChartDataHelper.computeMonthlyBalances(transactions, accounts, YEARS_TO_SHOW * 12, yearOffset * 12),
+    [transactions, accounts, yearOffset],
+  );
 
   // Aggregate monthly data into yearly data
   const yearlyData = useMemo((): MonthlyData[] => {
@@ -179,25 +171,15 @@ const ChartsView: React.FC = () => {
     viewMode === "months" ? incomeExpenseMonthly : incomeExpenseYearly;
 
   // Calculate expense breakdown data
-  const expenseBreakdownMonthly = useCategoryAccountBreakdown({
-    movements,
-    transactions,
-    accounts,
-    type: "expense",
-    groupBy: expenseGroupBy,
-    monthsToShow: MONTHS_TO_SHOW,
-    monthOffset,
-  });
+  const expenseBreakdownMonthly = useMemo(
+    () => ChartDataHelper.computeCategoryAccountBreakdown(movements, transactions, accounts, "expense", expenseGroupBy, MONTHS_TO_SHOW, monthOffset),
+    [movements, transactions, accounts, expenseGroupBy, monthOffset],
+  );
 
-  const expenseBreakdownYearlyRaw = useCategoryAccountBreakdown({
-    movements,
-    transactions,
-    accounts,
-    type: "expense",
-    groupBy: expenseGroupBy,
-    monthsToShow: YEARS_TO_SHOW * 12,
-    monthOffset: yearOffset * 12,
-  });
+  const expenseBreakdownYearlyRaw = useMemo(
+    () => ChartDataHelper.computeCategoryAccountBreakdown(movements, transactions, accounts, "expense", expenseGroupBy, YEARS_TO_SHOW * 12, yearOffset * 12),
+    [movements, transactions, accounts, expenseGroupBy, yearOffset],
+  );
 
   // Aggregate expense breakdown into yearly
   const expenseBreakdownYearly = useMemo((): PeriodBreakdownData[] => {
@@ -242,25 +224,15 @@ const ChartsView: React.FC = () => {
     viewMode === "months" ? expenseBreakdownMonthly : expenseBreakdownYearly;
 
   // Calculate income breakdown data
-  const incomeBreakdownMonthly = useCategoryAccountBreakdown({
-    movements,
-    transactions,
-    accounts,
-    type: "income",
-    groupBy: incomeGroupBy,
-    monthsToShow: MONTHS_TO_SHOW,
-    monthOffset,
-  });
+  const incomeBreakdownMonthly = useMemo(
+    () => ChartDataHelper.computeCategoryAccountBreakdown(movements, transactions, accounts, "income", incomeGroupBy, MONTHS_TO_SHOW, monthOffset),
+    [movements, transactions, accounts, incomeGroupBy, monthOffset],
+  );
 
-  const incomeBreakdownYearlyRaw = useCategoryAccountBreakdown({
-    movements,
-    transactions,
-    accounts,
-    type: "income",
-    groupBy: incomeGroupBy,
-    monthsToShow: YEARS_TO_SHOW * 12,
-    monthOffset: yearOffset * 12,
-  });
+  const incomeBreakdownYearlyRaw = useMemo(
+    () => ChartDataHelper.computeCategoryAccountBreakdown(movements, transactions, accounts, "income", incomeGroupBy, YEARS_TO_SHOW * 12, yearOffset * 12),
+    [movements, transactions, accounts, incomeGroupBy, yearOffset],
+  );
 
   // Aggregate income breakdown into yearly
   const incomeBreakdownYearly = useMemo((): PeriodBreakdownData[] => {

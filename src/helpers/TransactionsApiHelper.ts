@@ -1,6 +1,40 @@
 import { HttpHelper, AuthenticationError } from "./HttpHelper";
+import type { Transaction } from "../types/models";
 
 export class TransactionsApiHelper {
+  /**
+   * Parse an amount string (euro format with dots/commas) to a number.
+   */
+  static parseAmount(amountStr: string): number {
+    const cleaned =
+      amountStr
+        ?.replace?.(/[€\s]/g, "")
+        ?.replace(".", "")
+        .replace?.(",", ".") || "0";
+    return parseFloat(cleaned);
+  }
+
+  /**
+   * Transform raw backend transaction data to typed Transaction.
+   */
+  static rawToTransactionData(raw: any): Transaction {
+    const amount = TransactionsApiHelper.parseAmount(raw.amount || "0");
+
+    return {
+      movementId: raw.movementId,
+      transactionId: raw.transactionId || raw.id || Math.random().toString(),
+      date: raw.date,
+      description: raw.description || "",
+      amount: Math.abs(amount),
+      type: amount >= 0 ? ("income" as const) : ("expense" as const),
+      account: raw.account || "",
+      category: raw.category || "",
+      location: raw.location || "",
+      recurrenceId: raw.recurrenceId || undefined,
+      recurrencePattern: raw.recurrencePattern || undefined,
+      status: raw.status || "Confirmed",
+    };
+  }
   /**
    * Get all transactions for a specific spreadsheet
    */

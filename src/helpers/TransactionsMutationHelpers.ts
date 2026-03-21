@@ -11,6 +11,7 @@ export interface OptimisticSnapshot {
 }
 
 interface InputTransaction {
+  transactionId?: string; // Se presente, aggiorna la transaction esistente
   amount: string;
   account: string;
   type: "in" | "out";
@@ -61,7 +62,7 @@ function buildTransactions(
 ): Transaction[] {
   return inputs.map((t, index) => ({
     movementId,
-    transactionId: `${movementId}-${Date.now()}-${index}`,
+    transactionId: t.transactionId ?? `${movementId}-${Date.now()}-${index}`,
     date: metadata.date,
     description: metadata.description,
     amount: Math.abs(FunctionHelper.ConvertCurrencyToNumber(t.amount)),

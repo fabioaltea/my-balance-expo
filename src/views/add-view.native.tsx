@@ -449,6 +449,7 @@ const AddView: React.FC<AddViewProps> = ({
 
     const formattedDate = formatDateToDDMMYYYY(selectedDate);
     const transactionsData = validTransactions.map((transaction) => ({
+      ...(transaction.transactionID ? { transactionId: transaction.transactionID } : {}),
       amount:
         transaction.type === "income"
           ? String(transaction.amount).replace(".", ",")

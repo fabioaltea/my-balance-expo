@@ -9,6 +9,7 @@ interface AuthContextType extends AuthState {
   clearError: () => void;
   reloadData: () => Promise<void>;
   executeMigration: () => Promise<void>;
+  completeSetup: (spreadsheetId: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);

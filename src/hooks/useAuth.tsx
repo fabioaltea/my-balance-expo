@@ -6,11 +6,11 @@ import {
 } from "../helpers/AuthStorageHelper";
 import { ApiHelper } from "../helpers/ApiHelper";
 import { HttpHelper } from "../helpers/HttpHelper";
+import { AuthHelper } from "../helpers/AuthHelper";
 import { queryClient } from "../providers/QueryProvider";
 import * as WebBrowser from "expo-web-browser";
 import { makeRedirectUri } from "expo-auth-session";
 import * as AuthSession from "expo-auth-session";
-import * as Crypto from "expo-crypto";
 
 // Required for web OAuth - completes the auth session when the popup redirects back
 WebBrowser.maybeCompleteAuthSession();
@@ -83,7 +83,7 @@ export const useAuth = () => {
 
       await AuthStorageHelper.storeUser(profile.user);
 
-      if (profile.user.spreadsheetId) {
+      if (profile.user.spreadsheetId && profile.user.setupComplete) {
         console.log(
           "✅ User has spreadsheet configured:",
           profile.user.spreadsheetId
@@ -109,7 +109,7 @@ export const useAuth = () => {
           selectedSpreadsheetId: profile.user.spreadsheetId,
         });
       } else {
-        console.log("🆕 Quickstart mode - no spreadsheet configured");
+        console.log("🆕 Quickstart mode - setup not complete");
 
         setAuthState({
           isAuthenticated: true,
@@ -192,43 +192,6 @@ export const useAuth = () => {
     }
   }, [loadUserProfile]);
 
-  // PKCE utility functions for OAuth2 security - Following Google specifications
-  const generateCodeVerifier = () => {
-    // Generate ASCII string directly - RFC 7636 compliant characters only
-    const charset =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~";
-    let result = "";
-
-    // Generate 64 characters using Math.random for simplicity
-    for (let i = 0; i < 64; i++) {
-      result += charset.charAt(Math.floor(Math.random() * charset.length));
-    }
-
-    return result;
-  };
-
-  const generateCodeChallenge = async (verifier: string) => {
-    try {
-      // SHA256 the code verifier and encode as base64url
-      const hashBase64 = await Crypto.digestStringAsync(
-        Crypto.CryptoDigestAlgorithm.SHA256,
-        verifier,
-        { encoding: Crypto.CryptoEncoding.BASE64 }
-      );
-
-      // Convert BASE64 to BASE64URL (replace +/= with -_)
-      const challenge = hashBase64
-        .replace(/\+/g, "-")
-        .replace(/\//g, "_")
-        .replace(/=+$/, "");
-
-      return challenge;
-    } catch (error) {
-      console.error("❌ Error generating code challenge:", error);
-      throw error;
-    }
-  };
-
   // Google OAuth login - with PKCE implementation
   const loginWithGoogle = useCallback(async () => {
     try {
@@ -238,8 +201,8 @@ export const useAuth = () => {
       const isWeb = Platform.OS === "web";
 
       // Generate PKCE parameters
-      const codeVerifier = generateCodeVerifier();
-      const codeChallenge = await generateCodeChallenge(codeVerifier);
+      const codeVerifier = AuthHelper.generateCodeVerifier();
+      const codeChallenge = await AuthHelper.generateCodeChallenge(codeVerifier);
 
       // Use different client ID and redirect URI based on platform
       const clientId = isWeb
@@ -432,6 +395,17 @@ export const useAuth = () => {
     }
   }, [loadUserProfile]);
 
+  // Transition directly to dashboard after onboarding completes successfully
+  const completeSetup = useCallback((spreadsheetId: string) => {
+    queryClient.clear();
+    setAuthState((prev) => ({
+      ...prev,
+      mode: "dashboard",
+      dashboardReady: true,
+      selectedSpreadsheetId: spreadsheetId,
+    }));
+  }, []);
+
   return {
     ...authState,
     // Auth functions
@@ -441,5 +415,6 @@ export const useAuth = () => {
     clearError,
     reloadData: loadUserProfile,
     executeMigration,
+    completeSetup,
   };
 };

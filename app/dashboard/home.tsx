@@ -15,7 +15,9 @@ import { OCRHelper } from "@/src/helpers/OCRHelper";
 import { formatDateToDDMMYYYY } from "@/src/utils/dateUtils";
 import * as Crypto from "expo-crypto";
 import { ScreenView } from "@/src/components/core";
-import { useAddMovement } from "@/src/hooks/mutations/useAddMovement";
+import { useSpreadsheetMutation } from "@/src/hooks/useSpreadsheetMutation";
+import { TransactionsApiHelper } from "@/src/helpers/TransactionsApiHelper";
+import { TransactionsMutationHelpers, type CreateMovementData, type OptimisticSnapshot } from "@/src/helpers/TransactionsMutationHelpers";
 
 const contextMenuOptions: IContextMenuOption[] = [
   { label: "Fotocamera/Galleria", icon: "camera" },
@@ -23,7 +25,12 @@ const contextMenuOptions: IContextMenuOption[] = [
 ];
 
 export default function Home() {
-  const addMovement = useAddMovement();
+  const addMovement = useSpreadsheetMutation<CreateMovementData, OptimisticSnapshot>({
+    mutationFn: (spreadsheetId, data) => TransactionsApiHelper.createTransaction(spreadsheetId, data),
+    onMutate: (qc, data) => TransactionsMutationHelpers.optimisticAddMovement(qc, data),
+    onError: (qc, ctx) => TransactionsMutationHelpers.rollback(qc, ctx),
+    onSuccess: (qc) => TransactionsMutationHelpers.invalidateMovementCaches(qc),
+  });
 
   // Get data from centralized context
   const {

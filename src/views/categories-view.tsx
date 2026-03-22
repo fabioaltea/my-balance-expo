@@ -13,7 +13,7 @@ import { useThemeColor } from "@/src/hooks/use-theme-color";
 import Card from "@/src/components/core/card";
 import List from "@/src/components/ui/list";
 import ModalPanel from "@/src/components/ui/modal-panel";
-import { Category } from "@/src/hooks/useMyBalanceData";
+import type { Category } from "@/src/types/models";
 import * as Haptics from "expo-haptics";
 import IconSymbol, { IconName } from "@/src/components/ui/icon-symbol";
 import { DEFAULT_COLOR } from "@/src/constants/colors";

@@ -1,6 +1,24 @@
 import { HttpHelper, AuthenticationError } from "./HttpHelper";
+import type { Account } from "../types/models";
 
 export class AccountsApiHelper {
+  /**
+   * Transform raw backend account data to typed AccountData.
+   */
+  static rawToAccountData(raw: any): Account {
+    return {
+      accountId: raw.accountId || raw.id || Math.random().toString(),
+      name: raw.name || "",
+      balance:
+        typeof raw.balance === "number"
+          ? raw.balance
+          : parseFloat(
+              raw.balance?.replace?.(/[€\s]/g, "")?.replace?.(",", ".") || "0",
+            ),
+      color: raw.color || "#2F4F3F",
+      textColor: raw.textColor || "#FFFFFF",
+    };
+  }
   /**
    * Get all accounts for a specific spreadsheet
    */

@@ -18,7 +18,9 @@ import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
 import type { Movement } from "@/src/state";
 import { MovementHelper } from "@/src/helpers/MovementHelper";
-import { useUpdateMovement } from "@/src/hooks/mutations/useUpdateMovement";
+import { useSpreadsheetMutation } from "@/src/hooks/useSpreadsheetMutation";
+import { TransactionsApiHelper } from "@/src/helpers/TransactionsApiHelper";
+import { TransactionsMutationHelpers, type UpdateMovementData, type OptimisticSnapshot } from "@/src/helpers/TransactionsMutationHelpers";
 import ModalPanel from "@/src/components/ui/modal-panel";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
@@ -42,7 +44,15 @@ const UnconfirmedMovementsCard: React.FC<UnconfirmedMovementsCardProps> = ({
   const isLandscape = orientation === "landscape";
 
   // React Query mutation
-  const updateMovement = useUpdateMovement();
+  const updateMovement = useSpreadsheetMutation<UpdateMovementData, OptimisticSnapshot>({
+    mutationFn: (spreadsheetId, data) => {
+      const { movementId, ...updates } = data;
+      return TransactionsApiHelper.updateMovement(spreadsheetId, movementId, updates);
+    },
+    onMutate: (qc, data) => TransactionsMutationHelpers.optimisticUpdateMovement(qc, data),
+    onError: (qc, ctx) => TransactionsMutationHelpers.rollback(qc, ctx),
+    onSuccess: (qc) => TransactionsMutationHelpers.invalidateMovementCaches(qc),
+  });
 
   // Bottom sheet state for long press menu (portrait only)
   const [selectedMovement, setSelectedMovement] = useState<Movement | null>(null);

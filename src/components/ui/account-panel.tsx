@@ -1,27 +1,26 @@
 import React from "react";
 import { View, StyleSheet, ScrollView, Pressable } from "react-native";
-import IconSymbol, { IconName } from "@/src/components/ui/icon-symbol";
 import TextBox from "@/src/components/ui/text-box";
+import InlineCurrencyInput from "@/src/components/ui/inline-currency-input";
 import { COLOR_PALETTE, DEFAULT_COLOR } from "@/src/constants/colors";
-import { VALID_ICONS } from "@/src/constants/icons";
 import { ThemedText } from "../core/themed-text.native";
 
-interface CategoryPanelProps {
+interface AccountPanelProps {
   name: string;
-  selectedIcon: IconName;
+  balance: number;
   selectedColor: string;
   onNameChange?: (name: string) => void;
-  onIconChange: (icon: IconName) => void;
+  onBalanceChange?: (balance: number) => void;
   onColorChange: (color: string) => void;
   readonly?: boolean;
 }
 
-const CategoryPanel: React.FC<CategoryPanelProps> = ({
+const AccountPanel: React.FC<AccountPanelProps> = ({
   name,
-  selectedIcon,
+  balance,
   selectedColor,
   onNameChange,
-  onIconChange,
+  onBalanceChange,
   onColorChange,
   readonly = false,
 }) => {
@@ -29,24 +28,26 @@ const CategoryPanel: React.FC<CategoryPanelProps> = ({
     <ScrollView showsVerticalScrollIndicator={false}>
       {/* Name input */}
       {!readonly && onNameChange && (
-        <View style={styles.nameContainer}>
+        <View style={styles.fieldContainer}>
           <TextBox
             value={name}
             onChange={onNameChange}
-            label="Name"
-            placeholder="Category name"
+            label="Account name"
+            placeholder="e.g. Unicredit"
           />
         </View>
       )}
 
-      {/* Selected preview */}
-      {/* <View style={styles.previewContainer}>
-        <View
-          style={[styles.previewIcon, { backgroundColor: selectedColor }]}
-        >
-          <IconSymbol name={selectedIcon} size={32} color="#FFFFFF" />
+      {/* Current balance */}
+      {!readonly && onBalanceChange && (
+        <View style={styles.fieldContainer}>
+          <ThemedText style={styles.sectionTitle}>Current Balance</ThemedText>
+          <View style={{ flex: 1, justifyContent: "flex-end", alignItems:"center", flexDirection: "row", gap: 4 }}>
+            <InlineCurrencyInput value={balance} onChange={onBalanceChange} />
+            <ThemedText>€</ThemedText>
+          </View>
         </View>
-      </View> */}
+      )}
 
       {/* Color selection */}
       <ThemedText style={styles.sectionTitle}>Color</ThemedText>
@@ -69,42 +70,17 @@ const CategoryPanel: React.FC<CategoryPanelProps> = ({
         ))}
       </ScrollView>
 
-      {/* Icon selection */}
-      <ThemedText style={styles.sectionTitle}>Icon</ThemedText>
-      <View style={styles.iconGrid}>
-        {VALID_ICONS.map((icon) => (
-          <Pressable
-            key={icon}
-            onPress={() => onIconChange(icon as IconName)}
-            style={[
-              styles.iconItem,
-              selectedIcon === icon && styles.selectedItem,
-            ]}
-          >
-            <IconSymbol name={icon} size={28} color={selectedColor} />
-          </Pressable>
-        ))}
-      </View>
-
     </ScrollView>
   );
 };
 
-export default CategoryPanel;
+export default AccountPanel;
 
 const styles = StyleSheet.create({
-  nameContainer: {
+  fieldContainer: {
     marginBottom: 16,
-  },
-  previewContainer: {
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  previewIcon: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    justifyContent: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
   },
   sectionTitle: {
@@ -124,20 +100,6 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-  },
-  iconGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    paddingBottom: 40,
-    justifyContent: "center",
-  },
-  iconItem: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
   },
   selectedItem: {
     borderWidth: 3,

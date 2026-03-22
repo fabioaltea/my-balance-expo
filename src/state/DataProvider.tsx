@@ -1,6 +1,6 @@
 import React, { createContext, useContext, ReactNode } from "react";
-import {
-  useMyBalanceData,
+import { useMyBalanceData } from "../hooks/useMyBalanceData";
+import type {
   Transaction,
   Movement,
   Account,
@@ -8,7 +8,7 @@ import {
   PendingRecurrence,
   MonthlyForecast,
   AccountForecast,
-} from "../hooks/useMyBalanceData";
+} from "../types/models";
 import { useAuthContext } from "./AuthProvider";
 
 interface DataContextType {

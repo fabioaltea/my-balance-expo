@@ -5,10 +5,12 @@ import { useThemeColor } from '@/src/hooks/use-theme-color';
 import Card from '@/src/components/core/card';
 import List from '@/src/components/ui/list';
 import AccountModal from '@/src/components/ui/account-modal';
-import { Account } from '@/src/hooks/useMyBalanceData';
+import type { Account } from '@/src/types/models';
 import * as Haptics from 'expo-haptics';
 import { DEFAULT_COLOR, DEFAULT_TEXT_COLOR } from '@/src/constants/colors';
-import { useUpdateAccount } from '@/src/hooks/mutations';
+import { useSpreadsheetMutation } from '@/src/hooks/useSpreadsheetMutation';
+import { AccountsApiHelper } from '@/src/helpers/AccountsApiHelper';
+import { AccountsMutationHelpers, type UpdateAccountData, type AccountSnapshot } from '@/src/helpers/AccountsMutationHelpers';
 import { ThemedText } from '@/src/components/core/themed-text';
 
 interface AccountsViewProps {
@@ -28,7 +30,15 @@ const AccountsView: React.FC<AccountsViewProps> = ({
   selectedSpreadsheetId,
 }) => {
   // React Query mutation
-  const updateAccount = useUpdateAccount();
+  const updateAccount = useSpreadsheetMutation<UpdateAccountData, AccountSnapshot>({
+    mutationFn: (spreadsheetId, data) => {
+      const { accountId, ...updates } = data;
+      return AccountsApiHelper.updateAccount(spreadsheetId, accountId, updates);
+    },
+    onMutate: (qc, data) => AccountsMutationHelpers.optimisticUpdateAccount(qc, data),
+    onError: (qc, ctx) => AccountsMutationHelpers.rollbackAccounts(qc, ctx),
+    onSuccess: (qc, variables) => AccountsMutationHelpers.invalidateAccountCaches(qc, !!variables.name),
+  });
   const menuBackground = useThemeColor({}, 'menuBackground');
   const scrollY = useRef(new Animated.Value(0)).current;
   const fadeOpacity = scrollY.interpolate({

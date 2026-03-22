@@ -1,10 +1,4 @@
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  Pressable,
-  Alert,
-} from "react-native";
+import { View, StyleSheet, ScrollView, Pressable, Alert } from "react-native";
 import React, { useState, useEffect } from "react";
 import * as Crypto from "expo-crypto";
 import { ThemedText } from "@/src/components/core/themed-text";
@@ -12,11 +6,22 @@ import { useThemeColor } from "@/src/hooks/use-theme-color";
 import TextBox from "@/src/components/ui/text-box";
 import InputGroup from "@/src/components/ui/input-group";
 import { useAuthContext, useDataContext } from "@/src/state";
-import { formatDateToDDMMYYYY, parseDateFromDDMMYYYY } from "@/src/utils/dateUtils";
+import {
+  formatDateToDDMMYYYY,
+  parseDateFromDDMMYYYY,
+} from "@/src/utils/dateUtils";
 import { useRouter } from "expo-router";
 import { ITransaction } from "@/src/components/ui/transactions";
 import TransactionsWeb from "@/src/components/ui/transactions.web";
-import { useAddMovement, useUpdateMovement, useDeleteMovement } from "@/src/hooks/mutations";
+import { useSpreadsheetMutation } from "@/src/hooks/useSpreadsheetMutation";
+import { TransactionsApiHelper } from "@/src/helpers/TransactionsApiHelper";
+import {
+  TransactionsMutationHelpers,
+  type CreateMovementData,
+  type UpdateMovementData,
+  type DeleteMovementData,
+  type OptimisticSnapshot,
+} from "@/src/helpers/TransactionsMutationHelpers";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import LocationPicker, { ILocation } from "@/src/components/ui/location-picker";
 import RecurrencePickerWeb from "@/src/components/ui/recurrence-picker.web";
@@ -43,13 +48,54 @@ const AddView: React.FC<AddViewProps> = ({
     onClose ? onClose() : router.back();
   };
   const { selectedSpreadsheetId } = useAuthContext();
-  const { accounts, categories, movements, recurringMovements, unconfirmedMovements } =
-    useDataContext();
+  const {
+    accounts,
+    categories,
+    movements,
+    recurringMovements,
+    unconfirmedMovements,
+  } = useDataContext();
 
   // React Query mutations
-  const addMovement = useAddMovement();
-  const updateMovement = useUpdateMovement();
-  const deleteMovement = useDeleteMovement();
+  const addMovement = useSpreadsheetMutation<
+    CreateMovementData,
+    OptimisticSnapshot
+  >({
+    mutationFn: (spreadsheetId, data) =>
+      TransactionsApiHelper.createTransaction(spreadsheetId, data),
+    onMutate: (qc, data) =>
+      TransactionsMutationHelpers.optimisticAddMovement(qc, data),
+    onError: (qc, ctx) => TransactionsMutationHelpers.rollback(qc, ctx),
+    onSuccess: (qc) => TransactionsMutationHelpers.invalidateMovementCaches(qc),
+  });
+  const updateMovement = useSpreadsheetMutation<
+    UpdateMovementData,
+    OptimisticSnapshot
+  >({
+    mutationFn: (spreadsheetId, data) => {
+      const { movementId, ...updates } = data;
+      return TransactionsApiHelper.updateMovement(
+        spreadsheetId,
+        movementId,
+        updates,
+      );
+    },
+    onMutate: (qc, data) =>
+      TransactionsMutationHelpers.optimisticUpdateMovement(qc, data),
+    onError: (qc, ctx) => TransactionsMutationHelpers.rollback(qc, ctx),
+    onSuccess: (qc) => TransactionsMutationHelpers.invalidateMovementCaches(qc),
+  });
+  const deleteMovement = useSpreadsheetMutation<
+    DeleteMovementData,
+    OptimisticSnapshot
+  >({
+    mutationFn: (spreadsheetId, data) =>
+      TransactionsApiHelper.deleteMovement(spreadsheetId, data.movementId),
+    onMutate: (qc, data) =>
+      TransactionsMutationHelpers.optimisticDeleteMovement(qc, data),
+    onError: (qc, ctx) => TransactionsMutationHelpers.rollback(qc, ctx),
+    onSuccess: (qc) => TransactionsMutationHelpers.invalidateMovementCaches(qc),
+  });
 
   // Find the movement being edited
   const editingMovement = editingMovementId
@@ -64,13 +110,18 @@ const AddView: React.FC<AddViewProps> = ({
     : undefined;
 
   // Derive submitting state from mutations
-  const isSubmitting = addMovement.isPending || updateMovement.isPending || deleteMovement.isPending;
+  const isSubmitting =
+    addMovement.isPending ||
+    updateMovement.isPending ||
+    deleteMovement.isPending;
 
   const [description, setDescription] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [transactions, setTransactions] = useState<ITransaction[]>([]);
-  const [selectedLocation, setSelectedLocation] = useState<ILocation>({ address: "" });
+  const [selectedLocation, setSelectedLocation] = useState<ILocation>({
+    address: "",
+  });
   const [isRecurrent, setIsRecurrent] = useState(false);
   const [recurrenceSelection, setRecurrenceSelection] = useState<string>("new");
   const [recurrenceUnit, setRecurrenceUnit] = useState<string>("M");
@@ -79,7 +130,11 @@ const AddView: React.FC<AddViewProps> = ({
   const recurrencePattern = `P${recurrenceFrequency}${recurrenceUnit}`;
 
   const isEditing = !!editingMovementId;
-  const isEditingRecurring = isEditing && editingMovement && (editingMovement.status?.toLowerCase() === "recurrent" || editingMovement.recurrencePattern);
+  const isEditingRecurring =
+    isEditing &&
+    editingMovement &&
+    (editingMovement.status?.toLowerCase() === "recurrent" ||
+      editingMovement.recurrencePattern);
 
   // Pre-populate form when editing an existing movement
   useEffect(() => {
@@ -103,7 +158,7 @@ const AddView: React.FC<AddViewProps> = ({
         type: t.type,
         transactionID: t.transactionId,
         movementID: t.movementId,
-      })
+      }),
     );
     setTransactions(mappedTransactions);
     if (editingMovement.recurrencePattern) {
@@ -114,7 +169,10 @@ const AddView: React.FC<AddViewProps> = ({
       }
     }
     // Pre-populate recurrence link for non-template movements
-    if (editingMovement.recurrenceId && editingMovement.status?.toLowerCase() !== "recurrent") {
+    if (
+      editingMovement.recurrenceId &&
+      editingMovement.status?.toLowerCase() !== "recurrent"
+    ) {
       setIsRecurrent(true);
       setRecurrenceSelection(editingMovement.recurrenceId);
     }
@@ -142,13 +200,12 @@ const AddView: React.FC<AddViewProps> = ({
   const textColor = useThemeColor({ light: "#000", dark: "#fff" }, "text");
   const placeholderColor = useThemeColor(
     { light: "#aaa", dark: "#666" },
-    "tabIconDefault"
+    "tabIconDefault",
   );
   const borderColor = useThemeColor(
     { light: "#e0e0e0", dark: "#333" },
-    "tabIconDefault"
+    "tabIconDefault",
   );
-
 
   const allCategories = categories.map((category) => ({
     label: category.name,
@@ -176,13 +233,15 @@ const AddView: React.FC<AddViewProps> = ({
 
   const handleTransactionAccountChange = (id: number, accountName: string) => {
     setTransactions(
-      transactions.map((t) => (t.id === id ? { ...t, accountName } : t))
+      transactions.map((t) => (t.id === id ? { ...t, accountName } : t)),
     );
   };
 
   const handleTransactionAmountChange = (id: number, amount: number) => {
     setTransactions(
-      transactions.map((t) => (t.id === id ? { ...t, amount: Math.abs(amount) } : t))
+      transactions.map((t) =>
+        t.id === id ? { ...t, amount: Math.abs(amount) } : t,
+      ),
     );
   };
 
@@ -191,8 +250,8 @@ const AddView: React.FC<AddViewProps> = ({
       transactions.map((t) =>
         t.id === id
           ? { ...t, type: t.type === "income" ? "expense" : "income" }
-          : t
-      )
+          : t,
+      ),
     );
   };
 
@@ -240,10 +299,13 @@ const AddView: React.FC<AddViewProps> = ({
       return false;
     }
     const validTransactions = transactions.filter(
-      (t) => t.accountName && t.amount > 0
+      (t) => t.accountName && t.amount > 0,
     );
     if (validTransactions.length === 0) {
-      Alert.alert("Error", "Please add at least one transaction with a valid account and amount");
+      Alert.alert(
+        "Error",
+        "Please add at least one transaction with a valid account and amount",
+      );
       return false;
     }
     if (!selectedSpreadsheetId) {
@@ -253,10 +315,13 @@ const AddView: React.FC<AddViewProps> = ({
     return true;
   };
 
-
-
   const handleDeleteMovement = async () => {
-    if (!confirm("Are you sure you want to delete this movement? This action cannot be undone.")) return;
+    if (
+      !confirm(
+        "Are you sure you want to delete this movement? This action cannot be undone.",
+      )
+    )
+      return;
     if (!selectedSpreadsheetId || !editingMovementId) return;
 
     onToast?.("loading");
@@ -276,25 +341,29 @@ const AddView: React.FC<AddViewProps> = ({
     if (!selectedCategory) return false;
     if (!selectedDate) return false;
     const validTransactions = transactions.filter(
-      (t) => t.accountName && t.amount > 0
+      (t) => t.accountName && t.amount > 0,
     );
     if (validTransactions.length === 0) return false;
     if (!selectedSpreadsheetId) return false;
-    if (isRecurrent && recurrenceSelection === "new" && !recurrencePattern) return false;
-    if (isRecurrent && recurrenceSelection !== "new" && !recurrenceSelection) return false;
+    if (isRecurrent && recurrenceSelection === "new" && !recurrencePattern)
+      return false;
+    if (isRecurrent && recurrenceSelection !== "new" && !recurrenceSelection)
+      return false;
     return true;
   };
-
 
   const handleSubmit = async () => {
     if (!validateMovement()) return;
 
     const validTransactions = transactions.filter(
-      (t) => t.accountName && t.amount > 0
+      (t) => t.accountName && t.amount > 0,
     );
 
     const formattedDate = formatDateToDDMMYYYY(selectedDate);
     const transactionsData = validTransactions.map((transaction) => ({
+      ...(transaction.transactionID
+        ? { transactionId: transaction.transactionID }
+        : {}),
       amount:
         transaction.type === "income"
           ? String(transaction.amount).replace(".", ",")
@@ -652,7 +721,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 30,
-    padding:10
+    padding: 10,
   },
   title: {
     flex: 1,

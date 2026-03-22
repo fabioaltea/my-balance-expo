@@ -23,7 +23,9 @@ import IconSymbol from "@/src/components/ui/icon-symbol";
 import { MovementHelper } from "@/src/helpers/MovementHelper";
 import { isDateInRange, parseDateFromDDMMYYYY } from "@/src/utils/dateUtils";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useDeleteMovement } from "@/src/hooks/mutations/useDeleteMovement";
+import { useSpreadsheetMutation } from "@/src/hooks/useSpreadsheetMutation";
+import { TransactionsApiHelper } from "@/src/helpers/TransactionsApiHelper";
+import { TransactionsMutationHelpers, type DeleteMovementData, type OptimisticSnapshot } from "@/src/helpers/TransactionsMutationHelpers";
 import ModalPanel from "@/src/components/ui/modal-panel";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
@@ -55,7 +57,12 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
   const { selectedSpreadsheetId } = useAuthContext();
 
   // React Query mutation
-  const deleteMovement = useDeleteMovement();
+  const deleteMovement = useSpreadsheetMutation<DeleteMovementData, OptimisticSnapshot>({
+    mutationFn: (spreadsheetId, data) => TransactionsApiHelper.deleteMovement(spreadsheetId, data.movementId),
+    onMutate: (qc, data) => TransactionsMutationHelpers.optimisticDeleteMovement(qc, data),
+    onError: (qc, ctx) => TransactionsMutationHelpers.rollback(qc, ctx),
+    onSuccess: (qc) => TransactionsMutationHelpers.invalidateMovementCaches(qc),
+  });
 
   // Bottom sheet state for long press menu (portrait only)
   const [selectedMovement, setSelectedMovement] = useState<Movement | null>(null);

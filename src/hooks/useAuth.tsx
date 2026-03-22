@@ -83,7 +83,7 @@ export const useAuth = () => {
 
       await AuthStorageHelper.storeUser(profile.user);
 
-      if (profile.user.spreadsheetId) {
+      if (profile.user.spreadsheetId && profile.user.setupComplete) {
         console.log(
           "✅ User has spreadsheet configured:",
           profile.user.spreadsheetId
@@ -109,7 +109,7 @@ export const useAuth = () => {
           selectedSpreadsheetId: profile.user.spreadsheetId,
         });
       } else {
-        console.log("🆕 Quickstart mode - no spreadsheet configured");
+        console.log("🆕 Quickstart mode - setup not complete");
 
         setAuthState({
           isAuthenticated: true,
@@ -395,6 +395,17 @@ export const useAuth = () => {
     }
   }, [loadUserProfile]);
 
+  // Transition directly to dashboard after onboarding completes successfully
+  const completeSetup = useCallback((spreadsheetId: string) => {
+    queryClient.clear();
+    setAuthState((prev) => ({
+      ...prev,
+      mode: "dashboard",
+      dashboardReady: true,
+      selectedSpreadsheetId: spreadsheetId,
+    }));
+  }, []);
+
   return {
     ...authState,
     // Auth functions
@@ -404,5 +415,6 @@ export const useAuth = () => {
     clearError,
     reloadData: loadUserProfile,
     executeMigration,
+    completeSetup,
   };
 };

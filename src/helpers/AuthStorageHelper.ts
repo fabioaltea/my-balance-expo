@@ -13,6 +13,7 @@ export interface User {
   emailVerified?: boolean;
   spreadsheetId?: string;
   schemaVersion?: number;
+  setupComplete?: boolean;
   lastAccess?: string;
   pushNotificationsEnabled?: boolean;
 }

@@ -4,6 +4,9 @@ import { useThemeColor } from "@/src/hooks/use-theme-color";
 import { useAuthContext } from "@/src/state";
 import ContextMenu from "@/src/components/ui/context-menu";
 
+const LANDING_BASE_URL =
+  process.env.EXPO_PUBLIC_LANDING_URL || "https://mybalance.tech";
+
 interface LandscapeCommandBarProps {
   accountSelector: ReactNode;
   periodSelector: ReactNode;
@@ -34,6 +37,10 @@ export function CommandBar({
   const handleMenuOption = (option: string) => {
     if (option.toLowerCase() === "logout") {
       logout();
+    } else if (option === "Privacy Policy") {
+      window.open(`${LANDING_BASE_URL}/#/privacy-policy`, "_blank");
+    } else if (option === "Terms of Service") {
+      window.open(`${LANDING_BASE_URL}/#/terms-of-service`, "_blank");
     }
   };
 
@@ -43,6 +50,14 @@ export function CommandBar({
         {/* Logo section */}
         <ContextMenu
           options={[
+            {
+              label: "Privacy Policy",
+              icon: "shield-checkmark-outline",
+            },
+            {
+              label: "Terms of Service",
+              icon: "document-text-outline",
+            },
             {
               label: "Logout",
               icon: "log-out-outline",

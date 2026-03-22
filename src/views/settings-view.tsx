@@ -19,8 +19,11 @@ import InputGroup from "@/src/components/ui/input-group";
 import IconSymbol from "@/src/components/ui/icon-symbol";
 import { ShortcutApiHelper } from "@/src/helpers/ShortcutApiHelper";
 import { NotificationsHelpers } from "@/src/helpers/NotificationsHelpers";
+import * as WebBrowser from "expo-web-browser";
 
 const ICLOUD_SHORTCUT_URL = process.env.EXPO_PUBLIC_ICLOUD_SHORTCUT_URL || "";
+const LANDING_BASE_URL =
+  process.env.EXPO_PUBLIC_LANDING_URL || "https://mybalance.tech";
 
 interface SettingsViewProps {
   user: {
@@ -254,6 +257,16 @@ const SettingsView: React.FC<SettingsViewProps> = ({ user, logout }) => {
     router.push(route as any);
   };
 
+  const handleOpenLegal = async (path: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const url = `${LANDING_BASE_URL}/#/${path}`;
+    if (Platform.OS === "web") {
+      window.open(url, "_blank");
+    } else {
+      await WebBrowser.openBrowserAsync(url);
+    }
+  };
+
   return (
     <View style={styles.container}>
       {/* User Profile Card */}
@@ -391,6 +404,30 @@ const SettingsView: React.FC<SettingsViewProps> = ({ user, logout }) => {
               />
             )}
           </TouchableOpacity>
+        </InputGroup>
+      </SettingsSection>
+
+      {/* Legal */}
+      <SettingsSection title="LEGAL" secondaryTextColor={secondaryTextColor}>
+        <InputGroup>
+          <SettingsItem
+            icon="privacy-tip"
+            title="Privacy Policy"
+            onPress={() => handleOpenLegal("privacy-policy")}
+            textColor={textColor}
+            secondaryTextColor={secondaryTextColor}
+            separatorColor={separatorColor}
+            destructiveColor={destructiveColor}
+          />
+          <SettingsItem
+            icon="description"
+            title="Terms of Service"
+            onPress={() => handleOpenLegal("terms-of-service")}
+            textColor={textColor}
+            secondaryTextColor={secondaryTextColor}
+            separatorColor={separatorColor}
+            destructiveColor={destructiveColor}
+          />
         </InputGroup>
       </SettingsSection>
 

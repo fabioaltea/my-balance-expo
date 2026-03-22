@@ -18,10 +18,15 @@ import TransactionModal, {
   ITransactionData,
 } from "@/src/components/ui/transaction-modal";
 import GlassButton from "@/src/components/ui/glass-button";
-import ContextMenu, { IContextMenuOption } from "@/src/components/ui/context-menu";
+import ContextMenu, {
+  IContextMenuOption,
+} from "@/src/components/ui/context-menu";
 import RecurrencyPicker from "@/src/components/ui/recurrency-picker";
 import { useAuthContext, useDataContext } from "@/src/state";
-import { formatDateToDDMMYYYY, parseDateFromDDMMYYYY } from "@/src/utils/dateUtils";
+import {
+  formatDateToDDMMYYYY,
+  parseDateFromDDMMYYYY,
+} from "@/src/utils/dateUtils";
 import { useRouter } from "expo-router";
 import IconSymbol from "@/src/components/ui/icon-symbol";
 import LocationPicker, { ILocation } from "@/src/components/ui/location-picker";
@@ -41,7 +46,9 @@ import ListPicker from "@/src/components/ui/list-picker.native";
 import DatePicker from "@/src/components/ui/date-picker.native";
 import { ThemedText } from "@/src/components/core/themed-text.native";
 import { ScreenView } from "../components";
-import Transactions, { ITransaction } from "../components/ui/transactions.native";
+import Transactions, {
+  ITransaction,
+} from "../components/ui/transactions.native";
 
 export type ToastStatus = "loading" | "success" | "error";
 
@@ -67,28 +74,51 @@ const AddView: React.FC<AddViewProps> = ({
   };
 
   const { selectedSpreadsheetId } = useAuthContext();
-  const { accounts, categories, movements, recurringMovements, unconfirmedMovements } =
-    useDataContext();
+  const {
+    accounts,
+    categories,
+    movements,
+    recurringMovements,
+    unconfirmedMovements,
+  } = useDataContext();
 
   // React Query mutations
-  const addMovement = useSpreadsheetMutation<CreateMovementData, OptimisticSnapshot>({
-    mutationFn: (spreadsheetId, data) => TransactionsApiHelper.createTransaction(spreadsheetId, data),
-    onMutate: (qc, data) => TransactionsMutationHelpers.optimisticAddMovement(qc, data),
+  const addMovement = useSpreadsheetMutation<
+    CreateMovementData,
+    OptimisticSnapshot
+  >({
+    mutationFn: (spreadsheetId, data) =>
+      TransactionsApiHelper.createTransaction(spreadsheetId, data),
+    onMutate: (qc, data) =>
+      TransactionsMutationHelpers.optimisticAddMovement(qc, data),
     onError: (qc, ctx) => TransactionsMutationHelpers.rollback(qc, ctx),
     onSuccess: (qc) => TransactionsMutationHelpers.invalidateMovementCaches(qc),
   });
-  const updateMovement = useSpreadsheetMutation<UpdateMovementData, OptimisticSnapshot>({
+  const updateMovement = useSpreadsheetMutation<
+    UpdateMovementData,
+    OptimisticSnapshot
+  >({
     mutationFn: (spreadsheetId, data) => {
       const { movementId, ...updates } = data;
-      return TransactionsApiHelper.updateMovement(spreadsheetId, movementId, updates);
+      return TransactionsApiHelper.updateMovement(
+        spreadsheetId,
+        movementId,
+        updates,
+      );
     },
-    onMutate: (qc, data) => TransactionsMutationHelpers.optimisticUpdateMovement(qc, data),
+    onMutate: (qc, data) =>
+      TransactionsMutationHelpers.optimisticUpdateMovement(qc, data),
     onError: (qc, ctx) => TransactionsMutationHelpers.rollback(qc, ctx),
     onSuccess: (qc) => TransactionsMutationHelpers.invalidateMovementCaches(qc),
   });
-  const deleteMovement = useSpreadsheetMutation<DeleteMovementData, OptimisticSnapshot>({
-    mutationFn: (spreadsheetId, data) => TransactionsApiHelper.deleteMovement(spreadsheetId, data.movementId),
-    onMutate: (qc, data) => TransactionsMutationHelpers.optimisticDeleteMovement(qc, data),
+  const deleteMovement = useSpreadsheetMutation<
+    DeleteMovementData,
+    OptimisticSnapshot
+  >({
+    mutationFn: (spreadsheetId, data) =>
+      TransactionsApiHelper.deleteMovement(spreadsheetId, data.movementId),
+    onMutate: (qc, data) =>
+      TransactionsMutationHelpers.optimisticDeleteMovement(qc, data),
     onError: (qc, ctx) => TransactionsMutationHelpers.rollback(qc, ctx),
     onSuccess: (qc) => TransactionsMutationHelpers.invalidateMovementCaches(qc),
   });
@@ -106,7 +136,10 @@ const AddView: React.FC<AddViewProps> = ({
     : undefined;
 
   // Derive submitting state from mutations
-  const isSubmitting = addMovement.isPending || updateMovement.isPending || deleteMovement.isPending;
+  const isSubmitting =
+    addMovement.isPending ||
+    updateMovement.isPending ||
+    deleteMovement.isPending;
 
   const [description, setDescription] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -123,27 +156,43 @@ const AddView: React.FC<AddViewProps> = ({
   const [recurrenceSelection, setRecurrenceSelection] = useState<string>("new");
   const [recurrenceUnit, setRecurrenceUnit] = useState<string>("M");
   const [recurrenceFrequency, setRecurrenceFrequency] = useState<number>(1);
-  const [recurrenceStartDate, setRecurrenceStartDate] = useState<Date>(new Date());
-  const [hasRecurrencePattern, setHasRecurrencePattern] = useState<boolean>(false);
+  const [recurrenceStartDate, setRecurrenceStartDate] = useState<Date>(
+    new Date(),
+  );
+  const [hasRecurrencePattern, setHasRecurrencePattern] =
+    useState<boolean>(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const scrollViewRef = useRef<any>(null);
   const hasManualCategorySelection = useRef(false);
 
   useEffect(() => {
-    const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
-    const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
-    const showSub = Keyboard.addListener(showEvent, (e) => setKeyboardHeight(e.endCoordinates.height));
+    const showEvent =
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent =
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+    const showSub = Keyboard.addListener(showEvent, (e) =>
+      setKeyboardHeight(e.endCoordinates.height),
+    );
     const hideSub = Keyboard.addListener(hideEvent, () => setKeyboardHeight(0));
-    return () => { showSub.remove(); hideSub.remove(); };
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
   }, []);
 
-  const recurrencePattern = hasRecurrencePattern ? `P${recurrenceFrequency}${recurrenceUnit}` : null;
+  const recurrencePattern = hasRecurrencePattern
+    ? `P${recurrenceFrequency}${recurrenceUnit}`
+    : null;
 
   // Auto-predict category when description changes (only for new movements)
   const handleDescriptionChange = (text: string) => {
     setDescription(text);
     if (!hasManualCategorySelection.current && !isEditing) {
-      const predicted = MovementHelper.predictCategory(text, movements, categories);
+      const predicted = MovementHelper.predictCategory(
+        text,
+        movements,
+        categories,
+      );
       if (predicted) {
         setSelectedCategory(predicted);
       }
@@ -156,7 +205,11 @@ const AddView: React.FC<AddViewProps> = ({
   };
 
   const isEditing = !!editingMovementId;
-  const isEditingRecurring = isEditing && editingMovement && (editingMovement.status?.toLowerCase() === "recurrent" || editingMovement.recurrencePattern);
+  const isEditingRecurring =
+    isEditing &&
+    editingMovement &&
+    (editingMovement.status?.toLowerCase() === "recurrent" ||
+      editingMovement.recurrencePattern);
 
   // Pre-populate form when editing an existing movement
   useEffect(() => {
@@ -179,7 +232,7 @@ const AddView: React.FC<AddViewProps> = ({
         type: t.type,
         transactionID: t.transactionId,
         movementID: t.movementId,
-      })
+      }),
     );
     setTransactions(mappedTransactions);
     setSelectedLocation({ address: editingMovement.location || "" });
@@ -198,7 +251,10 @@ const AddView: React.FC<AddViewProps> = ({
       setRecurrenceStartDate(recStartDate);
     }
     // Pre-populate recurrence link for non-template movements
-    if (editingMovement.recurrenceId && editingMovement.status?.toLowerCase() !== "recurrent") {
+    if (
+      editingMovement.recurrenceId &&
+      editingMovement.status?.toLowerCase() !== "recurrent"
+    ) {
       setIsRecurrent(true);
       setRecurrenceSelection(editingMovement.recurrenceId);
     }
@@ -226,7 +282,8 @@ const AddView: React.FC<AddViewProps> = ({
   useEffect(() => {
     if (!initialMovement || editingMovement || recurringTemplate) return;
 
-    if (initialMovement.description) setDescription(initialMovement.description);
+    if (initialMovement.description)
+      setDescription(initialMovement.description);
     if (initialMovement.category) setSelectedCategory(initialMovement.category);
     if (initialMovement.date) {
       const parsedDate = parseDateFromDDMMYYYY(initialMovement.date);
@@ -235,15 +292,17 @@ const AddView: React.FC<AddViewProps> = ({
     if (initialMovement.location) {
       setSelectedLocation({ address: initialMovement.location });
     }
-    if (initialMovement.transactions && initialMovement.transactions.length > 0) {
-      const mappedTransactions: ITransaction[] = initialMovement.transactions.map(
-        (t, index) => ({
+    if (
+      initialMovement.transactions &&
+      initialMovement.transactions.length > 0
+    ) {
+      const mappedTransactions: ITransaction[] =
+        initialMovement.transactions.map((t, index) => ({
           id: index + 1,
           accountName: t.account,
           amount: t.amount,
           type: t.type,
-        })
-      );
+        }));
       setTransactions(mappedTransactions);
     }
   }, [initialMovement]);
@@ -251,11 +310,11 @@ const AddView: React.FC<AddViewProps> = ({
   // Theme colors
   const backgroundColor = useThemeColor(
     { light: "transparent", dark: "transparent" },
-    "background"
+    "background",
   );
   const placeholderColor = useThemeColor(
     { light: "#666", dark: "#999" },
-    "tabIconDefault"
+    "tabIconDefault",
   );
   const menuBackground = useThemeColor({}, "menuBackground");
 
@@ -310,8 +369,8 @@ const AddView: React.FC<AddViewProps> = ({
     if (editingTransaction) {
       setTransactions(
         transactions.map((t) =>
-          t.id === editingTransaction.id ? { ...t, ...data } : t
-        )
+          t.id === editingTransaction.id ? { ...t, ...data } : t,
+        ),
       );
     } else {
       const newTransaction: ITransaction = {
@@ -345,10 +404,13 @@ const AddView: React.FC<AddViewProps> = ({
       return false;
     }
     const validTransactions = transactions.filter(
-      (t) => t.accountName && t.amount > 0
+      (t) => t.accountName && t.amount > 0,
     );
     if (validTransactions.length === 0) {
-      Alert.alert("Error", "Please add at least one transaction with a valid account and amount");
+      Alert.alert(
+        "Error",
+        "Please add at least one transaction with a valid account and amount",
+      );
       return false;
     }
     if (!selectedSpreadsheetId) {
@@ -398,7 +460,9 @@ const AddView: React.FC<AddViewProps> = ({
               await deleteMovement.mutateAsync({
                 movementId: editingMovementId,
               });
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              Haptics.notificationAsync(
+                Haptics.NotificationFeedbackType.Success,
+              );
               onToast?.("success");
             } catch (error) {
               console.error("Error deleting movement:", error);
@@ -407,7 +471,7 @@ const AddView: React.FC<AddViewProps> = ({
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -416,12 +480,13 @@ const AddView: React.FC<AddViewProps> = ({
     if (!selectedCategory) return false;
     if (!selectedDate) return false;
     const validTransactions = transactions.filter(
-      (t) => t.accountName && t.amount > 0
+      (t) => t.accountName && t.amount > 0,
     );
     if (validTransactions.length === 0) return false;
     if (!selectedSpreadsheetId) return false;
     // recurrencePattern can be null (no pattern) — that's valid
-    if (isRecurrent && recurrenceSelection !== "new" && !recurrenceSelection) return false;
+    if (isRecurrent && recurrenceSelection !== "new" && !recurrenceSelection)
+      return false;
     return true;
   };
 
@@ -444,12 +509,14 @@ const AddView: React.FC<AddViewProps> = ({
     if (!validateMovement()) return;
 
     const validTransactions = transactions.filter(
-      (t) => t.accountName && t.amount > 0
+      (t) => t.accountName && t.amount > 0,
     );
 
     const formattedDate = formatDateToDDMMYYYY(selectedDate);
     const transactionsData = validTransactions.map((transaction) => ({
-      ...(transaction.transactionID ? { transactionId: transaction.transactionID } : {}),
+      ...(transaction.transactionID
+        ? { transactionId: transaction.transactionID }
+        : {}),
       amount:
         transaction.type === "income"
           ? String(transaction.amount).replace(".", ",")
@@ -466,7 +533,8 @@ const AddView: React.FC<AddViewProps> = ({
       transactions: transactionsData,
     };
 
-    const formattedRecurrenceStartDate = formatDateToDDMMYYYY(recurrenceStartDate);
+    const formattedRecurrenceStartDate =
+      formatDateToDDMMYYYY(recurrenceStartDate);
 
     onToast?.("loading");
     closeView();
@@ -562,7 +630,12 @@ const AddView: React.FC<AddViewProps> = ({
         </View>
 
         <Animated.View
-          style={{ height: 20, marginBottom: -20, zIndex: 1, opacity: fadeOpacity }}
+          style={{
+            height: 20,
+            marginBottom: -20,
+            zIndex: 1,
+            opacity: fadeOpacity,
+          }}
           pointerEvents="none"
         >
           <LinearGradient
@@ -576,7 +649,7 @@ const AddView: React.FC<AddViewProps> = ({
           showsVerticalScrollIndicator={false}
           onScroll={Animated.event(
             [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-            { useNativeDriver: true }
+            { useNativeDriver: true },
           )}
           scrollEventThrottle={16}
         >
@@ -632,9 +705,9 @@ const AddView: React.FC<AddViewProps> = ({
             <Transactions
               transactions={transactions}
               onAddPress={handleAddTransaction}
-              onDeletePress={handleDeleteTransaction} 
+              onDeletePress={handleDeleteTransaction}
               onTransactionPress={handleTransactionPress}
-                          />
+            />
           </InputGroup>
 
           {/* Recurrence section — for new movements and editing non-recurring */}

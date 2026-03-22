@@ -81,7 +81,9 @@ function calcDeltasFromInputs(
 ): Record<string, number> {
   const delta: Record<string, number> = {};
   for (const t of inputs) {
-    delta[t.account] = (delta[t.account] || 0) + FunctionHelper.ConvertCurrencyToNumber(t.amount);
+    delta[t.account] =
+      (delta[t.account] || 0) +
+      FunctionHelper.ConvertCurrencyToNumber(t.amount);
   }
   return delta;
 }
@@ -112,18 +114,16 @@ function updateAccountBalances(
   queryClient: QueryClient,
   deltaByAccount: Record<string, number>,
 ): void {
-  queryClient.setQueryData<Account[]>(
-    QUERY_KEYS.accounts.all,
-    (old = []) =>
-      old.map((account) => {
-        const delta = deltaByAccount[account.name];
-        if (!delta) return account;
-        return {
-          ...account,
-          balance: account.balance + delta,
-          isPending: true,
-        } as Account;
-      }),
+  queryClient.setQueryData<Account[]>(QUERY_KEYS.accounts.all, (old = []) =>
+    old.map((account) => {
+      const delta = deltaByAccount[account.name];
+      if (!delta) return account;
+      return {
+        ...account,
+        balance: account.balance + delta,
+        isPending: true,
+      } as Account;
+    }),
   );
 }
 

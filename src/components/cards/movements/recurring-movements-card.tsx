@@ -443,6 +443,8 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
                 }
                 delayLongPress={300}
                 activeOpacity={0.6}
+                // @ts-ignore — web-only prop for CSS hover
+                dataSet={{ movementRow: "" }}
                 style={[
                   styles.recurringItem,
                   dynamicStyles.itemBorder,

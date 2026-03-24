@@ -240,7 +240,7 @@ const MovementsCard: React.FC<MovementsCardProps> = ({
 
   if (showSkeleton) {
     return (
-      <Card label="">
+      <Card label={isLandscape ? "Recent Movements" : ""} style={isLandscape ? { flex: 1 } : undefined}>
         <ChartSkeleton variant="list" itemCount={5} />
       </Card>
     );
@@ -304,6 +304,8 @@ const MovementsCard: React.FC<MovementsCardProps> = ({
                   : undefined
               }
               delayLongPress={300}
+              // @ts-ignore — web-only prop for CSS hover
+              dataSet={{ movementRow: "" }}
               style={[
                 dynamicStyles.movementItem,
                 index === recentMovements.length - 1 && styles.lastMovementItem,

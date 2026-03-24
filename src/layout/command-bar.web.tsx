@@ -11,6 +11,7 @@ interface LandscapeCommandBarProps {
   accountSelector: ReactNode;
   periodSelector: ReactNode;
   rightContent?: ReactNode;
+  onManage?: () => void;
 }
 
 /**
@@ -21,6 +22,7 @@ export function CommandBar({
   accountSelector,
   periodSelector,
   rightContent,
+  onManage,
 }: LandscapeCommandBarProps) {
   const textColor = useThemeColor({}, "text");
   const borderColor = useThemeColor(
@@ -37,6 +39,8 @@ export function CommandBar({
   const handleMenuOption = (option: string) => {
     if (option.toLowerCase() === "logout") {
       logout();
+    } else if (option === "Manage") {
+      onManage?.();
     } else if (option === "Privacy Policy") {
       window.open(`${LANDING_BASE_URL}/#/privacy-policy`, "_blank");
     } else if (option === "Terms of Service") {
@@ -50,6 +54,10 @@ export function CommandBar({
         {/* Logo section */}
         <ContextMenu
           options={[
+            {
+              label: "Manage",
+              icon: "settings-outline",
+            },
             {
               label: "Privacy Policy",
               icon: "shield-checkmark-outline",

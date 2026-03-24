@@ -25,7 +25,7 @@ import { isDateInRange, parseDateFromDDMMYYYY } from "@/src/utils/dateUtils";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useSpreadsheetMutation } from "@/src/hooks/useSpreadsheetMutation";
 import { TransactionsApiHelper } from "@/src/helpers/TransactionsApiHelper";
-import { TransactionsMutationHelpers, type DeleteMovementData, type OptimisticSnapshot } from "@/src/helpers/TransactionsMutationHelpers";
+import { TransactionsMutationHelpers, type DeleteMovementData, type DismissMovementData, type OptimisticSnapshot } from "@/src/helpers/TransactionsMutationHelpers";
 import ModalPanel from "@/src/components/ui/modal-panel";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
@@ -56,7 +56,7 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
   const isLandscape = orientation === "landscape";
   const { selectedSpreadsheetId } = useAuthContext();
 
-  // React Query mutation
+  // React Query mutations
   const deleteMovement = useSpreadsheetMutation<DeleteMovementData, OptimisticSnapshot>({
     mutationFn: (spreadsheetId, data) => TransactionsApiHelper.deleteMovement(spreadsheetId, data.movementId),
     onMutate: (qc, data) => TransactionsMutationHelpers.optimisticDeleteMovement(qc, data),
@@ -64,8 +64,23 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
     onSuccess: (qc) => TransactionsMutationHelpers.invalidateMovementCaches(qc),
   });
 
+  const dismissMovement = useSpreadsheetMutation<DismissMovementData, OptimisticSnapshot>({
+    mutationFn: (spreadsheetId, data) => TransactionsApiHelper.createMovement(spreadsheetId, {
+      description: data.description,
+      category: data.category,
+      date: data.date,
+      status: "dismissed",
+      recurrenceId: data.recurrenceId,
+      transactions: [{ amount: "0", account: "", type: "out" }],
+    }),
+    onMutate: (qc, data) => TransactionsMutationHelpers.optimisticDismissMovement(qc, data),
+    onError: (qc, ctx) => TransactionsMutationHelpers.rollback(qc, ctx),
+    onSuccess: (qc) => TransactionsMutationHelpers.invalidateMovementCaches(qc),
+  });
+
   // Bottom sheet state for long press menu (portrait only)
   const [selectedMovement, setSelectedMovement] = useState<Movement | null>(null);
+  const [selectedPending, setSelectedPending] = useState<PendingRecurrence | null>(null);
 
   // Calculate the expected date object for a pending recurrence
   const getExpectedDateObj = (pending: PendingRecurrence): Date | null => {
@@ -198,7 +213,7 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
     }
   };
 
-  const handleMenuAction = async (movement: Movement, action: string) => {
+  const handleMenuAction = async (movement: Movement, action: string, pending?: PendingRecurrence | null) => {
     if (action === "edit") {
       if (onEditPress) {
         onEditPress(movement);
@@ -207,6 +222,34 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
           pathname: "/add",
           params: { movementId: movement.id },
         });
+      }
+    } else if (action === "dismiss") {
+      if (!selectedSpreadsheetId || !movement.recurrenceId) return;
+      const activePending = pending || null;
+      if (!activePending) return;
+
+      // Calculate the expected date for the dismissed movement
+      const expectedDate = getExpectedDateObj(activePending);
+      let dateStr: string;
+      if (expectedDate) {
+        const dd = String(expectedDate.getDate()).padStart(2, "0");
+        const mm = String(expectedDate.getMonth() + 1).padStart(2, "0");
+        const yyyy = expectedDate.getFullYear();
+        dateStr = `${dd}-${mm}-${yyyy}`;
+      } else {
+        dateStr = activePending.periodStart;
+      }
+
+      try {
+        await dismissMovement.mutateAsync({
+          description: movement.description,
+          category: movement.category,
+          date: dateStr,
+          recurrenceId: movement.recurrenceId,
+        });
+      } catch (error) {
+        console.error("Error dismissing movement:", error);
+        alert("Failed to dismiss movement");
       }
     } else if (action === "delete") {
       if (!selectedSpreadsheetId) return;
@@ -394,11 +437,14 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
                     ? () => {
                         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                         setSelectedMovement(movement);
+                        setSelectedPending(pending);
                       }
                     : undefined
                 }
                 delayLongPress={300}
                 activeOpacity={0.6}
+                // @ts-ignore — web-only prop for CSS hover
+                dataSet={{ movementRow: "" }}
                 style={[
                   styles.recurringItem,
                   dynamicStyles.itemBorder,
@@ -455,7 +501,7 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
                         value=""
                         onChange={(e: any) => {
                           e.stopPropagation();
-                          handleMenuAction(movement, e.target.value);
+                          handleMenuAction(movement, e.target.value, pending);
                           e.target.value = "";
                         }}
                         onClick={(e: any) => e.stopPropagation()}
@@ -470,6 +516,7 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
                         }}
                       >
                         <option value="" disabled />
+                        {hasPending && <option value="dismiss">Dismiss</option>}
                         <option value="edit">Edit</option>
                         <option value="delete">Delete</option>
                       </select>
@@ -486,10 +533,10 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
       {/* Bottom sheet for long press actions (portrait only) */}
       <ModalPanel
         isVisible={selectedMovement !== null}
-        onClose={() => setSelectedMovement(null)}
+        onClose={() => { setSelectedMovement(null); setSelectedPending(null); }}
         showConfirmButton={false}
         showCancelButton={false}
-        maxHeight={320}
+        maxHeight={370}
       >
         {selectedMovement && (
           <>
@@ -518,17 +565,34 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
                 onPress={() => {
                   const mov = selectedMovement;
                   setSelectedMovement(null);
+                  setSelectedPending(null);
                   handleQuickAdd(mov);
                 }}
               >
                 <Ionicons name="add-circle-outline" size={22} color={subtextColor} />
                 <ThemedText style={styles.menuOptionText}>Insert Movement</ThemedText>
               </TouchableOpacity>
+              {selectedPending && (
+                <TouchableOpacity
+                  style={styles.menuOption}
+                  onPress={() => {
+                    const mov = selectedMovement;
+                    const pend = selectedPending;
+                    setSelectedMovement(null);
+                    setSelectedPending(null);
+                    handleMenuAction(mov, "dismiss", pend);
+                  }}
+                >
+                  <Ionicons name="eye-off-outline" size={22} color={subtextColor} />
+                  <ThemedText style={styles.menuOptionText}>Dismiss</ThemedText>
+                </TouchableOpacity>
+              )}
               <TouchableOpacity
                 style={styles.menuOption}
                 onPress={() => {
                   const mov = selectedMovement;
                   setSelectedMovement(null);
+                  setSelectedPending(null);
                   handleMenuAction(mov, "edit");
                 }}
               >
@@ -540,6 +604,7 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
                 onPress={() => {
                   const mov = selectedMovement;
                   setSelectedMovement(null);
+                  setSelectedPending(null);
                   handleMenuAction(mov, "delete");
                 }}
               >

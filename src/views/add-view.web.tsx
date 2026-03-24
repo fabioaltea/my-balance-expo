@@ -122,6 +122,7 @@ const AddView: React.FC<AddViewProps> = ({
   const [selectedLocation, setSelectedLocation] = useState<ILocation>({
     address: "",
   });
+  const [isSaving, setIsSaving] = useState(false);
   const [isRecurrent, setIsRecurrent] = useState(false);
   const [recurrenceSelection, setRecurrenceSelection] = useState<string>("new");
   const [recurrenceUnit, setRecurrenceUnit] = useState<string>("M");
@@ -324,6 +325,7 @@ const AddView: React.FC<AddViewProps> = ({
       return;
     if (!selectedSpreadsheetId || !editingMovementId) return;
 
+    setIsSaving(true);
     onToast?.("loading");
     closeView();
 
@@ -380,6 +382,7 @@ const AddView: React.FC<AddViewProps> = ({
       transactions: transactionsData,
     };
 
+    setIsSaving(true);
     onToast?.("loading");
     closeView();
 
@@ -459,13 +462,14 @@ const AddView: React.FC<AddViewProps> = ({
                 ? "Edit Movement"
                 : "New Movement"}
           </ThemedText>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8, opacity: isSaving ? 0.5 : 1 }}>
             {isEditing && (
               <View style={styles.iconButton}>
                 <MaterialIcons name="more-vert" size={20} color={textColor} />
                 {/* @ts-ignore — HTML select element for web */}
                 <select
                   value=""
+                  disabled={isSaving}
                   onChange={(e: any) => {
                     handleMenuAction(e.target.value);
                     e.target.value = "";
@@ -485,13 +489,13 @@ const AddView: React.FC<AddViewProps> = ({
                 </select>
               </View>
             )}
-            <Pressable onPress={closeView} style={styles.iconButton}>
+            <Pressable onPress={closeView} disabled={isSaving} style={styles.iconButton}>
               <MaterialIcons name="close" size={20} color={textColor} />
             </Pressable>
           </View>
         </View>
 
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <ScrollView showsVerticalScrollIndicator={false} pointerEvents={isSaving ? "none" : "auto"}>
           {/* Description + Category + Date */}
           <InputGroup>
             <TextBox
@@ -690,19 +694,19 @@ const AddView: React.FC<AddViewProps> = ({
         </View>
         <Pressable
           onPress={() => handleSubmit()}
-          disabled={isSubmitting || !isFormValid()}
+          disabled={isSaving || isSubmitting || !isFormValid()}
           style={[
             styles.submitButton,
-            (isSubmitting || !isFormValid()) && styles.submitButtonDisabled,
+            (isSaving || isSubmitting || !isFormValid()) && styles.submitButtonDisabled,
           ]}
         >
           <ThemedText
             style={[
               styles.submitText,
-              (isSubmitting || !isFormValid()) && { opacity: 0.6 },
+              (isSaving || isSubmitting || !isFormValid()) && { opacity: 0.6 },
             ]}
           >
-            {isSubmitting ? "Saving" : isEditing ? "Update" : "Insert"}
+            {isSaving || isSubmitting ? "Saving" : isEditing ? "Update" : "Insert"}
           </ThemedText>
         </Pressable>
       </View>

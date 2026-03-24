@@ -120,9 +120,9 @@ export const useMyBalanceData = (
     () =>
       MovementDataHelper.calculatePendingRecurrences(
         recurringMovements,
-        movements,
+        allMovements,
       ),
-    [recurringMovements, movements],
+    [recurringMovements, allMovements],
   );
 
   const calculateForecast = useCallback(

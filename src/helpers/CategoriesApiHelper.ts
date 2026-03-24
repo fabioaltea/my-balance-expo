@@ -56,4 +56,57 @@ export class CategoriesApiHelper {
       return null;
     }
   }
+
+  /**
+   * Update an existing category (identified by its current name)
+   */
+  static async updateCategory(
+    spreadsheetId: string,
+    categoryName: string,
+    categoryData: any,
+  ) {
+    try {
+      console.log(`✏️ Updating category "${categoryName}"...`);
+
+      const response = await HttpHelper.put(
+        `/categories/${encodeURIComponent(categoryName)}?spreadsheet_id=${spreadsheetId}`,
+        { ...categoryData },
+      );
+
+      if (response.success) {
+        console.log("✅ Category updated successfully");
+        return response.data;
+      } else {
+        console.error("❌ Failed to update category:", response.error);
+        return null;
+      }
+    } catch (error) {
+      console.error("❌ Error updating category:", error);
+      return null;
+    }
+  }
+
+  /**
+   * Delete a category (soft delete)
+   */
+  static async deleteCategory(spreadsheetId: string, categoryName: string) {
+    try {
+      console.log(`🗑️ Deleting category "${categoryName}"...`);
+
+      const response = await HttpHelper.delete(
+        `/categories/${encodeURIComponent(categoryName)}?spreadsheet_id=${spreadsheetId}`,
+      );
+
+      if (response.success) {
+        console.log("✅ Category deleted successfully");
+        return response.data;
+      } else {
+        console.error("❌ Failed to delete category:", response.error);
+        return null;
+      }
+    } catch (error) {
+      console.error("❌ Error deleting category:", error);
+      return null;
+    }
+  }
 }

@@ -5,6 +5,7 @@ import {
   Animated,
   Pressable,
   Dimensions,
+  Alert,
 } from "react-native";
 import { ThemedText } from "@/src/components/core/themed-text";
 import React, { useState, useRef } from "react";
@@ -19,6 +20,13 @@ import IconSymbol, { IconName } from "@/src/components/ui/icon-symbol";
 import { DEFAULT_COLOR } from "@/src/constants/colors";
 import { DEFAULT_ICON } from "@/src/constants/icons";
 import CategoryPanel from "@/src/components/ui/category-panel";
+import { useSpreadsheetMutation } from "@/src/hooks/useSpreadsheetMutation";
+import { CategoriesApiHelper } from "@/src/helpers/CategoriesApiHelper";
+import {
+  CategoriesMutationHelpers,
+  type UpdateCategoryData,
+  type CategorySnapshot,
+} from "@/src/helpers/CategoriesMutationHelpers";
 
 interface CategoriesViewProps {
   categories: Category[];
@@ -33,10 +41,34 @@ const CategoriesView: React.FC<CategoriesViewProps> = ({ categories }) => {
     extrapolate: "clamp",
   });
 
+  const updateCategory = useSpreadsheetMutation<
+    UpdateCategoryData,
+    CategorySnapshot
+  >({
+    mutationFn: (spreadsheetId, data) => {
+      const { categoryName, ...updates } = data;
+      return CategoriesApiHelper.updateCategory(
+        spreadsheetId,
+        categoryName,
+        updates,
+      );
+    },
+    onMutate: (qc, data) =>
+      CategoriesMutationHelpers.optimisticUpdateCategory(qc, data),
+    onError: (qc, ctx) =>
+      CategoriesMutationHelpers.rollbackCategories(qc, ctx),
+    onSuccess: (qc, variables) =>
+      CategoriesMutationHelpers.invalidateCategoryCaches(
+        qc,
+        !!variables.name && variables.name !== variables.categoryName,
+      ),
+  });
+
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(
     null,
   );
+  const [editName, setEditName] = useState("");
   const [selectedIcon, setSelectedIcon] = useState<IconName>(
     DEFAULT_ICON as IconName,
   );
@@ -45,6 +77,7 @@ const CategoriesView: React.FC<CategoriesViewProps> = ({ categories }) => {
   const handleIconLongPress = (category: Category) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setSelectedCategory(category);
+    setEditName(category.name);
     setSelectedIcon((category.icon || DEFAULT_ICON) as IconName);
     setSelectedColor(category.color || DEFAULT_COLOR);
     setModalVisible(true);
@@ -55,10 +88,48 @@ const CategoriesView: React.FC<CategoriesViewProps> = ({ categories }) => {
     setSelectedCategory(null);
   };
 
+  const performUpdate = async (
+    name: string,
+    icon: string,
+    color: string,
+  ) => {
+    if (!selectedCategory) return;
+
+    try {
+      await updateCategory.mutateAsync({
+        categoryName: selectedCategory.name,
+        name,
+        icon,
+        color,
+      });
+      handleCloseModal();
+    } catch (error) {
+      console.error("Error updating category:", error);
+      Alert.alert("Errore", "Impossibile aggiornare la categoria");
+    }
+  };
+
   const handleConfirm = () => {
-    // TODO: save icon and color to category
-    console.log("Save:", selectedCategory?.id, selectedIcon, selectedColor);
-    handleCloseModal();
+    if (!selectedCategory) return;
+
+    const nameChanged = editName !== selectedCategory.name;
+
+    if (nameChanged) {
+      Alert.alert(
+        "Conferma modifica",
+        `Stai per rinominare la categoria da "${selectedCategory.name}" a "${editName}".\n\nTutte le transazioni associate a questa categoria saranno aggiornate con il nuovo nome.`,
+        [
+          { text: "Annulla", style: "cancel" },
+          {
+            text: "Conferma",
+            onPress: () =>
+              performUpdate(editName, selectedIcon, selectedColor),
+          },
+        ],
+      );
+    } else {
+      performUpdate(editName, selectedIcon, selectedColor);
+    }
   };
 
   return (
@@ -89,28 +160,28 @@ const CategoriesView: React.FC<CategoriesViewProps> = ({ categories }) => {
         <Card>
           <List>
             {categories.map((category) => (
-              <View key={category.id} style={styles.categoryRow}>
+              <Pressable
+                key={category.id}
+                onLongPress={() => handleIconLongPress(category)}
+                delayLongPress={300}
+                style={styles.categoryRow}
+              >
                 <ThemedText style={styles.categoryName}>
                   {category.name}
                 </ThemedText>
-                <Pressable
-                  onLongPress={() => handleIconLongPress(category)}
-                  delayLongPress={300}
+                <View
+                  style={[
+                    styles.iconContainer,
+                    { backgroundColor: category.color || DEFAULT_COLOR },
+                  ]}
                 >
-                  <View
-                    style={[
-                      styles.iconContainer,
-                      { backgroundColor: category.color || DEFAULT_COLOR },
-                    ]}
-                  >
-                    <IconSymbol
-                      name={(category.icon || DEFAULT_ICON) as IconName}
-                      size={24}
-                      color="#FFFFFF"
-                    />
-                  </View>
-                </Pressable>
-              </View>
+                  <IconSymbol
+                    name={(category.icon || DEFAULT_ICON) as IconName}
+                    size={24}
+                    color="#FFFFFF"
+                  />
+                </View>
+              </Pressable>
             ))}
           </List>
         </Card>
@@ -124,12 +195,13 @@ const CategoriesView: React.FC<CategoriesViewProps> = ({ categories }) => {
         maxHeight={Dimensions.get("window").height * 0.75}
       >
         <CategoryPanel
-          name={selectedCategory?.name || ""}
+          name={editName}
           selectedIcon={selectedIcon}
           selectedColor={selectedColor}
+          onNameChange={setEditName}
           onIconChange={setSelectedIcon}
           onColorChange={setSelectedColor}
-          readonly={true}
+          readonly={false}
         />
       </ModalPanel>
     </View>

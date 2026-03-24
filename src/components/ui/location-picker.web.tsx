@@ -110,6 +110,15 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
     [expandCard, onChange],
   );
 
+  // Auto-expand map when mounting with a pre-existing location value (e.g. editing a movement)
+  const hasAutoSearched = useRef(false);
+  useEffect(() => {
+    if (isLoaded && placesServiceRef.current && value.trim().length >= 3 && !hasAutoSearched.current && !isExpanded) {
+      hasAutoSearched.current = true;
+      searchAndShow(value.trim());
+    }
+  }, [isLoaded, value, isExpanded, searchAndShow]);
+
   const handleTextChange = (text: string) => {
     onChange({ address: text });
 

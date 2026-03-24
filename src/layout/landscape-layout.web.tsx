@@ -49,6 +49,7 @@ import CommandBar from "./command-bar";
 import PeriodPicker from "@/src/components/ui/period-chips-picker";
 import ChipButton from "@/src/components/ui/chip-button";
 import { SummaryCard } from "@/src/components/cards";
+import ManageView from "@/src/views/manage-view.web";
 
 type ToastStatus = "loading" | "success" | "error";
 
@@ -83,6 +84,7 @@ export function LandscapeLayout() {
   } = useDataContext();
 
   const { user, logout } = useAuthContext();
+  const [showManage, setShowManage] = useState(false);
   const addMovement = useSpreadsheetMutation<CreateMovementData, OptimisticSnapshot>({
     mutationFn: (spreadsheetId, data) => TransactionsApiHelper.createTransaction(spreadsheetId, data),
     onMutate: (qc, data) => TransactionsMutationHelpers.optimisticAddMovement(qc, data),
@@ -112,20 +114,23 @@ export function LandscapeLayout() {
     "months",
   );
 
-  // Drawer state
+  // Drawer state — separate open flag from content so content persists during close animation
   const [drawerContent, setDrawerContent] = useState<DrawerState | null>(null);
-  const isDrawerOpen = drawerContent !== null;
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   // Drawer actions
   const openDrawer = useCallback(
     (type: DrawerContentType, props?: DrawerState["props"]) => {
       setDrawerContent({ type, props });
+      setIsDrawerOpen(true);
     },
     [],
   );
 
   const closeDrawer = useCallback(() => {
-    setDrawerContent(null);
+    setIsDrawerOpen(false);
+    // Clear content after the SideDrawer close animation (250ms)
+    setTimeout(() => setDrawerContent(null), 300);
   }, []);
 
   // Toast state
@@ -426,6 +431,14 @@ export function LandscapeLayout() {
     return calculateForecast(dateRange.startDate, dateRange.endDate);
   }, [calculateForecast, dateRange]);
 
+  if (showManage) {
+    return (
+      <View style={[styles.container, { backgroundColor }]}>
+        <ManageView onBack={() => setShowManage(false)} />
+      </View>
+    );
+  }
+
   return (
     <View
       style={[styles.container, { backgroundColor }]}
@@ -458,12 +471,22 @@ export function LandscapeLayout() {
               scrollbar-width: thin;
               scrollbar-color: rgba(128,128,128,0.25) transparent;
             }
+            [data-movement-row] {
+              transition: background-color 0.15s ease;
+              border-radius: 20px;
+              padding-left: 10px !important;
+              padding-right: 10px !important;
+            }
+            [data-movement-row]:hover {
+              background-color: rgba(128, 128, 128, 0.08);
+            }
           `,
         }}
       />
 
       {/* Command bar */}
       <CommandBar
+        onManage={() => setShowManage(true)}
         accountSelector={
           <CompactAccountPicker
             accounts={availableAccounts}

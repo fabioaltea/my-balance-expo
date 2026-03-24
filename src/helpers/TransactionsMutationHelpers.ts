@@ -33,6 +33,13 @@ export interface DeleteMovementData {
   movementId: string;
 }
 
+export interface DismissMovementData {
+  description: string;
+  category: string;
+  date: string;
+  recurrenceId: string;
+}
+
 export interface UpdateMovementData {
   movementId: string;
   description?: string;
@@ -197,6 +204,34 @@ export class TransactionsMutationHelpers {
     updateAccountBalances(
       queryClient,
       calcDeltasFromInputs(newMovement.transactions),
+    );
+
+    return snapshot;
+  }
+
+  static async optimisticDismissMovement(
+    queryClient: QueryClient,
+    data: DismissMovementData,
+  ): Promise<OptimisticSnapshot> {
+    const snapshot = await this.snapshotAndCancel(queryClient);
+
+    const tempId = `temp-dismiss-${Date.now()}`;
+    const dismissedTransaction: Transaction = {
+      movementId: tempId,
+      transactionId: `${tempId}-0`,
+      date: data.date,
+      description: data.description,
+      amount: 0,
+      type: "expense",
+      account: "",
+      category: data.category,
+      recurrenceId: data.recurrenceId,
+      status: "dismissed",
+    };
+
+    queryClient.setQueryData<Transaction[]>(
+      QUERY_KEYS.transactions.filtered(),
+      (old = []) => [...old, dismissedTransaction],
     );
 
     return snapshot;

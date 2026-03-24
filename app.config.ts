@@ -28,7 +28,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   name: getAppName(),
   slug: "mybalance",
   owner: "fabioaltea",
-  version: "0.0.2",
+  version: "1.0.0",
   orientation: "portrait",
   icon: getIcon(),
   scheme: "mybalance",
@@ -63,10 +63,15 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   web: {
     output: "static",
     favicon: "./assets/images/favicon.png",
-    title:"My Balance",
+    title: "My Balance",
   },
   plugins: [
-    "expo-router",
+    [
+      "expo-router",
+      {
+        origin: IS_DEV ? "http://localhost:8081" : "https://app.mybalance.tech",
+      },
+    ],
     [
       "expo-splash-screen",
       {
@@ -97,5 +102,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     eas: {
       projectId: "2d2413da-2b7d-4cab-8be2-dc832515bde8",
     },
+    mapboxToken: process.env.MAPBOX_SECRET_TOKEN,
   },
 });

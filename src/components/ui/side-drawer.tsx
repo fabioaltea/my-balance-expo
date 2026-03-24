@@ -13,11 +13,12 @@ interface SideDrawerProps {
   onClose: () => void;
   children?: React.ReactNode;
   width?: number | string; // percentage or fixed width
+  side?: "right" | "left";
 }
 
 /**
- * SideDrawer - A right-side sliding drawer overlay
- * Opens from the right, covers specified width (default 40%)
+ * SideDrawer - A sliding drawer overlay
+ * Opens from the right (default) or left, covers specified width (default 40%)
  * Full height, high z-index, content underneath doesn't shift
  */
 const SideDrawer: React.FC<SideDrawerProps> = ({
@@ -25,6 +26,7 @@ const SideDrawer: React.FC<SideDrawerProps> = ({
   onClose,
   children,
   width = "40%",
+  side = "right",
 }) => {
   const backgroundColor = useThemeColor({ light: "#FFFFFF" }, "menuBackground");
   const screenWidth = Dimensions.get("window").width;
@@ -36,13 +38,13 @@ const SideDrawer: React.FC<SideDrawerProps> = ({
       ? width
       : screenWidth * 0.4;
 
-  // Initialize off-screen (translateX = drawerWidth means hidden to the right)
+  // Initialize off-screen
+  const hiddenValue = side === "left" ? -drawerWidth : drawerWidth;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
-  const translateX = useRef(new Animated.Value(drawerWidth)).current;
+  const translateX = useRef(new Animated.Value(hiddenValue)).current;
 
   useEffect(() => {
     if (isOpen) {
-      // Open drawer: slide in from right (translateX goes to 0)
       Animated.parallel([
         Animated.timing(overlayOpacity, {
           toValue: 1,
@@ -56,7 +58,6 @@ const SideDrawer: React.FC<SideDrawerProps> = ({
         }),
       ]).start();
     } else {
-      // Close drawer: slide out to right (translateX goes to drawerWidth)
       Animated.parallel([
         Animated.timing(overlayOpacity, {
           toValue: 0,
@@ -64,13 +65,13 @@ const SideDrawer: React.FC<SideDrawerProps> = ({
           useNativeDriver: true,
         }),
         Animated.timing(translateX, {
-          toValue: drawerWidth,
+          toValue: hiddenValue,
           duration: 200,
           useNativeDriver: true,
         }),
       ]).start();
     }
-  }, [isOpen, drawerWidth]);
+  }, [isOpen, drawerWidth, hiddenValue]);
 
   return (
     <View style={styles.overlay} pointerEvents={isOpen ? "auto" : "none"}>
@@ -82,7 +83,7 @@ const SideDrawer: React.FC<SideDrawerProps> = ({
       {/* Animated drawer container - handles animation only */}
       <Animated.View
         style={[
-          styles.drawerAnimatedContainer,
+          side === "left" ? styles.drawerAnimatedContainerLeft : styles.drawerAnimatedContainerRight,
           {
             width: drawerWidth,
             transform: [{ translateX }],
@@ -111,11 +112,18 @@ const styles = StyleSheet.create({
   backdropPressable: {
     flex: 1,
   },
-  drawerAnimatedContainer: {
+  drawerAnimatedContainerRight: {
     position: "absolute",
     top: 0,
     bottom: 0,
     right: 0,
+    padding: 15,
+  },
+  drawerAnimatedContainerLeft: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 0,
     padding: 15,
   },
   drawerContent: {

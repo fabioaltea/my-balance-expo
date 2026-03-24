@@ -24,6 +24,8 @@ import { TransactionsApiHelper } from "@/src/helpers/TransactionsApiHelper";
 import * as Crypto from "expo-crypto";
 import { useAuthContext } from "@/src/state/AuthProvider";
 import { ThemedText } from "@/src/components/core/themed-text";
+import ContextMenu from "@/src/components/ui/context-menu";
+import { Ionicons } from "@expo/vector-icons";
 
 // ===========================
 // Types
@@ -338,6 +340,12 @@ const OnboardingView: React.FC = () => {
     }
   };
 
+  const handleMenuOption = (option: string) => {
+    if (option.toLowerCase() === "logout") {
+      logout();
+    }
+  };
+
   const canComplete = sheetCreated && accounts.length > 0 && categories.length > 0;
 
   // ===========================
@@ -357,12 +365,25 @@ const OnboardingView: React.FC = () => {
           <ThemedText style={styles.appTagline}>Set up your account</ThemedText>
         </View>
         {user && (
-          <View style={styles.userInfo}>
-            {user.picture && (
-              <Image source={{ uri: user.picture }} style={styles.userAvatar} />
-            )}
-            <ThemedText style={styles.userName}>{user.name}</ThemedText>
-          </View>
+          <ContextMenu
+            options={[
+              {
+                label: "Logout",
+                icon: "log-out-outline",
+                destructive: true,
+              },
+            ]}
+            selectedOption=""
+            onSelectOption={handleMenuOption}
+          >
+            <View style={styles.userInfo}>
+              {user.picture && (
+                <Image source={{ uri: user.picture }} style={styles.userAvatar} />
+              )}
+              <ThemedText style={styles.userName}>{user.name}</ThemedText>
+              <Ionicons name="chevron-down" size={14} color="#888" />
+            </View>
+          </ContextMenu>
         )}
       </View>
 
@@ -843,7 +864,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-  },
+    cursor: "pointer",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+  } as any,
   userAvatar: {
     width: 32,
     height: 32,

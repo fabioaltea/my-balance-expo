@@ -10,7 +10,7 @@ import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 
 import { useColorScheme } from "@/src/hooks/use-color-scheme";
-import { View, Text, StyleSheet, ActivityIndicator, Alert, BackHandler } from "react-native";
+import { Platform, View, Text, StyleSheet, ActivityIndicator, Alert, BackHandler } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { AuthProvider, useAuthContext } from "@/src/state/AuthProvider";
 import { DataProvider } from "@/src/state/DataProvider";
@@ -194,10 +194,12 @@ const styles = StyleSheet.create({
 export default function RootLayout() {
   return (
     <PlatformProvider>
-      <Head>
-        <title>My Balance</title>
-        <link rel="icon" type="image/png" href="/favicon.png" />
-      </Head>
+      {Platform.OS === "web" && (
+        <Head>
+          <title>My Balance</title>
+          <link rel="icon" type="image/png" href="/favicon.png" />
+        </Head>
+      )}
       <QueryProvider>
         <AuthProvider>
           <AppRouter />

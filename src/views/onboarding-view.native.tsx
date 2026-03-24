@@ -25,6 +25,7 @@ import ModalPanel from "@/src/components/ui/modal-panel";
 import CategoryPanel from "@/src/components/ui/category-panel";
 import { useAuthContext } from "@/src/state/AuthProvider";
 import { ThemedText } from "@/src/components/core/themed-text";
+import GlassButton from "@/src/components/ui/glass-button";
 
 // ===========================
 // Types
@@ -745,6 +746,15 @@ const OnboardingView: React.FC = () => {
   // Render
   // ===========================
 
+  const handleMenuOption = (option: string) => {
+    if (option === "Logout") {
+      Alert.alert("Logout", "Are you sure you want to log out?", [
+        { text: "Cancel", style: "cancel" },
+        { text: "Logout", style: "destructive", onPress: () => logout() },
+      ]);
+    }
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: menuBackground }]}>
       <Pager
@@ -758,6 +768,23 @@ const OnboardingView: React.FC = () => {
         <Step3 />
       </Pager>
       <StepIndicator />
+
+      {/* Menu button (top-right) */}
+      <GlassButton
+        type="menu"
+        onPress={() => {}}
+        style={styles.menuButton}
+        contextMenuOptions={[
+          {
+            label: "Logout",
+            icon: "log-out-outline",
+            destructive: true,
+          },
+        ]}
+        contextMenuActivationMethod="singlePress"
+        onContextMenuSelect={handleMenuOption}
+        accessibilityLabel="Menu"
+      />
 
       {/* Category Modal */}
       <ModalPanel
@@ -796,6 +823,11 @@ const styles = StyleSheet.create({
   },
   pager: {
     flex: 1,
+  },
+  menuButton: {
+    position: "absolute",
+    top: 16,
+    right: 16,
   },
 
   // Step layout

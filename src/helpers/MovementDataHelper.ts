@@ -81,6 +81,7 @@ export class MovementDataHelper {
       (m) =>
         m.status?.toLowerCase() !== "recurrent" &&
         m.status?.toLowerCase() !== "unconfirmed" &&
+        m.status?.toLowerCase() !== "dismissed" &&
         !m.recurrencePattern,
     );
   }

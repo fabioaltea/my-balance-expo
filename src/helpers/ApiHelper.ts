@@ -99,6 +99,7 @@ export class ApiHelper {
       }
 
       const result = await response.json();
+      console.log("📡 Raw profile response:", JSON.stringify(result));
       if (result.success) {
         return result;
       }

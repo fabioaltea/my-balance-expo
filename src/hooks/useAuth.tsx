@@ -73,6 +73,7 @@ export const useAuth = () => {
         hasUser: !!profile?.user,
         spreadsheetId: profile?.user?.spreadsheetId,
         schemaVersion: profile?.user?.schemaVersion,
+        setupComplete: profile?.user?.setupComplete,
       });
 
       if (!profile || !profile.user) {

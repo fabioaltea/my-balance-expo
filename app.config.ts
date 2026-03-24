@@ -28,7 +28,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   name: getAppName(),
   slug: "mybalance",
   owner: "fabioaltea",
-  version: "0.0.3",
+  version: "1.0.0",
   orientation: "portrait",
   icon: getIcon(),
   scheme: "mybalance",

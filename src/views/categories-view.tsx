@@ -160,28 +160,28 @@ const CategoriesView: React.FC<CategoriesViewProps> = ({ categories }) => {
         <Card>
           <List>
             {categories.map((category) => (
-              <View key={category.id} style={styles.categoryRow}>
+              <Pressable
+                key={category.id}
+                onLongPress={() => handleIconLongPress(category)}
+                delayLongPress={300}
+                style={styles.categoryRow}
+              >
                 <ThemedText style={styles.categoryName}>
                   {category.name}
                 </ThemedText>
-                <Pressable
-                  onLongPress={() => handleIconLongPress(category)}
-                  delayLongPress={300}
+                <View
+                  style={[
+                    styles.iconContainer,
+                    { backgroundColor: category.color || DEFAULT_COLOR },
+                  ]}
                 >
-                  <View
-                    style={[
-                      styles.iconContainer,
-                      { backgroundColor: category.color || DEFAULT_COLOR },
-                    ]}
-                  >
-                    <IconSymbol
-                      name={(category.icon || DEFAULT_ICON) as IconName}
-                      size={24}
-                      color="#FFFFFF"
-                    />
-                  </View>
-                </Pressable>
-              </View>
+                  <IconSymbol
+                    name={(category.icon || DEFAULT_ICON) as IconName}
+                    size={24}
+                    color="#FFFFFF"
+                  />
+                </View>
+              </Pressable>
             ))}
           </List>
         </Card>

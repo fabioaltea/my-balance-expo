@@ -49,7 +49,7 @@ import CommandBar from "./command-bar";
 import PeriodPicker from "@/src/components/ui/period-chips-picker";
 import ChipButton from "@/src/components/ui/chip-button";
 import { SummaryCard } from "@/src/components/cards";
-import ManageView from "@/src/views/manage-view";
+import ManageView from "@/src/views/manage-view.web";
 
 type ToastStatus = "loading" | "success" | "error";
 

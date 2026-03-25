@@ -3,6 +3,10 @@ import { View, StyleSheet, Animated, TextInput } from "react-native";
 import { useThemeColor } from "@/src/hooks/use-theme-color";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { GoogleMap, MarkerF, useLoadScript } from "@react-google-maps/api";
+import {
+  capitalizeLocationQuery,
+  isLocationResolved,
+} from "@/src/utils/locationValue";
 
 const LIBRARIES: "places"[] = ["places"];
 
@@ -15,6 +19,7 @@ export interface ILocation {
 
 interface ILocationPickerProps {
   value: string;
+  location?: ILocation | null;
   onChange: (location: ILocation) => void;
   label?: string;
   placeholder?: string;
@@ -25,6 +30,7 @@ const DEFAULT_CENTER = { lat: 39.2238, lng: 9.1217 };
 
 const LocationPicker: React.FC<ILocationPickerProps> = ({
   value,
+  location,
   onChange,
   label = "Location",
   placeholder = "Enter location...",
@@ -32,11 +38,16 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [mapCenter, setMapCenter] = useState(DEFAULT_CENTER);
-  const [markerPos, setMarkerPos] = useState<{ lat: number; lng: number } | null>(null);
+  const [markerPos, setMarkerPos] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
 
   const cardHeight = useRef(new Animated.Value(30)).current;
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const placesServiceRef = useRef<google.maps.places.PlacesService | null>(null);
+  const placesServiceRef = useRef<google.maps.places.PlacesService | null>(
+    null,
+  );
 
   const textColor = useThemeColor({ light: "#000", dark: "#fff" }, "text");
   const placeholderColor = useThemeColor(
@@ -81,6 +92,25 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
     }
   }, [isExpanded, cardHeight]);
 
+  const showResolvedLocation = useCallback(
+    (nextLocation: ILocation) => {
+      if (!isLocationResolved(nextLocation)) {
+        return;
+      }
+
+      setMapCenter({
+        lat: nextLocation.latitude!,
+        lng: nextLocation.longitude!,
+      });
+      setMarkerPos({
+        lat: nextLocation.latitude!,
+        lng: nextLocation.longitude!,
+      });
+      expandCard();
+    },
+    [expandCard],
+  );
+
   const searchAndShow = useCallback(
     (query: string) => {
       if (!placesServiceRef.current) return;
@@ -88,39 +118,62 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
       placesServiceRef.current.textSearch(
         { query, region: "it" },
         (results, status) => {
-          if (status === google.maps.places.PlacesServiceStatus.OK && results?.length) {
+          if (
+            status === google.maps.places.PlacesServiceStatus.OK &&
+            results?.length
+          ) {
             const first = results[0];
             const lat = first.geometry?.location?.lat();
             const lng = first.geometry?.location?.lng();
             if (lat != null && lng != null) {
-              setMapCenter({ lat, lng });
-              setMarkerPos({ lat, lng });
-              expandCard();
-              onChange({
-                address: query,
+              const resolvedLocation = {
+                address: capitalizeLocationQuery(query),
                 latitude: lat,
                 longitude: lng,
                 placeId: first.place_id,
-              });
+              };
+
+              showResolvedLocation(resolvedLocation);
+              onChange(resolvedLocation);
             }
           }
         },
       );
     },
-    [expandCard, onChange],
+    [onChange, showResolvedLocation],
   );
 
   // Auto-expand map when mounting with a pre-existing location value (e.g. editing a movement)
   const hasAutoSearched = useRef(false);
   useEffect(() => {
-    if (isLoaded && placesServiceRef.current && value.trim().length >= 3 && !hasAutoSearched.current && !isExpanded) {
+    if (location && isLocationResolved(location)) {
+      showResolvedLocation(location);
+      hasAutoSearched.current = true;
+      return;
+    }
+
+    if (!value.trim()) {
+      collapseCard();
+      hasAutoSearched.current = false;
+    }
+  }, [collapseCard, location, showResolvedLocation, value]);
+
+  useEffect(() => {
+    if (
+      isLoaded &&
+      placesServiceRef.current &&
+      value.trim().length >= 3 &&
+      !hasAutoSearched.current &&
+      !isLocationResolved(location)
+    ) {
       hasAutoSearched.current = true;
       searchAndShow(value.trim());
     }
-  }, [isLoaded, value, isExpanded, searchAndShow]);
+  }, [isLoaded, location, searchAndShow, value]);
 
   const handleTextChange = (text: string) => {
     onChange({ address: text });
+    hasAutoSearched.current = false;
 
     if (!text.trim()) {
       collapseCard();
@@ -128,7 +181,9 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
     }
 
     if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    setMarkerPos(null);
     if (text.length >= 3) {
+      collapseCard();
       searchTimeout.current = setTimeout(() => searchAndShow(text), 600);
     }
   };
@@ -137,7 +192,9 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
     return (
       <View style={styles.cardContent}>
         <View style={styles.inputRow}>
-          <ThemedText type="default" style={styles.label}>{label}</ThemedText>
+          <ThemedText type="default" style={styles.label}>
+            {label}
+          </ThemedText>
           <TextInput
             style={[styles.textInput, { color: textColor }]}
             value={value}
@@ -153,7 +210,9 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
   return (
     <Animated.View style={[styles.cardContent, { height: cardHeight }]}>
       <View style={styles.inputRow}>
-        <ThemedText type="default" style={styles.label}>{label}</ThemedText>
+        <ThemedText type="default" style={styles.label}>
+          {label}
+        </ThemedText>
         <TextInput
           style={[styles.textInput, { color: textColor }]}
           value={value}
@@ -170,7 +229,6 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
             center={mapCenter}
             zoom={15}
             options={{ disableDefaultUI: true, zoomControl: true }}
-            
           >
             <MarkerF position={markerPos} />
           </GoogleMap>

@@ -20,6 +20,7 @@ import IconSymbol from "@/src/components/ui/icon-symbol";
 import { ShortcutApiHelper } from "@/src/helpers/ShortcutApiHelper";
 import { NotificationsHelpers } from "@/src/helpers/NotificationsHelpers";
 import * as WebBrowser from "expo-web-browser";
+import { ScrollView } from "react-native";
 
 const ICLOUD_SHORTCUT_URL = process.env.EXPO_PUBLIC_ICLOUD_SHORTCUT_URL || "";
 const LANDING_BASE_URL =
@@ -268,186 +269,187 @@ const SettingsView: React.FC<SettingsViewProps> = ({ user, logout }) => {
   };
 
   return (
-    <View style={styles.container}>
-      {/* User Profile Card */}
-      <SettingsSection secondaryTextColor={secondaryTextColor}>
-        <InputGroup>
-          <View style={styles.profileCard}>
-            {user?.picture ? (
-              <Image
-                source={{ uri: user.picture }}
-                style={styles.profileImage}
-              />
-            ) : (
-              <View style={styles.profileAvatar}>
-                <ThemedText style={styles.profileInitial}>
-                  {user?.name?.charAt(0).toUpperCase() ||
-                    user?.email?.charAt(0).toUpperCase() ||
-                    "U"}
+      <ScrollView style={styles.container}>
+        {/* User Profile Card */}
+        <SettingsSection secondaryTextColor={secondaryTextColor}>
+          <InputGroup>
+            <View style={styles.profileCard}>
+              {user?.picture ? (
+                <Image
+                  source={{ uri: user.picture }}
+                  style={styles.profileImage}
+                />
+              ) : (
+                <View style={styles.profileAvatar}>
+                  <ThemedText style={styles.profileInitial}>
+                    {user?.name?.charAt(0).toUpperCase() ||
+                      user?.email?.charAt(0).toUpperCase() ||
+                      "U"}
+                  </ThemedText>
+                </View>
+              )}
+              <View style={styles.profileInfo}>
+                <ThemedText style={[styles.profileName, { color: textColor }]}>
+                  {user?.name || user?.email || "User"}
+                </ThemedText>
+                <ThemedText
+                  style={[styles.profileEmail, { color: secondaryTextColor }]}
+                >
+                  {user?.email || "No email"}
                 </ThemedText>
               </View>
-            )}
-            <View style={styles.profileInfo}>
-              <ThemedText style={[styles.profileName, { color: textColor }]}>
-                {user?.name || user?.email || "User"}
-              </ThemedText>
-              <ThemedText
-                style={[styles.profileEmail, { color: secondaryTextColor }]}
-              >
-                {user?.email || "No email"}
-              </ThemedText>
             </View>
-          </View>
-        </InputGroup>
-      </SettingsSection>
+          </InputGroup>
+        </SettingsSection>
 
-      {/* Data Management */}
-      <SettingsSection title="DATA" secondaryTextColor={secondaryTextColor}>
-        <InputGroup>
-          <SettingsItem
-            icon="credit-card"
-            title="Accounts"
-            onPress={() => handleNavigation("/accounts")}
-            textColor={textColor}
-            secondaryTextColor={secondaryTextColor}
-            separatorColor={separatorColor}
-            destructiveColor={destructiveColor}
-          />
-          <SettingsItem
-            icon="folder"
-            title="Categories"
-            onPress={() => handleNavigation("/categories")}
-            textColor={textColor}
-            secondaryTextColor={secondaryTextColor}
-            separatorColor={separatorColor}
-            destructiveColor={destructiveColor}
-          />
-        </InputGroup>
-      </SettingsSection>
+        {/* Data Management */}
+        <SettingsSection title="DATA" secondaryTextColor={secondaryTextColor}>
+          <InputGroup>
+            <SettingsItem
+              icon="credit-card"
+              title="Accounts"
+              onPress={() => handleNavigation("/accounts")}
+              textColor={textColor}
+              secondaryTextColor={secondaryTextColor}
+              separatorColor={separatorColor}
+              destructiveColor={destructiveColor}
+            />
+            <SettingsItem
+              icon="folder"
+              title="Categories"
+              onPress={() => handleNavigation("/categories")}
+              textColor={textColor}
+              secondaryTextColor={secondaryTextColor}
+              separatorColor={separatorColor}
+              destructiveColor={destructiveColor}
+            />
+          </InputGroup>
+        </SettingsSection>
 
-      {/* Notifications */}
-      <SettingsSection
-        title="NOTIFICATIONS"
-        secondaryTextColor={secondaryTextColor}
-      >
-        <InputGroup>
-          <View
-            style={[
-              styles.settingsItem,
-              {
-                backgroundColor: "transparent",
-                borderBottomColor: separatorColor,
-              },
-            ]}
-          >
-            <View style={styles.settingsItemLeft}>
-              <View style={styles.iconContainer}>
-                <IconSymbol name="notifications" size={20} color="#2F4F3F" />
+        {/* Notifications */}
+        <SettingsSection
+          title="NOTIFICATIONS"
+          secondaryTextColor={secondaryTextColor}
+        >
+          <InputGroup>
+            <View
+              style={[
+                styles.settingsItem,
+                {
+                  backgroundColor: "transparent",
+                  borderBottomColor: separatorColor,
+                },
+              ]}
+            >
+              <View style={styles.settingsItemLeft}>
+                <View style={styles.iconContainer}>
+                  <IconSymbol name="notifications" size={20} color="#2F4F3F" />
+                </View>
+                <ThemedText
+                  style={[styles.settingsItemText, { color: textColor }]}
+                >
+                  Push Notifications
+                </ThemedText>
               </View>
-              <ThemedText
-                style={[styles.settingsItemText, { color: textColor }]}
-              >
-                Push Notifications
-              </ThemedText>
+              {isLoadingNotifications ? (
+                <ActivityIndicator size="small" color="#2F4F3F" />
+              ) : (
+                <Switch
+                  style={{ alignSelf: "center" }}
+                  trackColor={{ true: "#2F4F3F", false: "#767577" }}
+                  thumbColor={notificationsEnabled ? "#ffffff" : "#f4f3f4"}
+                  ios_backgroundColor="#3e3e3e"
+                  onValueChange={handleToggleNotifications}
+                  value={notificationsEnabled}
+                />
+              )}
             </View>
-            {isLoadingNotifications ? (
-              <ActivityIndicator size="small" color="#2F4F3F" />
-            ) : (
-              <Switch
-                style={{ alignSelf: "center" }}
-                trackColor={{ true: "#2F4F3F", false: "#767577" }}
-                thumbColor={notificationsEnabled ? "#ffffff" : "#f4f3f4"}
-                ios_backgroundColor="#3e3e3e"
-                onValueChange={handleToggleNotifications}
-                value={notificationsEnabled}
-              />
-            )}
-          </View>
-        </InputGroup>
-      </SettingsSection>
+          </InputGroup>
+        </SettingsSection>
 
-      {/* Shortcuts */}
-      <SettingsSection
-        title="SHORTCUTS"
-        secondaryTextColor={secondaryTextColor}
-      >
-        <InputGroup>
-          <TouchableOpacity
-            style={[
-              styles.settingsItem,
-              {
-                backgroundColor: "transparent",
-                borderBottomColor: separatorColor,
-              },
-            ]}
-            onPress={handleGenerateShortcut}
-            activeOpacity={0.6}
-            disabled={isLoadingShortcut}
-          >
-            <View style={styles.settingsItemLeft}>
-              <View style={styles.iconContainer}>
-                <IconSymbol name="app-shortcut" size={20} color="#2F4F3F" />
+        {/* Shortcuts */}
+        <SettingsSection
+          title="SHORTCUTS"
+          secondaryTextColor={secondaryTextColor}
+        >
+          <InputGroup>
+            <TouchableOpacity
+              style={[
+                styles.settingsItem,
+                {
+                  backgroundColor: "transparent",
+                  borderBottomColor: separatorColor,
+                },
+              ]}
+              onPress={handleGenerateShortcut}
+              activeOpacity={0.6}
+              disabled={isLoadingShortcut}
+            >
+              <View style={styles.settingsItemLeft}>
+                <View style={styles.iconContainer}>
+                  <IconSymbol name="app-shortcut" size={20} color="#2F4F3F" />
+                </View>
+                <ThemedText
+                  style={[styles.settingsItemText, { color: textColor }]}
+                >
+                  {shortcutKey ? "Update iOS Shortcut" : "Setup iOS Shortcut"}
+                </ThemedText>
               </View>
-              <ThemedText
-                style={[styles.settingsItemText, { color: textColor }]}
-              >
-                {shortcutKey ? "Update iOS Shortcut" : "Setup iOS Shortcut"}
-              </ThemedText>
-            </View>
-            {isLoadingShortcut ? (
-              <ActivityIndicator size="small" color="#2F4F3F" />
-            ) : (
-              <IconSymbol
-                name="chevron-right"
-                size={16}
-                color={secondaryTextColor}
-              />
-            )}
-          </TouchableOpacity>
-        </InputGroup>
-      </SettingsSection>
+              {isLoadingShortcut ? (
+                <ActivityIndicator size="small" color="#2F4F3F" />
+              ) : (
+                <IconSymbol
+                  name="chevron-right"
+                  size={16}
+                  color={secondaryTextColor}
+                />
+              )}
+            </TouchableOpacity>
+          </InputGroup>
+        </SettingsSection>
 
-      {/* Legal */}
-      <SettingsSection title="LEGAL" secondaryTextColor={secondaryTextColor}>
-        <InputGroup>
-          <SettingsItem
-            icon="privacy-tip"
-            title="Privacy Policy"
-            onPress={() => handleOpenLegal("privacy-policy")}
-            textColor={textColor}
-            secondaryTextColor={secondaryTextColor}
-            separatorColor={separatorColor}
-            destructiveColor={destructiveColor}
-          />
-          <SettingsItem
-            icon="description"
-            title="Terms of Service"
-            onPress={() => handleOpenLegal("terms-of-service")}
-            textColor={textColor}
-            secondaryTextColor={secondaryTextColor}
-            separatorColor={separatorColor}
-            destructiveColor={destructiveColor}
-          />
-        </InputGroup>
-      </SettingsSection>
+        {/* Legal */}
+        <SettingsSection title="LEGAL" secondaryTextColor={secondaryTextColor}>
+          <InputGroup>
+            <SettingsItem
+              icon="privacy-tip"
+              title="Privacy Policy"
+              onPress={() => handleOpenLegal("privacy-policy")}
+              textColor={textColor}
+              secondaryTextColor={secondaryTextColor}
+              separatorColor={separatorColor}
+              destructiveColor={destructiveColor}
+            />
+            <SettingsItem
+              icon="description"
+              title="Terms of Service"
+              onPress={() => handleOpenLegal("terms-of-service")}
+              textColor={textColor}
+              secondaryTextColor={secondaryTextColor}
+              separatorColor={separatorColor}
+              destructiveColor={destructiveColor}
+            />
+          </InputGroup>
+        </SettingsSection>
 
-      {/* Account Actions */}
-      <SettingsSection secondaryTextColor={secondaryTextColor}>
-        <InputGroup>
-          <SettingsItem
-            icon="logout"
-            title="Logout"
-            onPress={handleLogout}
-            showChevron={false}
-            isDestructive={true}
-            textColor={textColor}
-            secondaryTextColor={secondaryTextColor}
-            separatorColor={separatorColor}
-            destructiveColor={destructiveColor}
-          />
-        </InputGroup>
-      </SettingsSection>
-    </View>
+        {/* Account Actions */}
+        <SettingsSection secondaryTextColor={secondaryTextColor}>
+          <InputGroup>
+            <SettingsItem
+              icon="logout"
+              title="Logout"
+              onPress={handleLogout}
+              showChevron={false}
+              isDestructive={true}
+              textColor={textColor}
+              secondaryTextColor={secondaryTextColor}
+              separatorColor={separatorColor}
+              destructiveColor={destructiveColor}
+            />
+          </InputGroup>
+        </SettingsSection>
+        <View style={{ height: 70 }}></View>
+      </ScrollView>
   );
 };
 

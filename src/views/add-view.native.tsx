@@ -41,6 +41,10 @@ import {
 } from "@/src/helpers/TransactionsMutationHelpers";
 import type { Movement } from "@/src/state";
 import { MovementHelper } from "@/src/helpers/MovementHelper";
+import {
+  parseLocationValue,
+  serializeLocationValue,
+} from "@/src/utils/locationValue";
 import TextBox from "@/src/components/ui/text-box";
 import ListPicker from "@/src/components/ui/list-picker.native";
 import DatePicker from "@/src/components/ui/date-picker.native";
@@ -235,7 +239,7 @@ const AddView: React.FC<AddViewProps> = ({
       }),
     );
     setTransactions(mappedTransactions);
-    setSelectedLocation({ address: editingMovement.location || "" });
+    setSelectedLocation(parseLocationValue(editingMovement.location));
 
     if (editingMovement.recurrencePattern) {
       const match = editingMovement.recurrencePattern.match(/^P(\d+)([DWMY])$/);
@@ -275,7 +279,7 @@ const AddView: React.FC<AddViewProps> = ({
         type: t.type,
       }));
     setTransactions(mappedTransactions);
-    setSelectedLocation({ address: recurringTemplate.location || "" });
+    setSelectedLocation(parseLocationValue(recurringTemplate.location));
   }, [recurringTemplate, editingMovement]);
 
   // Pre-populate form from OCR/initial movement data
@@ -290,7 +294,7 @@ const AddView: React.FC<AddViewProps> = ({
       if (parsedDate) setSelectedDate(parsedDate);
     }
     if (initialMovement.location) {
-      setSelectedLocation({ address: initialMovement.location });
+      setSelectedLocation(parseLocationValue(initialMovement.location));
     }
     if (
       initialMovement.transactions &&
@@ -529,7 +533,7 @@ const AddView: React.FC<AddViewProps> = ({
       description: description.trim(),
       category: selectedCategory,
       date: formattedDate,
-      location: selectedLocation.address || "",
+      location: serializeLocationValue(selectedLocation),
       transactions: transactionsData,
     };
 
@@ -762,6 +766,7 @@ const AddView: React.FC<AddViewProps> = ({
           <InputGroup>
             <LocationPicker
               value={selectedLocation.address}
+              location={selectedLocation}
               onChange={setSelectedLocation}
               label="Location"
               placeholder="Enter location"

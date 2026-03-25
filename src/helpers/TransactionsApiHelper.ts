@@ -198,6 +198,31 @@ export class TransactionsApiHelper {
     }
   }
 
+  static async updateMovementsBatch(
+    spreadsheetId: string,
+    movements: Array<{ movementId: string; location?: string }>,
+  ) {
+    try {
+      console.log("✏️ Updating movements batch...", movements.length);
+
+      const response = await HttpHelper.post(
+        `/movements/batch?spreadsheet_id=${spreadsheetId}`,
+        { movements },
+      );
+
+      if (response.success) {
+        console.log("✅ Movements batch updated successfully");
+        return response.data;
+      } else {
+        console.error("❌ Failed to update movements batch:", response.error);
+        return null;
+      }
+    } catch (error) {
+      console.error("❌ Error updating movements batch:", error);
+      return null;
+    }
+  }
+
   /**
    * Update an existing movement (legacy endpoint - same as Ionic)
    * Uses POST /update which does raw Google Sheets update

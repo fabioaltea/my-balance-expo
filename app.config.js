@@ -1,5 +1,3 @@
-import { ExpoConfig, ConfigContext } from "expo/config";
-
 const IS_DEV = process.env.APP_VARIANT === "development";
 
 const getAppName = () => {
@@ -23,7 +21,7 @@ const getIcon = () => {
   return "./assets/images/icon.png";
 };
 
-export default ({ config }: ConfigContext): ExpoConfig => ({
+export default ({ config }) => ({
   ...config,
   name: getAppName(),
   slug: "mybalance",

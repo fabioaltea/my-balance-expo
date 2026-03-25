@@ -50,6 +50,7 @@ import PeriodPicker from "@/src/components/ui/period-chips-picker";
 import ChipButton from "@/src/components/ui/chip-button";
 import { SummaryCard } from "@/src/components/cards";
 import ManageView from "@/src/views/manage-view.web";
+import MapView from "@/src/views/map-view.web";
 
 type ToastStatus = "loading" | "success" | "error";
 
@@ -85,6 +86,7 @@ export function LandscapeLayout() {
 
   const { user, logout } = useAuthContext();
   const [showManage, setShowManage] = useState(false);
+  const [showMap, setShowMap] = useState(false);
   const addMovement = useSpreadsheetMutation<CreateMovementData, OptimisticSnapshot>({
     mutationFn: (spreadsheetId, data) => TransactionsApiHelper.createTransaction(spreadsheetId, data),
     onMutate: (qc, data) => TransactionsMutationHelpers.optimisticAddMovement(qc, data),
@@ -431,6 +433,14 @@ export function LandscapeLayout() {
     return calculateForecast(dateRange.startDate, dateRange.endDate);
   }, [calculateForecast, dateRange]);
 
+  if (showMap) {
+    return (
+      <View style={[styles.container, { backgroundColor }]}>
+        <MapView onBack={() => setShowMap(false)} />
+      </View>
+    );
+  }
+
   if (showManage) {
     return (
       <View style={[styles.container, { backgroundColor }]}>
@@ -487,6 +497,7 @@ export function LandscapeLayout() {
       {/* Command bar */}
       <CommandBar
         onManage={() => setShowManage(true)}
+        onMap={() => setShowMap(true)}
         accountSelector={
           <CompactAccountPicker
             accounts={availableAccounts}

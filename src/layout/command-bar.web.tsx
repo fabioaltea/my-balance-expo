@@ -12,6 +12,7 @@ interface LandscapeCommandBarProps {
   periodSelector: ReactNode;
   rightContent?: ReactNode;
   onManage?: () => void;
+  onMap?: () => void;
 }
 
 /**
@@ -23,6 +24,7 @@ export function CommandBar({
   periodSelector,
   rightContent,
   onManage,
+  onMap,
 }: LandscapeCommandBarProps) {
   const textColor = useThemeColor({}, "text");
   const borderColor = useThemeColor(
@@ -41,6 +43,8 @@ export function CommandBar({
       logout();
     } else if (option === "Manage") {
       onManage?.();
+    } else if (option === "Map") {
+      onMap?.();
     } else if (option === "Privacy Policy") {
       window.open(`${LANDING_BASE_URL}/#/privacy-policy`, "_blank");
     } else if (option === "Terms of Service") {
@@ -57,6 +61,10 @@ export function CommandBar({
             {
               label: "Manage",
               icon: "settings-outline",
+            },
+            {
+              label: "Map",
+              icon: "map-outline",
             },
             {
               label: "Privacy Policy",

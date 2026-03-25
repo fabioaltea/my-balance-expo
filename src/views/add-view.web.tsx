@@ -24,6 +24,10 @@ import {
 } from "@/src/helpers/TransactionsMutationHelpers";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import LocationPicker, { ILocation } from "@/src/components/ui/location-picker";
+import {
+  parseLocationValue,
+  serializeLocationValue,
+} from "@/src/utils/locationValue";
 import RecurrencePickerWeb from "@/src/components/ui/recurrence-picker.web";
 import { ScreenView } from "../components";
 
@@ -149,7 +153,7 @@ const AddView: React.FC<AddViewProps> = ({
       setSelectedDate(parsedDate);
     }
 
-    setSelectedLocation({ address: editingMovement.location || "" });
+    setSelectedLocation(parseLocationValue(editingMovement.location));
 
     const mappedTransactions: ITransaction[] = editingMovement.transactions.map(
       (t, index) => ({
@@ -185,7 +189,7 @@ const AddView: React.FC<AddViewProps> = ({
 
     setDescription(recurringTemplate.description);
     setSelectedCategory(recurringTemplate.category);
-    setSelectedLocation({ address: recurringTemplate.location || "" });
+    setSelectedLocation(parseLocationValue(recurringTemplate.location));
 
     const mappedTransactions: ITransaction[] =
       recurringTemplate.transactions.map((t, index) => ({
@@ -378,7 +382,7 @@ const AddView: React.FC<AddViewProps> = ({
       description: description.trim(),
       category: selectedCategory,
       date: formattedDate,
-      location: selectedLocation.address || "",
+      location: serializeLocationValue(selectedLocation),
       transactions: transactionsData,
     };
 
@@ -462,7 +466,14 @@ const AddView: React.FC<AddViewProps> = ({
                 ? "Edit Movement"
                 : "New Movement"}
           </ThemedText>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8, opacity: isSaving ? 0.5 : 1 }}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 8,
+              opacity: isSaving ? 0.5 : 1,
+            }}
+          >
             {isEditing && (
               <View style={styles.iconButton}>
                 <MaterialIcons name="more-vert" size={20} color={textColor} />
@@ -489,13 +500,20 @@ const AddView: React.FC<AddViewProps> = ({
                 </select>
               </View>
             )}
-            <Pressable onPress={closeView} disabled={isSaving} style={styles.iconButton}>
+            <Pressable
+              onPress={closeView}
+              disabled={isSaving}
+              style={styles.iconButton}
+            >
               <MaterialIcons name="close" size={20} color={textColor} />
             </Pressable>
           </View>
         </View>
 
-        <ScrollView showsVerticalScrollIndicator={false} pointerEvents={isSaving ? "none" : "auto"}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          pointerEvents={isSaving ? "none" : "auto"}
+        >
           {/* Description + Category + Date */}
           <InputGroup>
             <TextBox
@@ -672,6 +690,7 @@ const AddView: React.FC<AddViewProps> = ({
           <InputGroup>
             <LocationPicker
               value={selectedLocation.address}
+              location={selectedLocation}
               onChange={setSelectedLocation}
               label="Location"
               placeholder="Enter location"
@@ -697,7 +716,8 @@ const AddView: React.FC<AddViewProps> = ({
           disabled={isSaving || isSubmitting || !isFormValid()}
           style={[
             styles.submitButton,
-            (isSaving || isSubmitting || !isFormValid()) && styles.submitButtonDisabled,
+            (isSaving || isSubmitting || !isFormValid()) &&
+              styles.submitButtonDisabled,
           ]}
         >
           <ThemedText
@@ -706,7 +726,11 @@ const AddView: React.FC<AddViewProps> = ({
               (isSaving || isSubmitting || !isFormValid()) && { opacity: 0.6 },
             ]}
           >
-            {isSaving || isSubmitting ? "Saving" : isEditing ? "Update" : "Insert"}
+            {isSaving || isSubmitting
+              ? "Saving"
+              : isEditing
+                ? "Update"
+                : "Insert"}
           </ThemedText>
         </Pressable>
       </View>

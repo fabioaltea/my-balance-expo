@@ -3,6 +3,10 @@ import { View, StyleSheet, Animated, TextInput } from "react-native";
 import { useThemeColor } from "@/src/hooks/use-theme-color";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { GoogleMap, MarkerF, useLoadScript } from "@react-google-maps/api";
+import {
+  capitalizeLocationQuery,
+  isLocationResolved,
+} from "@/src/utils/locationValue";
 
 const LIBRARIES: "places"[] = ["places"];
 
@@ -15,6 +19,7 @@ export interface ILocation {
 
 interface ILocationPickerProps {
   value: string;
+  location?: ILocation | null;
   onChange: (location: ILocation) => void;
   label?: string;
   placeholder?: string;
@@ -25,6 +30,7 @@ const DEFAULT_CENTER = { lat: 39.2238, lng: 9.1217 };
 
 const LocationPicker: React.FC<ILocationPickerProps> = ({
   value,
+  location,
   onChange,
   label = "Location",
   placeholder = "Enter location...",
@@ -81,6 +87,25 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
     }
   }, [isExpanded, cardHeight]);
 
+  const showResolvedLocation = useCallback(
+    (nextLocation: ILocation) => {
+      if (!isLocationResolved(nextLocation)) {
+        return;
+      }
+
+      setMapCenter({
+        lat: nextLocation.latitude!,
+        lng: nextLocation.longitude!,
+      });
+      setMarkerPos({
+        lat: nextLocation.latitude!,
+        lng: nextLocation.longitude!,
+      });
+      expandCard();
+    },
+    [expandCard],
+  );
+
   const searchAndShow = useCallback(
     (query: string) => {
       if (!placesServiceRef.current) return;
@@ -93,34 +118,54 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
             const lat = first.geometry?.location?.lat();
             const lng = first.geometry?.location?.lng();
             if (lat != null && lng != null) {
-              setMapCenter({ lat, lng });
-              setMarkerPos({ lat, lng });
-              expandCard();
-              onChange({
-                address: query,
+              const resolvedLocation = {
+                address: capitalizeLocationQuery(query),
                 latitude: lat,
                 longitude: lng,
                 placeId: first.place_id,
-              });
+              };
+
+              showResolvedLocation(resolvedLocation);
+              onChange(resolvedLocation);
             }
           }
         },
       );
     },
-    [expandCard, onChange],
+    [onChange, showResolvedLocation],
   );
 
   // Auto-expand map when mounting with a pre-existing location value (e.g. editing a movement)
   const hasAutoSearched = useRef(false);
   useEffect(() => {
-    if (isLoaded && placesServiceRef.current && value.trim().length >= 3 && !hasAutoSearched.current && !isExpanded) {
+    if (location && isLocationResolved(location)) {
+      showResolvedLocation(location);
+      hasAutoSearched.current = true;
+      return;
+    }
+
+    if (!value.trim()) {
+      collapseCard();
+      hasAutoSearched.current = false;
+    }
+  }, [collapseCard, location, showResolvedLocation, value]);
+
+  useEffect(() => {
+    if (
+      isLoaded &&
+      placesServiceRef.current &&
+      value.trim().length >= 3 &&
+      !hasAutoSearched.current &&
+      !isLocationResolved(location)
+    ) {
       hasAutoSearched.current = true;
       searchAndShow(value.trim());
     }
-  }, [isLoaded, value, isExpanded, searchAndShow]);
+  }, [isLoaded, location, searchAndShow, value]);
 
   const handleTextChange = (text: string) => {
     onChange({ address: text });
+    hasAutoSearched.current = false;
 
     if (!text.trim()) {
       collapseCard();
@@ -128,7 +173,9 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
     }
 
     if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    setMarkerPos(null);
     if (text.length >= 3) {
+      collapseCard();
       searchTimeout.current = setTimeout(() => searchAndShow(text), 600);
     }
   };

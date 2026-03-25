@@ -8,6 +8,10 @@ import {
 import { useThemeColor } from "@/src/hooks/use-theme-color";
 import React, { useState, useRef, useEffect } from "react";
 import * as Haptics from "expo-haptics";
+import {
+  capitalizeLocationQuery,
+  isLocationResolved,
+} from "@/src/utils/locationValue";
 import TextBox from "./text-box.native";
 import Mapbox from "@rnmapbox/maps";
 import GooglePlacesSDK from "react-native-google-places-sdk";
@@ -23,6 +27,7 @@ export interface ILocation {
 
 interface ILocationPickerProps {
   value: string;
+  location?: ILocation | null;
   onChange: (location: ILocation) => void;
   label?: string;
   placeholder?: string;
@@ -33,6 +38,7 @@ interface ILocationPickerProps {
 
 const LocationPicker: React.FC<ILocationPickerProps> = ({
   value,
+  location,
   onChange,
   label = "Location",
   placeholder = "Enter location...",
@@ -40,7 +46,6 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
   onFocus,
   onBlur,
 }) => {
-  const [searchResults, setSearchResults] = useState<ILocation[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<ILocation | null>(
     null,
   );
@@ -64,18 +69,48 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
     };
   }, []);
 
-  useEffect(() => {
-    setSelectedLocation(searchResults[0] || null);
-  }, [searchResults]);
-
   // If value is already set (edit mode), expand and search on first non-empty value
   const initialSearchDone = useRef(false);
+
+  const centerMapOnLocation = (nextLocation: ILocation, zoomLevel = 15) => {
+    if (!isLocationResolved(nextLocation)) {
+      return;
+    }
+
+    cameraRef.current?.setCamera({
+      centerCoordinate: [nextLocation.longitude!, nextLocation.latitude!],
+      zoomLevel,
+      animationDuration: 300,
+    });
+  };
+
   useEffect(() => {
-    if (!initialSearchDone.current && value && value.trim().length >= 3) {
+    if (isLocationResolved(location)) {
+      setSelectedLocation(location);
+      expandCard();
+      centerMapOnLocation(location);
+      initialSearchDone.current = true;
+      return;
+    }
+
+    if (!value.trim()) {
+      setSelectedLocation(null);
+      collapseCard();
+      initialSearchDone.current = false;
+    }
+  }, [location, value]);
+
+  useEffect(() => {
+    if (
+      !initialSearchDone.current &&
+      value &&
+      value.trim().length >= 3 &&
+      !isLocationResolved(location)
+    ) {
       initialSearchDone.current = true;
       searchPlaces(value);
     }
-  }, [value]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [location, value]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const cardHeight = useRef(new Animated.Value(40)).current;
 
@@ -85,6 +120,8 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
   );
 
   const searchPlaces = async (text: string) => {
+    const normalizedQuery = capitalizeLocationQuery(text);
+
     expandCard();
     setIsLoading(true);
 
@@ -94,41 +131,33 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
           countries: ["it"],
         });
 
-        const locations: ILocation[] = await Promise.all(
-          predictions.slice(0, 5).map(async (prediction) => {
-            const place = await GooglePlacesSDK.fetchPlaceByID(
-              prediction.placeID,
-              ["coordinate", "formattedAddress"],
-            );
-            return {
-              address: place.formattedAddress || prediction.description,
-              latitude: place.coordinate?.latitude,
-              longitude: place.coordinate?.longitude,
-              placeId: prediction.placeID,
-            };
-          }),
-        );
+        const prediction = predictions[0];
 
-        setSearchResults(locations);
+        if (prediction) {
+          const place = await GooglePlacesSDK.fetchPlaceByID(
+            prediction.placeID,
+            ["coordinate"],
+          );
+          const resolvedLocation: ILocation = {
+            address: normalizedQuery,
+            latitude: place.coordinate?.latitude,
+            longitude: place.coordinate?.longitude,
+            placeId: prediction.placeID,
+          };
 
-        // Center map on first result
-        if (
-          locations.length > 0 &&
-          locations[0].latitude &&
-          locations[0].longitude
-        ) {
-          cameraRef.current?.setCamera({
-            centerCoordinate: [locations[0].longitude, locations[0].latitude],
-            zoomLevel: 15,
-            animationDuration: 300,
-          });
+          setSelectedLocation(resolvedLocation);
+          onChange(resolvedLocation);
+          centerMapOnLocation(resolvedLocation);
+        } else {
+          setSelectedLocation(null);
+          onChange({ address: normalizedQuery });
         }
       } else {
-        setSearchResults([]);
+        setSelectedLocation(null);
       }
     } catch (error) {
       console.error("Error searching places:", error);
-      setSearchResults([]);
+      setSelectedLocation(null);
     } finally {
       setIsLoading(false);
     }
@@ -136,21 +165,23 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
 
   const handleTextChange = (text: string) => {
     onChange({ address: text });
+    initialSearchDone.current = false;
 
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
 
     if (!text.trim()) {
-      setSearchResults([]);
       setSelectedLocation(null);
       collapseCard();
       return;
     }
 
+    setSelectedLocation(null);
+
     if (text.length < 3) return;
 
     debounceTimer.current = setTimeout(() => {
       searchPlaces(text);
-    }, 2000);
+    }, 600);
   };
 
   const expandCard = () => {
@@ -175,31 +206,15 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
     }
   };
 
-  const handleLocationSelect = (location: ILocation) => {
-    setSelectedLocation(location);
-    onChange(location);
-    setSearchResults([]);
-
-    if (location.latitude && location.longitude) {
-      cameraRef.current?.setCamera({
-        centerCoordinate: [location.longitude, location.latitude],
-        zoomLevel: 17,
-        animationDuration: 300,
-      });
-    }
-
-    collapseCard();
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-  };
-
   return (
     <Animated.View style={[styles.cardContent]}>
       <TextBox
-        label="Location"
+        label={label}
         value={value}
         onChange={handleTextChange}
         onFocus={onFocus}
         onBlur={onBlur}
+        placeholder={placeholder}
       />
 
       {isLoading && (
@@ -229,7 +244,8 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
                 zoomLevel={12}
                 centerCoordinate={[9.1217, 39.2238]}
               />
-              {selectedLocation?.latitude && selectedLocation?.longitude && (
+              {selectedLocation?.latitude != null &&
+                selectedLocation?.longitude != null && (
                 <Mapbox.PointAnnotation
                   id="selected-location"
                   coordinate={[

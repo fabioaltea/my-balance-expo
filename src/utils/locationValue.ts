@@ -33,8 +33,10 @@ export function parseLocationValue(raw?: string | null): ParsedLocationValue {
   }
 
   const separatorIndex = input.indexOf("|");
-  const queryPart = separatorIndex >= 0 ? input.slice(0, separatorIndex) : input;
-  const coordinatesPart = separatorIndex >= 0 ? input.slice(separatorIndex + 1) : "";
+  const queryPart =
+    separatorIndex >= 0 ? input.slice(0, separatorIndex) : input;
+  const coordinatesPart =
+    separatorIndex >= 0 ? input.slice(separatorIndex + 1) : "";
 
   let latitude: number | undefined;
   let longitude: number | undefined;
@@ -90,9 +92,26 @@ export function serializeLocationValue(location: {
   return address;
 }
 
-export function isLocationResolved(location?: {
-  latitude?: number;
-  longitude?: number;
-} | null): boolean {
-  return isFiniteNumber(location?.latitude) && isFiniteNumber(location?.longitude);
+export function isLocationResolved(
+  location?: {
+    latitude?: number;
+    longitude?: number;
+  } | null,
+): boolean {
+  return (
+    isFiniteNumber(location?.latitude) && isFiniteNumber(location?.longitude)
+  );
+}
+
+export function getLocationCoordinatesKey(
+  location?: {
+    latitude?: number;
+    longitude?: number;
+  } | null,
+): string | null {
+  if (!isLocationResolved(location)) {
+    return null;
+  }
+
+  return `${location.latitude!.toFixed(6)}|${location.longitude!.toFixed(6)}`;
 }

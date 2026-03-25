@@ -466,7 +466,14 @@ const AddView: React.FC<AddViewProps> = ({
                 ? "Edit Movement"
                 : "New Movement"}
           </ThemedText>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8, opacity: isSaving ? 0.5 : 1 }}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 8,
+              opacity: isSaving ? 0.5 : 1,
+            }}
+          >
             {isEditing && (
               <View style={styles.iconButton}>
                 <MaterialIcons name="more-vert" size={20} color={textColor} />
@@ -493,13 +500,20 @@ const AddView: React.FC<AddViewProps> = ({
                 </select>
               </View>
             )}
-            <Pressable onPress={closeView} disabled={isSaving} style={styles.iconButton}>
+            <Pressable
+              onPress={closeView}
+              disabled={isSaving}
+              style={styles.iconButton}
+            >
               <MaterialIcons name="close" size={20} color={textColor} />
             </Pressable>
           </View>
         </View>
 
-        <ScrollView showsVerticalScrollIndicator={false} pointerEvents={isSaving ? "none" : "auto"}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          pointerEvents={isSaving ? "none" : "auto"}
+        >
           {/* Description + Category + Date */}
           <InputGroup>
             <TextBox
@@ -702,7 +716,8 @@ const AddView: React.FC<AddViewProps> = ({
           disabled={isSaving || isSubmitting || !isFormValid()}
           style={[
             styles.submitButton,
-            (isSaving || isSubmitting || !isFormValid()) && styles.submitButtonDisabled,
+            (isSaving || isSubmitting || !isFormValid()) &&
+              styles.submitButtonDisabled,
           ]}
         >
           <ThemedText
@@ -711,7 +726,11 @@ const AddView: React.FC<AddViewProps> = ({
               (isSaving || isSubmitting || !isFormValid()) && { opacity: 0.6 },
             ]}
           >
-            {isSaving || isSubmitting ? "Saving" : isEditing ? "Update" : "Insert"}
+            {isSaving || isSubmitting
+              ? "Saving"
+              : isEditing
+                ? "Update"
+                : "Insert"}
           </ThemedText>
         </Pressable>
       </View>

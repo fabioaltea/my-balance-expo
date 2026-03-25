@@ -1,10 +1,5 @@
 import { ThemedText } from "../core/themed-text.native";
-import {
-  View,
-  StyleSheet,
-  ActivityIndicator,
-  Animated,
-} from "react-native";
+import { View, StyleSheet, ActivityIndicator, Animated } from "react-native";
 import { useThemeColor } from "@/src/hooks/use-theme-color";
 import React, { useState, useRef, useEffect } from "react";
 import * as Haptics from "expo-haptics";
@@ -246,17 +241,17 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
               />
               {selectedLocation?.latitude != null &&
                 selectedLocation?.longitude != null && (
-                <Mapbox.PointAnnotation
-                  id="selected-location"
-                  coordinate={[
-                    selectedLocation.longitude,
-                    selectedLocation.latitude,
-                  ]}
-                  title={selectedLocation.address}
-                >
-                  <View style={styles.marker} />
-                </Mapbox.PointAnnotation>
-              )}
+                  <Mapbox.PointAnnotation
+                    id="selected-location"
+                    coordinate={[
+                      selectedLocation.longitude,
+                      selectedLocation.latitude,
+                    ]}
+                    title={selectedLocation.address}
+                  >
+                    <View style={styles.marker} />
+                  </Mapbox.PointAnnotation>
+                )}
             </Mapbox.MapView>
           </View>
         </View>

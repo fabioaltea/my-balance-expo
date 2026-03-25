@@ -38,11 +38,16 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [mapCenter, setMapCenter] = useState(DEFAULT_CENTER);
-  const [markerPos, setMarkerPos] = useState<{ lat: number; lng: number } | null>(null);
+  const [markerPos, setMarkerPos] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
 
   const cardHeight = useRef(new Animated.Value(30)).current;
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const placesServiceRef = useRef<google.maps.places.PlacesService | null>(null);
+  const placesServiceRef = useRef<google.maps.places.PlacesService | null>(
+    null,
+  );
 
   const textColor = useThemeColor({ light: "#000", dark: "#fff" }, "text");
   const placeholderColor = useThemeColor(
@@ -113,7 +118,10 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
       placesServiceRef.current.textSearch(
         { query, region: "it" },
         (results, status) => {
-          if (status === google.maps.places.PlacesServiceStatus.OK && results?.length) {
+          if (
+            status === google.maps.places.PlacesServiceStatus.OK &&
+            results?.length
+          ) {
             const first = results[0];
             const lat = first.geometry?.location?.lat();
             const lng = first.geometry?.location?.lng();
@@ -184,7 +192,9 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
     return (
       <View style={styles.cardContent}>
         <View style={styles.inputRow}>
-          <ThemedText type="default" style={styles.label}>{label}</ThemedText>
+          <ThemedText type="default" style={styles.label}>
+            {label}
+          </ThemedText>
           <TextInput
             style={[styles.textInput, { color: textColor }]}
             value={value}
@@ -200,7 +210,9 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
   return (
     <Animated.View style={[styles.cardContent, { height: cardHeight }]}>
       <View style={styles.inputRow}>
-        <ThemedText type="default" style={styles.label}>{label}</ThemedText>
+        <ThemedText type="default" style={styles.label}>
+          {label}
+        </ThemedText>
         <TextInput
           style={[styles.textInput, { color: textColor }]}
           value={value}
@@ -217,7 +229,6 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
             center={mapCenter}
             zoom={15}
             options={{ disableDefaultUI: true, zoomControl: true }}
-            
           >
             <MarkerF position={markerPos} />
           </GoogleMap>

@@ -95,6 +95,11 @@ export class ApiHelper {
 
       if (!response.ok) {
         console.error("Get profile failed:", response.status);
+
+        if (response.status === 401) {
+          await HttpHelper.handleUnauthorized("Authentication failed");
+        }
+
         return null;
       }
 
@@ -129,6 +134,11 @@ export class ApiHelper {
         body: JSON.stringify({ pushToken }),
       });
 
+      if (response.status === 401) {
+        await HttpHelper.handleUnauthorized("Authentication failed");
+        return false;
+      }
+
       const result = await response.json();
       return result.success;
     } catch (error) {
@@ -152,6 +162,11 @@ export class ApiHelper {
           Authorization: `Bearer ${tokens.accessToken}`,
         },
       });
+
+      if (response.status === 401) {
+        await HttpHelper.handleUnauthorized("Authentication failed");
+        return false;
+      }
 
       const result = await response.json();
       return result.success;

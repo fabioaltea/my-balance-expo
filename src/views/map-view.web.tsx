@@ -1,7 +1,22 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { View, StyleSheet, Text, Pressable, ScrollView, Image, TouchableOpacity } from "react-native";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  useCallback,
+} from "react";
+import {
+  View,
+  StyleSheet,
+  Text,
+  Pressable,
+  ScrollView,
+  Image,
+  TouchableOpacity,
+} from "react-native";
 import { GoogleMap, MarkerF, useLoadScript } from "@react-google-maps/api";
 import { useQueryClient } from "@tanstack/react-query";
+import { useColorScheme } from "@/src/hooks/use-color-scheme";
 import { useThemeColor } from "@/src/hooks/use-theme-color";
 import { useAuthContext, useDataContext } from "@/src/state";
 import type { Movement } from "@/src/types/models";
@@ -12,6 +27,7 @@ import { TransactionsApiHelper } from "@/src/helpers/TransactionsApiHelper";
 import { TransactionsMutationHelpers } from "@/src/helpers/TransactionsMutationHelpers";
 import { formatDateForDisplay, compareDates } from "@/src/utils/dateUtils";
 import {
+  getLocationCoordinatesKey,
   parseLocationValue,
   serializeLocationValue,
 } from "@/src/utils/locationValue";
@@ -21,6 +37,62 @@ const DEFAULT_CENTER = { lat: 39.2238, lng: 9.1217 };
 const API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_WEB_API_KEY || "";
 const BACKFILL_BATCH_SIZE = 25;
 const GEOCODE_BATCH_SIZE = 10;
+const DARK_MAP_STYLES: google.maps.MapTypeStyle[] = [
+  { elementType: "geometry", stylers: [{ color: "#1f1f1f" }] },
+  { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#8f949d" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#1f1f1f" }] },
+  {
+    featureType: "administrative",
+    elementType: "geometry",
+    stylers: [{ color: "#3a3a3a" }],
+  },
+  {
+    featureType: "poi",
+    elementType: "geometry",
+    stylers: [{ color: "#242424" }],
+  },
+  {
+    featureType: "poi.park",
+    elementType: "geometry",
+    stylers: [{ color: "#1e3027" }],
+  },
+  {
+    featureType: "road",
+    elementType: "geometry",
+    stylers: [{ color: "#2c2c2c" }],
+  },
+  {
+    featureType: "road",
+    elementType: "geometry.stroke",
+    stylers: [{ color: "#252525" }],
+  },
+  {
+    featureType: "road.highway",
+    elementType: "geometry",
+    stylers: [{ color: "#3b3b3b" }],
+  },
+  {
+    featureType: "road.highway",
+    elementType: "geometry.stroke",
+    stylers: [{ color: "#2f2f2f" }],
+  },
+  {
+    featureType: "transit",
+    elementType: "geometry",
+    stylers: [{ color: "#2a2a2a" }],
+  },
+  {
+    featureType: "water",
+    elementType: "geometry",
+    stylers: [{ color: "#0f2c38" }],
+  },
+  {
+    featureType: "water",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#5f8ea0" }],
+  },
+];
 
 interface LocationGroup {
   location: string;
@@ -41,6 +113,7 @@ export default function MapView({ onBack }: MapViewProps) {
   const queryClient = useQueryClient();
   const { selectedSpreadsheetId } = useAuthContext();
   const { movements, categories } = useDataContext();
+  const colorScheme = useColorScheme() ?? "light";
   const backgroundColor = useThemeColor({}, "background");
   const cardBackground = useThemeColor({}, "cardBackground");
   const textColor = useThemeColor({}, "text");
@@ -56,7 +129,7 @@ export default function MapView({ onBack }: MapViewProps) {
     { light: "#107c2bff", dark: "#34C759" },
     "tint",
   );
-  const primaryColor = useThemeColor({}, "tint");
+  const primaryColor = "#2F4F3F";
   const miniBarBg = useThemeColor(
     { light: "rgba(255, 255, 255, 0.75)", dark: "rgba(40, 40, 40, 0.8)" },
     "cardBackground",
@@ -73,13 +146,19 @@ export default function MapView({ onBack }: MapViewProps) {
     region: "IT",
   });
 
-  const placesServiceRef = useRef<google.maps.places.PlacesService | null>(null);
+  const placesServiceRef = useRef<google.maps.places.PlacesService | null>(
+    null,
+  );
   const mapRef = useRef<google.maps.Map | null>(null);
   const [locationGroups, setLocationGroups] = useState<LocationGroup[]>([]);
-  const [selectedGroup, setSelectedGroup] = useState<LocationGroup | null>(null);
+  const [selectedGroup, setSelectedGroup] = useState<LocationGroup | null>(
+    null,
+  );
   const [initialCenter] = useState(DEFAULT_CENTER);
   const [initialZoom] = useState(6);
-  const geocodeCache = useRef<Map<string, { lat: number; lng: number }>>(new Map());
+  const geocodeCache = useRef<Map<string, { lat: number; lng: number }>>(
+    new Map(),
+  );
   const pendingBackfills = useRef<Set<string>>(new Set());
 
   const backfillLocations = useCallback(
@@ -132,12 +211,18 @@ export default function MapView({ onBack }: MapViewProps) {
   );
 
   const distinctLocations = useMemo(() => {
-    const locationMap = new Map<
+    const resolvedLocationMap = new Map<
       string,
       {
         display: string;
         resolvedMovements: Movement[];
-        coordinates?: { lat: number; lng: number };
+        coordinates: { lat: number; lng: number };
+      }
+    >();
+    const unresolvedLocationMap = new Map<
+      string,
+      {
+        display: string;
         movementsWithoutCoordinates: Movement[];
       }
     >();
@@ -146,42 +231,44 @@ export default function MapView({ onBack }: MapViewProps) {
       const parsedLocation = parseLocationValue(m.location);
       if (!parsedLocation.address) continue;
 
-      const key = parsedLocation.address.toLowerCase();
-
-      if (!locationMap.has(key)) {
-        locationMap.set(key, {
-          display: parsedLocation.address,
-          resolvedMovements: [],
-          coordinates: parsedLocation.hasCoordinates
-            ? {
-                lat: parsedLocation.latitude!,
-                lng: parsedLocation.longitude!,
-              }
-            : undefined,
-          movementsWithoutCoordinates: [],
-        });
-      }
-
-      const entry = locationMap.get(key)!;
-
-      if (
-        !entry.coordinates &&
-        parsedLocation.hasCoordinates
-      ) {
-        entry.coordinates = {
-          lat: parsedLocation.latitude!,
-          lng: parsedLocation.longitude!,
-        };
-      }
-
       if (parsedLocation.hasCoordinates) {
+        const key = getLocationCoordinatesKey(parsedLocation);
+        if (!key) {
+          continue;
+        }
+
+        if (!resolvedLocationMap.has(key)) {
+          resolvedLocationMap.set(key, {
+            display: parsedLocation.address,
+            resolvedMovements: [],
+            coordinates: {
+              lat: parsedLocation.latitude!,
+              lng: parsedLocation.longitude!,
+            },
+          });
+        }
+
+        const entry = resolvedLocationMap.get(key)!;
+        entry.display = parsedLocation.address;
         entry.resolvedMovements.push(m);
       } else {
-        entry.movementsWithoutCoordinates.push(m);
+        const key = parsedLocation.address.toLowerCase();
+
+        if (!unresolvedLocationMap.has(key)) {
+          unresolvedLocationMap.set(key, {
+            display: parsedLocation.address,
+            movementsWithoutCoordinates: [],
+          });
+        }
+
+        unresolvedLocationMap.get(key)!.movementsWithoutCoordinates.push(m);
       }
     }
 
-    return locationMap;
+    return {
+      resolved: Array.from(resolvedLocationMap.values()),
+      unresolved: Array.from(unresolvedLocationMap.values()),
+    };
   }, [movements]);
 
   // Initialize PlacesService once map API is loaded
@@ -212,7 +299,10 @@ export default function MapView({ onBack }: MapViewProps) {
     let isCancelled = false;
 
     const buildGroups = async () => {
-      if (distinctLocations.size === 0) {
+      if (
+        distinctLocations.resolved.length === 0 &&
+        distinctLocations.unresolved.length === 0
+      ) {
         setLocationGroups([]);
         return;
       }
@@ -220,8 +310,8 @@ export default function MapView({ onBack }: MapViewProps) {
       const groups: LocationGroup[] = [];
       const silentUpdates: Array<{ movementId: string; location: string }> = [];
 
-      distinctLocations.forEach((entry) => {
-        if (!entry.coordinates || entry.resolvedMovements.length === 0) {
+      distinctLocations.resolved.forEach((entry) => {
+        if (entry.resolvedMovements.length === 0) {
           return;
         }
 
@@ -231,27 +321,12 @@ export default function MapView({ onBack }: MapViewProps) {
           lng: entry.coordinates.lng,
           movements: entry.resolvedMovements,
         });
-
-        if (entry.movementsWithoutCoordinates.length > 0) {
-          const serializedLocation = serializeLocationValue({
-            address: entry.display,
-            latitude: entry.coordinates.lat,
-            longitude: entry.coordinates.lng,
-          });
-
-          entry.movementsWithoutCoordinates.forEach((movement) => {
-            silentUpdates.push({
-              movementId: movement.id,
-              location: serializedLocation,
-            });
-          });
-        }
       });
 
       if (isLoaded && placesServiceRef.current) {
         const service = placesServiceRef.current;
-        const unresolvedEntries = Array.from(distinctLocations.entries()).filter(
-          ([key, entry]) => !entry.coordinates && !geocodeCache.current.has(key),
+        const unresolvedEntries = distinctLocations.unresolved.filter(
+          (entry) => !geocodeCache.current.has(entry.display.toLowerCase()),
         );
 
         const geocodedGroups: Array<{
@@ -264,9 +339,12 @@ export default function MapView({ onBack }: MapViewProps) {
           index < unresolvedEntries.length;
           index += GEOCODE_BATCH_SIZE
         ) {
-          const chunk = unresolvedEntries.slice(index, index + GEOCODE_BATCH_SIZE);
+          const chunk = unresolvedEntries.slice(
+            index,
+            index + GEOCODE_BATCH_SIZE,
+          );
           const chunkResults = await Promise.all(
-            chunk.map(([key, entry]) => {
+            chunk.map((entry) => {
               return new Promise<{
                 group: LocationGroup | null;
                 updates: Array<{ movementId: string; location: string }>;
@@ -282,18 +360,23 @@ export default function MapView({ onBack }: MapViewProps) {
                       const lng = results[0].geometry?.location?.lng();
 
                       if (lat != null && lng != null) {
-                        geocodeCache.current.set(key, { lat, lng });
+                        geocodeCache.current.set(entry.display.toLowerCase(), {
+                          lat,
+                          lng,
+                        });
 
                         resolve({
                           group: null,
-                          updates: entry.movementsWithoutCoordinates.map((movement) => ({
-                            movementId: movement.id,
-                            location: serializeLocationValue({
-                              address: entry.display,
-                              latitude: lat,
-                              longitude: lng,
+                          updates: entry.movementsWithoutCoordinates.map(
+                            (movement) => ({
+                              movementId: movement.id,
+                              location: serializeLocationValue({
+                                address: entry.display,
+                                latitude: lat,
+                                longitude: lng,
+                              }),
                             }),
-                          })),
+                          ),
                         });
                         return;
                       }
@@ -334,49 +417,63 @@ export default function MapView({ onBack }: MapViewProps) {
   }, [backfillLocations, distinctLocations, fitBounds, isLoaded]);
 
   // Smooth pan + zoom to a marker
-  const smoothPanTo = useCallback((lat: number, lng: number, targetZoom: number) => {
-    const map = mapRef.current;
-    if (!map) return;
+  const smoothPanTo = useCallback(
+    (lat: number, lng: number, targetZoom: number) => {
+      const map = mapRef.current;
+      if (!map) return;
 
-    const currentZoom = map.getZoom() || 6;
+      const currentZoom = map.getZoom() || 6;
 
-    if (targetZoom - currentZoom > 4) {
-      const midZoom = Math.max(currentZoom, Math.floor((currentZoom + targetZoom) / 2) - 1);
-      map.setZoom(midZoom);
-      map.panTo({ lat, lng });
-      setTimeout(() => {
-        map.setZoom(targetZoom);
-      }, 400);
-    } else {
-      map.panTo({ lat, lng });
-      if (currentZoom !== targetZoom) {
+      if (targetZoom - currentZoom > 4) {
+        const midZoom = Math.max(
+          currentZoom,
+          Math.floor((currentZoom + targetZoom) / 2) - 1,
+        );
+        map.setZoom(midZoom);
+        map.panTo({ lat, lng });
         setTimeout(() => {
           map.setZoom(targetZoom);
-        }, 300);
+        }, 400);
+      } else {
+        map.panTo({ lat, lng });
+        if (currentZoom !== targetZoom) {
+          setTimeout(() => {
+            map.setZoom(targetZoom);
+          }, 300);
+        }
       }
-    }
-  }, []);
+    },
+    [],
+  );
 
-  const handleMarkerClick = useCallback((group: LocationGroup) => {
-    setSelectedGroup(group);
-    smoothPanTo(group.lat, group.lng, 14);
-  }, [smoothPanTo]);
+  const handleMarkerClick = useCallback(
+    (group: LocationGroup) => {
+      setSelectedGroup(group);
+      smoothPanTo(group.lat, group.lng, 14);
+    },
+    [smoothPanTo],
+  );
 
   const handleMapClick = useCallback(() => {
     setSelectedGroup(null);
   }, []);
 
-  const handleMapLoad = useCallback((map: google.maps.Map) => {
-    mapRef.current = map;
-    if (locationGroups.length > 0) {
-      fitBounds(locationGroups);
-    }
-  }, [locationGroups, fitBounds]);
+  const handleMapLoad = useCallback(
+    (map: google.maps.Map) => {
+      mapRef.current = map;
+      if (locationGroups.length > 0) {
+        fitBounds(locationGroups);
+      }
+    },
+    [locationGroups, fitBounds],
+  );
 
   // Sort movements by date descending
   const sortedMovements = useMemo(() => {
     if (!selectedGroup) return [];
-    return [...selectedGroup.movements].sort((a, b) => compareDates(b.date, a.date));
+    return [...selectedGroup.movements].sort((a, b) =>
+      compareDates(b.date, a.date),
+    );
   }, [selectedGroup]);
 
   const markerIcon = useMemo(() => {
@@ -389,6 +486,18 @@ export default function MapView({ onBack }: MapViewProps) {
 
     return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
   }, [primaryColor]);
+
+  const mapOptions = useMemo<google.maps.MapOptions>(
+    () => ({
+      disableDefaultUI: true,
+      zoomControl: false,
+      streetViewControl: false,
+      mapTypeControl: false,
+      fullscreenControl: false,
+      styles: colorScheme === "dark" ? DARK_MAP_STYLES : undefined,
+    }),
+    [colorScheme],
+  );
 
   if (!isLoaded) {
     return (
@@ -417,7 +526,9 @@ export default function MapView({ onBack }: MapViewProps) {
             style={styles.miniBarLogo}
             resizeMode="contain"
           />
-          <Text style={[styles.miniBarText, { color: miniBarTextColor }]}>MyBalance</Text>
+          <Text style={[styles.miniBarText, { color: miniBarTextColor }]}>
+            MyBalance
+          </Text>
         </View>
       </View>
 
@@ -427,13 +538,7 @@ export default function MapView({ onBack }: MapViewProps) {
         center={initialCenter}
         zoom={initialZoom}
         onLoad={handleMapLoad}
-        options={{
-          disableDefaultUI: true,
-          zoomControl: true,
-          streetViewControl: false,
-          mapTypeControl: false,
-          fullscreenControl: false,
-        }}
+        options={mapOptions}
         onClick={handleMapClick}
       >
         {locationGroups.map((group, idx) => (
@@ -460,7 +565,8 @@ export default function MapView({ onBack }: MapViewProps) {
                 {selectedGroup.location}
               </Text>
               <Text style={[styles.panelSubtitle, { color: subtextColor }]}>
-                {selectedGroup.movements.length} moviment{selectedGroup.movements.length === 1 ? "o" : "i"}
+                {selectedGroup.movements.length} moviment
+                {selectedGroup.movements.length === 1 ? "o" : "i"}
               </Text>
             </View>
             <Pressable
@@ -471,7 +577,9 @@ export default function MapView({ onBack }: MapViewProps) {
             </Pressable>
           </View>
 
-          <View style={[styles.panelDivider, { backgroundColor: borderColor }]} />
+          <View
+            style={[styles.panelDivider, { backgroundColor: borderColor }]}
+          />
 
           {/* Movements list — same style as RecentMovementsCard */}
           <ScrollView
@@ -479,8 +587,15 @@ export default function MapView({ onBack }: MapViewProps) {
             showsVerticalScrollIndicator={true}
           >
             {sortedMovements.map((movement, index) => {
-              const icon = MovementHelper.getMovementIcon(movement.category, categories);
-              const color = MovementHelper.getMovementColor(movement.type, movement.category, categories);
+              const icon = MovementHelper.getMovementIcon(
+                movement.category,
+                categories,
+              );
+              const color = MovementHelper.getMovementColor(
+                movement.type,
+                movement.category,
+                categories,
+              );
               const amount = movement.totalAmount;
 
               return (
@@ -489,14 +604,19 @@ export default function MapView({ onBack }: MapViewProps) {
                   style={[
                     styles.movementItem,
                     { borderBottomColor: borderColor },
-                    index === sortedMovements.length - 1 && styles.lastMovementItem,
+                    index === sortedMovements.length - 1 &&
+                      styles.lastMovementItem,
                   ]}
                 >
-                  <View style={[styles.movementIcon, { backgroundColor: color }]}>
+                  <View
+                    style={[styles.movementIcon, { backgroundColor: color }]}
+                  >
                     <IconSymbol name={icon} size={18} color="#FFFFFF" />
                   </View>
                   <View style={styles.movementInfo}>
-                    <Text style={[styles.movementDate, { color: subtextColor }]}>
+                    <Text
+                      style={[styles.movementDate, { color: subtextColor }]}
+                    >
                       {formatDateForDisplay(movement.date, "it-IT")}
                     </Text>
                     <Text
@@ -509,7 +629,9 @@ export default function MapView({ onBack }: MapViewProps) {
                   <Text
                     style={[
                       styles.movementAmount,
-                      amount > 0 ? { color: positiveAmountColor } : { color: textColor },
+                      amount > 0
+                        ? { color: positiveAmountColor }
+                        : { color: textColor },
                     ]}
                   >
                     {amount > 0 ? "+" : ""}
@@ -527,7 +649,8 @@ export default function MapView({ onBack }: MapViewProps) {
         <View style={[styles.infoBadge, { backgroundColor: cardBackground }]}>
           <MaterialIcons name="place" size={16} color="#2F4F3F" />
           <Text style={[styles.infoBadgeText, { color: textColor }]}>
-            {locationGroups.length} posizion{locationGroups.length === 1 ? "e" : "i"}
+            {locationGroups.length} posizion
+            {locationGroups.length === 1 ? "e" : "i"}
           </Text>
         </View>
       )}

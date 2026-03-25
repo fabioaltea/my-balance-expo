@@ -1,9 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Platform } from "react-native";
-import {
-  AuthStorageHelper,
-  User,
-} from "../helpers/AuthStorageHelper";
+import { AuthStorageHelper, User } from "../helpers/AuthStorageHelper";
 import { ApiHelper } from "../helpers/ApiHelper";
 import { HttpHelper } from "../helpers/HttpHelper";
 import { AuthHelper } from "../helpers/AuthHelper";
@@ -47,6 +44,7 @@ export const useAuth = () => {
   const handleSessionExpired = useCallback(async () => {
     console.log("🚪 Session expired, clearing auth...");
     await AuthStorageHelper.clearAll();
+    queryClient.clear();
     setAuthState({
       isAuthenticated: false,
       user: null,
@@ -87,7 +85,7 @@ export const useAuth = () => {
       if (profile.user.spreadsheetId && profile.user.setupComplete) {
         console.log(
           "✅ User has spreadsheet configured:",
-          profile.user.spreadsheetId
+          profile.user.spreadsheetId,
         );
 
         // Check if schema migration is needed
@@ -96,7 +94,7 @@ export const useAuth = () => {
 
         if (migrationNeeded) {
           console.log(
-            `🔄 Schema migration needed: v${schemaVersion} → v${LATEST_SCHEMA_VERSION}`
+            `🔄 Schema migration needed: v${schemaVersion} → v${LATEST_SCHEMA_VERSION}`,
           );
         }
 
@@ -203,7 +201,8 @@ export const useAuth = () => {
 
       // Generate PKCE parameters
       const codeVerifier = AuthHelper.generateCodeVerifier();
-      const codeChallenge = await AuthHelper.generateCodeChallenge(codeVerifier);
+      const codeChallenge =
+        await AuthHelper.generateCodeChallenge(codeVerifier);
 
       // Use different client ID and redirect URI based on platform
       const clientId = isWeb
@@ -215,7 +214,11 @@ export const useAuth = () => {
         ? makeRedirectUri()
         : `${process.env.EXPO_PUBLIC_GOOGLE_REDIRECT_SCHEME}:/oauthredirect`;
 
-      console.log("🔑 OAuth config:", { isWeb, clientId: clientId?.substring(0, 20) + "...", redirectUri });
+      console.log("🔑 OAuth config:", {
+        isWeb,
+        clientId: clientId?.substring(0, 20) + "...",
+        redirectUri,
+      });
 
       // Create OAuth request with PKCE
       const request = new AuthSession.AuthRequest({
@@ -257,7 +260,12 @@ export const useAuth = () => {
           authorizationCode: (result as any).params.code,
           codeVerifier: codeVerifier,
           deviceId,
-          deviceType: Platform.OS === "web" ? "web" : Platform.OS === "ios" ? "ios" : "android",
+          deviceType:
+            Platform.OS === "web"
+              ? "web"
+              : Platform.OS === "ios"
+                ? "ios"
+                : "android",
           redirectUri, // Pass redirectUri for web token exchange
         });
 
@@ -276,17 +284,16 @@ export const useAuth = () => {
           console.log("🚀 Loading user data after successful login");
           await loadUserProfile();
           // await NotificationsHelpers.registerForPushNotificationsAsync();
-
         } else {
           throw new Error(
-            authResponse.error || "Backend authentication failed"
+            authResponse.error || "Backend authentication failed",
           );
         }
       } else if (result.type === "error") {
         throw new Error(
           (result as any).params?.error_description ||
             (result as any).params?.error ||
-            "OAuth failed"
+            "OAuth failed",
         );
       } else {
         setAuthState((prev) => ({ ...prev, isLoading: false }));
@@ -344,6 +351,14 @@ export const useAuth = () => {
     console.log("🔧 useAuth useEffect mounting, calling initializeAuth");
     initializeAuth();
   }, [initializeAuth]);
+
+  useEffect(() => {
+    HttpHelper.setUnauthorizedHandler(handleSessionExpired);
+
+    return () => {
+      HttpHelper.setUnauthorizedHandler(null);
+    };
+  }, [handleSessionExpired]);
 
   // Execute pending schema migrations
   const executeMigration = useCallback(async () => {

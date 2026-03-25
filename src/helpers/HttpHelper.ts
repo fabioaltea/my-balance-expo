@@ -30,6 +30,36 @@ export interface HttpResponse<T = any> {
 export class HttpHelper {
   public static endpointUri = API_URL;
   public static authUri = AUTH_URL;
+  private static unauthorizedHandler: (() => Promise<void> | void) | null =
+    null;
+  private static isHandlingUnauthorized = false;
+
+  static setUnauthorizedHandler(
+    handler: (() => Promise<void> | void) | null,
+  ): void {
+    this.unauthorizedHandler = handler;
+  }
+
+  static async handleUnauthorized(
+    message = "Your session has expired. Please login again.",
+  ): Promise<void> {
+    if (this.isHandlingUnauthorized) {
+      return;
+    }
+
+    this.isHandlingUnauthorized = true;
+
+    try {
+      if (this.unauthorizedHandler) {
+        await this.unauthorizedHandler();
+      }
+    } catch (error) {
+      console.error("❌ Unauthorized handler failed:", error);
+    } finally {
+      console.log("🚪 Unauthorized session detected:", message);
+      this.isHandlingUnauthorized = false;
+    }
+  }
 
   /**
    * Private method to refresh tokens via API
@@ -61,6 +91,11 @@ export class HttpHelper {
         console.error("   Status:", response.status);
         console.error("   Error:", result.error);
         console.error("   Code:", result.code);
+
+        if (response.status === 401) {
+          await this.handleUnauthorized(result.error || "Token refresh failed");
+        }
+
         return null;
       }
 
@@ -125,6 +160,11 @@ export class HttpHelper {
       return tokens.accessToken;
     } catch (error) {
       console.error("❌ Error getting valid access token:", error);
+
+      if (error instanceof AuthenticationError) {
+        await this.handleUnauthorized(error.message);
+      }
+
       return null;
     }
   }
@@ -154,6 +194,9 @@ export class HttpHelper {
       if (!response.ok) {
         // If 401 Unauthorized, throw AuthenticationError to trigger logout
         if (response.status === 401) {
+          await this.handleUnauthorized(
+            result.error || "Authentication failed",
+          );
           throw new AuthenticationError(
             result.error || "Authentication failed",
           );
@@ -207,6 +250,7 @@ export class HttpHelper {
         const errorText = await response.text();
         console.error("POST error response:", errorText);
         if (response.status === 401) {
+          await this.handleUnauthorized(errorText || "Authentication failed");
           throw new AuthenticationError(errorText || "Authentication failed");
         }
         throw new Error(
@@ -260,6 +304,15 @@ export class HttpHelper {
       const result = await response.json();
 
       if (!response.ok) {
+        if (response.status === 401) {
+          await this.handleUnauthorized(
+            result.error || "Authentication failed",
+          );
+          throw new AuthenticationError(
+            result.error || "Authentication failed",
+          );
+        }
+
         throw new Error(
           result.error || `PUT request failed: ${response.statusText}`,
         );
@@ -298,6 +351,15 @@ export class HttpHelper {
       const result = await response.json();
 
       if (!response.ok) {
+        if (response.status === 401) {
+          await this.handleUnauthorized(
+            result.error || "Authentication failed",
+          );
+          throw new AuthenticationError(
+            result.error || "Authentication failed",
+          );
+        }
+
         throw new Error(
           result.error || `DELETE request failed: ${response.statusText}`,
         );

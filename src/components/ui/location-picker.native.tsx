@@ -50,6 +50,7 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
 
   const sdkInitialized = useRef(false);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasUserEditedQuery = useRef(false);
 
   useEffect(() => {
     if (googleMapsApiKey && !sdkInitialized.current) {
@@ -80,7 +81,7 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
   };
 
   useEffect(() => {
-    if (isLocationResolved(location)) {
+    if (location && isLocationResolved(location)) {
       setSelectedLocation(location);
       expandCard();
       centerMapOnLocation(location);
@@ -97,14 +98,50 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
 
   useEffect(() => {
     if (
-      !initialSearchDone.current &&
-      value &&
-      value.trim().length >= 3 &&
-      !isLocationResolved(location)
+      hasUserEditedQuery.current ||
+      initialSearchDone.current ||
+      !value ||
+      value.trim().length < 3 ||
+      isLocationResolved(location)
     ) {
-      initialSearchDone.current = true;
-      searchPlaces(value);
+      return;
     }
+
+    initialSearchDone.current = true;
+    searchPlaces(value);
+  }, [location, value]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!hasUserEditedQuery.current || isLocationResolved(location)) {
+      return;
+    }
+
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
+    const trimmedValue = value.trim();
+
+    if (!trimmedValue) {
+      setIsLoading(false);
+      collapseCard();
+      return;
+    }
+
+    if (trimmedValue.length < 3) {
+      setIsLoading(false);
+      return;
+    }
+
+    debounceTimer.current = setTimeout(() => {
+      searchPlaces(trimmedValue);
+    }, 1000);
+
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+    };
   }, [location, value]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const cardHeight = useRef(new Animated.Value(40)).current;
@@ -159,24 +196,23 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
   };
 
   const handleTextChange = (text: string) => {
+    hasUserEditedQuery.current = true;
     onChange({ address: text });
-    initialSearchDone.current = false;
 
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
 
     if (!text.trim()) {
       setSelectedLocation(null);
+      setIsLoading(false);
       collapseCard();
       return;
     }
 
     setSelectedLocation(null);
 
-    if (text.length < 3) return;
-
-    debounceTimer.current = setTimeout(() => {
-      searchPlaces(text);
-    }, 600);
+    if (text.trim().length < 3) {
+      setIsLoading(false);
+    }
   };
 
   const expandCard = () => {

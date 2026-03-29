@@ -1,61 +1,119 @@
-# MyBalance Expo App 👋
+# MyBalance — Expo App
 
-This is the mobile app for MyBalance built with [Expo](https://expo.dev).
+Cross-platform mobile app (iOS, Android, Web) for MyBalance, built with React Native and Expo.
 
-## Authentication Setup
+## Tech Stack
 
-Before running the app, you need to configure authentication:
+- **Framework**: Expo 54 + React Native 0.81 + React 19
+- **Navigation**: Expo Router v6 (file-based)
+- **State**: React Context + React Query v5 (TanStack)
+- **Language**: TypeScript 5.9
+- **Maps**: Mapbox (native) / Google Maps (web)
+- **OCR**: MLKit (native) / Tesseract.js (web)
+- **Build**: EAS Build
 
-1. Create `.env.local` with:
-   ```bash
+## Features
+
+- Multi-account financial tracking with real-time balances
+- Transaction management with split payments
+- Recurring transactions with status tracking
+- Monthly charts and category breakdowns
+- Map view with transaction locations
+- OCR receipt scanning
+- iOS Shortcuts integration
+- Dark/Light theme
+- Offline caching via AsyncStorage
+- Pull-to-refresh, haptic feedback, gestures
+
+## Screens
+
+| Screen          | Route                 | Description                         |
+| --------------- | --------------------- | ----------------------------------- |
+| Home/Dashboard  | `/dashboard/home`     | Balance cards, movements, forecasts |
+| Charts          | `/dashboard/charts`   | Monthly trends, category breakdown  |
+| Map             | `/dashboard/map`      | Transaction locations on map        |
+| Settings        | `/dashboard/settings` | Profile, theme, notifications       |
+| Add Transaction | `/add`                | Create/edit movements (modal)       |
+| Accounts        | `/accounts`           | Manage accounts                     |
+| Categories      | `/categories`         | Manage categories                   |
+| Onboarding      | `/onboarding`         | First-time spreadsheet setup        |
+
+## Setup
+
+1. Create `.env.local`:
+
+   ```env
    EXPO_PUBLIC_API_URL=http://localhost:8080
-   EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=your-ios-google-client-id.apps.googleusercontent.com
-   EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=your-web-google-client-id.apps.googleusercontent.com
+   EXPO_PUBLIC_AUTH_URL=http://localhost:8082
+   EXPO_PUBLIC_GOOGLE_CLIENT_ID=<your-client-id>.apps.googleusercontent.com
+   EXPO_PUBLIC_GOOGLE_REDIRECT_SCHEME=com.fabioaltea.mybalance
+   EXPO_PUBLIC_GOOGLE_MAPS_API_KEY=<your-key>
+   APP_VARIANT=development
    ```
 
-## Get started
-
-1. Install dependencies
-
+2. Install and run:
    ```bash
-   npm install
+   pnpm install
+   npx expo start           # Start dev server
+   pnpm run ios             # iOS simulator
+   pnpm run android         # Android emulator
+   pnpm run web             # Web browser
    ```
 
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Build
 
 ```bash
-npm run reset-project
+pnpm run build:dev              # Development build (all platforms)
+pnpm run build:dev:ios          # iOS only
+pnpm run build:dev:android      # Android only
+pnpm run build:preview          # Internal QA
+pnpm run build:production       # Store submission
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Architecture
 
-## Learn more
+```
+app/                          # Expo Router (file-based routes)
+├── _layout.tsx               # Root: providers + auth gate
+├── index.tsx                 # Redirect → /dashboard/home
+├── add.tsx                   # Add transaction modal
+├── accounts.tsx              # Account management
+├── categories.tsx            # Category management
+├── onboarding.tsx            # First-time setup
+└── dashboard/
+    ├── home.tsx              # Main dashboard
+    ├── charts.tsx            # Financial charts
+    ├── map.tsx               # Map view
+    └── settings.tsx          # Settings
 
-To learn more about developing your project with Expo, look at the following resources:
+src/
+├── state/                    # React Context providers
+│   ├── AuthProvider.tsx      # Auth state + Google OAuth
+│   ├── DataProvider.tsx      # Financial data + derived state
+│   └── PlatformProvider.tsx  # Platform detection
+├── hooks/                    # Custom hooks
+│   ├── useAuth.tsx           # Auth operations
+│   └── useMyBalanceData.tsx  # Data queries
+├── helpers/                  # API clients
+│   ├── HttpHelper.ts         # Auto token refresh HTTP client
+│   ├── ApiHelper.ts          # Auth API calls
+│   ├── TransactionsApiHelper.ts
+│   ├── AccountsApiHelper.ts
+│   ├── CategoriesApiHelper.ts
+│   └── AggregationsApiHelper.ts
+├── components/               # UI components
+│   ├── balance-card/
+│   ├── movements/
+│   ├── forecast-card/
+│   └── ui/
+└── views/                    # Screen implementations
+    ├── home-view.tsx
+    ├── add-view.native.tsx / add-view.web.tsx
+    ├── map-view.native.tsx / map-view.web.tsx
+    └── ...
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Bundle IDs
 
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- Production: `com.fabioaltea.mybalance`
+- Development: `com.fabioaltea.mybalance.dev`

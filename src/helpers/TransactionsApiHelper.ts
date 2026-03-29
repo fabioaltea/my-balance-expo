@@ -1,16 +1,12 @@
-import { HttpHelper, AuthenticationError } from "./HttpHelper";
-import type { Transaction } from "../types/models";
+import { HttpHelper, AuthenticationError } from './HttpHelper';
+import type { Transaction } from '../types/models';
 
 export class TransactionsApiHelper {
   /**
    * Parse an amount string (euro format with dots/commas) to a number.
    */
   static parseAmount(amountStr: string): number {
-    const cleaned =
-      amountStr
-        ?.replace?.(/[€\s]/g, "")
-        ?.replace(".", "")
-        .replace?.(",", ".") || "0";
+    const cleaned = amountStr?.replace?.(/[€\s]/g, '')?.replace('.', '').replace?.(',', '.') || '0';
     return parseFloat(cleaned);
   }
 
@@ -18,21 +14,21 @@ export class TransactionsApiHelper {
    * Transform raw backend transaction data to typed Transaction.
    */
   static rawToTransactionData(raw: any): Transaction {
-    const amount = TransactionsApiHelper.parseAmount(raw.amount || "0");
+    const amount = TransactionsApiHelper.parseAmount(raw.amount || '0');
 
     return {
       movementId: raw.movementId,
       transactionId: raw.transactionId || raw.id || Math.random().toString(),
       date: raw.date,
-      description: raw.description || "",
+      description: raw.description || '',
       amount: Math.abs(amount),
-      type: amount >= 0 ? ("income" as const) : ("expense" as const),
-      account: raw.account || "",
-      category: raw.category || "",
-      location: raw.location || "",
+      type: amount >= 0 ? ('income' as const) : ('expense' as const),
+      account: raw.account || '',
+      category: raw.category || '',
+      location: raw.location || '',
       recurrenceId: raw.recurrenceId || undefined,
       recurrencePattern: raw.recurrencePattern || undefined,
-      status: raw.status || "Confirmed",
+      status: raw.status || 'Confirmed',
     };
   }
   /**
@@ -40,24 +36,19 @@ export class TransactionsApiHelper {
    */
   static async getTransactions(spreadsheetId: string): Promise<any[]> {
     try {
-      console.log("🔄 Loading transactions from API...");
+      console.log('🔄 Loading transactions from API...');
 
-      const response = await HttpHelper.get(
-        `/transactions?spreadsheet_id=${spreadsheetId}`,
-      );
+      const response = await HttpHelper.get(`/transactions?spreadsheet_id=${spreadsheetId}`);
 
       if (response.success) {
-        console.log(
-          "✅ Transactions loaded successfully:",
-          response.data?.length || 0,
-        );
+        console.log('✅ Transactions loaded successfully:', response.data?.length || 0);
         return response.data || [];
       } else {
-        console.error("❌ Failed to load transactions:", response.error);
+        console.error('❌ Failed to load transactions:', response.error);
         return [];
       }
     } catch (error) {
-      console.error("❌ Error loading transactions:", error);
+      console.error('❌ Error loading transactions:', error);
       // Re-throw authentication errors to trigger logout
       if (error instanceof AuthenticationError) {
         throw error;
@@ -71,22 +62,21 @@ export class TransactionsApiHelper {
    */
   static async createMovement(spreadsheetId: string, movementData: any) {
     try {
-      console.log("➕ Creating new movement...");
+      console.log('➕ Creating new movement...');
 
-      const response = await HttpHelper.post(
-        `/movements?spreadsheet_id=${spreadsheetId}`,
-        { ...movementData },
-      );
+      const response = await HttpHelper.post(`/movements?spreadsheet_id=${spreadsheetId}`, {
+        ...movementData,
+      });
 
       if (response.success) {
-        console.log("✅ Movement created successfully");
+        console.log('✅ Movement created successfully');
         return response.data;
       } else {
-        console.error("❌ Failed to create movement:", response.error);
+        console.error('❌ Failed to create movement:', response.error);
         return null;
       }
     } catch (error) {
-      console.error("❌ Error creating movement:", error);
+      console.error('❌ Error creating movement:', error);
       return null;
     }
   }
@@ -96,22 +86,21 @@ export class TransactionsApiHelper {
    */
   static async createTransaction(spreadsheetId: string, transactionData: any) {
     try {
-      console.log("➕ Creating new transaction...");
+      console.log('➕ Creating new transaction...');
 
-      const response = await HttpHelper.post(
-        `/transactions?spreadsheet_id=${spreadsheetId}`,
-        { ...transactionData },
-      );
+      const response = await HttpHelper.post(`/transactions?spreadsheet_id=${spreadsheetId}`, {
+        ...transactionData,
+      });
 
       if (response.success) {
-        console.log("✅ Transaction created successfully");
+        console.log('✅ Transaction created successfully');
         return response.data;
       } else {
-        console.error("❌ Failed to create transaction:", response.error);
+        console.error('❌ Failed to create transaction:', response.error);
         return null;
       }
     } catch (error) {
-      console.error("❌ Error creating transaction:", error);
+      console.error('❌ Error creating transaction:', error);
       return null;
     }
   }
@@ -119,13 +108,9 @@ export class TransactionsApiHelper {
   /**
    * Update a transaction
    */
-  static async updateTransaction(
-    spreadsheetId: string,
-    transactionId: string,
-    updates: any,
-  ) {
+  static async updateTransaction(spreadsheetId: string, transactionId: string, updates: any) {
     try {
-      console.log("✏️ Updating transaction...");
+      console.log('✏️ Updating transaction...');
 
       const response = await HttpHelper.put(
         `/transactions/${transactionId}?spreadsheet_id=${spreadsheetId}`,
@@ -133,14 +118,14 @@ export class TransactionsApiHelper {
       );
 
       if (response.success) {
-        console.log("✅ Transaction updated successfully");
+        console.log('✅ Transaction updated successfully');
         return response.data;
       } else {
-        console.error("❌ Failed to update transaction:", response.error);
+        console.error('❌ Failed to update transaction:', response.error);
         return null;
       }
     } catch (error) {
-      console.error("❌ Error updating transaction:", error);
+      console.error('❌ Error updating transaction:', error);
       return null;
     }
   }
@@ -150,21 +135,21 @@ export class TransactionsApiHelper {
    */
   static async deleteTransaction(spreadsheetId: string, transactionId: string) {
     try {
-      console.log("🗑️ Deleting transaction...");
+      console.log('🗑️ Deleting transaction...');
 
       const response = await HttpHelper.delete(
         `/transactions/${transactionId}?spreadsheet_id=${spreadsheetId}`,
       );
 
       if (response.success) {
-        console.log("✅ Transaction deleted successfully");
+        console.log('✅ Transaction deleted successfully');
         return true;
       } else {
-        console.error("❌ Failed to delete transaction:", response.error);
+        console.error('❌ Failed to delete transaction:', response.error);
         return false;
       }
     } catch (error) {
-      console.error("❌ Error deleting transaction:", error);
+      console.error('❌ Error deleting transaction:', error);
       return false;
     }
   }
@@ -172,13 +157,9 @@ export class TransactionsApiHelper {
   /**
    * Update an existing movement (new RESTful API)
    */
-  static async updateMovement(
-    spreadsheetId: string,
-    movementId: string,
-    movementData: any,
-  ) {
+  static async updateMovement(spreadsheetId: string, movementId: string, movementData: any) {
     try {
-      console.log("✏️ Updating movement...", movementId);
+      console.log('✏️ Updating movement...', movementId);
 
       const response = await HttpHelper.put(
         `/movements/${movementId}?spreadsheet_id=${spreadsheetId}`,
@@ -186,14 +167,14 @@ export class TransactionsApiHelper {
       );
 
       if (response.success) {
-        console.log("✅ Movement updated successfully");
+        console.log('✅ Movement updated successfully');
         return response.data;
       } else {
-        console.error("❌ Failed to update movement:", response.error);
+        console.error('❌ Failed to update movement:', response.error);
         return null;
       }
     } catch (error) {
-      console.error("❌ Error updating movement:", error);
+      console.error('❌ Error updating movement:', error);
       return null;
     }
   }
@@ -203,22 +184,21 @@ export class TransactionsApiHelper {
     movements: Array<{ movementId: string; location?: string }>,
   ) {
     try {
-      console.log("✏️ Updating movements batch...", movements.length);
+      console.log('✏️ Updating movements batch...', movements.length);
 
-      const response = await HttpHelper.post(
-        `/movements/batch?spreadsheet_id=${spreadsheetId}`,
-        { movements },
-      );
+      const response = await HttpHelper.post(`/movements/batch?spreadsheet_id=${spreadsheetId}`, {
+        movements,
+      });
 
       if (response.success) {
-        console.log("✅ Movements batch updated successfully");
+        console.log('✅ Movements batch updated successfully');
         return response.data;
       } else {
-        console.error("❌ Failed to update movements batch:", response.error);
+        console.error('❌ Failed to update movements batch:', response.error);
         return null;
       }
     } catch (error) {
-      console.error("❌ Error updating movements batch:", error);
+      console.error('❌ Error updating movements batch:', error);
       return null;
     }
   }
@@ -229,7 +209,7 @@ export class TransactionsApiHelper {
    */
   static async updateMovementLegacy(spreadsheetId: string, movementData: any) {
     try {
-      console.log("✏️ Updating movement (legacy)...", movementData);
+      console.log('✏️ Updating movement (legacy)...', movementData);
 
       const response = await HttpHelper.post(
         `/update?spreadsheetId=${encodeURIComponent(spreadsheetId)}`,
@@ -237,14 +217,14 @@ export class TransactionsApiHelper {
       );
 
       if (response.success) {
-        console.log("✅ Movement updated successfully (legacy)");
+        console.log('✅ Movement updated successfully (legacy)');
         return response.data;
       } else {
-        console.error("❌ Failed to update movement (legacy):", response.error);
+        console.error('❌ Failed to update movement (legacy):', response.error);
         return null;
       }
     } catch (error) {
-      console.error("❌ Error updating movement (legacy):", error);
+      console.error('❌ Error updating movement (legacy):', error);
       return null;
     }
   }
@@ -254,21 +234,21 @@ export class TransactionsApiHelper {
    */
   static async deleteMovement(spreadsheetId: string, movementId: string) {
     try {
-      console.log("🗑️ Deleting movement...", movementId);
+      console.log('🗑️ Deleting movement...', movementId);
 
       const response = await HttpHelper.delete(
         `/movements/${movementId}?spreadsheet_id=${spreadsheetId}`,
       );
 
       if (response.success) {
-        console.log("✅ Movement deleted successfully");
+        console.log('✅ Movement deleted successfully');
         return true;
       } else {
-        console.error("❌ Failed to delete movement:", response.error);
+        console.error('❌ Failed to delete movement:', response.error);
         return false;
       }
     } catch (error) {
-      console.error("❌ Error deleting movement:", error);
+      console.error('❌ Error deleting movement:', error);
       return false;
     }
   }

@@ -7,12 +7,7 @@ export interface IDateRange {
   isTransitioning?: boolean; // Flag to indicate data is reloading
 }
 
-import {
-  getMonthStart,
-  getMonthEnd,
-  getYearStart,
-  getCurrentDate,
-} from "../utils/dateUtils";
+import { getMonthStart, getMonthEnd, getYearStart, getCurrentDate } from '../utils/dateUtils';
 
 // Preset date ranges (computed at runtime)
 export const DATE_RANGES = {
@@ -25,7 +20,7 @@ export const DATE_RANGES = {
       const now = new Date();
       return getMonthEnd(now.getFullYear(), now.getMonth());
     },
-    label: "This Month",
+    label: 'This Month',
   },
   LAST_MONTH: {
     get startDate() {
@@ -36,7 +31,7 @@ export const DATE_RANGES = {
       const now = new Date();
       return getMonthEnd(now.getFullYear(), now.getMonth() - 1);
     },
-    label: "Last Month",
+    label: 'Last Month',
   },
   LAST_3_MONTHS: {
     get startDate() {
@@ -46,7 +41,7 @@ export const DATE_RANGES = {
     get endDate() {
       return getCurrentDate();
     },
-    label: "Last 3 Months",
+    label: 'Last 3 Months',
   },
   THIS_YEAR: {
     get startDate() {
@@ -56,6 +51,6 @@ export const DATE_RANGES = {
     get endDate() {
       return getCurrentDate();
     },
-    label: "This Year",
+    label: 'This Year',
   },
 };

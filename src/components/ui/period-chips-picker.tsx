@@ -1,10 +1,10 @@
-import { View, StyleSheet, TouchableOpacity, Text } from "react-native";
-import ChipButton from "./chip-button";
-import { useState, useMemo, useEffect } from "react";
-import React from "react";
-import { formatDateToDDMMYYYY } from "@/src/utils/dateUtils";
-import { usePlatformContext, type IDateRange } from "@/src/state";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
+import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
+import ChipButton from './chip-button';
+import { useState, useMemo, useEffect } from 'react';
+import React from 'react';
+import { formatDateToDDMMYYYY } from '@/src/utils/dateUtils';
+import { usePlatformContext, type IDateRange } from '@/src/state';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
 
 function monthStartEnd(year: number, monthIndex: number) {
   const start = new Date(year, monthIndex, 1);
@@ -18,7 +18,7 @@ function monthStartEnd(year: number, monthIndex: number) {
 interface PeriodPickerProps {
   setDateRange: (range: IDateRange & { isTransitioning?: boolean }) => void;
   isLoading?: boolean;
-  onModeChange?: (mode: "month" | "year") => void;
+  onModeChange?: (mode: 'month' | 'year') => void;
 }
 
 const PeriodPicker: React.FC<PeriodPickerProps> = ({
@@ -31,30 +31,29 @@ const PeriodPicker: React.FC<PeriodPickerProps> = ({
   const currentMonthIndex = now.getMonth();
   const months = useMemo(
     () => [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ],
     [],
   );
 
   const { orientation } = usePlatformContext();
 
-  const isLandscape = orientation === "landscape";
+  const isLandscape = orientation === 'landscape';
 
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
-  const [selectedMonthIndex, setSelectedMonthIndex] =
-    useState<number>(currentMonthIndex);
-  const [mode, setMode] = useState<"month" | "year">("month");
+  const [selectedMonthIndex, setSelectedMonthIndex] = useState<number>(currentMonthIndex);
+  const [mode, setMode] = useState<'month' | 'year'>('month');
   const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
 
   // Reset transitioning state when loading is complete
@@ -69,11 +68,7 @@ const PeriodPicker: React.FC<PeriodPickerProps> = ({
     [currentYear],
   );
 
-  const setCustomRange = (
-    startDate: string,
-    endDate: string,
-    label?: string,
-  ) => {
+  const setCustomRange = (startDate: string, endDate: string, label?: string) => {
     setIsTransitioning(true);
     setDateRange({
       startDate,
@@ -95,16 +90,14 @@ const PeriodPicker: React.FC<PeriodPickerProps> = ({
   };
 
   const canGoNext = () => {
-    if (mode === "year") {
+    if (mode === 'year') {
       return selectedYear < currentYear;
     }
-    return !(
-      selectedYear === currentYear && selectedMonthIndex === currentMonthIndex
-    );
+    return !(selectedYear === currentYear && selectedMonthIndex === currentMonthIndex);
   };
 
   const goToPreviousMonth = () => {
-    if (mode === "year") {
+    if (mode === 'year') {
       const newYear = selectedYear - 1;
       setSelectedYear(newYear);
       updateYearRange(newYear);
@@ -126,7 +119,7 @@ const PeriodPicker: React.FC<PeriodPickerProps> = ({
   const goToNextMonth = () => {
     if (!canGoNext()) return;
 
-    if (mode === "year") {
+    if (mode === 'year') {
       const newYear = selectedYear + 1;
       setSelectedYear(newYear);
       updateYearRange(newYear);
@@ -155,7 +148,7 @@ const PeriodPicker: React.FC<PeriodPickerProps> = ({
     const y = parseInt(opt, 10);
     setSelectedYear(y);
 
-    if (mode === "year") {
+    if (mode === 'year') {
       updateYearRange(y);
     } else {
       // If selecting current year and current month is beyond available months, adjust
@@ -169,15 +162,15 @@ const PeriodPicker: React.FC<PeriodPickerProps> = ({
   };
 
   const handleMonthModeClick = () => {
-    setMode("month");
+    setMode('month');
     updateMonthRange(selectedYear, selectedMonthIndex);
-    onModeChange?.("month");
+    onModeChange?.('month');
   };
 
   const handleYearModeClick = () => {
-    setMode("year");
+    setMode('year');
     updateYearRange(selectedYear);
-    onModeChange?.("year");
+    onModeChange?.('year');
   };
 
   const availableMonths = useMemo(() => {
@@ -190,13 +183,10 @@ const PeriodPicker: React.FC<PeriodPickerProps> = ({
   }, [selectedYear, currentYear, currentMonthIndex, months]);
 
   const inactiveBackground = useThemeColor(
-    { light: "#a8a8a8ff", dark: "#4a4a4a" },
-    "tabIconDefault",
+    { light: '#a8a8a8ff', dark: '#4a4a4a' },
+    'tabIconDefault',
   );
-  const activeBackground = useThemeColor(
-    { light: "#000", dark: "#fff" },
-    "text",
-  );
+  const activeBackground = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
 
   const dynamicStyles = StyleSheet.create({
     chipButton: {
@@ -211,9 +201,7 @@ const PeriodPicker: React.FC<PeriodPickerProps> = ({
         style={[styles.arrowButton, dynamicStyles.chipButton]}
         onPress={goToPreviousMonth}
       >
-        <Text style={[styles.arrowText, isLandscape && { fontSize: 13 }]}>
-          ←
-        </Text>
+        <Text style={[styles.arrowText, isLandscape && { fontSize: 13 }]}>←</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={[
@@ -237,7 +225,7 @@ const PeriodPicker: React.FC<PeriodPickerProps> = ({
       <ChipButton
         text="Months"
         key="Months"
-        active={mode === "month"}
+        active={mode === 'month'}
         onPress={handleMonthModeClick}
         options={availableMonths}
         defaultOption={months[selectedMonthIndex]}
@@ -246,7 +234,7 @@ const PeriodPicker: React.FC<PeriodPickerProps> = ({
       <ChipButton
         text="Years"
         key="Years"
-        active={mode === "year"}
+        active={mode === 'year'}
         onPress={handleYearModeClick}
         options={availableYears}
         defaultOption={String(selectedYear)}
@@ -258,38 +246,38 @@ const PeriodPicker: React.FC<PeriodPickerProps> = ({
 
 const styles = StyleSheet.create({
   wrapper: {
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     gap: 8,
   },
   arrowButton: {
     padding: 8,
     paddingHorizontal: 12,
     borderRadius: 20,
-    backgroundColor: "#f0f0f0",
+    backgroundColor: '#f0f0f0',
   },
   arrowButtonDisabled: {
     opacity: 0.3,
   },
   arrowText: {
     fontSize: 18,
-    fontWeight: "bold",
-    color: "#fff",
+    fontWeight: 'bold',
+    color: '#fff',
   },
   arrowTextDisabled: {
-    color: "#e3e3e3",
+    color: '#e3e3e3',
   },
   chipWrapper: {
-    position: "relative",
+    position: 'relative',
     flexGrow: 1,
   },
   chipButton: {
     padding: 8,
     paddingHorizontal: 20,
     borderRadius: 20,
-    display: "flex",
+    display: 'flex',
   },
 });
 

@@ -1,25 +1,16 @@
-import {
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-  ViewStyle,
-} from "react-native";
-import { BlurView } from "expo-blur";
-import { LinearGradient } from "expo-linear-gradient";
-import { GlassView, isLiquidGlassAvailable } from "expo-glass-effect";
-import { Ionicons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
-import { useColorScheme } from "@/src/hooks/use-color-scheme";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import React from "react";
-import ContextMenu, {
-  type IContextMenuOption,
-} from "./context-menu";
-import type { ActivationMethod } from "@expo/ui/swift-ui";
+import { Platform, Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native';
+import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
+import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
+import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
+import { useColorScheme } from '@/src/hooks/use-color-scheme';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import React from 'react';
+import ContextMenu, { type IContextMenuOption } from './context-menu';
+import type { ActivationMethod } from '@expo/ui/swift-ui';
 
-type GlassButtonType = "add" | "search" | "confirm" | "dismiss" | "menu";
+type GlassButtonType = 'add' | 'search' | 'confirm' | 'dismiss' | 'menu';
 
 type Props = {
   onPress: () => void;
@@ -38,37 +29,31 @@ const GlassButton = ({
   onPress,
   onLongPress,
   style,
-  type = "add",
+  type = 'add',
   text,
   size = 24,
   accessibilityLabel,
   contextMenuOptions,
-  contextMenuActivationMethod = "longPress",
+  contextMenuActivationMethod = 'longPress',
   onContextMenuSelect,
 }: Props) => {
-  const scheme = useColorScheme() ?? "light";
-  const iconColor = useThemeColor({}, "text");
-  const dynamicBackground =
-    scheme === "dark" ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.18)";
-  const dynamicBorder =
-    scheme === "dark" ? "rgba(255,255,255,0.24)" : "rgba(255,255,255,0.35)";
+  const scheme = useColorScheme() ?? 'light';
+  const iconColor = useThemeColor({}, 'text');
+  const dynamicBackground = scheme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.18)';
+  const dynamicBorder = scheme === 'dark' ? 'rgba(255,255,255,0.24)' : 'rgba(255,255,255,0.35)';
   const sheenColors =
-    scheme === "dark"
-      ? ([
-          "rgba(62, 62, 62, 0.35)",
-          "rgba(255,255,255,0.12)",
-          "rgba(255,255,255,0.04)",
-        ] as const)
+    scheme === 'dark'
+      ? (['rgba(62, 62, 62, 0.35)', 'rgba(255,255,255,0.12)', 'rgba(255,255,255,0.04)'] as const)
       : ([
-          "rgba(144, 143, 143, 0.55)",
-          "rgba(131, 131, 131, 0.15)",
-          "rgba(255, 255, 255, 0.74)",
+          'rgba(144, 143, 143, 0.55)',
+          'rgba(131, 131, 131, 0.15)',
+          'rgba(255, 255, 255, 0.74)',
         ] as const);
   const handlePress = async () => {
     try {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     } catch (error) {
-      console.error("Haptic feedback error:", error);
+      console.error('Haptic feedback error:', error);
     }
     onPress();
   };
@@ -87,15 +72,15 @@ const GlassButton = ({
           accessibilityLabel ??
           (text
             ? text
-            : type === "search"
-              ? "Search"
-              : type === "confirm"
-                ? "Confirm"
-                : type === "dismiss"
-                  ? "Dismiss"
-                  : type === "menu"
-                    ? "Menu"
-                    : "Add")
+            : type === 'search'
+              ? 'Search'
+              : type === 'confirm'
+                ? 'Confirm'
+                : type === 'dismiss'
+                  ? 'Dismiss'
+                  : type === 'menu'
+                    ? 'Menu'
+                    : 'Add')
         }
       >
         {isLiquidGlassAvailable() ? (
@@ -108,11 +93,7 @@ const GlassButton = ({
         ) : (
           <>
             {/* Fallback blur + sheen for non-iOS 26 platforms */}
-            <BlurView
-              tint={scheme}
-              intensity={40}
-              style={StyleSheet.absoluteFill}
-            />
+            <BlurView tint={scheme} intensity={40} style={StyleSheet.absoluteFill} />
             <LinearGradient
               colors={sheenColors}
               start={{ x: 0.5, y: 0 }}
@@ -122,21 +103,19 @@ const GlassButton = ({
           </>
         )}
         {text ? (
-          <Text style={{ color: iconColor, fontSize: size, fontWeight: "600" }}>
-            {text}
-          </Text>
+          <Text style={{ color: iconColor, fontSize: size, fontWeight: '600' }}>{text}</Text>
         ) : (
           <Ionicons
             name={
-              type === "search"
-                ? "search"
-                : type === "confirm"
-                  ? "checkmark"
-                  : type === "dismiss"
-                    ? "close"
-                    : type === "menu"
-                      ? "ellipsis-vertical"
-                      : "add"
+              type === 'search'
+                ? 'search'
+                : type === 'confirm'
+                  ? 'checkmark'
+                  : type === 'dismiss'
+                    ? 'close'
+                    : type === 'menu'
+                      ? 'ellipsis-vertical'
+                      : 'add'
             }
             size={size}
             color={iconColor}
@@ -170,15 +149,15 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 32,
-    overflow: "hidden",
+    overflow: 'hidden',
     borderWidth: 0.35,
-    shadowColor: "#000000",
+    shadowColor: '#000000',
     shadowOpacity: 0.25,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 8 },
     elevation: 10,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

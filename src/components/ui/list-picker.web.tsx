@@ -1,8 +1,8 @@
-import { ThemedText } from "../core/themed-text";
-import { View, StyleSheet, Pressable, ScrollView } from "react-native";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import { useState, useRef } from "react";
-import React from "react";
+import { ThemedText } from '../core/themed-text';
+import { View, StyleSheet, Pressable, ScrollView } from 'react-native';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import { useState, useRef } from 'react';
+import React from 'react';
 
 export interface IListPickerItem {
   label: string;
@@ -24,32 +24,17 @@ const ListPicker: React.FC<IListPickerProps> = ({
   onChange,
   items,
   label,
-  placeholder = "Select...",
+  placeholder = 'Select...',
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<View>(null);
 
-  const textColor = useThemeColor({ light: "#000", dark: "#fff" }, "text");
-  const placeholderColor = useThemeColor(
-    { light: "#666", dark: "#99999984" },
-    "tabIconDefault",
-  );
-  const dropdownBg = useThemeColor(
-    { light: "#fff", dark: "#2a2a2a" },
-    "background",
-  );
-  const dropdownBorder = useThemeColor(
-    { light: "#e0e0e0", dark: "#444" },
-    "tabIconDefault",
-  );
-  const hoverColor = useThemeColor(
-    { light: "#f0f0f0", dark: "#3a3a3a" },
-    "tabIconDefault",
-  );
-  const selectedBg = useThemeColor(
-    { light: "#e8f5e9", dark: "#1b3a26" },
-    "tabIconDefault",
-  );
+  const textColor = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
+  const placeholderColor = useThemeColor({ light: '#666', dark: '#99999984' }, 'tabIconDefault');
+  const dropdownBg = useThemeColor({ light: '#fff', dark: '#2a2a2a' }, 'background');
+  const dropdownBorder = useThemeColor({ light: '#e0e0e0', dark: '#444' }, 'tabIconDefault');
+  const hoverColor = useThemeColor({ light: '#f0f0f0', dark: '#3a3a3a' }, 'tabIconDefault');
+  const selectedBg = useThemeColor({ light: '#e8f5e9', dark: '#1b3a26' }, 'tabIconDefault');
 
   const getDisplayValue = () => {
     const selectedItem = items.find((item) => item.value === value);
@@ -83,7 +68,7 @@ const ListPicker: React.FC<IListPickerProps> = ({
             {getDisplayValue()}
           </ThemedText>
           <ThemedText style={[styles.chevron, { color: placeholderColor }]}>
-            {isOpen ? "▲" : "▼"}
+            {isOpen ? '▲' : '▼'}
           </ThemedText>
         </View>
       </Pressable>
@@ -116,10 +101,7 @@ const ListPicker: React.FC<IListPickerProps> = ({
                   ]}
                 >
                   <ThemedText
-                    style={[
-                      styles.dropdownItemText,
-                      isSelected && styles.dropdownItemTextSelected,
-                    ]}
+                    style={[styles.dropdownItemText, isSelected && styles.dropdownItemTextSelected]}
                   >
                     {item.label}
                   </ThemedText>
@@ -135,14 +117,14 @@ const ListPicker: React.FC<IListPickerProps> = ({
 
 const styles = StyleSheet.create({
   wrapper: {
-    position: "relative",
+    position: 'relative',
     zIndex: 9999,
   },
   container: {
-    flexDirection: "row",
+    flexDirection: 'row',
     paddingHorizontal: 0,
     paddingVertical: 5,
-    alignItems: "center",
+    alignItems: 'center',
     flex: 1,
   },
   label: {
@@ -154,14 +136,14 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-end",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
     paddingHorizontal: 10,
   },
   valueText: {
     fontSize: 18,
-    textAlign: "right",
+    textAlign: 'right',
     flex: 1,
   },
   chevron: {
@@ -169,19 +151,19 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   dropdown: {
-    position: "absolute",
-    top: "100%",
+    position: 'absolute',
+    top: '100%',
     left: 0,
     right: 0,
     borderRadius: 12,
     borderWidth: 1,
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 10,
     zIndex: 99999,
-    overflow: "hidden",
+    overflow: 'hidden',
   },
   dropdownScroll: {
     maxHeight: 200,
@@ -194,7 +176,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   dropdownItemTextSelected: {
-    fontWeight: "600",
+    fontWeight: '600',
   },
 });
 

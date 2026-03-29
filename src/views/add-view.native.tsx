@@ -7,54 +7,42 @@ import {
   Animated,
   Keyboard,
   Platform,
-} from "react-native";
-import React, { useState, useEffect, useRef } from "react";
-import * as Crypto from "expo-crypto";
-import { LinearGradient } from "expo-linear-gradient";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import * as Haptics from "expo-haptics";
-import InputGroup from "@/src/components/ui/input-group";
-import TransactionModal, {
-  ITransactionData,
-} from "@/src/components/ui/transaction-modal";
-import GlassButton from "@/src/components/ui/glass-button";
-import ContextMenu, {
-  IContextMenuOption,
-} from "@/src/components/ui/context-menu";
-import RecurrencyPicker from "@/src/components/ui/recurrency-picker";
-import { useAuthContext, useDataContext } from "@/src/state";
-import {
-  formatDateToDDMMYYYY,
-  parseDateFromDDMMYYYY,
-} from "@/src/utils/dateUtils";
-import { useRouter } from "expo-router";
-import IconSymbol from "@/src/components/ui/icon-symbol";
-import LocationPicker, { ILocation } from "@/src/components/ui/location-picker";
-import { useSpreadsheetMutation } from "@/src/hooks/useSpreadsheetMutation";
-import { TransactionsApiHelper } from "@/src/helpers/TransactionsApiHelper";
+} from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import * as Crypto from 'expo-crypto';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import * as Haptics from 'expo-haptics';
+import InputGroup from '@/src/components/ui/input-group';
+import TransactionModal, { ITransactionData } from '@/src/components/ui/transaction-modal';
+import GlassButton from '@/src/components/ui/glass-button';
+import ContextMenu, { IContextMenuOption } from '@/src/components/ui/context-menu';
+import RecurrencyPicker from '@/src/components/ui/recurrency-picker';
+import { useAuthContext, useDataContext } from '@/src/state';
+import { formatDateToDDMMYYYY, parseDateFromDDMMYYYY } from '@/src/utils/dateUtils';
+import { useRouter } from 'expo-router';
+import IconSymbol from '@/src/components/ui/icon-symbol';
+import LocationPicker, { ILocation } from '@/src/components/ui/location-picker';
+import { useSpreadsheetMutation } from '@/src/hooks/useSpreadsheetMutation';
+import { TransactionsApiHelper } from '@/src/helpers/TransactionsApiHelper';
 import {
   TransactionsMutationHelpers,
   type CreateMovementData,
   type UpdateMovementData,
   type DeleteMovementData,
   type OptimisticSnapshot,
-} from "@/src/helpers/TransactionsMutationHelpers";
-import type { Movement } from "@/src/state";
-import { MovementHelper } from "@/src/helpers/MovementHelper";
-import {
-  parseLocationValue,
-  serializeLocationValue,
-} from "@/src/utils/locationValue";
-import TextBox from "@/src/components/ui/text-box";
-import ListPicker from "@/src/components/ui/list-picker.native";
-import DatePicker from "@/src/components/ui/date-picker.native";
-import { ThemedText } from "@/src/components/core/themed-text.native";
-import { ScreenView } from "../components";
-import Transactions, {
-  ITransaction,
-} from "../components/ui/transactions.native";
+} from '@/src/helpers/TransactionsMutationHelpers';
+import type { Movement } from '@/src/state';
+import { MovementHelper } from '@/src/helpers/MovementHelper';
+import { parseLocationValue, serializeLocationValue } from '@/src/utils/locationValue';
+import TextBox from '@/src/components/ui/text-box';
+import ListPicker from '@/src/components/ui/list-picker.native';
+import DatePicker from '@/src/components/ui/date-picker.native';
+import { ThemedText } from '@/src/components/core/themed-text.native';
+import { ScreenView } from '../components';
+import Transactions, { ITransaction } from '../components/ui/transactions.native';
 
-export type ToastStatus = "loading" | "success" | "error";
+export type ToastStatus = 'loading' | 'success' | 'error';
 
 interface AddViewProps {
   editingMovementId?: string;
@@ -78,51 +66,30 @@ const AddView: React.FC<AddViewProps> = ({
   };
 
   const { selectedSpreadsheetId } = useAuthContext();
-  const {
-    accounts,
-    categories,
-    movements,
-    recurringMovements,
-    unconfirmedMovements,
-  } = useDataContext();
+  const { accounts, categories, movements, recurringMovements, unconfirmedMovements } =
+    useDataContext();
 
   // React Query mutations
-  const addMovement = useSpreadsheetMutation<
-    CreateMovementData,
-    OptimisticSnapshot
-  >({
+  const addMovement = useSpreadsheetMutation<CreateMovementData, OptimisticSnapshot>({
     mutationFn: (spreadsheetId, data) =>
       TransactionsApiHelper.createTransaction(spreadsheetId, data),
-    onMutate: (qc, data) =>
-      TransactionsMutationHelpers.optimisticAddMovement(qc, data),
+    onMutate: (qc, data) => TransactionsMutationHelpers.optimisticAddMovement(qc, data),
     onError: (qc, ctx) => TransactionsMutationHelpers.rollback(qc, ctx),
     onSuccess: (qc) => TransactionsMutationHelpers.invalidateMovementCaches(qc),
   });
-  const updateMovement = useSpreadsheetMutation<
-    UpdateMovementData,
-    OptimisticSnapshot
-  >({
+  const updateMovement = useSpreadsheetMutation<UpdateMovementData, OptimisticSnapshot>({
     mutationFn: (spreadsheetId, data) => {
       const { movementId, ...updates } = data;
-      return TransactionsApiHelper.updateMovement(
-        spreadsheetId,
-        movementId,
-        updates,
-      );
+      return TransactionsApiHelper.updateMovement(spreadsheetId, movementId, updates);
     },
-    onMutate: (qc, data) =>
-      TransactionsMutationHelpers.optimisticUpdateMovement(qc, data),
+    onMutate: (qc, data) => TransactionsMutationHelpers.optimisticUpdateMovement(qc, data),
     onError: (qc, ctx) => TransactionsMutationHelpers.rollback(qc, ctx),
     onSuccess: (qc) => TransactionsMutationHelpers.invalidateMovementCaches(qc),
   });
-  const deleteMovement = useSpreadsheetMutation<
-    DeleteMovementData,
-    OptimisticSnapshot
-  >({
+  const deleteMovement = useSpreadsheetMutation<DeleteMovementData, OptimisticSnapshot>({
     mutationFn: (spreadsheetId, data) =>
       TransactionsApiHelper.deleteMovement(spreadsheetId, data.movementId),
-    onMutate: (qc, data) =>
-      TransactionsMutationHelpers.optimisticDeleteMovement(qc, data),
+    onMutate: (qc, data) => TransactionsMutationHelpers.optimisticDeleteMovement(qc, data),
     onError: (qc, ctx) => TransactionsMutationHelpers.rollback(qc, ctx),
     onSuccess: (qc) => TransactionsMutationHelpers.invalidateMovementCaches(qc),
   });
@@ -141,39 +108,31 @@ const AddView: React.FC<AddViewProps> = ({
 
   // Derive submitting state from mutations
   const isSubmitting =
-    addMovement.isPending ||
-    updateMovement.isPending ||
-    deleteMovement.isPending;
+    addMovement.isPending || updateMovement.isPending || deleteMovement.isPending;
 
-  const [description, setDescription] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
+  const [description, setDescription] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [transactions, setTransactions] = useState<ITransaction[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<ILocation>({
-    address: "",
+    address: '',
   });
   const [showTransactionPicker, setShowTransactionPicker] = useState(false);
-  const [editingTransaction, setEditingTransaction] =
-    useState<ITransaction | null>(null);
+  const [editingTransaction, setEditingTransaction] = useState<ITransaction | null>(null);
   const [showRecurrencyPicker, setShowRecurrencyPicker] = useState(false);
   const [isRecurrent, setIsRecurrent] = useState(false);
-  const [recurrenceSelection, setRecurrenceSelection] = useState<string>("new");
-  const [recurrenceUnit, setRecurrenceUnit] = useState<string>("M");
+  const [recurrenceSelection, setRecurrenceSelection] = useState<string>('new');
+  const [recurrenceUnit, setRecurrenceUnit] = useState<string>('M');
   const [recurrenceFrequency, setRecurrenceFrequency] = useState<number>(1);
-  const [recurrenceStartDate, setRecurrenceStartDate] = useState<Date>(
-    new Date(),
-  );
-  const [hasRecurrencePattern, setHasRecurrencePattern] =
-    useState<boolean>(false);
+  const [recurrenceStartDate, setRecurrenceStartDate] = useState<Date>(new Date());
+  const [hasRecurrencePattern, setHasRecurrencePattern] = useState<boolean>(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const scrollViewRef = useRef<any>(null);
   const hasManualCategorySelection = useRef(false);
 
   useEffect(() => {
-    const showEvent =
-      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
-    const hideEvent =
-      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
     const showSub = Keyboard.addListener(showEvent, (e) =>
       setKeyboardHeight(e.endCoordinates.height),
     );
@@ -192,11 +151,7 @@ const AddView: React.FC<AddViewProps> = ({
   const handleDescriptionChange = (text: string) => {
     setDescription(text);
     if (!hasManualCategorySelection.current && !isEditing) {
-      const predicted = MovementHelper.predictCategory(
-        text,
-        movements,
-        categories,
-      );
+      const predicted = MovementHelper.predictCategory(text, movements, categories);
       if (predicted) {
         setSelectedCategory(predicted);
       }
@@ -212,8 +167,7 @@ const AddView: React.FC<AddViewProps> = ({
   const isEditingRecurring =
     isEditing &&
     editingMovement &&
-    (editingMovement.status?.toLowerCase() === "recurrent" ||
-      editingMovement.recurrencePattern);
+    (editingMovement.status?.toLowerCase() === 'recurrent' || editingMovement.recurrencePattern);
 
   // Pre-populate form when editing an existing movement
   useEffect(() => {
@@ -228,16 +182,14 @@ const AddView: React.FC<AddViewProps> = ({
     }
 
     // Map transactions from the movement
-    const mappedTransactions: ITransaction[] = editingMovement.transactions.map(
-      (t, index) => ({
-        id: index + 1,
-        accountName: t.account,
-        amount: t.amount,
-        type: t.type,
-        transactionID: t.transactionId,
-        movementID: t.movementId,
-      }),
-    );
+    const mappedTransactions: ITransaction[] = editingMovement.transactions.map((t, index) => ({
+      id: index + 1,
+      accountName: t.account,
+      amount: t.amount,
+      type: t.type,
+      transactionID: t.transactionId,
+      movementID: t.movementId,
+    }));
     setTransactions(mappedTransactions);
     setSelectedLocation(parseLocationValue(editingMovement.location));
 
@@ -255,10 +207,7 @@ const AddView: React.FC<AddViewProps> = ({
       setRecurrenceStartDate(recStartDate);
     }
     // Pre-populate recurrence link for non-template movements
-    if (
-      editingMovement.recurrenceId &&
-      editingMovement.status?.toLowerCase() !== "recurrent"
-    ) {
+    if (editingMovement.recurrenceId && editingMovement.status?.toLowerCase() !== 'recurrent') {
       setIsRecurrent(true);
       setRecurrenceSelection(editingMovement.recurrenceId);
     }
@@ -271,13 +220,12 @@ const AddView: React.FC<AddViewProps> = ({
     setDescription(recurringTemplate.description);
     setSelectedCategory(recurringTemplate.category);
 
-    const mappedTransactions: ITransaction[] =
-      recurringTemplate.transactions.map((t, index) => ({
-        id: index + 1,
-        accountName: t.account,
-        amount: t.amount,
-        type: t.type,
-      }));
+    const mappedTransactions: ITransaction[] = recurringTemplate.transactions.map((t, index) => ({
+      id: index + 1,
+      accountName: t.account,
+      amount: t.amount,
+      type: t.type,
+    }));
     setTransactions(mappedTransactions);
     setSelectedLocation(parseLocationValue(recurringTemplate.location));
   }, [recurringTemplate, editingMovement]);
@@ -286,8 +234,7 @@ const AddView: React.FC<AddViewProps> = ({
   useEffect(() => {
     if (!initialMovement || editingMovement || recurringTemplate) return;
 
-    if (initialMovement.description)
-      setDescription(initialMovement.description);
+    if (initialMovement.description) setDescription(initialMovement.description);
     if (initialMovement.category) setSelectedCategory(initialMovement.category);
     if (initialMovement.date) {
       const parsedDate = parseDateFromDDMMYYYY(initialMovement.date);
@@ -296,38 +243,31 @@ const AddView: React.FC<AddViewProps> = ({
     if (initialMovement.location) {
       setSelectedLocation(parseLocationValue(initialMovement.location));
     }
-    if (
-      initialMovement.transactions &&
-      initialMovement.transactions.length > 0
-    ) {
-      const mappedTransactions: ITransaction[] =
-        initialMovement.transactions.map((t, index) => ({
-          id: index + 1,
-          accountName: t.account,
-          amount: t.amount,
-          type: t.type,
-        }));
+    if (initialMovement.transactions && initialMovement.transactions.length > 0) {
+      const mappedTransactions: ITransaction[] = initialMovement.transactions.map((t, index) => ({
+        id: index + 1,
+        accountName: t.account,
+        amount: t.amount,
+        type: t.type,
+      }));
       setTransactions(mappedTransactions);
     }
   }, [initialMovement]);
 
   // Theme colors
   const backgroundColor = useThemeColor(
-    { light: "transparent", dark: "transparent" },
-    "background",
+    { light: 'transparent', dark: 'transparent' },
+    'background',
   );
-  const placeholderColor = useThemeColor(
-    { light: "#666", dark: "#999" },
-    "tabIconDefault",
-  );
-  const menuBackground = useThemeColor({}, "menuBackground");
+  const placeholderColor = useThemeColor({ light: '#666', dark: '#999' }, 'tabIconDefault');
+  const menuBackground = useThemeColor({}, 'menuBackground');
 
   // Scroll fade animation
   const scrollY = useRef(new Animated.Value(0)).current;
   const fadeOpacity = scrollY.interpolate({
     inputRange: [0, 30],
     outputRange: [0, 1],
-    extrapolate: "clamp",
+    extrapolate: 'clamp',
   });
 
   const allCategories = categories.map((category) => ({
@@ -342,7 +282,7 @@ const AddView: React.FC<AddViewProps> = ({
 
   // Build recurrence options for ListPicker (existing recurrences + "new")
   const recurrenceOptions = [
-    { label: "New recurrence", value: "new" },
+    { label: 'New recurrence', value: 'new' },
     ...recurringMovements.map((m) => ({
       label: m.description,
       value: m.recurrenceId || m.id,
@@ -366,15 +306,13 @@ const AddView: React.FC<AddViewProps> = ({
 
   const handleTransactionSave = (data: ITransactionData) => {
     if (!data.accountName || data.amount <= 0) {
-      Alert.alert("Error, please complete all fields with valid data");
+      Alert.alert('Error, please complete all fields with valid data');
       return;
     }
 
     if (editingTransaction) {
       setTransactions(
-        transactions.map((t) =>
-          t.id === editingTransaction.id ? { ...t, ...data } : t,
-        ),
+        transactions.map((t) => (t.id === editingTransaction.id ? { ...t, ...data } : t)),
       );
     } else {
       const newTransaction: ITransaction = {
@@ -390,42 +328,37 @@ const AddView: React.FC<AddViewProps> = ({
 
   const getTotalAmount = () => {
     return transactions.reduce((sum, t) => {
-      return sum + (t.type === "income" ? t.amount : -t.amount);
+      return sum + (t.type === 'income' ? t.amount : -t.amount);
     }, 0);
   };
 
   const validateMovement = (): boolean => {
     if (!description.trim()) {
-      Alert.alert("Error", "Please enter a description");
+      Alert.alert('Error', 'Please enter a description');
       return false;
     }
     if (!selectedCategory) {
-      Alert.alert("Error", "Please select a category");
+      Alert.alert('Error', 'Please select a category');
       return false;
     }
     if (!selectedDate) {
-      Alert.alert("Error", "Please select a date");
+      Alert.alert('Error', 'Please select a date');
       return false;
     }
-    const validTransactions = transactions.filter(
-      (t) => t.accountName && t.amount > 0,
-    );
+    const validTransactions = transactions.filter((t) => t.accountName && t.amount > 0);
     if (validTransactions.length === 0) {
-      Alert.alert(
-        "Error",
-        "Please add at least one transaction with a valid account and amount",
-      );
+      Alert.alert('Error', 'Please add at least one transaction with a valid account and amount');
       return false;
     }
     if (!selectedSpreadsheetId) {
-      Alert.alert("Error", "No spreadsheet selected");
+      Alert.alert('Error', 'No spreadsheet selected');
       return false;
     }
     return true;
   };
 
   const handleMenuAction = (option: string) => {
-    if (option === "Delete movement") {
+    if (option === 'Delete movement') {
       handleDeleteMovement();
     }
   };
@@ -447,31 +380,29 @@ const AddView: React.FC<AddViewProps> = ({
 
   const handleDeleteMovement = async () => {
     Alert.alert(
-      "Delete Movement",
-      "Are you sure you want to delete this movement? This action cannot be undone.",
+      'Delete Movement',
+      'Are you sure you want to delete this movement? This action cannot be undone.',
       [
-        { text: "Cancel", style: "cancel" },
+        { text: 'Cancel', style: 'cancel' },
         {
-          text: "Delete",
-          style: "destructive",
+          text: 'Delete',
+          style: 'destructive',
           onPress: async () => {
             if (!selectedSpreadsheetId || !editingMovementId) return;
 
-            onToast?.("loading");
+            onToast?.('loading');
             closeView();
 
             try {
               await deleteMovement.mutateAsync({
                 movementId: editingMovementId,
               });
-              Haptics.notificationAsync(
-                Haptics.NotificationFeedbackType.Success,
-              );
-              onToast?.("success");
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              onToast?.('success');
             } catch (error) {
-              console.error("Error deleting movement:", error);
+              console.error('Error deleting movement:', error);
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-              onToast?.("error");
+              onToast?.('error');
             }
           },
         },
@@ -483,14 +414,11 @@ const AddView: React.FC<AddViewProps> = ({
     if (!description.trim()) return false;
     if (!selectedCategory) return false;
     if (!selectedDate) return false;
-    const validTransactions = transactions.filter(
-      (t) => t.accountName && t.amount > 0,
-    );
+    const validTransactions = transactions.filter((t) => t.accountName && t.amount > 0);
     if (validTransactions.length === 0) return false;
     if (!selectedSpreadsheetId) return false;
     // recurrencePattern can be null (no pattern) — that's valid
-    if (isRecurrent && recurrenceSelection !== "new" && !recurrenceSelection)
-      return false;
+    if (isRecurrent && recurrenceSelection !== 'new' && !recurrenceSelection) return false;
     return true;
   };
 
@@ -498,8 +426,8 @@ const AddView: React.FC<AddViewProps> = ({
     if (isEditing) {
       return [
         {
-          label: "Delete movement",
-          icon: "trash-outline",
+          label: 'Delete movement',
+          icon: 'trash-outline',
           destructive: true,
         },
       ];
@@ -512,21 +440,17 @@ const AddView: React.FC<AddViewProps> = ({
 
     if (!validateMovement()) return;
 
-    const validTransactions = transactions.filter(
-      (t) => t.accountName && t.amount > 0,
-    );
+    const validTransactions = transactions.filter((t) => t.accountName && t.amount > 0);
 
     const formattedDate = formatDateToDDMMYYYY(selectedDate);
     const transactionsData = validTransactions.map((transaction) => ({
-      ...(transaction.transactionID
-        ? { transactionId: transaction.transactionID }
-        : {}),
+      ...(transaction.transactionID ? { transactionId: transaction.transactionID } : {}),
       amount:
-        transaction.type === "income"
-          ? String(transaction.amount).replace(".", ",")
-          : String(-transaction.amount).replace(".", ","),
+        transaction.type === 'income'
+          ? String(transaction.amount).replace('.', ',')
+          : String(-transaction.amount).replace('.', ','),
       account: transaction.accountName,
-      type: (transaction.type === "income" ? "in" : "out") as "in" | "out",
+      type: (transaction.type === 'income' ? 'in' : 'out') as 'in' | 'out',
     }));
 
     const baseData = {
@@ -537,10 +461,9 @@ const AddView: React.FC<AddViewProps> = ({
       transactions: transactionsData,
     };
 
-    const formattedRecurrenceStartDate =
-      formatDateToDDMMYYYY(recurrenceStartDate);
+    const formattedRecurrenceStartDate = formatDateToDDMMYYYY(recurrenceStartDate);
 
-    onToast?.("loading");
+    onToast?.('loading');
     closeView();
 
     try {
@@ -551,18 +474,18 @@ const AddView: React.FC<AddViewProps> = ({
         };
         if (isEditingRecurring && editingMovement) {
           movementData.recurrenceId = editingMovement.recurrenceId;
-          movementData.status = "recurrent";
+          movementData.status = 'recurrent';
           movementData.recurrencePattern = recurrencePattern || undefined;
           movementData.date = formattedRecurrenceStartDate;
-        } else if (isRecurrent && recurrenceSelection !== "new") {
+        } else if (isRecurrent && recurrenceSelection !== 'new') {
           movementData.recurrenceId = recurrenceSelection;
-        } else if (isRecurrent && recurrenceSelection === "new") {
+        } else if (isRecurrent && recurrenceSelection === 'new') {
           const newRecurrenceId = Crypto.randomUUID();
           await addMovement.mutateAsync({
             ...baseData,
             date: formattedRecurrenceStartDate,
             recurrenceId: newRecurrenceId,
-            status: "recurrent",
+            status: 'recurrent',
             recurrencePattern: recurrencePattern || undefined,
           });
           movementData.recurrenceId = newRecurrenceId;
@@ -571,21 +494,21 @@ const AddView: React.FC<AddViewProps> = ({
           movementId: editingMovementId,
           ...movementData,
         });
-      } else if (isRecurrent && recurrenceSelection === "new") {
+      } else if (isRecurrent && recurrenceSelection === 'new') {
         // Create new recurring template + linked movement
         const newRecurrenceId = Crypto.randomUUID();
         await addMovement.mutateAsync({
           ...baseData,
           date: formattedRecurrenceStartDate,
           recurrenceId: newRecurrenceId,
-          status: "recurrent",
+          status: 'recurrent',
           recurrencePattern: recurrencePattern || undefined,
         });
         await addMovement.mutateAsync({
           ...baseData,
           recurrenceId: newRecurrenceId,
         });
-      } else if (isRecurrent && recurrenceSelection !== "new") {
+      } else if (isRecurrent && recurrenceSelection !== 'new') {
         // Link to existing recurrence
         await addMovement.mutateAsync({
           ...baseData,
@@ -601,11 +524,11 @@ const AddView: React.FC<AddViewProps> = ({
       }
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      onToast?.("success");
+      onToast?.('success');
     } catch (error) {
-      console.error("Error saving movement:", error);
+      console.error('Error saving movement:', error);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      onToast?.("error");
+      onToast?.('error');
     }
   };
 
@@ -614,11 +537,7 @@ const AddView: React.FC<AddViewProps> = ({
       <View style={[styles.container, { backgroundColor }]}>
         <View style={styles.headerContainer}>
           <ThemedText type="title" style={styles.title}>
-            {isEditingRecurring
-              ? "Edit Recurrent"
-              : isEditing
-                ? "Edit Movement"
-                : "New Movement"}
+            {isEditingRecurring ? 'Edit Recurrent' : isEditing ? 'Edit Movement' : 'New Movement'}
           </ThemedText>
           {isEditing && (
             <GlassButton
@@ -642,19 +561,15 @@ const AddView: React.FC<AddViewProps> = ({
           }}
           pointerEvents="none"
         >
-          <LinearGradient
-            colors={[menuBackground, menuBackground + "00"]}
-            style={{ flex: 1 }}
-          />
+          <LinearGradient colors={[menuBackground, menuBackground + '00']} style={{ flex: 1 }} />
         </Animated.View>
 
         <Animated.ScrollView
           ref={scrollViewRef}
           showsVerticalScrollIndicator={false}
-          onScroll={Animated.event(
-            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-            { useNativeDriver: true },
-          )}
+          onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+            useNativeDriver: true,
+          })}
           scrollEventThrottle={16}
         >
           <InputGroup>
@@ -676,7 +591,7 @@ const AddView: React.FC<AddViewProps> = ({
             <DatePicker
               value={selectedDate}
               onChange={setSelectedDate}
-              label={isEditingRecurring ? "Start" : "Date"}
+              label={isEditingRecurring ? 'Start' : 'Date'}
             />
           </InputGroup>
 
@@ -687,18 +602,12 @@ const AddView: React.FC<AddViewProps> = ({
                 onPress={() => setShowRecurrencyPicker(true)}
                 style={styles.recurrenceField}
               >
-                <ThemedText style={styles.recurrenceLabel}>
-                  Recurrence
-                </ThemedText>
+                <ThemedText style={styles.recurrenceLabel}>Recurrence</ThemedText>
                 <View style={styles.recurrenceValueContainer}>
                   <ThemedText style={styles.recurrenceValue}>
-                    {recurrencePattern ?? "Not set"}
+                    {recurrencePattern ?? 'Not set'}
                   </ThemedText>
-                  <IconSymbol
-                    name="chevron-right"
-                    size={16}
-                    color={placeholderColor}
-                  />
+                  <IconSymbol name="chevron-right" size={16} color={placeholderColor} />
                 </View>
               </Pressable>
             </InputGroup>
@@ -718,11 +627,9 @@ const AddView: React.FC<AddViewProps> = ({
           {!isEditingRecurring && !recurrenceId && (
             <InputGroup label="Recurrence">
               <View style={styles.recurrenceToggleRow}>
-                <ThemedText style={styles.recurrenceLabel}>
-                  Make recurring
-                </ThemedText>
+                <ThemedText style={styles.recurrenceLabel}>Make recurring</ThemedText>
                 <Switch
-                  trackColor={{ true: "#2F4F3F" }}
+                  trackColor={{ true: '#2F4F3F' }}
                   ios_backgroundColor="#ccc"
                   onValueChange={() => setIsRecurrent(!isRecurrent)}
                   value={isRecurrent}
@@ -737,23 +644,17 @@ const AddView: React.FC<AddViewProps> = ({
                     label="Link to"
                     placeholder="Select recurrence"
                   />
-                  {recurrenceSelection === "new" && (
+                  {recurrenceSelection === 'new' && (
                     <Pressable
                       onPress={() => setShowRecurrencyPicker(true)}
                       style={styles.recurrenceField}
                     >
-                      <ThemedText style={styles.recurrenceLabel}>
-                        Pattern
-                      </ThemedText>
+                      <ThemedText style={styles.recurrenceLabel}>Pattern</ThemedText>
                       <View style={styles.recurrenceValueContainer}>
                         <ThemedText style={styles.recurrenceValue}>
-                          {recurrencePattern ?? "Not set"}
+                          {recurrencePattern ?? 'Not set'}
                         </ThemedText>
-                        <IconSymbol
-                          name="chevron-right"
-                          size={16}
-                          color={placeholderColor}
-                        />
+                        <IconSymbol name="chevron-right" size={16} color={placeholderColor} />
                       </View>
                     </Pressable>
                   )}
@@ -790,7 +691,7 @@ const AddView: React.FC<AddViewProps> = ({
             setShowTransactionPicker(false);
             setEditingTransaction(null);
           }}
-          title={editingTransaction ? "Edit Transaction" : "Add Transaction"}
+          title={editingTransaction ? 'Edit Transaction' : 'Add Transaction'}
           initialData={editingTransaction}
           accounts={allAccounts}
           onSave={handleTransactionSave}
@@ -811,7 +712,7 @@ const AddView: React.FC<AddViewProps> = ({
         <View style={styles.totalRow}>
           <ThemedText style={styles.totalLabel}>Total:</ThemedText>
           <ThemedText style={styles.totalAmount}>
-            {getTotalAmount().toFixed(2).replace(".", ",")}€
+            {getTotalAmount().toFixed(2).replace('.', ',')}€
           </ThemedText>
         </View>
         <Pressable
@@ -823,12 +724,9 @@ const AddView: React.FC<AddViewProps> = ({
           ]}
         >
           <ThemedText
-            style={[
-              styles.submitText,
-              (isSubmitting || !isFormValid()) && { opacity: 0.6 },
-            ]}
+            style={[styles.submitText, (isSubmitting || !isFormValid()) && { opacity: 0.6 }]}
           >
-            {isSubmitting ? "Saving" : isEditing ? "Update" : "Insert"}
+            {isSubmitting ? 'Saving' : isEditing ? 'Update' : 'Insert'}
           </ThemedText>
         </Pressable>
       </View>
@@ -844,85 +742,85 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   headerContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 30,
     marginTop: 10,
   },
   title: {
     flex: 1,
-    textAlign: "left",
+    textAlign: 'left',
   },
   bottomSection: {
-    position: "absolute",
+    position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    alignItems: "center",
-    backgroundColor: "#2F4F3F",
+    alignItems: 'center',
+    backgroundColor: '#2F4F3F',
     paddingTop: 20,
     paddingBottom: 40,
     paddingHorizontal: 20,
     borderRadius: 30,
   },
   totalRow: {
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
   },
   totalLabel: {
     fontSize: 18,
-    color: "#fff",
-    fontWeight: "600",
+    color: '#fff',
+    fontWeight: '600',
   },
   totalAmount: {
     fontSize: 22,
-    fontWeight: "bold",
-    color: "#fff",
+    fontWeight: 'bold',
+    color: '#fff',
     marginVertical: 8,
   },
   submitButton: {
-    backgroundColor: "#fff",
+    backgroundColor: '#fff',
     borderRadius: 25,
     paddingVertical: 16,
     paddingHorizontal: 60,
     marginTop: 16,
-    width: "100%",
-    alignItems: "center",
+    width: '100%',
+    alignItems: 'center',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
-    shadowColor: "#000",
+    shadowColor: '#000',
   },
   submitText: {
-    color: "#2F4F3F",
+    color: '#2F4F3F',
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   submitButtonDisabled: {
     opacity: 0.6,
   },
   recurrenceField: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingVertical: 12,
   },
   recurrenceToggleRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingVertical: 8,
   },
   recurrenceLabel: {
     fontSize: 16,
-    fontWeight: "500",
+    fontWeight: '500',
   },
   recurrenceValueContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
   },
   recurrenceValue: {

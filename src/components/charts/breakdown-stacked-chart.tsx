@@ -4,12 +4,12 @@
  * Renders stacked bars showing category or account breakdown per period.
  */
 
-import React, { useMemo, useRef, useEffect } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView } from "react-native";
-import * as Haptics from "expo-haptics";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import type { PeriodBreakdownData } from "@/src/types/charts";
-import { getShortMonthLabel } from "@/src/helpers/ChartDataHelper";
+import React, { useMemo, useRef, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView } from 'react-native';
+import * as Haptics from 'expo-haptics';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import type { PeriodBreakdownData } from '@/src/types/charts';
+import { getShortMonthLabel } from '@/src/helpers/ChartDataHelper';
 
 interface BreakdownStackedChartProps {
   data: PeriodBreakdownData[];
@@ -17,7 +17,7 @@ interface BreakdownStackedChartProps {
   showLabels?: boolean;
   showYAxis?: boolean;
   onBarPress?: (data: PeriodBreakdownData) => void;
-  viewMode?: "months" | "years";
+  viewMode?: 'months' | 'years';
   scrollable?: boolean;
 }
 
@@ -30,10 +30,10 @@ const BreakdownStackedChart: React.FC<BreakdownStackedChartProps> = ({
   showLabels = true,
   showYAxis = true,
   onBarPress,
-  viewMode = "months",
+  viewMode = 'months',
   scrollable = false,
 }) => {
-  const subtleTextColor = useThemeColor({}, "tabIconDefault");
+  const subtleTextColor = useThemeColor({}, 'tabIconDefault');
   const scrollRef = useRef<ScrollView>(null);
 
   const chartHeight = height - (showLabels ? 20 : 0);
@@ -46,7 +46,7 @@ const BreakdownStackedChart: React.FC<BreakdownStackedChartProps> = ({
   // Calculate visible data
   const visibleData = useMemo(() => {
     if (scrollable) return data;
-    const screenWidth = Dimensions.get("window").width;
+    const screenWidth = Dimensions.get('window').width;
     const containerPadding = 32;
     const cardPadding = 48;
     const availableWidth = screenWidth - containerPadding - cardPadding - yAxisWidth;
@@ -62,7 +62,7 @@ const BreakdownStackedChart: React.FC<BreakdownStackedChartProps> = ({
     const roundedMax = Math.ceil(maxTotal / 1000) * 1000;
     const step = roundedMax / 4;
     const labels = [0, step, step * 2, step * 3, roundedMax].map((v) =>
-      v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v.toString()
+      v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v.toString(),
     );
 
     return { maxValue: roundedMax || 1000, yAxisLabels: labels };
@@ -78,18 +78,18 @@ const BreakdownStackedChart: React.FC<BreakdownStackedChartProps> = ({
   if (data.length === 0) {
     return (
       <View style={[styles.emptyContainer, { height }]}>
-        <Text style={[styles.emptyText, { color: subtleTextColor }]}>
-          No data available
-        </Text>
+        <Text style={[styles.emptyText, { color: subtleTextColor }]}>No data available</Text>
       </View>
     );
   }
 
   const barsContent = (
-    <View style={[
-      scrollable ? styles.barsRowScrollable : styles.barsRow,
-      scrollable && { width: visibleData.length * barTotalWidth + BAR_GAP },
-    ]}>
+    <View
+      style={[
+        scrollable ? styles.barsRowScrollable : styles.barsRow,
+        scrollable && { width: visibleData.length * barTotalWidth + BAR_GAP },
+      ]}
+    >
       {visibleData.map((periodData, periodIndex) => {
         const barHeightPercent = (periodData.total / maxValue) * 100;
 
@@ -103,7 +103,11 @@ const BreakdownStackedChart: React.FC<BreakdownStackedChartProps> = ({
         return (
           <TouchableOpacity
             key={periodIndex}
-            style={scrollable ? [styles.barColumnFixed, { width: barWidth, marginHorizontal: BAR_GAP / 2 }] : styles.barColumn}
+            style={
+              scrollable
+                ? [styles.barColumnFixed, { width: barWidth, marginHorizontal: BAR_GAP / 2 }]
+                : styles.barColumn
+            }
             onPress={handlePress}
             activeOpacity={onBarPress ? 0.7 : 1}
           >
@@ -120,9 +124,8 @@ const BreakdownStackedChart: React.FC<BreakdownStackedChartProps> = ({
               ]}
             >
               {periodData.items.map((item, itemIndex) => {
-                const segmentHeight = periodData.total > 0
-                  ? (item.amount / periodData.total) * 100
-                  : 0;
+                const segmentHeight =
+                  periodData.total > 0 ? (item.amount / periodData.total) * 100 : 0;
                 return (
                   <View
                     key={itemIndex}
@@ -141,29 +144,21 @@ const BreakdownStackedChart: React.FC<BreakdownStackedChartProps> = ({
             {/* Label */}
             {showLabels && (
               <View style={styles.xAxisLabelContainer}>
-                {viewMode === "months" ? (
+                {viewMode === 'months' ? (
                   <>
-                    <Text
-                      style={[styles.xAxisLabel, { color: subtleTextColor }]}
-                    >
+                    <Text style={[styles.xAxisLabel, { color: subtleTextColor }]}>
                       {getShortMonthLabel(periodData.monthIndex)}
                     </Text>
-                    <Text
-                      style={[styles.xAxisLabelYear, { color: subtleTextColor }]}
-                    >
+                    <Text style={[styles.xAxisLabelYear, { color: subtleTextColor }]}>
                       {String(periodData.year).slice(-2)}
                     </Text>
                   </>
                 ) : (
                   <>
-                    <Text
-                      style={[styles.xAxisLabel, { color: subtleTextColor }]}
-                    >
+                    <Text style={[styles.xAxisLabel, { color: subtleTextColor }]}>
                       {String(periodData.year).slice(0, 2)}
                     </Text>
-                    <Text
-                      style={[styles.xAxisLabelYear, { color: subtleTextColor }]}
-                    >
+                    <Text style={[styles.xAxisLabelYear, { color: subtleTextColor }]}>
                       {String(periodData.year).slice(-2)}
                     </Text>
                   </>
@@ -186,10 +181,7 @@ const BreakdownStackedChart: React.FC<BreakdownStackedChartProps> = ({
               .slice()
               .reverse()
               .map((label, index) => (
-                <Text
-                  key={index}
-                  style={[styles.yAxisLabel, { color: subtleTextColor }]}
-                >
+                <Text key={index} style={[styles.yAxisLabel, { color: subtleTextColor }]}>
                   {label}
                 </Text>
               ))}
@@ -203,10 +195,7 @@ const BreakdownStackedChart: React.FC<BreakdownStackedChartProps> = ({
             {yAxisLabels.slice(1).map((_, index) => (
               <View
                 key={index}
-                style={[
-                  styles.gridLine,
-                  { borderColor: subtleTextColor, opacity: 0.2 },
-                ]}
+                style={[styles.gridLine, { borderColor: subtleTextColor, opacity: 0.2 }]}
               />
             ))}
           </View>
@@ -233,25 +222,25 @@ const BreakdownStackedChart: React.FC<BreakdownStackedChartProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    width: "100%",
-    justifyContent: "center",
+    width: '100%',
+    justifyContent: 'center',
   },
   emptyContainer: {
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   emptyText: {
     fontSize: 14,
   },
   chartContainer: {
-    flexDirection: "row",
-    alignSelf: "stretch",
+    flexDirection: 'row',
+    alignSelf: 'stretch',
     padding: 0,
     paddingVertical: 4,
   },
   yAxis: {
-    justifyContent: "space-between",
-    alignItems: "flex-end",
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
     paddingRight: 2,
     paddingVertical: 10,
     paddingBottom: 25,
@@ -261,58 +250,58 @@ const styles = StyleSheet.create({
   },
   barsContainer: {
     flex: 1,
-    position: "relative",
+    position: 'relative',
     paddingTop: 20,
   },
   gridContainer: {
-    position: "absolute",
+    position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    justifyContent: "space-between",
+    justifyContent: 'space-between',
   },
   gridLine: {
     height: 1,
-    borderStyle: "dashed",
+    borderStyle: 'dashed',
   },
   scrollContainer: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    alignItems: "stretch",
+    alignItems: 'stretch',
   },
   barsRow: {
     flex: 1,
-    flexDirection: "row",
-    alignItems: "stretch",
-    justifyContent: "space-evenly",
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    justifyContent: 'space-evenly',
     paddingBottom: 0,
   },
   barsRowScrollable: {
     flex: 1,
-    flexDirection: "row",
-    alignItems: "stretch",
+    flexDirection: 'row',
+    alignItems: 'stretch',
   },
   barColumn: {
     flex: 1,
-    alignItems: "center",
+    alignItems: 'center',
   },
   barColumnFixed: {
-    alignItems: "center",
+    alignItems: 'center',
   },
   bar: {
     borderRadius: 8,
-    overflow: "hidden",
-    flexDirection: "column-reverse",
+    overflow: 'hidden',
+    flexDirection: 'column-reverse',
     minHeight: 2,
   },
   barSegment: {
-    width: "100%",
+    width: '100%',
   },
   xAxisLabelContainer: {
-    alignItems: "center",
+    alignItems: 'center',
     marginTop: 4,
   },
   xAxisLabel: {

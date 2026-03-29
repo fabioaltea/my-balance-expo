@@ -1,11 +1,11 @@
-import { ThemedText } from "../core/themed-text";
-import { View, StyleSheet, Pressable } from "react-native";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import { Picker } from "@react-native-picker/picker";
-import { useState } from "react";
-import * as Haptics from "expo-haptics";
-import ModalPanel from "./modal-panel";
-import React from "react";
+import { ThemedText } from '../core/themed-text';
+import { View, StyleSheet, Pressable } from 'react-native';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import { Picker } from '@react-native-picker/picker';
+import { useState } from 'react';
+import * as Haptics from 'expo-haptics';
+import ModalPanel from './modal-panel';
+import React from 'react';
 
 export interface IListPickerItem {
   label: string;
@@ -27,19 +27,16 @@ const ListPicker: React.FC<IListPickerProps> = ({
   onChange,
   items,
   label,
-  placeholder = "Select...",
-  title = "Select an option",
-  iconName = "chevron.down",
+  placeholder = 'Select...',
+  title = 'Select an option',
+  iconName = 'chevron.down',
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [tempValue, setTempValue] = useState(value);
 
   // Theme colors
-  const textColor = useThemeColor({ light: "#000", dark: "#fff" }, "text");
-  const placeholderColor = useThemeColor(
-    { light: "#666", dark: "#99999984" },
-    "tabIconDefault",
-  );
+  const textColor = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
+  const placeholderColor = useThemeColor({ light: '#666', dark: '#99999984' }, 'tabIconDefault');
 
   const getDisplayValue = () => {
     const selectedItem = items.find((item) => item.value === value);
@@ -97,13 +94,9 @@ const ListPicker: React.FC<IListPickerProps> = ({
             style={styles.picker}
             itemStyle={styles.pickerItem}
           >
-            <Picker.Item key={""} label={""} value={""} />
+            <Picker.Item key={''} label={''} value={''} />
             {items.map((item) => (
-              <Picker.Item
-                key={item.value}
-                label={item.label}
-                value={item.value}
-              />
+              <Picker.Item key={item.value} label={item.label} value={item.value} />
             ))}
           </Picker>
         </View>
@@ -114,10 +107,10 @@ const ListPicker: React.FC<IListPickerProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: "row",
+    flexDirection: 'row',
     paddingHorizontal: 0,
     paddingVertical: 5,
-    alignItems: "center",
+    alignItems: 'center',
   },
   label: {
     flex: 0,
@@ -128,25 +121,25 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-end",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
     paddingHorizontal: 10,
   },
   valueText: {
     fontSize: 18,
-    textAlign: "right",
+    textAlign: 'right',
     flex: 1,
   },
   icon: {
     marginLeft: 8,
   },
   pickerContainer: {
-    alignItems: "center",
+    alignItems: 'center',
     minHeight: 200,
   },
   picker: {
-    width: "100%",
+    width: '100%',
     height: 200,
   },
   pickerItem: {

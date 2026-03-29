@@ -5,8 +5,8 @@ import type {
   PendingRecurrence,
   MonthlyForecast,
   AccountForecast,
-} from "../types/models";
-import { EXCLUDED_CATEGORIES } from "../constants/categories";
+} from '../types/models';
+import { EXCLUDED_CATEGORIES } from '../constants/categories';
 import {
   calculateExpectedOccurrences,
   getMonthPeriodsFromStartDate,
@@ -20,7 +20,7 @@ import {
   getYearRangeUpToDay,
   getMonthStart,
   getMonthEnd,
-} from "../utils/dateUtils";
+} from '../utils/dateUtils';
 
 /**
  * Pure helper functions for movement data processing.
@@ -31,9 +31,7 @@ export class MovementDataHelper {
    * Group transactions into movements by movementId.
    * Returns ALL movements including templates and unconfirmed.
    */
-  static groupTransactionsIntoMovements(
-    transactions: Transaction[],
-  ): Movement[] {
+  static groupTransactionsIntoMovements(transactions: Transaction[]): Movement[] {
     return Object.values(
       transactions.reduce(
         (acc, transaction) => {
@@ -51,20 +49,17 @@ export class MovementDataHelper {
               status: transaction.status,
               transactions: [],
               totalAmount: 0,
-              type: "expense" as const,
+              type: 'expense' as const,
             };
           }
 
           acc[movementId].transactions.push(transaction);
 
           const signedAmount =
-            transaction.type === "income"
-              ? transaction.amount
-              : -transaction.amount;
+            transaction.type === 'income' ? transaction.amount : -transaction.amount;
           acc[movementId].totalAmount += signedAmount;
 
-          acc[movementId].type =
-            acc[movementId].totalAmount >= 0 ? "income" : "expense";
+          acc[movementId].type = acc[movementId].totalAmount >= 0 ? 'income' : 'expense';
 
           return acc;
         },
@@ -79,9 +74,9 @@ export class MovementDataHelper {
   static filterActualMovements(allMovements: Movement[]): Movement[] {
     return allMovements.filter(
       (m) =>
-        m.status?.toLowerCase() !== "recurrent" &&
-        m.status?.toLowerCase() !== "unconfirmed" &&
-        m.status?.toLowerCase() !== "dismissed" &&
+        m.status?.toLowerCase() !== 'recurrent' &&
+        m.status?.toLowerCase() !== 'unconfirmed' &&
+        m.status?.toLowerCase() !== 'dismissed' &&
         !m.recurrencePattern,
     );
   }
@@ -90,9 +85,7 @@ export class MovementDataHelper {
    * Get unconfirmed movements (from third party imports).
    */
   static filterUnconfirmedMovements(allMovements: Movement[]): Movement[] {
-    return allMovements.filter(
-      (m) => m.status?.toLowerCase() === "unconfirmed",
-    );
+    return allMovements.filter((m) => m.status?.toLowerCase() === 'unconfirmed');
   }
 
   /**
@@ -102,9 +95,7 @@ export class MovementDataHelper {
     return Object.values(
       allMovements
         .filter(
-          (m) =>
-            m.recurrenceId &&
-            (m.status?.toLowerCase() === "recurrent" || m.recurrencePattern),
+          (m) => m.recurrenceId && (m.status?.toLowerCase() === 'recurrent' || m.recurrencePattern),
         )
         .reduce(
           (acc, movement) => {
@@ -123,16 +114,13 @@ export class MovementDataHelper {
    * Calculate total income from movements.
    * When accountFilter is provided (and not "All"), sums only transactions for that account.
    */
-  static getTotalIncome(
-    filteredMovements: Movement[],
-    accountFilter?: string,
-  ): number {
+  static getTotalIncome(filteredMovements: Movement[], accountFilter?: string): number {
     return filteredMovements
       .filter((m) => !EXCLUDED_CATEGORIES.includes(m.category))
       .reduce((sum, m) => {
-        if (accountFilter && accountFilter !== "All") {
+        if (accountFilter && accountFilter !== 'All') {
           const accountIncome = m.transactions
-            .filter((t) => t.account === accountFilter && t.type === "income")
+            .filter((t) => t.account === accountFilter && t.type === 'income')
             .reduce((s, t) => s + t.amount, 0);
           return sum + accountIncome;
         } else {
@@ -145,16 +133,13 @@ export class MovementDataHelper {
    * Calculate total expense from movements.
    * When accountFilter is provided (and not "All"), sums only transactions for that account.
    */
-  static getTotalExpense(
-    filteredMovements: Movement[],
-    accountFilter?: string,
-  ): number {
+  static getTotalExpense(filteredMovements: Movement[], accountFilter?: string): number {
     return filteredMovements
       .filter((m) => !EXCLUDED_CATEGORIES.includes(m.category))
       .reduce((sum, m) => {
-        if (accountFilter && accountFilter !== "All") {
+        if (accountFilter && accountFilter !== 'All') {
           const accountExpense = m.transactions
-            .filter((t) => t.account === accountFilter && t.type === "expense")
+            .filter((t) => t.account === accountFilter && t.type === 'expense')
             .reduce((s, t) => s + t.amount, 0);
           return sum + accountExpense;
         } else {
@@ -185,19 +170,12 @@ export class MovementDataHelper {
     const result: PendingRecurrence[] = [];
 
     for (const template of recurringMovements) {
-      const {
-        recurrenceId,
-        recurrencePattern,
-        date: templateStartDate,
-      } = template;
+      const { recurrenceId, recurrencePattern, date: templateStartDate } = template;
       if (!recurrenceId || !recurrencePattern) {
         continue;
       }
 
-      const periods = getMonthPeriodsFromStartDate(
-        templateStartDate,
-        Infinity,
-      );
+      const periods = getMonthPeriodsFromStartDate(templateStartDate, Infinity);
 
       for (const period of periods) {
         const expectedCount = calculateExpectedOccurrences(
@@ -210,7 +188,7 @@ export class MovementDataHelper {
         const matchingMovements = movements.filter(
           (m) =>
             m.recurrenceId === recurrenceId &&
-            m.status?.toLowerCase() !== "recurrent" &&
+            m.status?.toLowerCase() !== 'recurrent' &&
             isDateInRange(m.date, period.startDate, period.endDate),
         );
         const actualCount = matchingMovements.length;
@@ -257,10 +235,7 @@ export class MovementDataHelper {
     const now = new Date();
 
     // 1. Current balance
-    const currentBalance = accounts.reduce(
-      (sum, acc) => sum + acc.balance,
-      0,
-    );
+    const currentBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
 
     // 2. Current period income and expenses
     const currentPeriodMovements = movements.filter(
@@ -269,37 +244,27 @@ export class MovementDataHelper {
         !EXCLUDED_CATEGORIES.includes(m.category),
     );
     const currentPeriodIncome = currentPeriodMovements
-      .filter((m) => m.type === "income")
+      .filter((m) => m.type === 'income')
       .reduce((sum, m) => sum + m.totalAmount, 0);
     const currentPeriodExpense = currentPeriodMovements
-      .filter((m) => m.type === "expense")
+      .filter((m) => m.type === 'expense')
       .reduce((sum, m) => sum + Math.abs(m.totalAmount), 0);
 
     // 3. Pending recurring for this period
-    const currentPeriodPending = pendingRecurrences.filter(
-      (pr) => !pr.isOverdue,
-    );
+    const currentPeriodPending = pendingRecurrences.filter((pr) => !pr.isOverdue);
     const pendingRecurringIncome = currentPeriodPending
-      .filter((pr) => pr.template.type === "income")
-      .reduce(
-        (sum, pr) =>
-          sum + Math.abs(pr.template.totalAmount) * pr.missingCount,
-        0,
-      );
+      .filter((pr) => pr.template.type === 'income')
+      .reduce((sum, pr) => sum + Math.abs(pr.template.totalAmount) * pr.missingCount, 0);
     const pendingRecurringExpense = currentPeriodPending
-      .filter((pr) => pr.template.type === "expense")
-      .reduce(
-        (sum, pr) =>
-          sum + Math.abs(pr.template.totalAmount) * pr.missingCount,
-        0,
-      );
+      .filter((pr) => pr.template.type === 'expense')
+      .reduce((sum, pr) => sum + Math.abs(pr.template.totalAmount) * pr.missingCount, 0);
 
     let avgIncome = 0;
     let avgExpense = 0;
     let periodProgress = 0;
     let historicalProgressAtThisPoint = 0;
 
-    if (periodType === "year") {
+    if (periodType === 'year') {
       const currentYear = now.getFullYear();
       const dayOfYear = getDayOfYear(now);
       const totalDaysInYear = getDaysInYear(currentYear);
@@ -322,10 +287,10 @@ export class MovementDataHelper {
         if (yearMovements.length > 0) {
           yearsWithData++;
           const yearIncome = yearMovements
-            .filter((m) => m.type === "income")
+            .filter((m) => m.type === 'income')
             .reduce((sum, m) => sum + m.totalAmount, 0);
           const yearExpense = yearMovements
-            .filter((m) => m.type === "expense")
+            .filter((m) => m.type === 'expense')
             .reduce((sum, m) => sum + Math.abs(m.totalAmount), 0);
 
           totalYearlyIncome += yearIncome;
@@ -338,10 +303,10 @@ export class MovementDataHelper {
               !EXCLUDED_CATEGORIES.includes(m.category),
           );
           const upToDayIncome = upToDayMovements
-            .filter((m) => m.type === "income")
+            .filter((m) => m.type === 'income')
             .reduce((sum, m) => sum + m.totalAmount, 0);
           const upToDayExpense = upToDayMovements
-            .filter((m) => m.type === "expense")
+            .filter((m) => m.type === 'expense')
             .reduce((sum, m) => sum + Math.abs(m.totalAmount), 0);
 
           if (yearIncome > 0) {
@@ -362,11 +327,7 @@ export class MovementDataHelper {
     } else {
       const currentMonth = now.getMonth();
       const currentDay = now.getDate();
-      const daysInMonth = new Date(
-        now.getFullYear(),
-        currentMonth + 1,
-        0,
-      ).getDate();
+      const daysInMonth = new Date(now.getFullYear(), currentMonth + 1, 0).getDate();
       periodProgress = currentDay / daysInMonth;
 
       const pastYears = getPastYearsPeriods(5);
@@ -391,10 +352,10 @@ export class MovementDataHelper {
 
         if (monthMovements.length > 0 && yearMovements.length > 0) {
           const monthIncome = monthMovements
-            .filter((m) => m.type === "income")
+            .filter((m) => m.type === 'income')
             .reduce((sum, m) => sum + m.totalAmount, 0);
           const monthExpense = monthMovements
-            .filter((m) => m.type === "expense")
+            .filter((m) => m.type === 'expense')
             .reduce((sum, m) => sum + Math.abs(m.totalAmount), 0);
 
           sameMonthTotalsIncome.push(monthIncome);
@@ -403,28 +364,19 @@ export class MovementDataHelper {
       }
 
       if (sameMonthTotalsIncome.length > 0) {
-        avgIncome =
-          sameMonthTotalsIncome.reduce((a, b) => a + b, 0) /
-          sameMonthTotalsIncome.length;
+        avgIncome = sameMonthTotalsIncome.reduce((a, b) => a + b, 0) / sameMonthTotalsIncome.length;
       }
       if (sameMonthTotalsExpense.length > 0) {
         avgExpense =
-          sameMonthTotalsExpense.reduce((a, b) => a + b, 0) /
-          sameMonthTotalsExpense.length;
+          sameMonthTotalsExpense.reduce((a, b) => a + b, 0) / sameMonthTotalsExpense.length;
       }
 
       historicalProgressAtThisPoint = periodProgress;
     }
 
     // 6. Calculate forecast
-    const expectedRemainingIncome = Math.max(
-      0,
-      avgIncome - currentPeriodIncome,
-    );
-    const expectedRemainingExpense = Math.max(
-      0,
-      avgExpense - currentPeriodExpense,
-    );
+    const expectedRemainingIncome = Math.max(0, avgIncome - currentPeriodIncome);
+    const expectedRemainingExpense = Math.max(0, avgExpense - currentPeriodExpense);
 
     const forecastBalance =
       currentBalance +
@@ -440,7 +392,7 @@ export class MovementDataHelper {
       movements
         .filter((m) => !EXCLUDED_CATEGORIES.includes(m.category))
         .map((m) => {
-          const parts = m.date.split("-");
+          const parts = m.date.split('-');
           return parts.length === 3 ? `${parts[2]}-${parts[1]}` : null;
         })
         .filter(Boolean),
@@ -476,40 +428,32 @@ export class MovementDataHelper {
     const last12Months = getLast12MonthsPeriods();
 
     return accounts.map((account) => {
-      const accountTransactions = transactions.filter(
-        (t) => t.account === account.name,
-      );
+      const accountTransactions = transactions.filter((t) => t.account === account.name);
 
       const currentMonthTx = accountTransactions.filter((t) =>
         isDateInRange(t.date, currentMonth.startDate, currentMonth.endDate),
       );
       const currentMonthIncome = currentMonthTx
-        .filter((t) => t.type === "income")
+        .filter((t) => t.type === 'income')
         .reduce((sum, t) => sum + t.amount, 0);
       const currentMonthExpense = currentMonthTx
-        .filter((t) => t.type === "expense")
+        .filter((t) => t.type === 'expense')
         .reduce((sum, t) => sum + t.amount, 0);
 
       const accountPending = pendingRecurrences.filter(
-        (pr) =>
-          !pr.isOverdue &&
-          pr.template.transactions.some((t) => t.account === account.name),
+        (pr) => !pr.isOverdue && pr.template.transactions.some((t) => t.account === account.name),
       );
       const pendingIncome = accountPending
-        .filter((pr) => pr.template.type === "income")
+        .filter((pr) => pr.template.type === 'income')
         .reduce((sum, pr) => {
-          const accountTx = pr.template.transactions.filter(
-            (t) => t.account === account.name,
-          );
+          const accountTx = pr.template.transactions.filter((t) => t.account === account.name);
           const accountAmount = accountTx.reduce((s, t) => s + t.amount, 0);
           return sum + accountAmount * pr.missingCount;
         }, 0);
       const pendingExpense = accountPending
-        .filter((pr) => pr.template.type === "expense")
+        .filter((pr) => pr.template.type === 'expense')
         .reduce((sum, pr) => {
-          const accountTx = pr.template.transactions.filter(
-            (t) => t.account === account.name,
-          );
+          const accountTx = pr.template.transactions.filter((t) => t.account === account.name);
           const accountAmount = accountTx.reduce((s, t) => s + t.amount, 0);
           return sum + accountAmount * pr.missingCount;
         }, 0);
@@ -525,26 +469,19 @@ export class MovementDataHelper {
         if (periodTx.length > 0) {
           monthsWithData++;
           totalIncome += periodTx
-            .filter((t) => t.type === "income")
+            .filter((t) => t.type === 'income')
             .reduce((sum, t) => sum + t.amount, 0);
           totalExpense += periodTx
-            .filter((t) => t.type === "expense")
+            .filter((t) => t.type === 'expense')
             .reduce((sum, t) => sum + t.amount, 0);
         }
       }
 
       const avgIncome = monthsWithData > 0 ? totalIncome / monthsWithData : 0;
-      const avgExpense =
-        monthsWithData > 0 ? totalExpense / monthsWithData : 0;
+      const avgExpense = monthsWithData > 0 ? totalExpense / monthsWithData : 0;
 
-      const expectedRemainingIncome = Math.max(
-        0,
-        avgIncome - currentMonthIncome,
-      );
-      const expectedRemainingExpense = Math.max(
-        0,
-        avgExpense - currentMonthExpense,
-      );
+      const expectedRemainingIncome = Math.max(0, avgIncome - currentMonthIncome);
+      const expectedRemainingExpense = Math.max(0, avgExpense - currentMonthExpense);
 
       const forecastBalance =
         account.balance +

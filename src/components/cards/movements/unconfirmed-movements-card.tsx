@@ -1,28 +1,26 @@
-import React, { useState } from "react";
-import { ThemedText } from "@/src/components/core/themed-text";
+import React, { useState } from 'react';
+import { ThemedText } from '@/src/components/core/themed-text';
+import { TouchableOpacity, StyleSheet, View, Alert, ScrollView } from 'react-native';
+import IconSymbol from '@/src/components/ui/icon-symbol';
+import Card from '@/src/components/core/card';
+import { usePlatformContext } from '@/src/state/PlatformProvider';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import { useDataContext } from '@/src/state/DataProvider';
+import { useAuthContext } from '@/src/state/AuthProvider';
+import { formatDateForDisplay, compareDates } from '@/src/utils/dateUtils';
+import { router } from 'expo-router';
+import * as Haptics from 'expo-haptics';
+import type { Movement } from '@/src/state';
+import { MovementHelper } from '@/src/helpers/MovementHelper';
+import { useSpreadsheetMutation } from '@/src/hooks/useSpreadsheetMutation';
+import { TransactionsApiHelper } from '@/src/helpers/TransactionsApiHelper';
 import {
-  TouchableOpacity,
-  StyleSheet,
-  View,
-  Alert,
-  ScrollView,
-} from "react-native";
-import IconSymbol from "@/src/components/ui/icon-symbol";
-import Card from "@/src/components/core/card";
-import { usePlatformContext } from "@/src/state/PlatformProvider";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import { useDataContext } from "@/src/state/DataProvider";
-import { useAuthContext } from "@/src/state/AuthProvider";
-import { formatDateForDisplay, compareDates } from "@/src/utils/dateUtils";
-import { router } from "expo-router";
-import * as Haptics from "expo-haptics";
-import type { Movement } from "@/src/state";
-import { MovementHelper } from "@/src/helpers/MovementHelper";
-import { useSpreadsheetMutation } from "@/src/hooks/useSpreadsheetMutation";
-import { TransactionsApiHelper } from "@/src/helpers/TransactionsApiHelper";
-import { TransactionsMutationHelpers, type UpdateMovementData, type OptimisticSnapshot } from "@/src/helpers/TransactionsMutationHelpers";
-import ModalPanel from "@/src/components/ui/modal-panel";
-import Ionicons from "@expo/vector-icons/Ionicons";
+  TransactionsMutationHelpers,
+  type UpdateMovementData,
+  type OptimisticSnapshot,
+} from '@/src/helpers/TransactionsMutationHelpers';
+import ModalPanel from '@/src/components/ui/modal-panel';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 const sortMovements = (movements: Movement[]) => {
   return movements?.sort((a, b) => {
@@ -35,13 +33,11 @@ interface UnconfirmedMovementsCardProps {
   onMovementPress?: (movement: Movement) => void;
 }
 
-const UnconfirmedMovementsCard: React.FC<UnconfirmedMovementsCardProps> = ({
-  onMovementPress,
-}) => {
+const UnconfirmedMovementsCard: React.FC<UnconfirmedMovementsCardProps> = ({ onMovementPress }) => {
   const { unconfirmedMovements, categories } = useDataContext();
   const { selectedSpreadsheetId } = useAuthContext();
   const { orientation } = usePlatformContext();
-  const isLandscape = orientation === "landscape";
+  const isLandscape = orientation === 'landscape';
 
   // React Query mutation
   const updateMovement = useSpreadsheetMutation<UpdateMovementData, OptimisticSnapshot>({
@@ -63,7 +59,7 @@ const UnconfirmedMovementsCard: React.FC<UnconfirmedMovementsCardProps> = ({
       onMovementPress(movement);
     } else {
       router.push({
-        pathname: "/add",
+        pathname: '/add',
         params: {
           movementId: movement.id,
         },
@@ -74,53 +70,44 @@ const UnconfirmedMovementsCard: React.FC<UnconfirmedMovementsCardProps> = ({
   const handleDismissMovement = (movement: Movement) => {
     if (!selectedSpreadsheetId) return;
 
-    Alert.alert("Dismiss movement?", undefined, [
+    Alert.alert('Dismiss movement?', undefined, [
       {
-        text: "Cancel",
-        style: "cancel",
+        text: 'Cancel',
+        style: 'cancel',
       },
       {
-        text: "Dismiss",
-        style: "destructive",
+        text: 'Dismiss',
+        style: 'destructive',
         onPress: async () => {
           console.log(
-            "🗑️ Dismissing movement:",
+            '🗑️ Dismissing movement:',
             movement.id,
-            "spreadsheetId:",
+            'spreadsheetId:',
             selectedSpreadsheetId,
           );
           try {
             // Use React Query mutation to update movement status
             await updateMovement.mutateAsync({
               movementId: movement.id,
-              status: "DELETED",
+              status: 'DELETED',
             });
 
             // Success - mutation handles cache invalidation automatically
-            console.log("🗑️ Dismiss successful");
+            console.log('🗑️ Dismiss successful');
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           } catch (error) {
-            console.error("Error dismissing movement:", error);
+            console.error('Error dismissing movement:', error);
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-            Alert.alert("Error", "Failed to dismiss movement");
+            Alert.alert('Error', 'Failed to dismiss movement');
           }
         },
       },
     ]);
   };
 
-  const borderColor = useThemeColor(
-    { light: "#F0F0F0", dark: "#333333" },
-    "tabIconDefault",
-  );
-  const positiveAmountColor = useThemeColor(
-    { light: "#107c2bff", dark: "#34C759" },
-    "tint",
-  );
-  const subtextColor = useThemeColor(
-    { light: "#888", dark: "#999" },
-    "tabIconDefault",
-  );
+  const borderColor = useThemeColor({ light: '#F0F0F0', dark: '#333333' }, 'tabIconDefault');
+  const positiveAmountColor = useThemeColor({ light: '#107c2bff', dark: '#34C759' }, 'tint');
+  const subtextColor = useThemeColor({ light: '#888', dark: '#999' }, 'tabIconDefault');
 
   const dynamicStyles = StyleSheet.create({
     movementItem: {
@@ -138,15 +125,13 @@ const UnconfirmedMovementsCard: React.FC<UnconfirmedMovementsCardProps> = ({
   if (!sortedMovements || sortedMovements.length === 0) {
     return (
       <Card
-        label={isLandscape ? "Unconfirmed Movements" : ""}
+        label={isLandscape ? 'Unconfirmed Movements' : ''}
         style={isLandscape ? { flex: 1 } : undefined}
       >
         <View style={styles.emptyState}>
           <IconSymbol name="check-circle" size={48} color="#999" />
           <View style={styles.emptyState}>
-            <ThemedText style={[styles.emptyTitle, { color: "#999" }]}>
-              You're all set!
-            </ThemedText>
+            <ThemedText style={[styles.emptyTitle, { color: '#999' }]}>You're all set!</ThemedText>
             <ThemedText style={[styles.emptyText, { color: subtextColor }]}>
               No unconfirmed movements to review
             </ThemedText>
@@ -158,18 +143,12 @@ const UnconfirmedMovementsCard: React.FC<UnconfirmedMovementsCardProps> = ({
 
   return (
     <Card
-      label={isLandscape ? "Unconfirmed Movements" : ""}
+      label={isLandscape ? 'Unconfirmed Movements' : ''}
       style={isLandscape ? { flex: 1 } : undefined}
     >
-      <ScrollView
-        showsVerticalScrollIndicator={isLandscape}
-        nestedScrollEnabled={true}
-      >
+      <ScrollView showsVerticalScrollIndicator={isLandscape} nestedScrollEnabled={true}>
         {sortedMovements.map((movement, index) => {
-          const icon = MovementHelper.getMovementIcon(
-            movement.category,
-            categories,
-          );
+          const icon = MovementHelper.getMovementIcon(movement.category, categories);
           const color = MovementHelper.getMovementColor(
             movement.type,
             movement.category,
@@ -192,11 +171,10 @@ const UnconfirmedMovementsCard: React.FC<UnconfirmedMovementsCardProps> = ({
               delayLongPress={300}
               activeOpacity={0.6}
               // @ts-ignore — web-only prop for CSS hover
-              dataSet={{ movementRow: "" }}
+              dataSet={{ movementRow: '' }}
               style={[
                 dynamicStyles.movementItem,
-                index === sortedMovements.length - 1 &&
-                  styles.lastMovementItem,
+                index === sortedMovements.length - 1 && styles.lastMovementItem,
               ]}
             >
               <View style={[styles.movementIcon, { backgroundColor: color }]}>
@@ -204,11 +182,9 @@ const UnconfirmedMovementsCard: React.FC<UnconfirmedMovementsCardProps> = ({
               </View>
               <View style={styles.movementInfo}>
                 <ThemedText style={styles.movementDate}>
-                  {formatDateForDisplay(movement.date, "it-IT")}
+                  {formatDateForDisplay(movement.date, 'it-IT')}
                 </ThemedText>
-                <ThemedText style={styles.movementDescription}>
-                  {movement.description}
-                </ThemedText>
+                <ThemedText style={styles.movementDescription}>{movement.description}</ThemedText>
               </View>
               <View style={styles.rightSection}>
                 <ThemedText
@@ -217,14 +193,10 @@ const UnconfirmedMovementsCard: React.FC<UnconfirmedMovementsCardProps> = ({
                     amount > 0 ? dynamicStyles.positiveAmount : undefined,
                   ]}
                 >
-                  {amount > 0 ? "+" : ""}
-                  {amount.toFixed(2).replace(".", ",")}€
+                  {amount > 0 ? '+' : ''}
+                  {amount.toFixed(2).replace('.', ',')}€
                 </ThemedText>
-                <IconSymbol
-                  name="chevron-right"
-                  size={20}
-                  color={subtextColor}
-                />
+                <IconSymbol name="chevron-right" size={20} color={subtextColor} />
               </View>
             </TouchableOpacity>
           );
@@ -247,7 +219,8 @@ const UnconfirmedMovementsCard: React.FC<UnconfirmedMovementsCardProps> = ({
                   {selectedMovement.description}
                 </ThemedText>
                 <ThemedText style={[styles.sheetSubtitle, { color: subtextColor }]}>
-                  {formatDateForDisplay(selectedMovement.date, "it-IT")} • {selectedMovement.category}
+                  {formatDateForDisplay(selectedMovement.date, 'it-IT')} •{' '}
+                  {selectedMovement.category}
                 </ThemedText>
               </View>
               <ThemedText
@@ -256,8 +229,8 @@ const UnconfirmedMovementsCard: React.FC<UnconfirmedMovementsCardProps> = ({
                   selectedMovement.totalAmount > 0 && { color: positiveAmountColor },
                 ]}
               >
-                {selectedMovement.totalAmount > 0 ? "+" : ""}
-                {selectedMovement.totalAmount.toFixed(2).replace(".", ",")}€
+                {selectedMovement.totalAmount > 0 ? '+' : ''}
+                {selectedMovement.totalAmount.toFixed(2).replace('.', ',')}€
               </ThemedText>
             </View>
             <View style={[styles.sheetDivider, { backgroundColor: borderColor }]} />
@@ -282,7 +255,7 @@ const UnconfirmedMovementsCard: React.FC<UnconfirmedMovementsCardProps> = ({
                 }}
               >
                 <Ionicons name="close-circle-outline" size={22} color="#DC3545" />
-                <ThemedText style={[styles.menuOptionText, { color: "#DC3545" }]}>
+                <ThemedText style={[styles.menuOptionText, { color: '#DC3545' }]}>
                   Dismiss Movement
                 </ThemedText>
               </TouchableOpacity>
@@ -296,8 +269,8 @@ const UnconfirmedMovementsCard: React.FC<UnconfirmedMovementsCardProps> = ({
 
 const styles = StyleSheet.create({
   movementItem: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: 10,
     borderBottomWidth: 1,
   },
@@ -308,8 +281,8 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 30,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: 16,
   },
   movementInfo: {
@@ -321,36 +294,36 @@ const styles = StyleSheet.create({
   },
   movementDescription: {
     fontSize: 16,
-    fontWeight: "500",
-    textTransform: "capitalize",
+    fontWeight: '500',
+    textTransform: 'capitalize',
   },
   rightSection: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
   },
   movementAmount: {
     fontSize: 16,
-    fontWeight: "700",
+    fontWeight: '700',
   },
   emptyState: {
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
   },
   emptyTitle: {
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: '600',
     marginTop: 8,
   },
   emptyText: {
     fontSize: 14,
-    textAlign: "center",
+    textAlign: 'center',
   },
   sheetHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
     marginBottom: 12,
   },
   sheetHeaderLeft: {
@@ -359,17 +332,17 @@ const styles = StyleSheet.create({
   },
   sheetTitle: {
     fontSize: 18,
-    fontWeight: "600",
-    textTransform: "capitalize",
+    fontWeight: '600',
+    textTransform: 'capitalize',
   },
   sheetSubtitle: {
     fontSize: 13,
     marginTop: 2,
-    textTransform: "capitalize",
+    textTransform: 'capitalize',
   },
   sheetAmount: {
     fontSize: 18,
-    fontWeight: "700",
+    fontWeight: '700',
   },
   sheetDivider: {
     height: 1,
@@ -379,15 +352,15 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   menuOption: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: 14,
     paddingHorizontal: 8,
     gap: 12,
   },
   menuOptionText: {
     fontSize: 17,
-    fontWeight: "500",
+    fontWeight: '500',
   },
 });
 

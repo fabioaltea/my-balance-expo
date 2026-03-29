@@ -1,31 +1,24 @@
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  Pressable,
-  ActivityIndicator,
-  Alert,
-} from "react-native";
-import React, { useState } from "react";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import Pager from "@/src/components/ui/pager";
-import Card from "@/src/components/core/card";
-import List from "@/src/components/ui/list";
-import AccountModal from "@/src/components/ui/account-modal";
-import IconSymbol from "@/src/components/ui/icon-symbol";
-import { DEFAULT_TEXT_COLOR } from "@/src/constants/colors";
-import { HttpHelper, AuthenticationError } from "@/src/helpers/HttpHelper";
-import { AccountsApiHelper } from "@/src/helpers/AccountsApiHelper";
-import { CategoriesApiHelper } from "@/src/helpers/CategoriesApiHelper";
-import { TransactionsApiHelper } from "@/src/helpers/TransactionsApiHelper";
-import * as Haptics from "expo-haptics";
-import * as Crypto from "expo-crypto";
-import InputGroup from "@/src/components/ui/input-group";
-import ModalPanel from "@/src/components/ui/modal-panel";
-import CategoryPanel from "@/src/components/ui/category-panel";
-import { useAuthContext } from "@/src/state/AuthProvider";
-import { ThemedText } from "@/src/components/core/themed-text";
-import GlassButton from "@/src/components/ui/glass-button";
+import { View, StyleSheet, ScrollView, Pressable, ActivityIndicator, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import Pager from '@/src/components/ui/pager';
+import Card from '@/src/components/core/card';
+import List from '@/src/components/ui/list';
+import AccountModal from '@/src/components/ui/account-modal';
+import IconSymbol from '@/src/components/ui/icon-symbol';
+import { DEFAULT_TEXT_COLOR } from '@/src/constants/colors';
+import { HttpHelper, AuthenticationError } from '@/src/helpers/HttpHelper';
+import { AccountsApiHelper } from '@/src/helpers/AccountsApiHelper';
+import { CategoriesApiHelper } from '@/src/helpers/CategoriesApiHelper';
+import { TransactionsApiHelper } from '@/src/helpers/TransactionsApiHelper';
+import * as Haptics from 'expo-haptics';
+import * as Crypto from 'expo-crypto';
+import InputGroup from '@/src/components/ui/input-group';
+import ModalPanel from '@/src/components/ui/modal-panel';
+import CategoryPanel from '@/src/components/ui/category-panel';
+import { useAuthContext } from '@/src/state/AuthProvider';
+import { ThemedText } from '@/src/components/core/themed-text';
+import GlassButton from '@/src/components/ui/glass-button';
 
 // ===========================
 // Types
@@ -49,29 +42,29 @@ interface OnboardingCategory {
 // ===========================
 
 const DEFAULT_CATEGORIES: OnboardingCategory[] = [
-  { name: "Groceries", icon: "restaurant", color: "#4CAF50", selected: true },
+  { name: 'Groceries', icon: 'restaurant', color: '#4CAF50', selected: true },
   {
-    name: "Transport",
-    icon: "directions-car",
-    color: "#2196F3",
+    name: 'Transport',
+    icon: 'directions-car',
+    color: '#2196F3',
     selected: true,
   },
-  { name: "Home", icon: "home", color: "#FF9800", selected: true },
-  { name: "Health", icon: "local-hospital", color: "#F44336", selected: true },
+  { name: 'Home', icon: 'home', color: '#FF9800', selected: true },
+  { name: 'Health', icon: 'local-hospital', color: '#F44336', selected: true },
   {
-    name: "Entertainment",
-    icon: "sports-esports",
-    color: "#9C27B0",
+    name: 'Entertainment',
+    icon: 'sports-esports',
+    color: '#9C27B0',
     selected: true,
   },
-  { name: "Work", icon: "work", color: "#607D8B", selected: true },
+  { name: 'Work', icon: 'work', color: '#607D8B', selected: true },
   {
-    name: "Investments",
-    icon: "trending-up",
-    color: "#795548",
+    name: 'Investments',
+    icon: 'trending-up',
+    color: '#795548',
     selected: true,
   },
-  { name: "Other", icon: "more-horiz", color: "#9E9E9E", selected: true },
+  { name: 'Other', icon: 'more-horiz', color: '#9E9E9E', selected: true },
 ];
 
 // ===========================
@@ -79,16 +72,16 @@ const DEFAULT_CATEGORIES: OnboardingCategory[] = [
 // ===========================
 
 const formatCurrency = (amount: number): string => {
-  return amount.toLocaleString("it-IT", {
-    style: "currency",
-    currency: "EUR",
+  return amount.toLocaleString('it-IT', {
+    style: 'currency',
+    currency: 'EUR',
   });
 };
 
 const getTodayFormatted = (): string => {
   const now = new Date();
-  const dd = String(now.getDate()).padStart(2, "0");
-  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const dd = String(now.getDate()).padStart(2, '0');
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
   const yyyy = now.getFullYear();
   return `${dd}-${mm}-${yyyy}`;
 };
@@ -101,11 +94,8 @@ const OnboardingView: React.FC = () => {
   const { reloadData, logout } = useAuthContext();
 
   // Theme
-  const menuBackground = useThemeColor({}, "menuBackground");
-  const borderColor = useThemeColor(
-    { light: "#e0e0e0", dark: "#333" },
-    "tabIconDefault",
-  );
+  const menuBackground = useThemeColor({}, 'menuBackground');
+  const borderColor = useThemeColor({ light: '#e0e0e0', dark: '#333' }, 'tabIconDefault');
 
   // Pager state
   const [currentPage, setCurrentPage] = useState(0);
@@ -119,22 +109,17 @@ const OnboardingView: React.FC = () => {
   // Step 2 state
   const [accounts, setAccounts] = useState<OnboardingAccount[]>([]);
   const [accountModalVisible, setAccountModalVisible] = useState(false);
-  const [editingAccountIndex, setEditingAccountIndex] = useState<number | null>(
-    null,
-  );
+  const [editingAccountIndex, setEditingAccountIndex] = useState<number | null>(null);
   const [isSavingAccounts, setIsSavingAccounts] = useState(false);
 
   // Step 3 state
-  const [categories, setCategories] =
-    useState<OnboardingCategory[]>(DEFAULT_CATEGORIES);
+  const [categories, setCategories] = useState<OnboardingCategory[]>(DEFAULT_CATEGORIES);
   const [isSavingCategories, setIsSavingCategories] = useState(false);
   const [categoryModalVisible, setCategoryModalVisible] = useState(false);
-  const [editingCategoryIndex, setEditingCategoryIndex] = useState<
-    number | null
-  >(null);
-  const [newCategoryIcon, setNewCategoryIcon] = useState<string>("label");
-  const [newCategoryColor, setNewCategoryColor] = useState<string>("#2196F3");
-  const [newCategoryName, setNewCategoryName] = useState<string>("");
+  const [editingCategoryIndex, setEditingCategoryIndex] = useState<number | null>(null);
+  const [newCategoryIcon, setNewCategoryIcon] = useState<string>('label');
+  const [newCategoryColor, setNewCategoryColor] = useState<string>('#2196F3');
+  const [newCategoryName, setNewCategoryName] = useState<string>('');
 
   // ===========================
   // Step 1 handlers
@@ -143,21 +128,21 @@ const OnboardingView: React.FC = () => {
   const handleCreateSheet = async () => {
     setIsCreatingSheet(true);
     try {
-      const createResponse = await HttpHelper.post("/spreadsheet/create", { title: "MyBalance" });
+      const createResponse = await HttpHelper.post('/spreadsheet/create', { title: 'MyBalance' });
       const newSpreadsheetId = createResponse.data?.spreadsheetId;
-      await HttpHelper.post("/spreadsheet/initialize", { spreadsheetId: newSpreadsheetId });
+      await HttpHelper.post('/spreadsheet/initialize', { spreadsheetId: newSpreadsheetId });
       setSpreadsheetId(newSpreadsheetId);
       setSheetCreated(true);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (error) {
-      console.error("Error creating spreadsheet:", error);
+      console.error('Error creating spreadsheet:', error);
       if (error instanceof AuthenticationError) {
-        Alert.alert("Session Expired", "Please log in again.", [
-          { text: "OK", onPress: () => logout() },
+        Alert.alert('Session Expired', 'Please log in again.', [
+          { text: 'OK', onPress: () => logout() },
         ]);
         return;
       }
-      Alert.alert("Error", "Could not create spreadsheet. Please try again.");
+      Alert.alert('Error', 'Could not create spreadsheet. Please try again.');
     } finally {
       setIsCreatingSheet(false);
     }
@@ -178,11 +163,7 @@ const OnboardingView: React.FC = () => {
     setAccountModalVisible(true);
   };
 
-  const handleConfirmAccount = (data: {
-    name: string;
-    color: string;
-    balance: number;
-  }) => {
+  const handleConfirmAccount = (data: { name: string; color: string; balance: number }) => {
     if (editingAccountIndex !== null) {
       setAccounts((prev) =>
         prev.map((a, i) =>
@@ -203,13 +184,12 @@ const OnboardingView: React.FC = () => {
 
   const handleRemoveAccount = (index: number) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    Alert.alert("Remove Account", `Remove "${accounts[index].name}"?`, [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert('Remove Account', `Remove "${accounts[index].name}"?`, [
+      { text: 'Cancel', style: 'cancel' },
       {
-        text: "Remove",
-        style: "destructive",
-        onPress: () =>
-          setAccounts((prev) => prev.filter((_, i) => i !== index)),
+        text: 'Remove',
+        style: 'destructive',
+        onPress: () => setAccounts((prev) => prev.filter((_, i) => i !== index)),
       },
     ]);
   };
@@ -225,8 +205,8 @@ const OnboardingView: React.FC = () => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setCurrentPage(2);
     } catch (error) {
-      console.error("Error saving accounts:", error);
-      Alert.alert("Error", "Could not save accounts. Please try again.");
+      console.error('Error saving accounts:', error);
+      Alert.alert('Error', 'Could not save accounts. Please try again.');
     } finally {
       setIsSavingAccounts(false);
     }
@@ -246,9 +226,9 @@ const OnboardingView: React.FC = () => {
   const handleAddCustomCategory = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setEditingCategoryIndex(null);
-    setNewCategoryName("");
-    setNewCategoryIcon("label");
-    setNewCategoryColor("#2196F3");
+    setNewCategoryName('');
+    setNewCategoryIcon('label');
+    setNewCategoryColor('#2196F3');
     setCategoryModalVisible(true);
   };
 
@@ -264,7 +244,7 @@ const OnboardingView: React.FC = () => {
 
   const handleConfirmCustomCategory = () => {
     if (!newCategoryName.trim()) {
-      Alert.alert("Error", "Category name is required");
+      Alert.alert('Error', 'Category name is required');
       return;
     }
 
@@ -302,7 +282,7 @@ const OnboardingView: React.FC = () => {
     if (!spreadsheetId) return;
     const selectedCategories = categories.filter((c) => c.selected);
     if (selectedCategories.length === 0) {
-      Alert.alert("Warning", "Select at least one category.");
+      Alert.alert('Warning', 'Select at least one category.');
       return;
     }
     setIsSavingCategories(true);
@@ -333,16 +313,16 @@ const OnboardingView: React.FC = () => {
         const movementId = Crypto.randomUUID();
         await TransactionsApiHelper.createMovement(spreadsheetId, {
           movementId,
-          description: "MyBalance Start",
-          category: "Initial Balance",
+          description: 'MyBalance Start',
+          category: 'Initial Balance',
           date: today,
-          type: "in",
+          type: 'in',
           transactions: accountsWithBalance.map((account) => ({
             transactionId: Crypto.randomUUID(),
-            description: "MyBalance Start",
-            category: "Initial Balance",
+            description: 'MyBalance Start',
+            category: 'Initial Balance',
             amount: account.balance,
-            type: "in",
+            type: 'in',
             account: account.name,
             date: today,
           })),
@@ -353,14 +333,14 @@ const OnboardingView: React.FC = () => {
       // Reload user profile - spreadsheet_id is now set, so mode will switch to "dashboard"
       await reloadData();
     } catch (error) {
-      console.error("Error completing setup:", error);
+      console.error('Error completing setup:', error);
       if (error instanceof AuthenticationError) {
-        Alert.alert("Session Expired", "Please log in again.", [
-          { text: "OK", onPress: () => logout() },
+        Alert.alert('Session Expired', 'Please log in again.', [
+          { text: 'OK', onPress: () => logout() },
         ]);
         return;
       }
-      Alert.alert("Error", "Could not complete setup. Please try again.");
+      Alert.alert('Error', 'Could not complete setup. Please try again.');
     } finally {
       setIsSavingCategories(false);
     }
@@ -378,7 +358,7 @@ const OnboardingView: React.FC = () => {
           style={[
             styles.stepDot,
             {
-              backgroundColor: step === currentPage ? "#2F4F3F" : borderColor,
+              backgroundColor: step === currentPage ? '#2F4F3F' : borderColor,
             },
           ]}
         />
@@ -397,29 +377,23 @@ const OnboardingView: React.FC = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ flexGrow: 1 }}
       >
-        <View
-          style={[styles.stepHeader, { paddingHorizontal: 16, paddingTop: 48 }]}
-        >
+        <View style={[styles.stepHeader, { paddingHorizontal: 16, paddingTop: 48 }]}>
           <ThemedText type="title" style={styles.title}>
             Welcome to MyBalance
           </ThemedText>
-          <ThemedText
-            style={[styles.subtitle, { fontSize: 17, lineHeight: 25 }]}
-          >
-            MyBalance helps you track your income and expenses with ease. Your
-            financial data is securely stored in a Google Sheets spreadsheet in
-            your Google account — only you have access.{"\n\n"}
-            No external servers, no third-party analytics: your finances stay
-            private and fully under your control.
+          <ThemedText style={[styles.subtitle, { fontSize: 17, lineHeight: 25 }]}>
+            MyBalance helps you track your income and expenses with ease. Your financial data is
+            securely stored in a Google Sheets spreadsheet in your Google account — only you have
+            access.{'\n\n'}
+            No external servers, no third-party analytics: your finances stay private and fully
+            under your control.
           </ThemedText>
         </View>
 
         {sheetCreated && (
           <View style={styles.successBadge}>
             <IconSymbol name="check-circle" size={24} color="#27AE60" />
-            <ThemedText style={styles.successText}>
-              Spreadsheet created successfully!
-            </ThemedText>
+            <ThemedText style={styles.successText}>Spreadsheet created successfully!</ThemedText>
           </View>
         )}
 
@@ -431,10 +405,9 @@ const OnboardingView: React.FC = () => {
               Privacy Policy
             </ThemedText>
             <ThemedText style={styles.privacyText}>
-              By accepting, you authorize MyBalance to create and manage a
-              Google Sheets spreadsheet in your account to store your financial
-              data. Your data stays in your Google Drive and is not shared with
-              third parties.
+              By accepting, you authorize MyBalance to create and manage a Google Sheets spreadsheet
+              in your account to store your financial data. Your data stays in your Google Drive and
+              is not shared with third parties.
             </ThemedText>
             <Pressable
               style={styles.checkboxRow}
@@ -450,13 +423,10 @@ const OnboardingView: React.FC = () => {
                   privacyAccepted && styles.checkboxChecked,
                 ]}
               >
-                {privacyAccepted && (
-                  <IconSymbol name="check" size={18} color="#fff" />
-                )}
+                {privacyAccepted && <IconSymbol name="check" size={18} color="#fff" />}
               </View>
               <ThemedText style={styles.checkboxLabel}>
-                I accept the privacy policy and authorize the spreadsheet
-                creation
+                I accept the privacy policy and authorize the spreadsheet creation
               </ThemedText>
             </Pressable>
           </View>
@@ -468,9 +438,7 @@ const OnboardingView: React.FC = () => {
         <Pressable
           style={[
             styles.submitButton,
-            (!privacyAccepted || isCreatingSheet) &&
-              !sheetCreated &&
-              styles.buttonDisabledLight,
+            (!privacyAccepted || isCreatingSheet) && !sheetCreated && styles.buttonDisabledLight,
           ]}
           onPress={sheetCreated ? () => setCurrentPage(1) : handleCreateSheet}
           disabled={!sheetCreated && (!privacyAccepted || isCreatingSheet)}
@@ -479,7 +447,7 @@ const OnboardingView: React.FC = () => {
             <ActivityIndicator color="#2F4F3F" />
           ) : (
             <ThemedText style={styles.submitText}>
-              {sheetCreated ? "Next" : "Create your spreadsheet"}
+              {sheetCreated ? 'Next' : 'Create your spreadsheet'}
             </ThemedText>
           )}
         </Pressable>
@@ -493,9 +461,7 @@ const OnboardingView: React.FC = () => {
 
   const Step2 = () => (
     <View style={styles.stepContainer}>
-      <View
-        style={[styles.stepHeader, { paddingHorizontal: 16, paddingTop: 48 }]}
-      >
+      <View style={[styles.stepHeader, { paddingHorizontal: 16, paddingTop: 48 }]}>
         <ThemedText type="title" style={styles.title}>
           Your Accounts
         </ThemedText>
@@ -504,14 +470,10 @@ const OnboardingView: React.FC = () => {
         </ThemedText>
       </View>
 
-      <View style={{ flex: 1, justifyContent: "flex-end" }}>
+      <View style={{ flex: 1, justifyContent: 'flex-end' }}>
         {accounts.length === 0 && (
           <View style={styles.emptyState}>
-            <IconSymbol
-              name="account-balance-wallet"
-              size={48}
-              color={borderColor}
-            />
+            <IconSymbol name="account-balance-wallet" size={48} color={borderColor} />
             <ThemedText style={[styles.emptyText, { color: borderColor }]}>
               No accounts added
             </ThemedText>
@@ -522,10 +484,7 @@ const OnboardingView: React.FC = () => {
         )}
         <InputGroup>
           {accounts.length > 0 && (
-            <ScrollView
-              style={{ maxHeight: 390 }}
-              showsVerticalScrollIndicator={false}
-            >
+            <ScrollView style={{ maxHeight: 390 }} showsVerticalScrollIndicator={false}>
               <List>
                 {accounts.map((account, index) => (
                   <Pressable
@@ -545,9 +504,7 @@ const OnboardingView: React.FC = () => {
                             },
                           ]}
                         />
-                        <ThemedText style={styles.accountName}>
-                          {account.name}
-                        </ThemedText>
+                        <ThemedText style={styles.accountName}>{account.name}</ThemedText>
                       </View>
                       <ThemedText style={styles.balanceText}>
                         {formatCurrency(account.balance)}
@@ -575,16 +532,13 @@ const OnboardingView: React.FC = () => {
         {accounts.length > 0 && (
           <View style={styles.totalRow}>
             <ThemedText style={styles.totalLabel}>Total:</ThemedText>
-            <ThemedText style={styles.totalAmount}>
-              {formatCurrency(getTotalBalance())}
-            </ThemedText>
+            <ThemedText style={styles.totalAmount}>{formatCurrency(getTotalBalance())}</ThemedText>
           </View>
         )}
         <Pressable
           style={[
             styles.submitButton,
-            (accounts.length === 0 || isSavingAccounts) &&
-              styles.buttonDisabledLight,
+            (accounts.length === 0 || isSavingAccounts) && styles.buttonDisabledLight,
           ]}
           onPress={handleSaveAccounts}
           disabled={accounts.length === 0 || isSavingAccounts}
@@ -604,13 +558,9 @@ const OnboardingView: React.FC = () => {
           setEditingAccountIndex(null);
         }}
         onConfirm={handleConfirmAccount}
-        title={editingAccountIndex !== null ? "Edit Account" : "New Account"}
+        title={editingAccountIndex !== null ? 'Edit Account' : 'New Account'}
         balanceEditable
-        initialData={
-          editingAccountIndex !== null
-            ? accounts[editingAccountIndex]
-            : undefined
-        }
+        initialData={editingAccountIndex !== null ? accounts[editingAccountIndex] : undefined}
       />
     </View>
   );
@@ -621,9 +571,7 @@ const OnboardingView: React.FC = () => {
 
   const Step3 = () => (
     <View style={styles.stepContainer}>
-      <View
-        style={[styles.stepHeader, { paddingHorizontal: 16, paddingTop: 48 }]}
-      >
+      <View style={[styles.stepHeader, { paddingHorizontal: 16, paddingTop: 48 }]}>
         <ThemedText type="title" style={styles.title}>
           Your Categories
         </ThemedText>
@@ -632,7 +580,7 @@ const OnboardingView: React.FC = () => {
         </ThemedText>
       </View>
 
-      <View style={{ flex: 1, justifyContent: "flex-end" }}>
+      <View style={{ flex: 1, justifyContent: 'flex-end' }}>
         {categories.length === 0 && (
           <View style={styles.emptyState}>
             <IconSymbol name="category" size={48} color={borderColor} />
@@ -646,10 +594,7 @@ const OnboardingView: React.FC = () => {
         )}
         <InputGroup>
           {categories.length > 0 && (
-            <ScrollView
-              style={{ maxHeight: 390 }}
-              showsVerticalScrollIndicator={false}
-            >
+            <ScrollView style={{ maxHeight: 390 }} showsVerticalScrollIndicator={false}>
               <List>
                 {categories.map((category, index) => (
                   <Pressable
@@ -664,23 +609,14 @@ const OnboardingView: React.FC = () => {
                           style={[
                             styles.categoryIcon,
                             {
-                              backgroundColor: category.selected
-                                ? category.color
-                                : borderColor,
+                              backgroundColor: category.selected ? category.color : borderColor,
                             },
                           ]}
                         >
-                          <IconSymbol
-                            name={category.icon}
-                            size={22}
-                            color="#FFFFFF"
-                          />
+                          <IconSymbol name={category.icon} size={22} color="#FFFFFF" />
                         </View>
                         <ThemedText
-                          style={[
-                            styles.categoryName,
-                            !category.selected && { opacity: 0.4 },
-                          ]}
+                          style={[styles.categoryName, !category.selected && { opacity: 0.4 }]}
                         >
                           {category.name}
                         </ThemedText>
@@ -692,9 +628,7 @@ const OnboardingView: React.FC = () => {
                           category.selected && styles.checkboxChecked,
                         ]}
                       >
-                        {category.selected && (
-                          <IconSymbol name="check" size={18} color="#fff" />
-                        )}
+                        {category.selected && <IconSymbol name="check" size={18} color="#fff" />}
                       </View>
                     </View>
                   </Pressable>
@@ -747,10 +681,10 @@ const OnboardingView: React.FC = () => {
   // ===========================
 
   const handleMenuOption = (option: string) => {
-    if (option === "Logout") {
-      Alert.alert("Logout", "Are you sure you want to log out?", [
-        { text: "Cancel", style: "cancel" },
-        { text: "Logout", style: "destructive", onPress: () => logout() },
+    if (option === 'Logout') {
+      Alert.alert('Logout', 'Are you sure you want to log out?', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Logout', style: 'destructive', onPress: () => logout() },
       ]);
     }
   };
@@ -776,8 +710,8 @@ const OnboardingView: React.FC = () => {
         style={styles.menuButton}
         contextMenuOptions={[
           {
-            label: "Logout",
-            icon: "log-out-outline",
+            label: 'Logout',
+            icon: 'log-out-outline',
             destructive: true,
           },
         ]}
@@ -794,7 +728,7 @@ const OnboardingView: React.FC = () => {
           setEditingCategoryIndex(null);
         }}
         onConfirm={handleConfirmCustomCategory}
-        title={editingCategoryIndex !== null ? "Edit Category" : "New Category"}
+        title={editingCategoryIndex !== null ? 'Edit Category' : 'New Category'}
         maxHeight={650}
       >
         <CategoryPanel
@@ -825,7 +759,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   menuButton: {
-    position: "absolute",
+    position: 'absolute',
     top: 16,
     right: 16,
   },
@@ -843,9 +777,9 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   stepHeaderRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 16,
     marginBottom: 8,
   },
@@ -862,9 +796,9 @@ const styles = StyleSheet.create({
 
   // Step indicator
   stepIndicator: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
     paddingVertical: 16,
     gap: 8,
   },
@@ -889,8 +823,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   checkboxRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 12,
   },
   checkbox: {
@@ -898,12 +832,12 @@ const styles = StyleSheet.create({
     height: 28,
     borderRadius: 8,
     borderWidth: 2,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   checkboxChecked: {
-    backgroundColor: "#2F4F3F",
-    borderColor: "#2F4F3F",
+    backgroundColor: '#2F4F3F',
+    borderColor: '#2F4F3F',
   },
   checkboxLabel: {
     fontSize: 14,
@@ -917,15 +851,15 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   primaryButton: {
-    backgroundColor: "#2F4F3F",
+    backgroundColor: '#2F4F3F',
     borderRadius: 16,
     paddingVertical: 16,
-    alignItems: "center",
+    alignItems: 'center',
   },
   primaryButtonText: {
-    color: "#fff",
+    color: '#fff',
     fontSize: 17,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   buttonDisabled: {
     opacity: 0.4,
@@ -939,15 +873,15 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   successBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
   },
   successText: {
     fontSize: 16,
-    fontWeight: "600",
-    color: "#27AE60",
+    fontWeight: '600',
+    color: '#27AE60',
   },
 
   // Accounts list
@@ -959,14 +893,14 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   accountRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingVertical: 12,
   },
   accountLeft: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     flex: 1,
   },
   colorDot: {
@@ -982,28 +916,28 @@ const styles = StyleSheet.create({
   },
   balanceText: {
     fontSize: 18,
-    fontWeight: "700",
+    fontWeight: '700',
   },
 
   // Add button (green centered, like transactions)
   addButton: {
-    backgroundColor: "#2F4F3F",
+    backgroundColor: '#2F4F3F',
     borderRadius: 25,
     height: 50,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   // Empty state
   emptyState: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
   },
   emptyText: {
     fontSize: 17,
-    fontWeight: "600",
+    fontWeight: '600',
     marginTop: 8,
   },
   emptySubtext: {
@@ -1012,39 +946,39 @@ const styles = StyleSheet.create({
 
   // Total container (bottom bar)
   totalContainer: {
-    backgroundColor: "#2F4F3F",
+    backgroundColor: '#2F4F3F',
     paddingVertical: 20,
     paddingHorizontal: 20,
     borderRadius: 30,
     marginTop: 20,
   },
   totalRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 16,
   },
   totalLabel: {
-    color: "#fff",
+    color: '#fff',
     fontSize: 18,
-    fontWeight: "500",
+    fontWeight: '500',
   },
   totalAmount: {
-    color: "#fff",
+    color: '#fff',
     fontSize: 24,
-    fontWeight: "700",
+    fontWeight: '700',
   },
   submitButton: {
-    backgroundColor: "#fff",
+    backgroundColor: '#fff',
     borderRadius: 20,
     height: 50,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   submitText: {
-    color: "#2F4F3F",
+    color: '#2F4F3F',
     fontSize: 17,
-    fontWeight: "700",
+    fontWeight: '700',
   },
 
   // Categories
@@ -1055,14 +989,14 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   categoryRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingVertical: 8,
   },
   categoryLeft: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     flex: 1,
     gap: 12,
   },
@@ -1070,11 +1004,11 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   categoryName: {
     fontSize: 16,
-    fontWeight: "500",
+    fontWeight: '500',
   },
 });

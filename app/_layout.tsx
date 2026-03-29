@@ -1,26 +1,30 @@
-import React, { useEffect } from "react";
-import {
-  DarkTheme,
-  DefaultTheme,
-  ThemeProvider,
-} from "@react-navigation/native";
-import { Stack } from "expo-router";
-import Head from "expo-router/head";
-import { StatusBar } from "expo-status-bar";
-import "react-native-reanimated";
+import React, { useEffect } from 'react';
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { Stack } from 'expo-router';
+import Head from 'expo-router/head';
+import { StatusBar } from 'expo-status-bar';
+import 'react-native-reanimated';
 
-import { useColorScheme } from "@/src/hooks/use-color-scheme";
-import { Platform, View, Text, StyleSheet, ActivityIndicator, Alert, BackHandler } from "react-native";
-import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-import { AuthProvider, useAuthContext } from "@/src/state/AuthProvider";
-import { DataProvider } from "@/src/state/DataProvider";
-import { PlatformProvider } from "@/src/state/PlatformProvider";
-import { QueryProvider } from "@/src/providers/QueryProvider";
-import LoginScreen from "@/src/views/login-view";
-import Onboarding from "./onboarding";
+import { useColorScheme } from '@/src/hooks/use-color-scheme';
+import {
+  Platform,
+  View,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  Alert,
+  BackHandler,
+} from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { AuthProvider, useAuthContext } from '@/src/state/AuthProvider';
+import { DataProvider } from '@/src/state/DataProvider';
+import { PlatformProvider } from '@/src/state/PlatformProvider';
+import { QueryProvider } from '@/src/providers/QueryProvider';
+import LoginScreen from '@/src/views/login-view';
+import Onboarding from './onboarding';
 
 export const unstable_settings = {
-  anchor: "dashboard",
+  anchor: 'dashboard',
 };
 
 // Main app content that requires authentication
@@ -28,7 +32,7 @@ const AuthenticatedApp: React.FC = () => {
   const { dashboardReady } = useAuthContext();
   const colorScheme = useColorScheme();
 
-  console.log("🎨 AuthenticatedApp render - dashboardReady:", dashboardReady);
+  console.log('🎨 AuthenticatedApp render - dashboardReady:', dashboardReady);
 
   // Show loading screen until dashboard is ready
   if (!dashboardReady) {
@@ -41,7 +45,7 @@ const AuthenticatedApp: React.FC = () => {
   }
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <SafeAreaProvider>
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen
@@ -61,39 +65,36 @@ const AuthenticatedApp: React.FC = () => {
           <Stack.Screen
             name="add"
             options={{
-              presentation: "card",
-              title: "Add",
+              presentation: 'card',
+              title: 'Add',
               headerShown: false,
             }}
           />
           <Stack.Screen
             name="accounts"
             options={{
-              presentation: "card",
-              title: "Accounts",
+              presentation: 'card',
+              title: 'Accounts',
               headerShown: false,
             }}
           />
           <Stack.Screen
             name="categories"
             options={{
-              presentation: "card",
-              title: "Categories",
+              presentation: 'card',
+              title: 'Categories',
               headerShown: false,
             }}
           />
           <Stack.Screen
             name="onboarding"
             options={{
-              presentation: "card",
-              title: "Onboarding",
+              presentation: 'card',
+              title: 'Onboarding',
               headerShown: false,
             }}
           />
-          <Stack.Screen
-            name="modal"
-            options={{ presentation: "modal", title: "Modal" }}
-          />
+          <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
         </Stack>
         <StatusBar style="auto" />
       </SafeAreaProvider>
@@ -110,20 +111,20 @@ const AppRouter: React.FC = () => {
   // Also re-show when isLoading transitions to false while still in migration mode
   // (e.g. after a failed migration attempt, so the user can retry).
   useEffect(() => {
-    if (mode === "migration" && !isLoading) {
+    if (mode === 'migration' && !isLoading) {
       Alert.alert(
-        "Update Available",
+        'Update Available',
         error
-          ? "The upgrade could not be completed. Would you like to try again?"
-          : "A data format update is available. Would you like to upgrade now? Your existing data will be preserved.",
+          ? 'The upgrade could not be completed. Would you like to try again?'
+          : 'A data format update is available. Would you like to upgrade now? Your existing data will be preserved.',
         [
           {
-            text: "Esci",
-            style: "cancel",
+            text: 'Esci',
+            style: 'cancel',
             onPress: () => BackHandler.exitApp(),
           },
           {
-            text: error ? "Retry" : "Upgrade Now",
+            text: error ? 'Retry' : 'Upgrade Now',
             onPress: () => executeMigration(),
           },
         ],
@@ -134,32 +135,31 @@ const AppRouter: React.FC = () => {
 
   if (isLoading) {
     return (
-            <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2F4F3F" />
-        <Text style={styles.loadingText}>
-          {mode === "migration" ? "Upgrading your data..." : "Loading..."}
-        </Text>
-      </View>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#2F4F3F" />
+          <Text style={styles.loadingText}>
+            {mode === 'migration' ? 'Upgrading your data...' : 'Loading...'}
+          </Text>
+        </View>
       </ThemeProvider>
     );
   }
 
   if (!isAuthenticated) {
-    console.log("📱 Showing LoginScreen");
+    console.log('📱 Showing LoginScreen');
     return <LoginScreen />;
   }
 
-  if (mode === "quickstart") {
-    console.log("📱 Showing onboarding");
+  if (mode === 'quickstart') {
+    console.log('📱 Showing onboarding');
     return <Onboarding />;
   }
 
-  if (mode === "migration") {
+  if (mode === 'migration') {
     // Show loading while Alert is visible (before user taps)
     return (
-      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#2F4F3F" />
           <Text style={styles.loadingText}>Checking for updates...</Text>
@@ -168,7 +168,7 @@ const AppRouter: React.FC = () => {
     );
   }
 
-  console.log("✅ Showing AuthenticatedApp");
+  console.log('✅ Showing AuthenticatedApp');
   return (
     <DataProvider>
       <AuthenticatedApp />
@@ -179,14 +179,13 @@ const AppRouter: React.FC = () => {
 const styles = StyleSheet.create({
   loadingContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: "#2F4F3F",
+    color: '#2F4F3F',
   },
 });
 
@@ -194,7 +193,7 @@ const styles = StyleSheet.create({
 export default function RootLayout() {
   return (
     <PlatformProvider>
-      {Platform.OS === "web" && (
+      {Platform.OS === 'web' && (
         <Head>
           <title>My Balance</title>
           <link rel="icon" type="image/png" href="/favicon.png" />

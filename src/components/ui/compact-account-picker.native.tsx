@@ -1,9 +1,9 @@
-import { View, StyleSheet, Pressable, Modal } from "react-native";
-import React from "react";
-import { ThemedText } from "../core/themed-text.native";
-import { Picker } from "@react-native-picker/picker";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import type { Account } from "@/src/state";
+import { View, StyleSheet, Pressable, Modal } from 'react-native';
+import React from 'react';
+import { ThemedText } from '../core/themed-text.native';
+import { Picker } from '@react-native-picker/picker';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import type { Account } from '@/src/state';
 
 export interface CompactAccountPickerProps {
   accounts: Account[];
@@ -23,20 +23,17 @@ const CompactAccountPicker: React.FC<CompactAccountPickerProps> = ({
   const [pickerVisible, setPickerVisible] = React.useState(false);
 
   const backgroundColor = useThemeColor(
-    { light: "rgba(0,0,0,0.06)", dark: "rgba(255,255,255,0.1)" },
-    "background",
+    { light: 'rgba(0,0,0,0.06)', dark: 'rgba(255,255,255,0.1)' },
+    'background',
   );
-  const modalBackground = useThemeColor(
-    { light: "#ffffff", dark: "#1c1c1e" },
-    "background",
-  );
+  const modalBackground = useThemeColor({ light: '#ffffff', dark: '#1c1c1e' }, 'background');
   const borderColor = useThemeColor(
-    { light: "rgba(0, 0, 0, 0.1)", dark: "rgba(255, 255, 255, 0.1)" },
-    "cardBorder",
+    { light: 'rgba(0, 0, 0, 0.1)', dark: 'rgba(255, 255, 255, 0.1)' },
+    'cardBorder',
   );
   const handleColor = useThemeColor(
-    { light: "rgba(0, 0, 0, 0.3)", dark: "rgba(255, 255, 255, 0.3)" },
-    "cardBorder",
+    { light: 'rgba(0, 0, 0, 0.3)', dark: 'rgba(255, 255, 255, 0.3)' },
+    'cardBorder',
   );
 
   const handleSelectOption = (value: string) => {
@@ -44,8 +41,7 @@ const CompactAccountPicker: React.FC<CompactAccountPickerProps> = ({
   };
 
   // Display label
-  const displayLabel =
-    selectedAccount === "All" ? "All accounts" : selectedAccount;
+  const displayLabel = selectedAccount === 'All' ? 'All accounts' : selectedAccount;
 
   return (
     <>
@@ -64,29 +60,14 @@ const CompactAccountPicker: React.FC<CompactAccountPickerProps> = ({
         onRequestClose={() => setPickerVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <Pressable
-            style={styles.modalBackdrop}
-            onPress={() => setPickerVisible(false)}
-          />
-          <View
-            style={[
-              styles.pickerContainer,
-              { backgroundColor: modalBackground },
-            ]}
-          >
+          <Pressable style={styles.modalBackdrop} onPress={() => setPickerVisible(false)} />
+          <View style={[styles.pickerContainer, { backgroundColor: modalBackground }]}>
             {/* Drag handle */}
-            <View
-              style={[styles.dragHandle, { backgroundColor: handleColor }]}
-            />
+            <View style={[styles.dragHandle, { backgroundColor: handleColor }]} />
 
-            <View
-              style={[styles.pickerHeader, { borderBottomColor: borderColor }]}
-            >
+            <View style={[styles.pickerHeader, { borderBottomColor: borderColor }]}>
               <ThemedText style={styles.headerTitle}>Select Account</ThemedText>
-              <Pressable
-                onPress={() => setPickerVisible(false)}
-                style={styles.doneButtonContainer}
-              >
+              <Pressable onPress={() => setPickerVisible(false)} style={styles.doneButtonContainer}>
                 <ThemedText style={styles.doneButton}>Done</ThemedText>
               </Pressable>
             </View>
@@ -100,7 +81,7 @@ const CompactAccountPicker: React.FC<CompactAccountPickerProps> = ({
               {accounts.map((account) => (
                 <Picker.Item
                   key={account.name}
-                  label={account.name === "All" ? "All accounts" : account.name}
+                  label={account.name === 'All' ? 'All accounts' : account.name}
                   value={account.name}
                 />
               ))}
@@ -114,8 +95,8 @@ const CompactAccountPicker: React.FC<CompactAccountPickerProps> = ({
 
 const styles = StyleSheet.create({
   pressable: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 18,
@@ -123,7 +104,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 13,
-    fontWeight: "500",
+    fontWeight: '500',
   },
   chevron: {
     fontSize: 10,
@@ -131,8 +112,8 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    justifyContent: "flex-end",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalBackdrop: {
     ...StyleSheet.absoluteFillObject,
@@ -141,7 +122,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingBottom: 34,
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
@@ -151,21 +132,21 @@ const styles = StyleSheet.create({
     width: 36,
     height: 5,
     borderRadius: 3,
-    alignSelf: "center",
+    alignSelf: 'center',
     marginTop: 12,
     marginBottom: 8,
   },
   pickerHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 0.5,
   },
   headerTitle: {
     fontSize: 17,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   doneButtonContainer: {
     paddingVertical: 4,
@@ -173,11 +154,11 @@ const styles = StyleSheet.create({
   },
   doneButton: {
     fontSize: 17,
-    fontWeight: "600",
-    color: "#007AFF",
+    fontWeight: '600',
+    color: '#007AFF',
   },
   picker: {
-    width: "100%",
+    width: '100%',
     height: 200,
   },
   pickerItem: {

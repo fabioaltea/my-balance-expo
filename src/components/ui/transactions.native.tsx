@@ -6,22 +6,19 @@ import {
   LayoutAnimation,
   Platform,
   UIManager,
-} from "react-native";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import * as Haptics from "expo-haptics";
-import React, { useRef } from "react";
-import {
-  Swipeable,
-  GestureHandlerRootView,
-} from "react-native-gesture-handler";
-import IconSymbol from "./icon-symbol";
-import { ThemedText } from "../core/themed-text.native";
+} from 'react-native';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import * as Haptics from 'expo-haptics';
+import React, { useRef } from 'react';
+import { Swipeable, GestureHandlerRootView } from 'react-native-gesture-handler';
+import IconSymbol from './icon-symbol';
+import { ThemedText } from '../core/themed-text.native';
 
 export interface ITransaction {
   id: number;
   accountName: string;
   amount: number;
-  type: "income" | "expense";
+  type: 'income' | 'expense';
   // Original IDs from backend (for update operations)
   transactionID?: string;
   movementID?: string;
@@ -53,16 +50,13 @@ const TransactionRow: React.FC<TransactionRowProps> = ({
   const translateX = useRef(new Animated.Value(0)).current;
 
   // Enable native LayoutAnimation on Android
-  if (
-    Platform.OS === "android" &&
-    UIManager.setLayoutAnimationEnabledExperimental
-  ) {
+  if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
     UIManager.setLayoutAnimationEnabledExperimental(true);
   }
 
-  const formatAmount = (amount: number, type: "income" | "expense") => {
-    const formattedAmount = amount.toFixed(2).replace(".", ",");
-    const prefix = type === "income" ? "+ " : "- ";
+  const formatAmount = (amount: number, type: 'income' | 'expense') => {
+    const formattedAmount = amount.toFixed(2).replace('.', ',');
+    const prefix = type === 'income' ? '+ ' : '- ';
     return `${prefix}${formattedAmount}€`;
   };
 
@@ -91,30 +85,26 @@ const TransactionRow: React.FC<TransactionRowProps> = ({
     const containerOpacity = dragX.interpolate({
       inputRange: [-120, showThreshold, showThreshold + 0.001, 0],
       outputRange: [1, 1, 0, 0],
-      extrapolate: "clamp",
+      extrapolate: 'clamp',
     });
 
     const scale = dragX.interpolate({
       inputRange: [-120, showThreshold, 0],
       outputRange: [1, 1, 0.5],
-      extrapolate: "clamp",
+      extrapolate: 'clamp',
     });
 
     const opacity = dragX.interpolate({
       // Keep hidden until the threshold is crossed
       inputRange: [-120, -80, showThreshold, 0],
       outputRange: [1, 1, 0, 0],
-      extrapolate: "clamp",
+      extrapolate: 'clamp',
     });
 
     return (
-      <Animated.View
-        style={[styles.deleteAction, { opacity: containerOpacity }]}
-      >
+      <Animated.View style={[styles.deleteAction, { opacity: containerOpacity }]}>
         <Pressable onPress={handleDelete} style={styles.deleteContent}>
-          <Animated.View
-            style={[styles.deleteContent, { transform: [{ scale }], opacity }]}
-          >
+          <Animated.View style={[styles.deleteContent, { transform: [{ scale }], opacity }]}>
             <IconSymbol name="delete" size={22} color="#fff" />
           </Animated.View>
         </Pressable>
@@ -129,27 +119,23 @@ const TransactionRow: React.FC<TransactionRowProps> = ({
       rightThreshold={40}
       overshootRight={false}
       onSwipeableOpen={(direction) => {
-        if (direction === "right") {
+        if (direction === 'right') {
           handleDelete();
         }
       }}
     >
-      <Animated.View
-        style={[styles.animatedContainer, { transform: [{ translateX }] }]}
-      >
+      <Animated.View style={[styles.animatedContainer, { transform: [{ translateX }] }]}>
         <Pressable
           onPress={onPress}
           style={[styles.transactionRow, { borderBottomColor: borderColor }]}
         >
           <View style={styles.transactionContent}>
-            <ThemedText style={styles.accountName}>
-              {transaction.accountName}
-            </ThemedText>
+            <ThemedText style={styles.accountName}>{transaction.accountName}</ThemedText>
             <ThemedText
               style={[
                 styles.amount,
                 {
-                  color: transaction.type === "income" ? "#22c55e" : "#ef4444",
+                  color: transaction.type === 'income' ? '#22c55e' : '#ef4444',
                 },
               ]}
             >
@@ -175,11 +161,8 @@ const Transactions: React.FC<ITransactionsProps> = ({
   onDeletePress,
 }) => {
   // Theme colors
-  const textColor = useThemeColor({ light: "#000", dark: "#fff" }, "text");
-  const borderColor = useThemeColor(
-    { light: "#e0e0e0", dark: "#333" },
-    "tabIconDefault",
-  );
+  const textColor = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
+  const borderColor = useThemeColor({ light: '#e0e0e0', dark: '#333' }, 'tabIconDefault');
 
   const handleTransactionPress = (transaction: ITransaction) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -227,19 +210,19 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   transactionRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 0,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    backgroundColor: "transparent",
+    backgroundColor: 'transparent',
     marginBottom: 8,
   },
   transactionContent: {
     flex: 1,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   accountName: {
     fontSize: 16,
@@ -247,35 +230,34 @@ const styles = StyleSheet.create({
   },
   amount: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: '600',
     marginRight: 8,
   },
   chevron: {
     opacity: 0.6,
   },
   addButton: {
-    backgroundColor: "#2F4F3F",
+    backgroundColor: '#2F4F3F',
     borderRadius: 20,
     height: 50,
-    justifyContent: "center",
-    alignItems: "center",
-    
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   deleteAction: {
-    backgroundColor: "#ef4444ff",
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: '#ef4444ff',
+    justifyContent: 'center',
+    alignItems: 'center',
     borderRadius: 20,
     marginVertical: 2,
     width: 70,
     height: 40,
   },
   deleteContent: {
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   animatedContainer: {
-    overflow: "hidden",
+    overflow: 'hidden',
   },
 });
 

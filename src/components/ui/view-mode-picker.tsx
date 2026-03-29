@@ -1,10 +1,10 @@
-import { View, StyleSheet, Animated } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import ChipButton from "./chip-button";
-import React from "react";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
+import { View, StyleSheet, Animated } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import ChipButton from './chip-button';
+import React from 'react';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
 
-export type ViewMode = "recent" | "recurring" | "unconfirmed";
+export type ViewMode = 'recent' | 'recurring' | 'unconfirmed';
 
 interface ViewModePickerProps {
   selectedMode: ViewMode;
@@ -21,17 +21,17 @@ const ViewModePicker: React.FC<ViewModePickerProps> = ({
   unconfirmedCount = 0,
   fadeOpacity,
 }) => {
-  const backgroundColor = useThemeColor({}, "menuBackground");
+  const backgroundColor = useThemeColor({}, 'menuBackground');
   const modes: { label: string; value: ViewMode; badge?: number }[] = [
-    { label: "Recent", value: "recent" },
+    { label: 'Recent', value: 'recent' },
     {
-      label: "Recurring",
-      value: "recurring",
+      label: 'Recurring',
+      value: 'recurring',
       badge: pendingCount > 0 ? pendingCount : undefined,
     },
     {
-      label: "Unconfirmed",
-      value: "unconfirmed",
+      label: 'Unconfirmed',
+      value: 'unconfirmed',
       badge: unconfirmedCount > 0 ? unconfirmedCount : undefined,
     },
   ];
@@ -48,16 +48,10 @@ const ViewModePicker: React.FC<ViewModePickerProps> = ({
         />
       ))}
       <Animated.View
-        style={[
-          styles.bottomFade,
-          fadeOpacity != null ? { opacity: fadeOpacity } : undefined,
-        ]}
+        style={[styles.bottomFade, fadeOpacity != null ? { opacity: fadeOpacity } : undefined]}
         pointerEvents="none"
       >
-        <LinearGradient
-          colors={[backgroundColor, backgroundColor + "00"]}
-          style={{ flex: 1 }}
-        />
+        <LinearGradient colors={[backgroundColor, backgroundColor + '00']} style={{ flex: 1 }} />
       </Animated.View>
     </View>
   );
@@ -65,16 +59,16 @@ const ViewModePicker: React.FC<ViewModePickerProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 8,
     paddingBottom: 16,
     paddingTop: 8,
     paddingHorizontal: 16,
     marginHorizontal: -16,
-    overflow: "visible" as const,
+    overflow: 'visible' as const,
   },
   bottomFade: {
-    position: "absolute" as const,
+    position: 'absolute' as const,
     bottom: -20,
     left: 0,
     right: 0,

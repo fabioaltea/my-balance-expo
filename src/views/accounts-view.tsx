@@ -10,7 +10,11 @@ import * as Haptics from 'expo-haptics';
 import { DEFAULT_COLOR, DEFAULT_TEXT_COLOR } from '@/src/constants/colors';
 import { useSpreadsheetMutation } from '@/src/hooks/useSpreadsheetMutation';
 import { AccountsApiHelper } from '@/src/helpers/AccountsApiHelper';
-import { AccountsMutationHelpers, type UpdateAccountData, type AccountSnapshot } from '@/src/helpers/AccountsMutationHelpers';
+import {
+  AccountsMutationHelpers,
+  type UpdateAccountData,
+  type AccountSnapshot,
+} from '@/src/helpers/AccountsMutationHelpers';
 import { ThemedText } from '@/src/components/core/themed-text';
 
 interface AccountsViewProps {
@@ -25,10 +29,7 @@ const formatCurrency = (amount: number): string => {
   });
 };
 
-const AccountsView: React.FC<AccountsViewProps> = ({
-  accounts,
-  selectedSpreadsheetId,
-}) => {
+const AccountsView: React.FC<AccountsViewProps> = ({ accounts, selectedSpreadsheetId }) => {
   // React Query mutation
   const updateAccount = useSpreadsheetMutation<UpdateAccountData, AccountSnapshot>({
     mutationFn: (spreadsheetId, data) => {
@@ -37,7 +38,8 @@ const AccountsView: React.FC<AccountsViewProps> = ({
     },
     onMutate: (qc, data) => AccountsMutationHelpers.optimisticUpdateAccount(qc, data),
     onError: (qc, ctx) => AccountsMutationHelpers.rollbackAccounts(qc, ctx),
-    onSuccess: (qc, variables) => AccountsMutationHelpers.invalidateAccountCaches(qc, !!variables.name),
+    onSuccess: (qc, variables) =>
+      AccountsMutationHelpers.invalidateAccountCaches(qc, !!variables.name),
   });
   const menuBackground = useThemeColor({}, 'menuBackground');
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -89,7 +91,7 @@ const AccountsView: React.FC<AccountsViewProps> = ({
         [
           { text: 'Annulla', style: 'cancel' },
           { text: 'Conferma', onPress: () => performUpdate(data.name, data.color) },
-        ]
+        ],
       );
     } else {
       performUpdate(data.name, data.color);
@@ -102,18 +104,14 @@ const AccountsView: React.FC<AccountsViewProps> = ({
         style={{ height: 20, marginBottom: -20, zIndex: 1, opacity: fadeOpacity }}
         pointerEvents="none"
       >
-        <LinearGradient
-          colors={[menuBackground, menuBackground + '00']}
-          style={{ flex: 1 }}
-        />
+        <LinearGradient colors={[menuBackground, menuBackground + '00']} style={{ flex: 1 }} />
       </Animated.View>
       <Animated.ScrollView
         style={styles.content}
         showsVerticalScrollIndicator={false}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: true },
-        )}
+        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+          useNativeDriver: true,
+        })}
         scrollEventThrottle={16}
       >
         <Card>
@@ -152,7 +150,11 @@ const AccountsView: React.FC<AccountsViewProps> = ({
         onClose={handleCloseModal}
         onConfirm={handleAccountModalConfirm}
         title="Edit Account"
-        initialData={selectedAccount ? { name: selectedAccount.name, color: selectedAccount.color || DEFAULT_COLOR } : undefined}
+        initialData={
+          selectedAccount
+            ? { name: selectedAccount.name, color: selectedAccount.color || DEFAULT_COLOR }
+            : undefined
+        }
       />
     </View>
   );
@@ -165,14 +167,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   accountRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingVertical: 12,
   },
   accountLeft: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     flex: 1,
   },
   colorDot: {
@@ -188,6 +190,6 @@ const styles = StyleSheet.create({
   },
   balanceText: {
     fontSize: 18,
-    fontWeight: "700",
+    fontWeight: '700',
   },
 });

@@ -1,9 +1,9 @@
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import { useTheme } from "@react-navigation/native";
-import { use } from "react";
-import { StyleSheet, View, Text } from "react-native";
-import List from "./list";
-import React from "react";
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import { useTheme } from '@react-navigation/native';
+import { use } from 'react';
+import { StyleSheet, View, Text } from 'react-native';
+import List from './list';
+import React from 'react';
 
 interface ICardProps {
   backgroundColor?: string;
@@ -12,14 +12,9 @@ interface ICardProps {
   children: React.ReactNode;
 }
 
-const InputGroup: React.FC<ICardProps> = ({
-  backgroundColor,
-  color,
-  label,
-  children,
-}) => {
-  const themeBackground = useThemeColor({}, "cardBackground");
-  const themeColor = useThemeColor({}, "cardColor");
+const InputGroup: React.FC<ICardProps> = ({ backgroundColor, color, label, children }) => {
+  const themeBackground = useThemeColor({}, 'cardBackground');
+  const themeColor = useThemeColor({}, 'cardColor');
   const styles = StyleSheet.create({
     //Card
     card: {
@@ -30,8 +25,8 @@ const InputGroup: React.FC<ICardProps> = ({
       flexGrow: 2,
       paddingHorizontal: 5,
       paddingVertical: 5,
-      overflow: "visible" as const,
-      shadowColor: "#000",
+      overflow: 'visible' as const,
+      shadowColor: '#000',
       shadowOffset: { width: 0, height: 0 },
       shadowOpacity: 0.1,
       shadowRadius: 12,
@@ -40,8 +35,8 @@ const InputGroup: React.FC<ICardProps> = ({
 
     cardLabel: {
       fontSize: 18,
-      fontWeight: "600",
-      color: "#848484ff",
+      fontWeight: '600',
+      color: '#848484ff',
       marginBottom: 10,
       marginLeft: 10,
     },

@@ -1,10 +1,4 @@
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  useMemo,
-  useCallback,
-} from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -13,84 +7,84 @@ import {
   ScrollView,
   Image,
   TouchableOpacity,
-} from "react-native";
-import { GoogleMap, MarkerF, useLoadScript } from "@react-google-maps/api";
-import { useQueryClient } from "@tanstack/react-query";
-import { useColorScheme } from "@/src/hooks/use-color-scheme";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import { useAuthContext, useDataContext } from "@/src/state";
-import type { Movement } from "@/src/types/models";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import IconSymbol from "@/src/components/ui/icon-symbol";
-import { MovementHelper } from "@/src/helpers/MovementHelper";
-import { TransactionsApiHelper } from "@/src/helpers/TransactionsApiHelper";
-import { TransactionsMutationHelpers } from "@/src/helpers/TransactionsMutationHelpers";
-import { formatDateForDisplay, compareDates } from "@/src/utils/dateUtils";
+} from 'react-native';
+import { GoogleMap, MarkerF, useLoadScript } from '@react-google-maps/api';
+import { useQueryClient } from '@tanstack/react-query';
+import { useColorScheme } from '@/src/hooks/use-color-scheme';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import { useAuthContext, useDataContext } from '@/src/state';
+import type { Movement } from '@/src/types/models';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import IconSymbol from '@/src/components/ui/icon-symbol';
+import { MovementHelper } from '@/src/helpers/MovementHelper';
+import { TransactionsApiHelper } from '@/src/helpers/TransactionsApiHelper';
+import { TransactionsMutationHelpers } from '@/src/helpers/TransactionsMutationHelpers';
+import { formatDateForDisplay, compareDates } from '@/src/utils/dateUtils';
 import {
   getLocationCoordinatesKey,
   parseLocationValue,
   serializeLocationValue,
-} from "@/src/utils/locationValue";
+} from '@/src/utils/locationValue';
 
-const LIBRARIES: "places"[] = ["places"];
+const LIBRARIES: 'places'[] = ['places'];
 const DEFAULT_CENTER = { lat: 39.2238, lng: 9.1217 };
-const API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_WEB_API_KEY || "";
+const API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_WEB_API_KEY || '';
 const BACKFILL_BATCH_SIZE = 25;
 const GEOCODE_BATCH_SIZE = 10;
 const DARK_MAP_STYLES: google.maps.MapTypeStyle[] = [
-  { elementType: "geometry", stylers: [{ color: "#1f1f1f" }] },
-  { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
-  { elementType: "labels.text.fill", stylers: [{ color: "#8f949d" }] },
-  { elementType: "labels.text.stroke", stylers: [{ color: "#1f1f1f" }] },
+  { elementType: 'geometry', stylers: [{ color: '#1f1f1f' }] },
+  { elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#8f949d' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#1f1f1f' }] },
   {
-    featureType: "administrative",
-    elementType: "geometry",
-    stylers: [{ color: "#3a3a3a" }],
+    featureType: 'administrative',
+    elementType: 'geometry',
+    stylers: [{ color: '#3a3a3a' }],
   },
   {
-    featureType: "poi",
-    elementType: "geometry",
-    stylers: [{ color: "#242424" }],
+    featureType: 'poi',
+    elementType: 'geometry',
+    stylers: [{ color: '#242424' }],
   },
   {
-    featureType: "poi.park",
-    elementType: "geometry",
-    stylers: [{ color: "#1e3027" }],
+    featureType: 'poi.park',
+    elementType: 'geometry',
+    stylers: [{ color: '#1e3027' }],
   },
   {
-    featureType: "road",
-    elementType: "geometry",
-    stylers: [{ color: "#2c2c2c" }],
+    featureType: 'road',
+    elementType: 'geometry',
+    stylers: [{ color: '#2c2c2c' }],
   },
   {
-    featureType: "road",
-    elementType: "geometry.stroke",
-    stylers: [{ color: "#252525" }],
+    featureType: 'road',
+    elementType: 'geometry.stroke',
+    stylers: [{ color: '#252525' }],
   },
   {
-    featureType: "road.highway",
-    elementType: "geometry",
-    stylers: [{ color: "#3b3b3b" }],
+    featureType: 'road.highway',
+    elementType: 'geometry',
+    stylers: [{ color: '#3b3b3b' }],
   },
   {
-    featureType: "road.highway",
-    elementType: "geometry.stroke",
-    stylers: [{ color: "#2f2f2f" }],
+    featureType: 'road.highway',
+    elementType: 'geometry.stroke',
+    stylers: [{ color: '#2f2f2f' }],
   },
   {
-    featureType: "transit",
-    elementType: "geometry",
-    stylers: [{ color: "#2a2a2a" }],
+    featureType: 'transit',
+    elementType: 'geometry',
+    stylers: [{ color: '#2a2a2a' }],
   },
   {
-    featureType: "water",
-    elementType: "geometry",
-    stylers: [{ color: "#0f2c38" }],
+    featureType: 'water',
+    elementType: 'geometry',
+    stylers: [{ color: '#0f2c38' }],
   },
   {
-    featureType: "water",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#5f8ea0" }],
+    featureType: 'water',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#5f8ea0' }],
   },
 ];
 
@@ -113,52 +107,34 @@ export default function MapView({ onBack }: MapViewProps) {
   const queryClient = useQueryClient();
   const { selectedSpreadsheetId } = useAuthContext();
   const { movements, categories } = useDataContext();
-  const colorScheme = useColorScheme() ?? "light";
-  const backgroundColor = useThemeColor({}, "background");
-  const cardBackground = useThemeColor({}, "cardBackground");
-  const textColor = useThemeColor({}, "text");
-  const subtextColor = useThemeColor(
-    { light: "#888", dark: "#999" },
-    "tabIconDefault",
-  );
-  const borderColor = useThemeColor(
-    { light: "#F0F0F0", dark: "#333333" },
-    "tabIconDefault",
-  );
-  const positiveAmountColor = useThemeColor(
-    { light: "#107c2bff", dark: "#34C759" },
-    "tint",
-  );
-  const primaryColor = "#2F4F3F";
+  const colorScheme = useColorScheme() ?? 'light';
+  const backgroundColor = useThemeColor({}, 'background');
+  const cardBackground = useThemeColor({}, 'cardBackground');
+  const textColor = useThemeColor({}, 'text');
+  const subtextColor = useThemeColor({ light: '#888', dark: '#999' }, 'tabIconDefault');
+  const borderColor = useThemeColor({ light: '#F0F0F0', dark: '#333333' }, 'tabIconDefault');
+  const positiveAmountColor = useThemeColor({ light: '#107c2bff', dark: '#34C759' }, 'tint');
+  const primaryColor = '#2F4F3F';
   const miniBarBg = useThemeColor(
-    { light: "rgba(255, 255, 255, 0.75)", dark: "rgba(40, 40, 40, 0.8)" },
-    "cardBackground",
+    { light: 'rgba(255, 255, 255, 0.75)', dark: 'rgba(40, 40, 40, 0.8)' },
+    'cardBackground',
   );
-  const miniBarTextColor = useThemeColor(
-    { light: "#2F4F3F", dark: "#FFFFFF" },
-    "text",
-  );
+  const miniBarTextColor = useThemeColor({ light: '#2F4F3F', dark: '#FFFFFF' }, 'text');
 
   const { isLoaded } = useLoadScript({
     googleMapsApiKey: API_KEY,
     libraries: LIBRARIES,
-    language: "it",
-    region: "IT",
+    language: 'it',
+    region: 'IT',
   });
 
-  const placesServiceRef = useRef<google.maps.places.PlacesService | null>(
-    null,
-  );
+  const placesServiceRef = useRef<google.maps.places.PlacesService | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const [locationGroups, setLocationGroups] = useState<LocationGroup[]>([]);
-  const [selectedGroup, setSelectedGroup] = useState<LocationGroup | null>(
-    null,
-  );
+  const [selectedGroup, setSelectedGroup] = useState<LocationGroup | null>(null);
   const [initialCenter] = useState(DEFAULT_CENTER);
   const [initialZoom] = useState(6);
-  const geocodeCache = useRef<Map<string, { lat: number; lng: number }>>(
-    new Map(),
-  );
+  const geocodeCache = useRef<Map<string, { lat: number; lng: number }>>(new Map());
   const pendingBackfills = useRef<Set<string>>(new Set());
 
   const backfillLocations = useCallback(
@@ -183,11 +159,7 @@ export default function MapView({ onBack }: MapViewProps) {
       try {
         const results = [];
 
-        for (
-          let index = 0;
-          index < uniqueUpdates.length;
-          index += BACKFILL_BATCH_SIZE
-        ) {
+        for (let index = 0; index < uniqueUpdates.length; index += BACKFILL_BATCH_SIZE) {
           const chunk = uniqueUpdates.slice(index, index + BACKFILL_BATCH_SIZE);
           const result = await TransactionsApiHelper.updateMovementsBatch(
             selectedSpreadsheetId,
@@ -274,7 +246,7 @@ export default function MapView({ onBack }: MapViewProps) {
   // Initialize PlacesService once map API is loaded
   useEffect(() => {
     if (isLoaded && !placesServiceRef.current) {
-      const div = document.createElement("div");
+      const div = document.createElement('div');
       placesServiceRef.current = new google.maps.places.PlacesService(div);
     }
   }, [isLoaded]);
@@ -299,10 +271,7 @@ export default function MapView({ onBack }: MapViewProps) {
     let isCancelled = false;
 
     const buildGroups = async () => {
-      if (
-        distinctLocations.resolved.length === 0 &&
-        distinctLocations.unresolved.length === 0
-      ) {
+      if (distinctLocations.resolved.length === 0 && distinctLocations.unresolved.length === 0) {
         setLocationGroups([]);
         return;
       }
@@ -334,57 +303,42 @@ export default function MapView({ onBack }: MapViewProps) {
           updates: Array<{ movementId: string; location: string }>;
         }> = [];
 
-        for (
-          let index = 0;
-          index < unresolvedEntries.length;
-          index += GEOCODE_BATCH_SIZE
-        ) {
-          const chunk = unresolvedEntries.slice(
-            index,
-            index + GEOCODE_BATCH_SIZE,
-          );
+        for (let index = 0; index < unresolvedEntries.length; index += GEOCODE_BATCH_SIZE) {
+          const chunk = unresolvedEntries.slice(index, index + GEOCODE_BATCH_SIZE);
           const chunkResults = await Promise.all(
             chunk.map((entry) => {
               return new Promise<{
                 group: LocationGroup | null;
                 updates: Array<{ movementId: string; location: string }>;
               }>((resolve) => {
-                service.textSearch(
-                  { query: entry.display, region: "it" },
-                  (results, status) => {
-                    if (
-                      status === google.maps.places.PlacesServiceStatus.OK &&
-                      results?.length
-                    ) {
-                      const lat = results[0].geometry?.location?.lat();
-                      const lng = results[0].geometry?.location?.lng();
+                service.textSearch({ query: entry.display, region: 'it' }, (results, status) => {
+                  if (status === google.maps.places.PlacesServiceStatus.OK && results?.length) {
+                    const lat = results[0].geometry?.location?.lat();
+                    const lng = results[0].geometry?.location?.lng();
 
-                      if (lat != null && lng != null) {
-                        geocodeCache.current.set(entry.display.toLowerCase(), {
-                          lat,
-                          lng,
-                        });
+                    if (lat != null && lng != null) {
+                      geocodeCache.current.set(entry.display.toLowerCase(), {
+                        lat,
+                        lng,
+                      });
 
-                        resolve({
-                          group: null,
-                          updates: entry.movementsWithoutCoordinates.map(
-                            (movement) => ({
-                              movementId: movement.id,
-                              location: serializeLocationValue({
-                                address: entry.display,
-                                latitude: lat,
-                                longitude: lng,
-                              }),
-                            }),
-                          ),
-                        });
-                        return;
-                      }
+                      resolve({
+                        group: null,
+                        updates: entry.movementsWithoutCoordinates.map((movement) => ({
+                          movementId: movement.id,
+                          location: serializeLocationValue({
+                            address: entry.display,
+                            latitude: lat,
+                            longitude: lng,
+                          }),
+                        })),
+                      });
+                      return;
                     }
+                  }
 
-                    resolve({ group: null, updates: [] });
-                  },
-                );
+                  resolve({ group: null, updates: [] });
+                });
               });
             }),
           );
@@ -417,34 +371,28 @@ export default function MapView({ onBack }: MapViewProps) {
   }, [backfillLocations, distinctLocations, fitBounds, isLoaded]);
 
   // Smooth pan + zoom to a marker
-  const smoothPanTo = useCallback(
-    (lat: number, lng: number, targetZoom: number) => {
-      const map = mapRef.current;
-      if (!map) return;
+  const smoothPanTo = useCallback((lat: number, lng: number, targetZoom: number) => {
+    const map = mapRef.current;
+    if (!map) return;
 
-      const currentZoom = map.getZoom() || 6;
+    const currentZoom = map.getZoom() || 6;
 
-      if (targetZoom - currentZoom > 4) {
-        const midZoom = Math.max(
-          currentZoom,
-          Math.floor((currentZoom + targetZoom) / 2) - 1,
-        );
-        map.setZoom(midZoom);
-        map.panTo({ lat, lng });
+    if (targetZoom - currentZoom > 4) {
+      const midZoom = Math.max(currentZoom, Math.floor((currentZoom + targetZoom) / 2) - 1);
+      map.setZoom(midZoom);
+      map.panTo({ lat, lng });
+      setTimeout(() => {
+        map.setZoom(targetZoom);
+      }, 400);
+    } else {
+      map.panTo({ lat, lng });
+      if (currentZoom !== targetZoom) {
         setTimeout(() => {
           map.setZoom(targetZoom);
-        }, 400);
-      } else {
-        map.panTo({ lat, lng });
-        if (currentZoom !== targetZoom) {
-          setTimeout(() => {
-            map.setZoom(targetZoom);
-          }, 300);
-        }
+        }, 300);
       }
-    },
-    [],
-  );
+    }
+  }, []);
 
   const handleMarkerClick = useCallback(
     (group: LocationGroup) => {
@@ -471,9 +419,7 @@ export default function MapView({ onBack }: MapViewProps) {
   // Sort movements by date descending
   const sortedMovements = useMemo(() => {
     if (!selectedGroup) return [];
-    return [...selectedGroup.movements].sort((a, b) =>
-      compareDates(b.date, a.date),
-    );
+    return [...selectedGroup.movements].sort((a, b) => compareDates(b.date, a.date));
   }, [selectedGroup]);
 
   const markerIcon = useMemo(() => {
@@ -494,7 +440,7 @@ export default function MapView({ onBack }: MapViewProps) {
       streetViewControl: false,
       mapTypeControl: false,
       fullscreenControl: false,
-      styles: colorScheme === "dark" ? DARK_MAP_STYLES : undefined,
+      styles: colorScheme === 'dark' ? DARK_MAP_STYLES : undefined,
     }),
     [colorScheme],
   );
@@ -502,9 +448,7 @@ export default function MapView({ onBack }: MapViewProps) {
   if (!isLoaded) {
     return (
       <View style={[styles.container, { backgroundColor }]}>
-        <Text style={{ color: textColor, textAlign: "center", marginTop: 40 }}>
-          Loading map...
-        </Text>
+        <Text style={{ color: textColor, textAlign: 'center', marginTop: 40 }}>Loading map...</Text>
       </View>
     );
   }
@@ -522,19 +466,17 @@ export default function MapView({ onBack }: MapViewProps) {
       <View style={styles.miniBarContainer}>
         <View style={[styles.miniBar, { backgroundColor: miniBarBg }]}>
           <Image
-            source={require("@/assets/images/icon.png")}
+            source={require('@/assets/images/icon.png')}
             style={styles.miniBarLogo}
             resizeMode="contain"
           />
-          <Text style={[styles.miniBarText, { color: miniBarTextColor }]}>
-            MyBalance
-          </Text>
+          <Text style={[styles.miniBarText, { color: miniBarTextColor }]}>MyBalance</Text>
         </View>
       </View>
 
       {/* Full-screen map */}
       <GoogleMap
-        mapContainerStyle={{ width: "100%", height: "100%" }}
+        mapContainerStyle={{ width: '100%', height: '100%' }}
         center={initialCenter}
         zoom={initialZoom}
         onLoad={handleMapLoad}
@@ -558,39 +500,25 @@ export default function MapView({ onBack }: MapViewProps) {
           {/* Location header */}
           <View style={styles.panelHeader}>
             <View style={{ flex: 1 }}>
-              <Text
-                style={[styles.panelTitle, { color: textColor }]}
-                numberOfLines={2}
-              >
+              <Text style={[styles.panelTitle, { color: textColor }]} numberOfLines={2}>
                 {selectedGroup.location}
               </Text>
               <Text style={[styles.panelSubtitle, { color: subtextColor }]}>
                 {selectedGroup.movements.length} moviment
-                {selectedGroup.movements.length === 1 ? "o" : "i"}
+                {selectedGroup.movements.length === 1 ? 'o' : 'i'}
               </Text>
             </View>
-            <Pressable
-              onPress={() => setSelectedGroup(null)}
-              style={styles.closeButton}
-            >
+            <Pressable onPress={() => setSelectedGroup(null)} style={styles.closeButton}>
               <MaterialIcons name="close" size={18} color={subtextColor} />
             </Pressable>
           </View>
 
-          <View
-            style={[styles.panelDivider, { backgroundColor: borderColor }]}
-          />
+          <View style={[styles.panelDivider, { backgroundColor: borderColor }]} />
 
           {/* Movements list — same style as RecentMovementsCard */}
-          <ScrollView
-            style={styles.panelList}
-            showsVerticalScrollIndicator={true}
-          >
+          <ScrollView style={styles.panelList} showsVerticalScrollIndicator={true}>
             {sortedMovements.map((movement, index) => {
-              const icon = MovementHelper.getMovementIcon(
-                movement.category,
-                categories,
-              );
+              const icon = MovementHelper.getMovementIcon(movement.category, categories);
               const color = MovementHelper.getMovementColor(
                 movement.type,
                 movement.category,
@@ -604,20 +532,15 @@ export default function MapView({ onBack }: MapViewProps) {
                   style={[
                     styles.movementItem,
                     { borderBottomColor: borderColor },
-                    index === sortedMovements.length - 1 &&
-                      styles.lastMovementItem,
+                    index === sortedMovements.length - 1 && styles.lastMovementItem,
                   ]}
                 >
-                  <View
-                    style={[styles.movementIcon, { backgroundColor: color }]}
-                  >
+                  <View style={[styles.movementIcon, { backgroundColor: color }]}>
                     <IconSymbol name={icon} size={18} color="#FFFFFF" />
                   </View>
                   <View style={styles.movementInfo}>
-                    <Text
-                      style={[styles.movementDate, { color: subtextColor }]}
-                    >
-                      {formatDateForDisplay(movement.date, "it-IT")}
+                    <Text style={[styles.movementDate, { color: subtextColor }]}>
+                      {formatDateForDisplay(movement.date, 'it-IT')}
                     </Text>
                     <Text
                       style={[styles.movementDescription, { color: textColor }]}
@@ -629,13 +552,11 @@ export default function MapView({ onBack }: MapViewProps) {
                   <Text
                     style={[
                       styles.movementAmount,
-                      amount > 0
-                        ? { color: positiveAmountColor }
-                        : { color: textColor },
+                      amount > 0 ? { color: positiveAmountColor } : { color: textColor },
                     ]}
                   >
-                    {amount > 0 ? "+" : ""}
-                    {amount.toFixed(2).replace(".", ",")}€
+                    {amount > 0 ? '+' : ''}
+                    {amount.toFixed(2).replace('.', ',')}€
                   </Text>
                 </View>
               );
@@ -650,7 +571,7 @@ export default function MapView({ onBack }: MapViewProps) {
           <MaterialIcons name="place" size={16} color="#2F4F3F" />
           <Text style={[styles.infoBadgeText, { color: textColor }]}>
             {locationGroups.length} posizion
-            {locationGroups.length === 1 ? "e" : "i"}
+            {locationGroups.length === 1 ? 'e' : 'i'}
           </Text>
         </View>
       )}
@@ -661,11 +582,11 @@ export default function MapView({ onBack }: MapViewProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    position: "relative",
+    position: 'relative',
   },
   // Back button
   backButton: {
-    position: "absolute",
+    position: 'absolute',
     top: 16,
     left: 16,
     zIndex: 10,
@@ -674,29 +595,29 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   // Mini command bar — static centered title
   miniBarContainer: {
-    position: "absolute",
+    position: 'absolute',
     top: 16,
     left: 0,
     right: 0,
     zIndex: 10,
-    alignItems: "center",
-    pointerEvents: "none",
+    alignItems: 'center',
+    pointerEvents: 'none',
   },
   miniBar: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 22,
-    boxShadow: "0 4px 24px rgba(0, 0, 0, 0.12)",
-    backdropFilter: "blur(20px)",
+    boxShadow: '0 4px 24px rgba(0, 0, 0, 0.12)',
+    backdropFilter: 'blur(20px)',
   },
   miniBarLogo: {
     width: 24,
@@ -705,34 +626,34 @@ const styles = StyleSheet.create({
   },
   miniBarText: {
     fontSize: 15,
-    fontWeight: "600",
+    fontWeight: '600',
     letterSpacing: -0.3,
   },
   // Panel — bottom left
   panel: {
-    position: "absolute",
+    position: 'absolute',
     bottom: 24,
     left: 24,
     width: 380,
-    maxHeight: "70%",
+    maxHeight: '70%',
     borderRadius: 30,
-    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.06)",
-    overflow: "hidden",
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.06)',
+    overflow: 'hidden',
     paddingVertical: 15,
     paddingHorizontal: 12,
   },
   panelHeader: {
-    flexDirection: "row",
-    alignItems: "flex-start",
+    flexDirection: 'row',
+    alignItems: 'flex-start',
     paddingHorizontal: 10,
     paddingBottom: 12,
     gap: 12,
   },
   panelTitle: {
     fontSize: 17,
-    fontWeight: "700",
+    fontWeight: '700',
     letterSpacing: -0.3,
-    textTransform: "capitalize",
+    textTransform: 'capitalize',
   },
   panelSubtitle: {
     fontSize: 13,
@@ -752,8 +673,8 @@ const styles = StyleSheet.create({
   },
   // Movement rows — matching RecentMovementsCard style
   movementItem: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: 10,
     borderBottomWidth: 1,
   },
@@ -764,8 +685,8 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: 12,
   },
   movementInfo: {
@@ -777,28 +698,28 @@ const styles = StyleSheet.create({
   },
   movementDescription: {
     fontSize: 15,
-    fontWeight: "500",
-    textTransform: "capitalize",
+    fontWeight: '500',
+    textTransform: 'capitalize',
   },
   movementAmount: {
     fontSize: 15,
-    fontWeight: "700",
+    fontWeight: '700',
   },
   // Info badge — bottom right
   infoBadge: {
-    position: "absolute",
+    position: 'absolute',
     bottom: 24,
     right: 24,
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 6,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
-    boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
+    boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
   },
   infoBadgeText: {
     fontSize: 13,
-    fontWeight: "600",
+    fontWeight: '600',
   },
 });

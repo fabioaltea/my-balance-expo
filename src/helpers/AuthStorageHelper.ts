@@ -1,4 +1,4 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface AuthTokens {
   accessToken: string;
@@ -19,10 +19,10 @@ export interface User {
 }
 
 export class AuthStorageHelper {
-  private static readonly ACCESS_TOKEN_KEY = "accessToken";
-  private static readonly REFRESH_TOKEN_KEY = "refreshToken";
-  private static readonly USER_KEY = "user";
-  private static readonly DEVICE_ID_KEY = "deviceId";
+  private static readonly ACCESS_TOKEN_KEY = 'accessToken';
+  private static readonly REFRESH_TOKEN_KEY = 'refreshToken';
+  private static readonly USER_KEY = 'user';
+  private static readonly DEVICE_ID_KEY = 'deviceId';
 
   // Token management
   static async storeTokens(tokens: AuthTokens): Promise<void> {
@@ -32,17 +32,14 @@ export class AuthStorageHelper {
         [this.REFRESH_TOKEN_KEY, tokens.refreshToken],
       ]);
     } catch (error) {
-      console.error("Error storing tokens:", error);
+      console.error('Error storing tokens:', error);
       throw error;
     }
   }
 
   static async getTokens(): Promise<AuthTokens | null> {
     try {
-      const tokens = await AsyncStorage.multiGet([
-        this.ACCESS_TOKEN_KEY,
-        this.REFRESH_TOKEN_KEY,
-      ]);
+      const tokens = await AsyncStorage.multiGet([this.ACCESS_TOKEN_KEY, this.REFRESH_TOKEN_KEY]);
 
       const accessToken = tokens[0][1];
       const refreshToken = tokens[1][1];
@@ -52,19 +49,16 @@ export class AuthStorageHelper {
       }
       return null;
     } catch (error) {
-      console.error("Error getting tokens:", error);
+      console.error('Error getting tokens:', error);
       return null;
     }
   }
 
   static async clearTokens(): Promise<void> {
     try {
-      await AsyncStorage.multiRemove([
-        this.ACCESS_TOKEN_KEY,
-        this.REFRESH_TOKEN_KEY,
-      ]);
+      await AsyncStorage.multiRemove([this.ACCESS_TOKEN_KEY, this.REFRESH_TOKEN_KEY]);
     } catch (error) {
-      console.error("Error clearing tokens:", error);
+      console.error('Error clearing tokens:', error);
       throw error;
     }
   }
@@ -82,7 +76,7 @@ export class AuthStorageHelper {
         atob(base64)
           .split('')
           .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-          .join('')
+          .join(''),
       );
 
       const payload = JSON.parse(jsonPayload);
@@ -94,7 +88,7 @@ export class AuthStorageHelper {
       const currentTime = Math.floor(Date.now() / 1000);
       return payload.exp < currentTime;
     } catch (error) {
-      console.error("Error checking token expiration:", error);
+      console.error('Error checking token expiration:', error);
       return true; // If we can't decode, consider it expired
     }
   }
@@ -104,7 +98,7 @@ export class AuthStorageHelper {
     try {
       await AsyncStorage.setItem(this.USER_KEY, JSON.stringify(user));
     } catch (error) {
-      console.error("Error storing user:", error);
+      console.error('Error storing user:', error);
       throw error;
     }
   }
@@ -114,7 +108,7 @@ export class AuthStorageHelper {
       const userJson = await AsyncStorage.getItem(this.USER_KEY);
       return userJson ? JSON.parse(userJson) : null;
     } catch (error) {
-      console.error("Error getting user:", error);
+      console.error('Error getting user:', error);
       return null;
     }
   }
@@ -123,7 +117,7 @@ export class AuthStorageHelper {
     try {
       await AsyncStorage.removeItem(this.USER_KEY);
     } catch (error) {
-      console.error("Error clearing user:", error);
+      console.error('Error clearing user:', error);
       throw error;
     }
   }
@@ -138,18 +132,14 @@ export class AuthStorageHelper {
       }
       return deviceId;
     } catch (error) {
-      console.error("Error managing device ID:", error);
+      console.error('Error managing device ID:', error);
       // Fallback to generating a new ID
       return this.generateDeviceId();
     }
   }
 
   private static generateDeviceId(): string {
-    return (
-      "expo-" +
-      Math.random().toString(36).substr(2, 9) +
-      Date.now().toString(36)
-    );
+    return 'expo-' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
   }
 
   // Clear all auth data
@@ -157,7 +147,7 @@ export class AuthStorageHelper {
     try {
       await Promise.all([this.clearTokens(), this.clearUser()]);
     } catch (error) {
-      console.error("Error clearing all auth data:", error);
+      console.error('Error clearing all auth data:', error);
       throw error;
     }
   }

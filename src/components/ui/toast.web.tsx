@@ -1,9 +1,9 @@
-import React, { useEffect, useRef, useState } from "react";
-import { View, StyleSheet, Animated, Text } from "react-native";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import React, { useEffect, useRef, useState } from 'react';
+import { View, StyleSheet, Animated, Text } from 'react-native';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
-type ToastStatus = "loading" | "success" | "error";
+type ToastStatus = 'loading' | 'success' | 'error';
 
 interface IToastProps {
   isVisible: boolean;
@@ -24,11 +24,8 @@ const Toast: React.FC<IToastProps> = ({
   const opacity = useRef(new Animated.Value(0)).current;
   const [isRendered, setIsRendered] = useState(false);
 
-  const backgroundColor = useThemeColor(
-    { light: "#fff", dark: "#2a2a2a" },
-    "cardBackground"
-  );
-  const textColor = useThemeColor({ light: "#000", dark: "#fff" }, "text");
+  const backgroundColor = useThemeColor({ light: '#fff', dark: '#2a2a2a' }, 'cardBackground');
+  const textColor = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
 
   const dismiss = () => {
     Animated.parallel([
@@ -65,7 +62,7 @@ const Toast: React.FC<IToastProps> = ({
         }),
       ]).start();
 
-      if (status !== "loading" && autoDismissMs > 0) {
+      if (status !== 'loading' && autoDismissMs > 0) {
         const timer = setTimeout(() => {
           dismiss();
         }, autoDismissMs);
@@ -80,23 +77,23 @@ const Toast: React.FC<IToastProps> = ({
 
   const getIcon = () => {
     switch (status) {
-      case "loading":
+      case 'loading':
         return <MaterialIcons name="sync" size={18} color="#2F4F3F" />;
-      case "success":
+      case 'success':
         return <MaterialIcons name="check-circle" size={18} color="#22c55e" />;
-      case "error":
+      case 'error':
         return <MaterialIcons name="error" size={18} color="#ef4444" />;
     }
   };
 
   const getDefaultMessage = () => {
     switch (status) {
-      case "loading":
-        return "Saving...";
-      case "success":
-        return "Saved successfully";
-      case "error":
-        return "Error saving";
+      case 'loading':
+        return 'Saving...';
+      case 'success':
+        return 'Saved successfully';
+      case 'error':
+        return 'Error saving';
     }
   };
 
@@ -112,25 +109,23 @@ const Toast: React.FC<IToastProps> = ({
       ]}
     >
       {getIcon()}
-      <Text style={[styles.message, { color: textColor }]}>
-        {message || getDefaultMessage()}
-      </Text>
+      <Text style={[styles.message, { color: textColor }]}>{message || getDefaultMessage()}</Text>
     </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    position: "absolute",
+    position: 'absolute',
     bottom: 20,
     right: 20,
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 10,
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 20,
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
@@ -139,7 +134,7 @@ const styles = StyleSheet.create({
   },
   message: {
     fontSize: 14,
-    fontWeight: "500",
+    fontWeight: '500',
   },
 });
 

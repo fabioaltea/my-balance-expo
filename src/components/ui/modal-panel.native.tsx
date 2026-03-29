@@ -1,17 +1,10 @@
-import {
-  View,
-  StyleSheet,
-  Modal,
-  Pressable,
-  Animated,
-  Dimensions,
-} from "react-native";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import { useState, useRef, useEffect, ReactNode } from "react";
-import { ThemedText } from "../core/themed-text.native";
-import * as Haptics from "expo-haptics";
-import GlassButton from "./glass-button";
-import React from "react";
+import { View, StyleSheet, Modal, Pressable, Animated, Dimensions } from 'react-native';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import { useState, useRef, useEffect, ReactNode } from 'react';
+import { ThemedText } from '../core/themed-text.native';
+import * as Haptics from 'expo-haptics';
+import GlassButton from './glass-button';
+import React from 'react';
 
 interface IModalPanelProps {
   isVisible: boolean;
@@ -26,7 +19,7 @@ interface IModalPanelProps {
   maxHeight?: number;
 }
 
-const { height: SCREEN_HEIGHT } = Dimensions.get("window");
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const DEFAULT_MAX_HEIGHT = SCREEN_HEIGHT * 0.5;
 
 const ModalPanel: React.FC<IModalPanelProps> = ({
@@ -36,8 +29,8 @@ const ModalPanel: React.FC<IModalPanelProps> = ({
   title,
   showConfirmButton = true,
   showCancelButton = true,
-  confirmText = "Conferma",
-  cancelText = "Annulla",
+  confirmText = 'Conferma',
+  cancelText = 'Annulla',
   children,
   maxHeight = DEFAULT_MAX_HEIGHT,
 }) => {
@@ -45,17 +38,11 @@ const ModalPanel: React.FC<IModalPanelProps> = ({
   const opacityAnimation = useRef(new Animated.Value(0)).current;
 
   // Theme colors
-  const backgroundColor = useThemeColor(
-    { light: "#fff", dark: "#1a1a1a" },
-    "background",
-  );
-  const borderColor = useThemeColor(
-    { light: "#e0e0e0", dark: "#333" },
-    "tabIconDefault",
-  );
+  const backgroundColor = useThemeColor({ light: '#fff', dark: '#1a1a1a' }, 'background');
+  const borderColor = useThemeColor({ light: '#e0e0e0', dark: '#333' }, 'tabIconDefault');
   const overlayColor = useThemeColor(
-    { light: "rgba(0,0,0,0.5)", dark: "rgba(0,0,0,0.7)" },
-    "tabIconDefault",
+    { light: 'rgba(0,0,0,0.5)', dark: 'rgba(0,0,0,0.7)' },
+    'tabIconDefault',
   );
 
   const hideModal = () => {
@@ -116,18 +103,10 @@ const ModalPanel: React.FC<IModalPanelProps> = ({
   if (!isVisible) return null;
 
   return (
-    <Modal
-      visible={isVisible}
-      transparent={true}
-      animationType="none"
-      statusBarTranslucent={true}
-    >
+    <Modal visible={isVisible} transparent={true} animationType="none" statusBarTranslucent={true}>
       <View style={styles.modalContainer}>
         {/* Overlay - tappable to close */}
-        <Pressable
-          style={[styles.modalOverlay, dynamicStyles.overlay]}
-          onPress={hideModal}
-        />
+        <Pressable style={[styles.modalOverlay, dynamicStyles.overlay]} onPress={hideModal} />
 
         {/* Content panel - separate from overlay */}
         <Animated.View
@@ -181,7 +160,7 @@ const ModalPanel: React.FC<IModalPanelProps> = ({
 const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
-    justifyContent: "flex-end",
+    justifyContent: 'flex-end',
   },
   modalOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -190,7 +169,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     borderTopWidth: 1,
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: -2,
@@ -201,9 +180,9 @@ const styles = StyleSheet.create({
     paddingTop: 20,
   },
   modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 20,
     marginBottom: 20,
   },
@@ -213,26 +192,26 @@ const styles = StyleSheet.create({
     minWidth: 80,
   },
   cancelText: {
-    color: "#ff4444",
+    color: '#ff4444',
     fontSize: 16,
-    fontWeight: "500",
+    fontWeight: '500',
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: '600',
     flex: 1,
-    textAlign: "center",
+    textAlign: 'center',
   },
   confirmButton: {
     paddingVertical: 8,
     paddingHorizontal: 12,
     minWidth: 80,
-    alignItems: "flex-end",
+    alignItems: 'flex-end',
   },
   confirmText: {
-    color: "#007AFF",
+    color: '#007AFF',
     fontSize: 16,
-    fontWeight: "500",
+    fontWeight: '500',
   },
   spacer: {
     width: 48,

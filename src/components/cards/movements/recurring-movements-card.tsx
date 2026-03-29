@@ -1,35 +1,34 @@
-import React, { useMemo, useState } from "react";
-import { ThemedText } from "../../core/themed-text.native";
-import {
-  TouchableOpacity,
-  StyleSheet,
-  View,
-  ScrollView,
-  Platform,
-} from "react-native";
-import Card from "@/src/components/core/card";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
+import React, { useMemo, useState } from 'react';
+import { ThemedText } from '../../core/themed-text.native';
+import { TouchableOpacity, StyleSheet, View, ScrollView, Platform } from 'react-native';
+import Card from '@/src/components/core/card';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
 import {
   useAuthContext,
   useDataContext,
   type PendingRecurrence,
   type IDateRange,
-} from "@/src/state";
-import { usePlatformContext } from "@/src/state/PlatformProvider";
-import { router } from "expo-router";
-import * as Haptics from "expo-haptics";
-import type { Movement } from "@/src/state";
-import IconSymbol from "@/src/components/ui/icon-symbol";
-import { MovementHelper } from "@/src/helpers/MovementHelper";
-import { isDateInRange, parseDateFromDDMMYYYY } from "@/src/utils/dateUtils";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useSpreadsheetMutation } from "@/src/hooks/useSpreadsheetMutation";
-import { TransactionsApiHelper } from "@/src/helpers/TransactionsApiHelper";
-import { TransactionsMutationHelpers, type DeleteMovementData, type DismissMovementData, type OptimisticSnapshot } from "@/src/helpers/TransactionsMutationHelpers";
-import ModalPanel from "@/src/components/ui/modal-panel";
-import Ionicons from "@expo/vector-icons/Ionicons";
+} from '@/src/state';
+import { usePlatformContext } from '@/src/state/PlatformProvider';
+import { router } from 'expo-router';
+import * as Haptics from 'expo-haptics';
+import type { Movement } from '@/src/state';
+import IconSymbol from '@/src/components/ui/icon-symbol';
+import { MovementHelper } from '@/src/helpers/MovementHelper';
+import { isDateInRange, parseDateFromDDMMYYYY } from '@/src/utils/dateUtils';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { useSpreadsheetMutation } from '@/src/hooks/useSpreadsheetMutation';
+import { TransactionsApiHelper } from '@/src/helpers/TransactionsApiHelper';
+import {
+  TransactionsMutationHelpers,
+  type DeleteMovementData,
+  type DismissMovementData,
+  type OptimisticSnapshot,
+} from '@/src/helpers/TransactionsMutationHelpers';
+import ModalPanel from '@/src/components/ui/modal-panel';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
-type BadgeStatus = "upcoming" | "soon" | "today" | "overdue" | null;
+type BadgeStatus = 'upcoming' | 'soon' | 'today' | 'overdue' | null;
 
 interface RecurringMovementWithPending {
   movement: Movement;
@@ -50,29 +49,30 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
   onRecurrencePress,
   onEditPress,
 }) => {
-  const { recurringMovements, categories, pendingRecurrences, movements } =
-    useDataContext();
+  const { recurringMovements, categories, pendingRecurrences, movements } = useDataContext();
   const { orientation } = usePlatformContext();
-  const isLandscape = orientation === "landscape";
+  const isLandscape = orientation === 'landscape';
   const { selectedSpreadsheetId } = useAuthContext();
 
   // React Query mutations
   const deleteMovement = useSpreadsheetMutation<DeleteMovementData, OptimisticSnapshot>({
-    mutationFn: (spreadsheetId, data) => TransactionsApiHelper.deleteMovement(spreadsheetId, data.movementId),
+    mutationFn: (spreadsheetId, data) =>
+      TransactionsApiHelper.deleteMovement(spreadsheetId, data.movementId),
     onMutate: (qc, data) => TransactionsMutationHelpers.optimisticDeleteMovement(qc, data),
     onError: (qc, ctx) => TransactionsMutationHelpers.rollback(qc, ctx),
     onSuccess: (qc) => TransactionsMutationHelpers.invalidateMovementCaches(qc),
   });
 
   const dismissMovement = useSpreadsheetMutation<DismissMovementData, OptimisticSnapshot>({
-    mutationFn: (spreadsheetId, data) => TransactionsApiHelper.createMovement(spreadsheetId, {
-      description: data.description,
-      category: data.category,
-      date: data.date,
-      status: "dismissed",
-      recurrenceId: data.recurrenceId,
-      transactions: [{ amount: "0", account: "", type: "out" }],
-    }),
+    mutationFn: (spreadsheetId, data) =>
+      TransactionsApiHelper.createMovement(spreadsheetId, {
+        description: data.description,
+        category: data.category,
+        date: data.date,
+        status: 'dismissed',
+        recurrenceId: data.recurrenceId,
+        transactions: [{ amount: '0', account: '', type: 'out' }],
+      }),
     onMutate: (qc, data) => TransactionsMutationHelpers.optimisticDismissMovement(qc, data),
     onError: (qc, ctx) => TransactionsMutationHelpers.rollback(qc, ctx),
     onSuccess: (qc) => TransactionsMutationHelpers.invalidateMovementCaches(qc),
@@ -107,42 +107,37 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
 
     // If marked as overdue from the period calculation
     if (pending.isOverdue) {
-      return "overdue";
+      return 'overdue';
     }
 
     // Calculate the expected date for this occurrence
     const expectedDate = getExpectedDateObj(pending);
-    if (!expectedDate) return "soon";
+    if (!expectedDate) return 'soon';
 
     // Compare expected date with today
     if (expectedDate < today) {
-      return "overdue"; // Expected date has passed
+      return 'overdue'; // Expected date has passed
     } else if (expectedDate.getTime() === today.getTime()) {
-      return "today"; // Expected date is today - yellow
+      return 'today'; // Expected date is today - yellow
     }
 
     // Check if it's in the current period
     const periodStart = parseDateFromDDMMYYYY(pending.periodStart);
     const periodEnd = parseDateFromDDMMYYYY(pending.periodEnd);
 
-    if (
-      periodStart &&
-      periodEnd &&
-      today >= periodStart &&
-      today <= periodEnd
-    ) {
-      return "soon"; // Current period but future date - green
+    if (periodStart && periodEnd && today >= periodStart && today <= periodEnd) {
+      return 'soon'; // Current period but future date - green
     }
 
-    return "upcoming"; // Future period
+    return 'upcoming'; // Future period
   };
 
   // Calculate occurrences in the selected period for a recurring movement
   const getOccurrencesInPeriod = (recurrenceId: string): number => {
     return movements.filter(
-      (m:Movement) =>
+      (m: Movement) =>
         m.recurrenceId === recurrenceId &&
-        m.status?.toLowerCase() !== "recurrent" &&
+        m.status?.toLowerCase() !== 'recurrent' &&
         isDateInRange(m.date, dateRange.startDate, dateRange.endDate),
     ).length;
   };
@@ -150,22 +145,19 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
   // Combine recurring movements with their pending status
   // Sort: items with pending occurrences first (overdue, then today, then upcoming), then others at bottom
   const sortedMovements = useMemo((): RecurringMovementWithPending[] => {
-    const movementsWithPending = recurringMovements.map((movement:Movement) => {
+    const movementsWithPending = recurringMovements.map((movement: Movement) => {
       // Find pending recurrence for this movement (check overdue first, then current)
       const overduePending = pendingRecurrences?.find(
-        (p:PendingRecurrence) => p.template.recurrenceId === movement.recurrenceId && p.isOverdue,
+        (p: PendingRecurrence) => p.template.recurrenceId === movement.recurrenceId && p.isOverdue,
       );
       const currentPending = pendingRecurrences?.find(
-        (p:PendingRecurrence) =>
-          p.template.recurrenceId === movement.recurrenceId && !p.isOverdue,
+        (p: PendingRecurrence) => p.template.recurrenceId === movement.recurrenceId && !p.isOverdue,
       );
 
       // Prioritize overdue, then current
       const pending = overduePending || currentPending || null;
       const badgeStatus = getBadgeStatus(pending);
-      const occurrencesInPeriod = getOccurrencesInPeriod(
-        movement.recurrenceId || "",
-      );
+      const occurrencesInPeriod = getOccurrencesInPeriod(movement.recurrenceId || '');
 
       return {
         movement,
@@ -177,25 +169,27 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
     });
 
     // Sort by: items with pending first, then by expected date (closest/passed first)
-    return movementsWithPending.sort((a: RecurringMovementWithPending, b: RecurringMovementWithPending) => {
-      // Items with pending first
-      if (a.badgeStatus && !b.badgeStatus) return -1;
-      if (!a.badgeStatus && b.badgeStatus) return 1;
+    return movementsWithPending.sort(
+      (a: RecurringMovementWithPending, b: RecurringMovementWithPending) => {
+        // Items with pending first
+        if (a.badgeStatus && !b.badgeStatus) return -1;
+        if (!a.badgeStatus && b.badgeStatus) return 1;
 
-      // Both have pending - sort by expected date
-      if (a.pending && b.pending) {
-        const dateA = getExpectedDateObj(a.pending);
-        const dateB = getExpectedDateObj(b.pending);
+        // Both have pending - sort by expected date
+        if (a.pending && b.pending) {
+          const dateA = getExpectedDateObj(a.pending);
+          const dateB = getExpectedDateObj(b.pending);
 
-        if (dateA && dateB) {
-          // Sort by date (earliest first - overdue and closest dates at top)
-          return dateA.getTime() - dateB.getTime();
+          if (dateA && dateB) {
+            // Sort by date (earliest first - overdue and closest dates at top)
+            return dateA.getTime() - dateB.getTime();
+          }
         }
-      }
 
-      // Neither has pending - keep original order
-      return 0;
-    });
+        // Neither has pending - keep original order
+        return 0;
+      },
+    );
   }, [recurringMovements, pendingRecurrences, movements, dateRange]);
 
   const handleQuickAdd = (movement: Movement) => {
@@ -205,25 +199,29 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
       onRecurrencePress(movement);
     } else {
       router.push({
-        pathname: "/add",
+        pathname: '/add',
         params: {
-          recurrenceId: movement.recurrenceId || "",
+          recurrenceId: movement.recurrenceId || '',
         },
       });
     }
   };
 
-  const handleMenuAction = async (movement: Movement, action: string, pending?: PendingRecurrence | null) => {
-    if (action === "edit") {
+  const handleMenuAction = async (
+    movement: Movement,
+    action: string,
+    pending?: PendingRecurrence | null,
+  ) => {
+    if (action === 'edit') {
       if (onEditPress) {
         onEditPress(movement);
       } else {
         router.push({
-          pathname: "/add",
+          pathname: '/add',
           params: { movementId: movement.id },
         });
       }
-    } else if (action === "dismiss") {
+    } else if (action === 'dismiss') {
       if (!selectedSpreadsheetId || !movement.recurrenceId) return;
       const activePending = pending || null;
       if (!activePending) return;
@@ -232,8 +230,8 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
       const expectedDate = getExpectedDateObj(activePending);
       let dateStr: string;
       if (expectedDate) {
-        const dd = String(expectedDate.getDate()).padStart(2, "0");
-        const mm = String(expectedDate.getMonth() + 1).padStart(2, "0");
+        const dd = String(expectedDate.getDate()).padStart(2, '0');
+        const mm = String(expectedDate.getMonth() + 1).padStart(2, '0');
         const yyyy = expectedDate.getFullYear();
         dateStr = `${dd}-${mm}-${yyyy}`;
       } else {
@@ -248,35 +246,29 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
           recurrenceId: movement.recurrenceId,
         });
       } catch (error) {
-        console.error("Error dismissing movement:", error);
-        alert("Failed to dismiss movement");
+        console.error('Error dismissing movement:', error);
+        alert('Failed to dismiss movement');
       }
-    } else if (action === "delete") {
+    } else if (action === 'delete') {
       if (!selectedSpreadsheetId) return;
       if (
         !confirm(
-          "Are you sure you want to delete this recurring movement? This action cannot be undone.",
+          'Are you sure you want to delete this recurring movement? This action cannot be undone.',
         )
       )
         return;
       try {
         await deleteMovement.mutateAsync({ movementId: movement.id });
       } catch (error) {
-        console.error("Error deleting movement:", error);
-        alert("Failed to delete movement");
+        console.error('Error deleting movement:', error);
+        alert('Failed to delete movement');
       }
     }
   };
 
   // Theme colors
-  const borderColor = useThemeColor(
-    { light: "#F0F0F0", dark: "#333333" },
-    "tabIconDefault",
-  );
-  const subtextColor = useThemeColor(
-    { light: "#888", dark: "#999" },
-    "tabIconDefault",
-  );
+  const borderColor = useThemeColor({ light: '#F0F0F0', dark: '#333333' }, 'tabIconDefault');
+  const subtextColor = useThemeColor({ light: '#888', dark: '#999' }, 'tabIconDefault');
 
   const dynamicStyles = StyleSheet.create({
     itemBorder: {
@@ -288,12 +280,12 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
   if (!recurringMovements || recurringMovements.length === 0) {
     return (
       <Card
-        label={isLandscape ? "Recurring Movements" : ""}
+        label={isLandscape ? 'Recurring Movements' : ''}
         style={isLandscape ? { flex: 1 } : undefined}
       >
         <View style={styles.emptyState}>
           <IconSymbol name="repeat" size={48} color="#999" />
-          <ThemedText style={[styles.emptyTitle, { color: "#999" }]}>
+          <ThemedText style={[styles.emptyTitle, { color: '#999' }]}>
             No recurring movements
           </ThemedText>
           <ThemedText style={[styles.emptyText, { color: subtextColor }]}>
@@ -306,37 +298,37 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
 
   // Format amount for display
   const formatAmount = (amount: number) => {
-    const sign = amount > 0 ? "+" : "";
-    return `${sign}${amount.toFixed(2).replace(".", ",")}€`;
+    const sign = amount > 0 ? '+' : '';
+    return `${sign}${amount.toFixed(2).replace('.', ',')}€`;
   };
 
   // Get badge color based on status (semi-transparent)
   const getBadgeColor = (status: BadgeStatus): string => {
     switch (status) {
-      case "overdue":
-        return "rgba(220, 53, 69, 0.15)"; // Red semi-transparent
-      case "today":
-        return "rgba(245, 158, 11, 0.15)"; // Orange/Yellow semi-transparent
-      case "soon":
-      case "upcoming":
-        return "rgba(47, 79, 63, 0.15)"; // Green semi-transparent
+      case 'overdue':
+        return 'rgba(220, 53, 69, 0.15)'; // Red semi-transparent
+      case 'today':
+        return 'rgba(245, 158, 11, 0.15)'; // Orange/Yellow semi-transparent
+      case 'soon':
+      case 'upcoming':
+        return 'rgba(47, 79, 63, 0.15)'; // Green semi-transparent
       default:
-        return "rgba(47, 79, 63, 0.15)";
+        return 'rgba(47, 79, 63, 0.15)';
     }
   };
 
   // Get badge text color based on status
   const getBadgeTextColor = (status: BadgeStatus): string => {
     switch (status) {
-      case "overdue":
-        return "#DC3545"; // Red
-      case "today":
-        return "#D97706"; // Orange/Yellow - only for actual today
-      case "soon":
-      case "upcoming":
-        return "#2F4F3F"; // Green
+      case 'overdue':
+        return '#DC3545'; // Red
+      case 'today':
+        return '#D97706'; // Orange/Yellow - only for actual today
+      case 'soon':
+      case 'upcoming':
+        return '#2F4F3F'; // Green
       default:
-        return "#2F4F3F";
+        return '#2F4F3F';
     }
   };
 
@@ -359,33 +351,28 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
     const expectedDate = new Date(year, month, actualDay);
 
     // Format as "Jan 15, 2025"
-    return expectedDate.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
+    return expectedDate.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
     });
   };
 
   // Get badge label based on status
-  const getBadgeLabel = (
-    status: BadgeStatus,
-    pending: PendingRecurrence | null,
-  ): string => {
-    if (!pending) return "";
+  const getBadgeLabel = (status: BadgeStatus, pending: PendingRecurrence | null): string => {
+    if (!pending) return '';
 
     switch (status) {
-      case "overdue":
-        return pending.missingCount > 1
-          ? `${pending.missingCount} Overdue`
-          : "Overdue";
-      case "today":
-        return "Today";
-      case "soon":
-        return "Soon";
-      case "upcoming":
+      case 'overdue':
+        return pending.missingCount > 1 ? `${pending.missingCount} Overdue` : 'Overdue';
+      case 'today':
+        return 'Today';
+      case 'soon':
+        return 'Soon';
+      case 'upcoming':
         return getExpectedDate(pending);
       default:
-        return "";
+        return '';
     }
   };
 
@@ -396,10 +383,7 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
     amount: number,
   ): string => {
     const amountStr = formatAmount(amount);
-    if (
-      (status === "overdue" || status === "today" || status === "soon") &&
-      pending
-    ) {
+    if ((status === 'overdue' || status === 'today' || status === 'soon') && pending) {
       return `${amountStr} • ${getExpectedDate(pending)}`;
     }
     return amountStr;
@@ -407,133 +391,108 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
 
   return (
     <Card
-      label={isLandscape ? "Recurring Movements" : ""}
+      label={isLandscape ? 'Recurring Movements' : ''}
       style={isLandscape ? { flex: 1 } : undefined}
     >
-      <ScrollView
-        showsVerticalScrollIndicator={isLandscape}
-        nestedScrollEnabled={true}
-      >
-        {sortedMovements.map(
-          ({ movement, pending, badgeStatus, occurrencesInPeriod }, index) => {
-            const icon = MovementHelper.getMovementIcon(
-              movement.category,
-              categories,
-            );
-            const color = MovementHelper.getMovementColor(
-              movement.type,
-              movement.category,
-              categories,
-            );
-            const amount = movement.totalAmount;
-            const hasPending = badgeStatus !== null;
+      <ScrollView showsVerticalScrollIndicator={isLandscape} nestedScrollEnabled={true}>
+        {sortedMovements.map(({ movement, pending, badgeStatus, occurrencesInPeriod }, index) => {
+          const icon = MovementHelper.getMovementIcon(movement.category, categories);
+          const color = MovementHelper.getMovementColor(
+            movement.type,
+            movement.category,
+            categories,
+          );
+          const amount = movement.totalAmount;
+          const hasPending = badgeStatus !== null;
 
-            return (
-              <TouchableOpacity
-                key={movement.recurrenceId || movement.id}
-                onPress={() => handleQuickAdd(movement)}
-                onLongPress={
-                  !isLandscape
-                    ? () => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                        setSelectedMovement(movement);
-                        setSelectedPending(pending);
-                      }
-                    : undefined
-                }
-                delayLongPress={300}
-                activeOpacity={0.6}
-                // @ts-ignore — web-only prop for CSS hover
-                dataSet={{ movementRow: "" }}
-                style={[
-                  styles.recurringItem,
-                  dynamicStyles.itemBorder,
-                  index === sortedMovements.length - 1 && styles.lastItem,
-                ]}
-              >
-                <View
-                  style={[styles.iconContainer, { backgroundColor: color }]}
-                >
-                  <IconSymbol name={icon} size={20} color="#FFFFFF" />
-                </View>
-                <View style={styles.itemInfo}>
+          return (
+            <TouchableOpacity
+              key={movement.recurrenceId || movement.id}
+              onPress={() => handleQuickAdd(movement)}
+              onLongPress={
+                !isLandscape
+                  ? () => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                      setSelectedMovement(movement);
+                      setSelectedPending(pending);
+                    }
+                  : undefined
+              }
+              delayLongPress={300}
+              activeOpacity={0.6}
+              // @ts-ignore — web-only prop for CSS hover
+              dataSet={{ movementRow: '' }}
+              style={[
+                styles.recurringItem,
+                dynamicStyles.itemBorder,
+                index === sortedMovements.length - 1 && styles.lastItem,
+              ]}
+            >
+              <View style={[styles.iconContainer, { backgroundColor: color }]}>
+                <IconSymbol name={icon} size={20} color="#FFFFFF" />
+              </View>
+              <View style={styles.itemInfo}>
+                <ThemedText style={styles.itemDescription} numberOfLines={1}>
+                  {movement.description}
+                </ThemedText>
+                <ThemedText style={[styles.itemSubtitle, { color: subtextColor }]}>
+                  {hasPending
+                    ? getSubtitleText(badgeStatus, pending, amount)
+                    : `${formatAmount(amount)} • ${occurrencesInPeriod} occurrence${occurrencesInPeriod !== 1 ? 's' : ''} this period`}
+                </ThemedText>
+              </View>
+              {hasPending && (
+                <View style={[styles.statusBadge, { backgroundColor: getBadgeColor(badgeStatus) }]}>
                   <ThemedText
-                    style={styles.itemDescription}
-                    numberOfLines={1}
+                    style={[styles.statusBadgeText, { color: getBadgeTextColor(badgeStatus) }]}
                   >
-                    {movement.description}
-                  </ThemedText>
-                  <ThemedText
-                    style={[styles.itemSubtitle, { color: subtextColor }]}
-                  >
-                    {hasPending
-                      ? getSubtitleText(badgeStatus, pending, amount)
-                      : `${formatAmount(amount)} • ${occurrencesInPeriod} occurrence${occurrencesInPeriod !== 1 ? "s" : ""} this period`}
+                    {getBadgeLabel(badgeStatus, pending)}
                   </ThemedText>
                 </View>
-                {hasPending && (
-                  <View
-                    style={[
-                      styles.statusBadge,
-                      { backgroundColor: getBadgeColor(badgeStatus) },
-                    ]}
-                  >
-                    <ThemedText
-                      style={[
-                        styles.statusBadgeText,
-                        { color: getBadgeTextColor(badgeStatus) },
-                      ]}
+              )}
+              {isLandscape && (
+                <View style={styles.menuButton}>
+                  <MaterialIcons name="more-vert" size={20} color={subtextColor} />
+                  {Platform.OS === 'web' && (
+                    // @ts-ignore — HTML select for web
+                    <select
+                      value=""
+                      onChange={(e: any) => {
+                        e.stopPropagation();
+                        handleMenuAction(movement, e.target.value, pending);
+                        e.target.value = '';
+                      }}
+                      onClick={(e: any) => e.stopPropagation()}
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        opacity: 0,
+                        cursor: 'pointer',
+                      }}
                     >
-                      {getBadgeLabel(badgeStatus, pending)}
-                    </ThemedText>
-                  </View>
-                )}
-                {isLandscape && (
-                  <View style={styles.menuButton}>
-                    <MaterialIcons
-                      name="more-vert"
-                      size={20}
-                      color={subtextColor}
-                    />
-                    {Platform.OS === "web" && (
-                      // @ts-ignore — HTML select for web
-                      <select
-                        value=""
-                        onChange={(e: any) => {
-                          e.stopPropagation();
-                          handleMenuAction(movement, e.target.value, pending);
-                          e.target.value = "";
-                        }}
-                        onClick={(e: any) => e.stopPropagation()}
-                        style={{
-                          position: "absolute",
-                          top: 0,
-                          left: 0,
-                          width: "100%",
-                          height: "100%",
-                          opacity: 0,
-                          cursor: "pointer",
-                        }}
-                      >
-                        <option value="" disabled />
-                        {hasPending && <option value="dismiss">Dismiss</option>}
-                        <option value="edit">Edit</option>
-                        <option value="delete">Delete</option>
-                      </select>
-                    )}
-                  </View>
-                )}
-              </TouchableOpacity>
-            );
-
-          },
-        )}
+                      <option value="" disabled />
+                      {hasPending && <option value="dismiss">Dismiss</option>}
+                      <option value="edit">Edit</option>
+                      <option value="delete">Delete</option>
+                    </select>
+                  )}
+                </View>
+              )}
+            </TouchableOpacity>
+          );
+        })}
       </ScrollView>
 
       {/* Bottom sheet for long press actions (portrait only) */}
       <ModalPanel
         isVisible={selectedMovement !== null}
-        onClose={() => { setSelectedMovement(null); setSelectedPending(null); }}
+        onClose={() => {
+          setSelectedMovement(null);
+          setSelectedPending(null);
+        }}
         showConfirmButton={false}
         showCancelButton={false}
         maxHeight={370}
@@ -552,7 +511,7 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
               <ThemedText
                 style={[
                   styles.sheetAmount,
-                  selectedMovement.totalAmount > 0 && { color: "#107c2b" },
+                  selectedMovement.totalAmount > 0 && { color: '#107c2b' },
                 ]}
               >
                 {formatAmount(selectedMovement.totalAmount)}
@@ -580,7 +539,7 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
                     const pend = selectedPending;
                     setSelectedMovement(null);
                     setSelectedPending(null);
-                    handleMenuAction(mov, "dismiss", pend);
+                    handleMenuAction(mov, 'dismiss', pend);
                   }}
                 >
                   <Ionicons name="eye-off-outline" size={22} color={subtextColor} />
@@ -593,7 +552,7 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
                   const mov = selectedMovement;
                   setSelectedMovement(null);
                   setSelectedPending(null);
-                  handleMenuAction(mov, "edit");
+                  handleMenuAction(mov, 'edit');
                 }}
               >
                 <Ionicons name="create-outline" size={22} color={subtextColor} />
@@ -605,11 +564,11 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
                   const mov = selectedMovement;
                   setSelectedMovement(null);
                   setSelectedPending(null);
-                  handleMenuAction(mov, "delete");
+                  handleMenuAction(mov, 'delete');
                 }}
               >
                 <Ionicons name="trash-outline" size={22} color="#DC3545" />
-                <ThemedText style={[styles.menuOptionText, { color: "#DC3545" }]}>
+                <ThemedText style={[styles.menuOptionText, { color: '#DC3545' }]}>
                   Delete Recurrence
                 </ThemedText>
               </TouchableOpacity>
@@ -623,8 +582,8 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
 
 const styles = StyleSheet.create({
   recurringItem: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: 10,
     borderBottomWidth: 1,
   },
@@ -635,8 +594,8 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 30,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: 16,
   },
   itemInfo: {
@@ -645,8 +604,8 @@ const styles = StyleSheet.create({
   },
   itemDescription: {
     fontSize: 16,
-    fontWeight: "500",
-    textTransform: "capitalize",
+    fontWeight: '500',
+    textTransform: 'capitalize',
   },
   itemSubtitle: {
     fontSize: 12,
@@ -660,21 +619,21 @@ const styles = StyleSheet.create({
   },
   statusBadgeText: {
     fontSize: 10,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   emptyState: {
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
   },
   emptyTitle: {
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: '600',
     marginTop: 8,
   },
   emptyText: {
     fontSize: 14,
-    textAlign: "center",
+    textAlign: 'center',
   },
   menuButton: {
     padding: 6,
@@ -682,9 +641,9 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   sheetHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
     marginBottom: 12,
   },
   sheetHeaderLeft: {
@@ -693,17 +652,17 @@ const styles = StyleSheet.create({
   },
   sheetTitle: {
     fontSize: 18,
-    fontWeight: "600",
-    textTransform: "capitalize",
+    fontWeight: '600',
+    textTransform: 'capitalize',
   },
   sheetSubtitle: {
     fontSize: 13,
     marginTop: 2,
-    textTransform: "capitalize",
+    textTransform: 'capitalize',
   },
   sheetAmount: {
     fontSize: 18,
-    fontWeight: "700",
+    fontWeight: '700',
   },
   sheetDivider: {
     height: 1,
@@ -713,15 +672,15 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   menuOption: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: 14,
     paddingHorizontal: 8,
     gap: 12,
   },
   menuOptionText: {
     fontSize: 17,
-    fontWeight: "500",
+    fontWeight: '500',
   },
 });
 

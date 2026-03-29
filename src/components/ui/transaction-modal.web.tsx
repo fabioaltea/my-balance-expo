@@ -1,15 +1,15 @@
-import { View, StyleSheet, Pressable, Switch, TextInput } from "react-native";
-import { ThemedText } from "../core/themed-text.native";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import { useEffect, useState } from "react";
-import ListPicker, { IListPickerItem } from "./list-picker.native";
-import GlassButton from "./glass-button";
-import React from "react";
+import { View, StyleSheet, Pressable, Switch, TextInput } from 'react-native';
+import { ThemedText } from '../core/themed-text.native';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import { useEffect, useState } from 'react';
+import ListPicker, { IListPickerItem } from './list-picker.native';
+import GlassButton from './glass-button';
+import React from 'react';
 
 export interface ITransactionData {
   accountName: string;
   amount: number;
-  type: "income" | "expense";
+  type: 'income' | 'expense';
 }
 
 interface ITransactionModalProps {
@@ -27,53 +27,45 @@ const TransactionModal: React.FC<ITransactionModalProps> = ({
   initialData,
   accounts,
   onSave,
-  title = "Transaction",
+  title = 'Transaction',
 }) => {
-  const [transactionType, setTransactionType] = useState<"income" | "expense">(
-    initialData?.type || "expense",
+  const [transactionType, setTransactionType] = useState<'income' | 'expense'>(
+    initialData?.type || 'expense',
   );
-  const [selectedAccount, setSelectedAccount] = useState(
-    initialData?.accountName || "",
-  );
+  const [selectedAccount, setSelectedAccount] = useState(initialData?.accountName || '');
   const [amount, setAmount] = useState(initialData?.amount || 0);
   const [amountText, setAmountText] = useState(
-    initialData?.amount ? initialData.amount.toFixed(2) : "",
+    initialData?.amount ? initialData.amount.toFixed(2) : '',
   );
 
   useEffect(() => {
     if (isVisible) {
       if (initialData) {
-        setTransactionType(initialData.type || "expense");
-        setSelectedAccount(initialData.accountName || "");
+        setTransactionType(initialData.type || 'expense');
+        setSelectedAccount(initialData.accountName || '');
         setAmount(initialData.amount || 0);
-        setAmountText(initialData.amount ? initialData.amount.toFixed(2) : "");
+        setAmountText(initialData.amount ? initialData.amount.toFixed(2) : '');
       } else {
-        setTransactionType("expense");
-        setSelectedAccount("");
+        setTransactionType('expense');
+        setSelectedAccount('');
         setAmount(0);
-        setAmountText("");
+        setAmountText('');
       }
     }
   }, [isVisible, initialData]);
 
-  const backgroundColor = useThemeColor(
-    { light: "#fff", dark: "#1a1a1a" },
-    "background",
-  );
-  const borderColor = useThemeColor(
-    { light: "#e0e0e0", dark: "#333" },
-    "tabIconDefault",
-  );
-  const textColor = useThemeColor({ light: "#000", dark: "#fff" }, "text");
+  const backgroundColor = useThemeColor({ light: '#fff', dark: '#1a1a1a' }, 'background');
+  const borderColor = useThemeColor({ light: '#e0e0e0', dark: '#333' }, 'tabIconDefault');
+  const textColor = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
 
   const handleAmountChange = (text: string) => {
     // Allow numbers, dot and comma
-    const sanitized = text.replace(",", ".");
+    const sanitized = text.replace(',', '.');
     setAmountText(text);
     const parsed = parseFloat(sanitized);
     if (!isNaN(parsed)) {
       setAmount(parsed);
-    } else if (text === "" || text === "0") {
+    } else if (text === '' || text === '0') {
       setAmount(0);
     }
   };
@@ -111,13 +103,11 @@ const TransactionModal: React.FC<ITransactionModalProps> = ({
       <View style={styles.inputRow}>
         <ThemedText style={styles.label}>Type</ThemedText>
         <Switch
-          trackColor={{ true: "#59a25bff" }}
+          trackColor={{ true: '#59a25bff' }}
           // @ts-ignore — ios_backgroundColor works on web too
-          ios_backgroundColor={"#9c1414ff"}
-          onValueChange={(value) =>
-            setTransactionType(value ? "income" : "expense")
-          }
-          value={transactionType === "income"}
+          ios_backgroundColor={'#9c1414ff'}
+          onValueChange={(value) => setTransactionType(value ? 'income' : 'expense')}
+          value={transactionType === 'income'}
         />
       </View>
 
@@ -132,9 +122,7 @@ const TransactionModal: React.FC<ITransactionModalProps> = ({
           style={[styles.amountInput, { color: textColor }]}
           placeholderTextColor="#999"
         />
-        <ThemedText style={[styles.currency, { color: textColor }]}>
-          €
-        </ThemedText>
+        <ThemedText style={[styles.currency, { color: textColor }]}>€</ThemedText>
       </View>
 
       {/* Account */}
@@ -160,46 +148,46 @@ const styles = StyleSheet.create({
     marginVertical: 8,
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 20,
   },
   title: {
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: '600',
     flex: 1,
-    textAlign: "center",
+    textAlign: 'center',
   },
   spacer: {
     width: 48,
     height: 48,
   },
   inputRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 20,
   },
   label: {
     fontSize: 16,
-    fontWeight: "500",
+    fontWeight: '500',
     flex: 0,
     minWidth: 80,
   },
   amountInput: {
     flex: 1,
-    textAlign: "right",
+    textAlign: 'right',
     fontSize: 24,
-    fontWeight: "bold",
+    fontWeight: 'bold',
     paddingVertical: 4,
     paddingHorizontal: 8,
     // @ts-ignore — web-specific
-    outlineStyle: "none",
+    outlineStyle: 'none',
   },
   currency: {
     fontSize: 24,
-    fontWeight: "bold",
+    fontWeight: 'bold',
     marginLeft: 4,
   },
 });

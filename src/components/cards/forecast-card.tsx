@@ -1,11 +1,10 @@
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import type { MonthlyForecast } from "@/src/types/models";
-import { useDataContext } from "@/src/state";
-import React from "react";
-import { View, Text, StyleSheet } from "react-native";
-import { Card } from "../core";
-import { ChartSkeleton } from "../charts";
-
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import type { MonthlyForecast } from '@/src/types/models';
+import { useDataContext } from '@/src/state';
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { Card } from '../core';
+import { ChartSkeleton } from '../charts';
 
 interface IMonthlyForecastCardProps {
   forecast: MonthlyForecast;
@@ -18,12 +17,12 @@ const ForecastCard: React.FC<IMonthlyForecastCardProps> = ({
 }) => {
   const { isLoading } = useDataContext();
 
-  const textColor = useThemeColor({}, "text");
-  const subtleTextColor = useThemeColor({}, "tabIconDefault");
-  const cardBackground = useThemeColor({}, "cardBackground");
+  const textColor = useThemeColor({}, 'text');
+  const subtleTextColor = useThemeColor({}, 'tabIconDefault');
+  const cardBackground = useThemeColor({}, 'cardBackground');
 
   const formatAmount = (amount: number) => {
-    return `€${Math.abs(amount).toLocaleString("it-IT", {
+    return `€${Math.abs(amount).toLocaleString('it-IT', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })}`;
@@ -48,35 +47,31 @@ const ForecastCard: React.FC<IMonthlyForecastCardProps> = ({
     avgMonthlyExpense,
   } = forecast;
 
-  const isYearlyForecast = periodType === "year";
+  const isYearlyForecast = periodType === 'year';
 
   // Calculate the expected end date
   const getExpectedEndDate = () => {
     const now = new Date();
     const months = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
 
     if (isYearlyForecast) {
-      return "31 December";
+      return '31 December';
     } else {
       // Last day of current month
-      const lastDay = new Date(
-        now.getFullYear(),
-        now.getMonth() + 1,
-        0,
-      ).getDate();
+      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
       return `${lastDay} ${months[now.getMonth()]}`;
     }
   };
@@ -135,8 +130,8 @@ const ForecastCard: React.FC<IMonthlyForecastCardProps> = ({
   const forecastPillOffset = isPositiveDelta ? pillOffset : -pillOffset;
 
   // Colors
-  const solidColor = "#4CAF50"; // Current balance (green)
-  const deltaColor = isPositiveDelta ? "#81C784" : "#E57373"; // Forecast delta
+  const solidColor = '#4CAF50'; // Current balance (green)
+  const deltaColor = isPositiveDelta ? '#81C784' : '#E57373'; // Forecast delta
 
   const showSkeleton = (isLoading && currentBalance === 0) || isTransitioning;
 
@@ -157,23 +152,16 @@ const ForecastCard: React.FC<IMonthlyForecastCardProps> = ({
       <View style={{ height: 200 }}>
         {/* Header with Forecast label and change value */}
         <View style={styles.headerRow}>
-          <View style={{ flexDirection: "row", alignItems: "baseline" }}>
-            <Text style={[styles.forecastLabel, { color: textColor }]}>
-              Forecast
-            </Text>
-            <Text style={{ color: "lightgray", fontSize: 10, marginLeft: 6 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+            <Text style={[styles.forecastLabel, { color: textColor }]}>Forecast</Text>
+            <Text style={{ color: 'lightgray', fontSize: 10, marginLeft: 6 }}>
               {expectedEndDate}
             </Text>
           </View>
 
           <View style={styles.headerRight}>
-            <Text
-              style={[
-                styles.changeAmount,
-                { color: isPositiveDelta ? "#4CAF50" : "#F44336" },
-              ]}
-            >
-              {isPositiveDelta ? "+" : ""}
+            <Text style={[styles.changeAmount, { color: isPositiveDelta ? '#4CAF50' : '#F44336' }]}>
+              {isPositiveDelta ? '+' : ''}
               {formatAmount(displayedDelta)}
             </Text>
             {/* <Text style={[styles.expectedDate, { color: subtleTextColor }]}>
@@ -236,8 +224,7 @@ const ForecastCard: React.FC<IMonthlyForecastCardProps> = ({
                     style={[
                       styles.stripe,
                       {
-                        backgroundColor:
-                          i % 2 === 0 ? deltaColor : "transparent",
+                        backgroundColor: i % 2 === 0 ? deltaColor : 'transparent',
                       },
                     ]}
                   />
@@ -246,13 +233,7 @@ const ForecastCard: React.FC<IMonthlyForecastCardProps> = ({
             )}
 
             {/* Current balance marker */}
-            <View
-              style={[
-                styles.marker,
-                styles.currentMarker,
-                { left: `${currentPos}%` },
-              ]}
-            />
+            <View style={[styles.marker, styles.currentMarker, { left: `${currentPos}%` }]} />
 
             {/* Forecast marker */}
             <View
@@ -261,7 +242,7 @@ const ForecastCard: React.FC<IMonthlyForecastCardProps> = ({
                 styles.forecastMarker,
                 {
                   left: `${forecastPos}%`,
-                  borderColor: isPositiveDelta ? "#4CAF50" : "#F44336",
+                  borderColor: isPositiveDelta ? '#4CAF50' : '#F44336',
                 },
               ]}
             />
@@ -279,21 +260,10 @@ const ForecastCard: React.FC<IMonthlyForecastCardProps> = ({
                 },
               ]}
             >
-              <View
-                style={[
-                  styles.valueLabelBubble,
-                  { backgroundColor: solidColor },
-                ]}
-              >
-                <Text style={styles.valueLabelText}>
-                  {formatCompact(currentBalance)}
-                </Text>
+              <View style={[styles.valueLabelBubble, { backgroundColor: solidColor }]}>
+                <Text style={styles.valueLabelText}>{formatCompact(currentBalance)}</Text>
               </View>
-              <Text
-                style={[styles.valueLabelCaption, { color: subtleTextColor }]}
-              >
-                Actual
-              </Text>
+              <Text style={[styles.valueLabelCaption, { color: subtleTextColor }]}>Actual</Text>
             </View>
 
             {/* Forecast label */}
@@ -310,19 +280,13 @@ const ForecastCard: React.FC<IMonthlyForecastCardProps> = ({
                 style={[
                   styles.valueLabelBubble,
                   {
-                    backgroundColor: isPositiveDelta ? "#4CAF50" : "#F44336",
+                    backgroundColor: isPositiveDelta ? '#4CAF50' : '#F44336',
                   },
                 ]}
               >
-                <Text style={styles.valueLabelText}>
-                  {formatCompact(displayForecastBalance)}
-                </Text>
+                <Text style={styles.valueLabelText}>{formatCompact(displayForecastBalance)}</Text>
               </View>
-              <Text
-                style={[styles.valueLabelCaption, { color: subtleTextColor }]}
-              >
-                Forecast
-              </Text>
+              <Text style={[styles.valueLabelCaption, { color: subtleTextColor }]}>Forecast</Text>
             </View>
           </View>
         </View>
@@ -331,12 +295,8 @@ const ForecastCard: React.FC<IMonthlyForecastCardProps> = ({
         <View style={styles.detailsSection}>
           <View style={styles.detailRow}>
             <View style={styles.detailLabel}>
-              <View
-                style={[styles.colorIndicator, { backgroundColor: "#4CAF50" }]}
-              />
-              <Text style={[styles.detailText, { color: textColor }]}>
-                Expected Incomes
-              </Text>
+              <View style={[styles.colorIndicator, { backgroundColor: '#4CAF50' }]} />
+              <Text style={[styles.detailText, { color: textColor }]}>Expected Incomes</Text>
             </View>
             <View style={styles.detailValue}>
               <Text style={[styles.detailAmount, { color: textColor }]}>
@@ -347,12 +307,8 @@ const ForecastCard: React.FC<IMonthlyForecastCardProps> = ({
 
           <View style={styles.detailRow}>
             <View style={styles.detailLabel}>
-              <View
-                style={[styles.colorIndicator, { backgroundColor: "#F44336" }]}
-              />
-              <Text style={[styles.detailText, { color: textColor }]}>
-                Expected Outcomes
-              </Text>
+              <View style={[styles.colorIndicator, { backgroundColor: '#F44336' }]} />
+              <Text style={[styles.detailText, { color: textColor }]}>Expected Outcomes</Text>
             </View>
             <View style={styles.detailValue}>
               <Text style={[styles.detailAmount, { color: textColor }]}>
@@ -368,22 +324,22 @@ const ForecastCard: React.FC<IMonthlyForecastCardProps> = ({
 
 const styles = StyleSheet.create({
   headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     height: 28,
     marginBottom: 10,
   },
   forecastLabel: {
     fontSize: 22,
-    fontWeight: "500",
+    fontWeight: '500',
   },
   headerRight: {
-    alignItems: "flex-end",
+    alignItems: 'flex-end',
   },
   changeAmount: {
     fontSize: 24,
-    fontWeight: "bold",
+    fontWeight: 'bold',
   },
   expectedDate: {
     fontSize: 12,
@@ -393,8 +349,8 @@ const styles = StyleSheet.create({
     marginBottom: 0,
   },
   scaleLabels: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginBottom: 4,
   },
   scaleLabel: {
@@ -403,36 +359,36 @@ const styles = StyleSheet.create({
   barContainer: {
     height: 20,
     borderRadius: 10,
-    overflow: "hidden",
-    position: "relative",
+    overflow: 'hidden',
+    position: 'relative',
   },
   barBackground: {
-    position: "absolute",
+    position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "#E8E8E8",
+    backgroundColor: '#E8E8E8',
     borderRadius: 12,
   },
   barSegmentSolid: {
-    position: "absolute",
+    position: 'absolute',
     top: 0,
     bottom: 0,
   },
   barSegmentDashed: {
-    position: "absolute",
+    position: 'absolute',
     top: 0,
     bottom: 0,
-    flexDirection: "row",
-    overflow: "hidden",
+    flexDirection: 'row',
+    overflow: 'hidden',
   },
   stripe: {
     flex: 1,
-    height: "100%",
+    height: '100%',
   },
   marker: {
-    position: "absolute",
+    position: 'absolute',
     top: -2,
     width: 3,
     height: 24,
@@ -440,20 +396,20 @@ const styles = StyleSheet.create({
     marginLeft: -1.5,
   },
   currentMarker: {
-    backgroundColor: "#2E7D32",
+    backgroundColor: '#2E7D32',
   },
   forecastMarker: {
-    backgroundColor: "#fff",
+    backgroundColor: '#fff',
     borderWidth: 2,
   },
   valueLabels: {
-    position: "relative",
+    position: 'relative',
     height: 44,
     marginTop: 6,
   },
   valueLabelContainer: {
-    position: "absolute",
-    alignItems: "center",
+    position: 'absolute',
+    alignItems: 'center',
     transform: [{ translateX: -25 }],
   },
   valueLabelBubble: {
@@ -461,12 +417,12 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     borderRadius: 8,
     minWidth: 45,
-    alignItems: "center",
+    alignItems: 'center',
   },
   valueLabelText: {
-    color: "#fff",
+    color: '#fff',
     fontSize: 11,
-    fontWeight: "bold",
+    fontWeight: 'bold',
   },
   valueLabelCaption: {
     fontSize: 9,
@@ -478,16 +434,16 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
   },
   detailRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 8,
     paddingVertical: 0,
     height: 30,
   },
   detailLabel: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
   },
   colorIndicator: {
@@ -497,14 +453,14 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: 16,
-    fontWeight: "500",
+    fontWeight: '500',
   },
   detailValue: {
-    alignItems: "flex-end",
+    alignItems: 'flex-end',
   },
   detailAmount: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: '600',
   },
 });
 

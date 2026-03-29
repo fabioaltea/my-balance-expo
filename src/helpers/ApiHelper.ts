@@ -1,5 +1,5 @@
-import { HttpHelper, HttpResponse } from "./HttpHelper";
-import { AuthStorageHelper, User } from "./AuthStorageHelper";
+import { HttpHelper, HttpResponse } from './HttpHelper';
+import { AuthStorageHelper, User } from './AuthStorageHelper';
 
 export class ApiHelper {
   // Authentication methods
@@ -7,7 +7,7 @@ export class ApiHelper {
     authorizationCode: string;
     codeVerifier?: string;
     deviceId: string;
-    deviceType: "ios" | "android" | "web";
+    deviceType: 'ios' | 'android' | 'web';
     redirectUri?: string;
   }): Promise<HttpResponse> {
     try {
@@ -19,20 +19,17 @@ export class ApiHelper {
         redirectUri: data.redirectUri,
       };
 
-      const response = await fetch(
-        `${HttpHelper.authUri}/auth/google/callback`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(requestBody),
+      const response = await fetch(`${HttpHelper.authUri}/auth/google/callback`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      );
+        body: JSON.stringify(requestBody),
+      });
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("❌ Auth error response:", errorText);
+        console.error('❌ Auth error response:', errorText);
         throw new Error(
           `Authentication failed: ${response.status} ${
             response.statusText
@@ -46,13 +43,11 @@ export class ApiHelper {
         const result = JSON.parse(responseText);
         return result;
       } catch (jsonError) {
-        console.error("❌ Auth JSON parse error. Response was:", responseText);
-        throw new Error(
-          `Invalid JSON response: ${responseText.substring(0, 100)}`,
-        );
+        console.error('❌ Auth JSON parse error. Response was:', responseText);
+        throw new Error(`Invalid JSON response: ${responseText.substring(0, 100)}`);
       }
     } catch (error) {
-      console.log("❌ Authentication error:", error);
+      console.log('❌ Authentication error:', error);
       throw error;
     }
   }
@@ -60,15 +55,15 @@ export class ApiHelper {
   static async logout(deviceId: string, refreshToken: string): Promise<void> {
     try {
       await fetch(`${HttpHelper.authUri}/auth/logout`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${refreshToken}`,
         },
         body: JSON.stringify({ deviceId }),
       });
     } catch (error) {
-      console.error("Logout API call failed:", error);
+      console.error('Logout API call failed:', error);
       // Don't throw - logout should always clear local state
     }
   }
@@ -78,40 +73,37 @@ export class ApiHelper {
       // Get valid access token (with automatic refresh if expired)
       const accessToken = await HttpHelper.getValidAccessToken();
       if (!accessToken) {
-        console.error("No valid access token available for profile request");
+        console.error('No valid access token available for profile request');
         return null;
       }
 
-      const response = await fetch(
-        `${HttpHelper.authUri}/auth/profile?product=MyBalance`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
+      const response = await fetch(`${HttpHelper.authUri}/auth/profile?product=MyBalance`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
         },
-      );
+      });
 
       if (!response.ok) {
-        console.error("Get profile failed:", response.status);
+        console.error('Get profile failed:', response.status);
 
         if (response.status === 401) {
-          await HttpHelper.handleUnauthorized("Authentication failed");
+          await HttpHelper.handleUnauthorized('Authentication failed');
         }
 
         return null;
       }
 
       const result = await response.json();
-      console.log("📡 Raw profile response:", JSON.stringify(result));
+      console.log('📡 Raw profile response:', JSON.stringify(result));
       if (result.success) {
         return result;
       }
 
       return null;
     } catch (error) {
-      console.error("Get profile error:", error);
+      console.error('Get profile error:', error);
       return null;
     }
   }
@@ -121,28 +113,28 @@ export class ApiHelper {
     try {
       const tokens = await AuthStorageHelper.getTokens();
       if (!tokens?.accessToken) {
-        console.error("No access token available for push token request");
+        console.error('No access token available for push token request');
         return false;
       }
 
       const response = await fetch(`${HttpHelper.authUri}/auth/push-token`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${tokens.accessToken}`,
         },
         body: JSON.stringify({ pushToken }),
       });
 
       if (response.status === 401) {
-        await HttpHelper.handleUnauthorized("Authentication failed");
+        await HttpHelper.handleUnauthorized('Authentication failed');
         return false;
       }
 
       const result = await response.json();
       return result.success;
     } catch (error) {
-      console.error("Save push token error:", error);
+      console.error('Save push token error:', error);
       return false;
     }
   }
@@ -151,27 +143,27 @@ export class ApiHelper {
     try {
       const tokens = await AuthStorageHelper.getTokens();
       if (!tokens?.accessToken) {
-        console.error("No access token available for push token removal");
+        console.error('No access token available for push token removal');
         return false;
       }
 
       const response = await fetch(`${HttpHelper.authUri}/auth/push-token`, {
-        method: "DELETE",
+        method: 'DELETE',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${tokens.accessToken}`,
         },
       });
 
       if (response.status === 401) {
-        await HttpHelper.handleUnauthorized("Authentication failed");
+        await HttpHelper.handleUnauthorized('Authentication failed');
         return false;
       }
 
       const result = await response.json();
       return result.success;
     } catch (error) {
-      console.error("Remove push token error:", error);
+      console.error('Remove push token error:', error);
       return false;
     }
   }

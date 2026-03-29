@@ -7,25 +7,25 @@ import {
   Alert,
   Image,
   Text,
-} from "react-native";
-import React, { useState, useRef } from "react";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import Card from "@/src/components/core/card";
-import List from "@/src/components/ui/list";
-import IconSymbol from "@/src/components/ui/icon-symbol";
-import CategoryPanel from "@/src/components/ui/category-panel";
-import AccountPanel from "@/src/components/ui/account-panel";
-import SideDrawer from "@/src/components/ui/side-drawer";
-import { DEFAULT_TEXT_COLOR, COLOR_PALETTE } from "@/src/constants/colors";
-import { HttpHelper, AuthenticationError } from "@/src/helpers/HttpHelper";
-import { AccountsApiHelper } from "@/src/helpers/AccountsApiHelper";
-import { CategoriesApiHelper } from "@/src/helpers/CategoriesApiHelper";
-import { TransactionsApiHelper } from "@/src/helpers/TransactionsApiHelper";
-import * as Crypto from "expo-crypto";
-import { useAuthContext } from "@/src/state/AuthProvider";
-import { ThemedText } from "@/src/components/core/themed-text";
-import ContextMenu from "@/src/components/ui/context-menu";
-import { Ionicons } from "@expo/vector-icons";
+} from 'react-native';
+import React, { useState, useRef } from 'react';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import Card from '@/src/components/core/card';
+import List from '@/src/components/ui/list';
+import IconSymbol from '@/src/components/ui/icon-symbol';
+import CategoryPanel from '@/src/components/ui/category-panel';
+import AccountPanel from '@/src/components/ui/account-panel';
+import SideDrawer from '@/src/components/ui/side-drawer';
+import { DEFAULT_TEXT_COLOR, COLOR_PALETTE } from '@/src/constants/colors';
+import { HttpHelper, AuthenticationError } from '@/src/helpers/HttpHelper';
+import { AccountsApiHelper } from '@/src/helpers/AccountsApiHelper';
+import { CategoriesApiHelper } from '@/src/helpers/CategoriesApiHelper';
+import { TransactionsApiHelper } from '@/src/helpers/TransactionsApiHelper';
+import * as Crypto from 'expo-crypto';
+import { useAuthContext } from '@/src/state/AuthProvider';
+import { ThemedText } from '@/src/components/core/themed-text';
+import ContextMenu from '@/src/components/ui/context-menu';
+import { Ionicons } from '@expo/vector-icons';
 
 // ===========================
 // Types
@@ -48,15 +48,15 @@ interface OnboardingCategory {
 // ===========================
 
 const DEFAULT_CATEGORIES: OnboardingCategory[] = [
-  { name: "Groceries", icon: "restaurant", color: "#4CAF50" },
-  { name: "Transport", icon: "directions-car", color: "#2196F3" },
-  { name: "Home", icon: "home", color: "#FF9800" },
-  { name: "Health", icon: "local-hospital", color: "#F44336" },
-  { name: "Entertainment", icon: "sports-esports", color: "#9C27B0" },
-  { name: "Salary", icon: "attach-money", color: "#2E7D32" },
-  { name: "Subscriptions", icon: "autorenew", color: "#E91E63" },
-  { name: "Investments", icon: "trending-up", color: "#795548" },
-  { name: "Other", icon: "more-horiz", color: "#9E9E9E" },
+  { name: 'Groceries', icon: 'restaurant', color: '#4CAF50' },
+  { name: 'Transport', icon: 'directions-car', color: '#2196F3' },
+  { name: 'Home', icon: 'home', color: '#FF9800' },
+  { name: 'Health', icon: 'local-hospital', color: '#F44336' },
+  { name: 'Entertainment', icon: 'sports-esports', color: '#9C27B0' },
+  { name: 'Salary', icon: 'attach-money', color: '#2E7D32' },
+  { name: 'Subscriptions', icon: 'autorenew', color: '#E91E63' },
+  { name: 'Investments', icon: 'trending-up', color: '#795548' },
+  { name: 'Other', icon: 'more-horiz', color: '#9E9E9E' },
 ];
 
 // ===========================
@@ -64,13 +64,13 @@ const DEFAULT_CATEGORIES: OnboardingCategory[] = [
 // ===========================
 
 const formatCurrency = (amount: number): string => {
-  return amount.toLocaleString("it-IT", { style: "currency", currency: "EUR" });
+  return amount.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' });
 };
 
 const getTodayFormatted = (): string => {
   const now = new Date();
-  const dd = String(now.getDate()).padStart(2, "0");
-  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const dd = String(now.getDate()).padStart(2, '0');
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
   const yyyy = now.getFullYear();
   return `${dd}-${mm}-${yyyy}`;
 };
@@ -82,11 +82,8 @@ const getTodayFormatted = (): string => {
 const OnboardingView: React.FC = () => {
   const { logout, user, completeSetup } = useAuthContext();
 
-  const menuBackground = useThemeColor({ light: "#fff", dark: "#171717" }, "menuBackground");
-  const borderColor = useThemeColor(
-    { light: "#e0e0e0", dark: "#333" },
-    "tabIconDefault",
-  );
+  const menuBackground = useThemeColor({ light: '#fff', dark: '#171717' }, 'menuBackground');
+  const borderColor = useThemeColor({ light: '#e0e0e0', dark: '#333' }, 'tabIconDefault');
 
   // Scroll ref for auto-scroll
   const scrollViewRef = useRef<ScrollView>(null);
@@ -103,26 +100,19 @@ const OnboardingView: React.FC = () => {
   // Panel 2 state
   const [accounts, setAccounts] = useState<OnboardingAccount[]>([]);
   const [accountDrawerOpen, setAccountDrawerOpen] = useState(false);
-  const [editingAccountIndex, setEditingAccountIndex] = useState<number | null>(
-    null,
-  );
-  const [drawerAccountName, setDrawerAccountName] = useState("");
+  const [editingAccountIndex, setEditingAccountIndex] = useState<number | null>(null);
+  const [drawerAccountName, setDrawerAccountName] = useState('');
   const [drawerAccountBalance, setDrawerAccountBalance] = useState(0);
-  const [drawerAccountColor, setDrawerAccountColor] = useState(
-    COLOR_PALETTE[0],
-  );
+  const [drawerAccountColor, setDrawerAccountColor] = useState(COLOR_PALETTE[0]);
 
   // Panel 3 state
-  const [categories, setCategories] =
-    useState<OnboardingCategory[]>(DEFAULT_CATEGORIES);
+  const [categories, setCategories] = useState<OnboardingCategory[]>(DEFAULT_CATEGORIES);
   const [isSaving, setIsSaving] = useState(false);
   const [categoryDrawerOpen, setCategoryDrawerOpen] = useState(false);
-  const [editingCategoryIndex, setEditingCategoryIndex] = useState<
-    number | null
-  >(null);
-  const [newCategoryIcon, setNewCategoryIcon] = useState<string>("label");
-  const [newCategoryColor, setNewCategoryColor] = useState<string>("#2196F3");
-  const [newCategoryName, setNewCategoryName] = useState<string>("");
+  const [editingCategoryIndex, setEditingCategoryIndex] = useState<number | null>(null);
+  const [newCategoryIcon, setNewCategoryIcon] = useState<string>('label');
+  const [newCategoryColor, setNewCategoryColor] = useState<string>('#2196F3');
+  const [newCategoryName, setNewCategoryName] = useState<string>('');
 
   // ===========================
   // Panel 1 handlers
@@ -131,11 +121,11 @@ const OnboardingView: React.FC = () => {
   const handleCreateSheet = async () => {
     setIsCreatingSheet(true);
     try {
-      const createResponse = await HttpHelper.post("/spreadsheet/create", {
-        title: "MyBalance",
+      const createResponse = await HttpHelper.post('/spreadsheet/create', {
+        title: 'MyBalance',
       });
       const newSpreadsheetId = createResponse.data?.spreadsheetId;
-      await HttpHelper.post("/spreadsheet/initialize", {
+      await HttpHelper.post('/spreadsheet/initialize', {
         spreadsheetId: newSpreadsheetId,
       });
       setSpreadsheetId(newSpreadsheetId);
@@ -151,14 +141,14 @@ const OnboardingView: React.FC = () => {
         );
       }, 300);
     } catch (error) {
-      console.error("Error creating spreadsheet:", error);
+      console.error('Error creating spreadsheet:', error);
       if (error instanceof AuthenticationError) {
-        Alert.alert("Session Expired", "Please log in again.", [
-          { text: "OK", onPress: () => logout() },
+        Alert.alert('Session Expired', 'Please log in again.', [
+          { text: 'OK', onPress: () => logout() },
         ]);
         return;
       }
-      Alert.alert("Error", "Could not create spreadsheet. Please try again.");
+      Alert.alert('Error', 'Could not create spreadsheet. Please try again.');
     } finally {
       setIsCreatingSheet(false);
     }
@@ -170,7 +160,7 @@ const OnboardingView: React.FC = () => {
 
   const openAddAccount = () => {
     setEditingAccountIndex(null);
-    setDrawerAccountName("");
+    setDrawerAccountName('');
     setDrawerAccountBalance(0);
     setDrawerAccountColor(COLOR_PALETTE[0]);
     setAccountDrawerOpen(true);
@@ -222,8 +212,7 @@ const OnboardingView: React.FC = () => {
     }
   };
 
-  const getTotalBalance = (): number =>
-    accounts.reduce((sum, a) => sum + a.balance, 0);
+  const getTotalBalance = (): number => accounts.reduce((sum, a) => sum + a.balance, 0);
 
   // ===========================
   // Panel 3 handlers
@@ -231,9 +220,9 @@ const OnboardingView: React.FC = () => {
 
   const handleAddCustomCategory = () => {
     setEditingCategoryIndex(null);
-    setNewCategoryName("");
-    setNewCategoryIcon("label");
-    setNewCategoryColor("#2196F3");
+    setNewCategoryName('');
+    setNewCategoryIcon('label');
+    setNewCategoryColor('#2196F3');
     setCategoryDrawerOpen(true);
   };
 
@@ -248,7 +237,7 @@ const OnboardingView: React.FC = () => {
 
   const handleConfirmCustomCategory = () => {
     if (!newCategoryName.trim()) {
-      Alert.alert("Error", "Category name is required");
+      Alert.alert('Error', 'Category name is required');
       return;
     }
     if (editingCategoryIndex !== null) {
@@ -282,7 +271,7 @@ const OnboardingView: React.FC = () => {
     if (!spreadsheetId) return;
     const selectedCategories = categories;
     if (selectedCategories.length === 0) {
-      Alert.alert("Warning", "Select at least one category.");
+      Alert.alert('Warning', 'Select at least one category.');
       return;
     }
     setIsSaving(true);
@@ -308,40 +297,40 @@ const OnboardingView: React.FC = () => {
         const movementId = Crypto.randomUUID();
         await TransactionsApiHelper.createMovement(spreadsheetId, {
           movementId,
-          description: "MyBalance Start",
-          category: "Initial Balance",
+          description: 'MyBalance Start',
+          category: 'Initial Balance',
           date: today,
-          type: "in",
+          type: 'in',
           transactions: accountsWithBalance.map((account) => ({
             transactionId: Crypto.randomUUID(),
-            description: "MyBalance Start",
-            category: "Initial Balance",
+            description: 'MyBalance Start',
+            category: 'Initial Balance',
             amount: account.balance,
-            type: "in",
+            type: 'in',
             account: account.name,
             date: today,
           })),
         });
       }
       // Mark setup as complete in the database, then go to dashboard
-      await HttpHelper.post("/spreadsheet/complete-setup", {});
+      await HttpHelper.post('/spreadsheet/complete-setup', {});
       completeSetup(spreadsheetId);
     } catch (error) {
-      console.error("Error completing setup:", error);
+      console.error('Error completing setup:', error);
       if (error instanceof AuthenticationError) {
-        Alert.alert("Session Expired", "Please log in again.", [
-          { text: "OK", onPress: () => logout() },
+        Alert.alert('Session Expired', 'Please log in again.', [
+          { text: 'OK', onPress: () => logout() },
         ]);
         return;
       }
-      Alert.alert("Error", "Could not complete setup. Please try again.");
+      Alert.alert('Error', 'Could not complete setup. Please try again.');
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleMenuOption = (option: string) => {
-    if (option.toLowerCase() === "logout") {
+    if (option.toLowerCase() === 'logout') {
       logout();
     }
   };
@@ -356,10 +345,7 @@ const OnboardingView: React.FC = () => {
     <View style={[styles.container, { backgroundColor: menuBackground }]}>
       {/* Top bar */}
       <View style={[styles.topBar, { borderBottomColor: borderColor }]}>
-        <Image
-          source={require("../../assets/images/icon.png")}
-          style={styles.logo}
-        />
+        <Image source={require('../../assets/images/icon.png')} style={styles.logo} />
         <View style={{ flex: 1 }}>
           <Text style={styles.appTitle}>MyBalance</Text>
           <ThemedText style={styles.appTagline}>Set up your account</ThemedText>
@@ -368,8 +354,8 @@ const OnboardingView: React.FC = () => {
           <ContextMenu
             options={[
               {
-                label: "Logout",
-                icon: "log-out-outline",
+                label: 'Logout',
+                icon: 'log-out-outline',
                 destructive: true,
               },
             ]}
@@ -377,9 +363,7 @@ const OnboardingView: React.FC = () => {
             onSelectOption={handleMenuOption}
           >
             <View style={styles.userInfo}>
-              {user.picture && (
-                <Image source={{ uri: user.picture }} style={styles.userAvatar} />
-              )}
+              {user.picture && <Image source={{ uri: user.picture }} style={styles.userAvatar} />}
               <ThemedText style={styles.userName}>{user.name}</ThemedText>
               <Ionicons name="chevron-down" size={14} color="#888" />
             </View>
@@ -420,32 +404,27 @@ const OnboardingView: React.FC = () => {
           </View>
 
           <ThemedText style={styles.bodyText}>
-            MyBalance helps you track your income and expenses. Your financial
-            data is stored securely in a Google Sheets spreadsheet in your own
-            Google account — no external servers, full privacy.
+            MyBalance helps you track your income and expenses. Your financial data is stored
+            securely in a Google Sheets spreadsheet in your own Google account — no external
+            servers, full privacy.
           </ThemedText>
 
           {sheetCreated && (
             <View style={styles.successBadge}>
               <IconSymbol name="check-circle" size={18} color="#27AE60" />
-              <Text style={styles.successText}>
-                Spreadsheet created successfully!
-              </Text>
+              <Text style={styles.successText}>Spreadsheet created successfully!</Text>
             </View>
           )}
 
           <Card style={{ marginTop: 20 }}>
             <View style={styles.privacySection}>
-              <ThemedText
-                type="defaultSemiBold"
-                style={styles.cardSectionLabel}
-              >
+              <ThemedText type="defaultSemiBold" style={styles.cardSectionLabel}>
                 Privacy Policy
               </ThemedText>
               <ThemedText style={styles.privacyText}>
-                By accepting, you authorise MyBalance to create and manage a
-                Google Sheets spreadsheet in your account. Your data stays in
-                your Google Drive and is never shared with third parties.
+                By accepting, you authorise MyBalance to create and manage a Google Sheets
+                spreadsheet in your account. Your data stays in your Google Drive and is never
+                shared with third parties.
               </ThemedText>
               <Pressable
                 style={styles.checkboxRow}
@@ -458,13 +437,10 @@ const OnboardingView: React.FC = () => {
                     privacyAccepted && styles.checkboxChecked,
                   ]}
                 >
-                  {privacyAccepted && (
-                    <IconSymbol name="check" size={14} color="#fff" />
-                  )}
+                  {privacyAccepted && <IconSymbol name="check" size={14} color="#fff" />}
                 </View>
                 <ThemedText style={styles.checkboxLabel}>
-                  I accept the privacy policy and authorise the spreadsheet
-                  creation
+                  I accept the privacy policy and authorise the spreadsheet creation
                 </ThemedText>
               </Pressable>
             </View>
@@ -474,9 +450,7 @@ const OnboardingView: React.FC = () => {
             style={[
               styles.primaryButton,
               { marginTop: 20 },
-              (!privacyAccepted || isCreatingSheet) &&
-                !sheetCreated &&
-                styles.buttonDisabled,
+              (!privacyAccepted || isCreatingSheet) && !sheetCreated && styles.buttonDisabled,
               sheetCreated && styles.buttonDone,
             ]}
             onPress={sheetCreated ? undefined : handleCreateSheet}
@@ -486,7 +460,7 @@ const OnboardingView: React.FC = () => {
               <ActivityIndicator color="#fff" size="small" />
             ) : (
               <Text style={styles.primaryButtonText}>
-                {sheetCreated ? "✓ Spreadsheet ready" : "Create Spreadsheet"}
+                {sheetCreated ? '✓ Spreadsheet ready' : 'Create Spreadsheet'}
               </Text>
             )}
           </Pressable>
@@ -495,11 +469,7 @@ const OnboardingView: React.FC = () => {
         {/* ── Section 2: Accounts ── */}
         <View
           ref={section2Ref}
-          style={[
-            styles.section,
-            { borderColor },
-            !sheetCreated && styles.sectionLocked,
-          ]}
+          style={[styles.section, { borderColor }, !sheetCreated && styles.sectionLocked]}
         >
           <View style={styles.sectionHeader}>
             <View
@@ -508,12 +478,7 @@ const OnboardingView: React.FC = () => {
                 sheetCreated ? styles.stepBadgeActive : styles.stepBadgePending,
               ]}
             >
-              <Text
-                style={[
-                  styles.stepBadgeText,
-                  !sheetCreated && styles.stepBadgeTextPending,
-                ]}
-              >
+              <Text style={[styles.stepBadgeText, !sheetCreated && styles.stepBadgeTextPending]}>
                 2
               </Text>
             </View>
@@ -534,18 +499,12 @@ const OnboardingView: React.FC = () => {
 
           {accounts.length === 0 ? (
             <View style={styles.emptyState}>
-              <IconSymbol
-                name="account-balance-wallet"
-                size={40}
-                color={borderColor}
-              />
+              <IconSymbol name="account-balance-wallet" size={40} color={borderColor} />
               <ThemedText style={[styles.emptyText, { color: borderColor }]}>
                 No accounts yet
               </ThemedText>
               {sheetCreated && (
-                <ThemedText
-                  style={[styles.emptySubtext, { color: borderColor }]}
-                >
+                <ThemedText style={[styles.emptySubtext, { color: borderColor }]}>
                   Tap + to add your first account
                 </ThemedText>
               )}
@@ -556,17 +515,13 @@ const OnboardingView: React.FC = () => {
                 <Pressable
                   key={index}
                   onPress={() => openEditAccount(index)}
-                  style={[styles.accountChip, { borderColor: account.color, backgroundColor: account.color + "12" }]}
+                  style={[
+                    styles.accountChip,
+                    { borderColor: account.color, backgroundColor: account.color + '12' },
+                  ]}
                 >
-                  <View
-                    style={[
-                      styles.colorDot,
-                      { backgroundColor: account.color },
-                    ]}
-                  />
-                  <ThemedText style={styles.accountName}>
-                    {account.name}
-                  </ThemedText>
+                  <View style={[styles.colorDot, { backgroundColor: account.color }]} />
+                  <ThemedText style={styles.accountName}>{account.name}</ThemedText>
                   <ThemedText style={styles.balanceText}>
                     {formatCurrency(account.balance)}
                   </ThemedText>
@@ -585,11 +540,7 @@ const OnboardingView: React.FC = () => {
         {/* ── Section 3: Categories ── */}
         <View
           ref={section3Ref}
-          style={[
-            styles.section,
-            { borderColor },
-            !sheetCreated && styles.sectionLocked,
-          ]}
+          style={[styles.section, { borderColor }, !sheetCreated && styles.sectionLocked]}
         >
           <View style={styles.sectionHeader}>
             <View
@@ -598,12 +549,7 @@ const OnboardingView: React.FC = () => {
                 sheetCreated ? styles.stepBadgeActive : styles.stepBadgePending,
               ]}
             >
-              <Text
-                style={[
-                  styles.stepBadgeText,
-                  !sheetCreated && styles.stepBadgeTextPending,
-                ]}
-              >
+              <Text style={[styles.stepBadgeText, !sheetCreated && styles.stepBadgeTextPending]}>
                 3
               </Text>
             </View>
@@ -614,14 +560,11 @@ const OnboardingView: React.FC = () => {
               <ThemedText style={styles.sectionSubtitle}>
                 {sheetCreated
                   ? `${categories.length} categories`
-                  : "Organise your expenses and income"}
+                  : 'Organise your expenses and income'}
               </ThemedText>
             </View>
             {sheetCreated && (
-              <Pressable
-                onPress={handleAddCustomCategory}
-                style={styles.addIconButton}
-              >
+              <Pressable onPress={handleAddCustomCategory} style={styles.addIconButton}>
                 <IconSymbol name="add" size={20} color="#fff" />
               </Pressable>
             )}
@@ -634,29 +577,18 @@ const OnboardingView: React.FC = () => {
                 onPress={() => sheetCreated && handleEditCategory(index)}
                 style={[
                   styles.categoryChip,
-                  { borderColor: category.color, backgroundColor: category.color + "12" },
+                  { borderColor: category.color, backgroundColor: category.color + '12' },
                 ]}
               >
-                <View
-                  style={[
-                    styles.categoryChipIcon,
-                    { backgroundColor: category.color },
-                  ]}
-                >
+                <View style={[styles.categoryChipIcon, { backgroundColor: category.color }]}>
                   <IconSymbol name={category.icon} size={15} color="#fff" />
                 </View>
-                <Text
-                  style={[
-                    styles.categoryChipLabel,
-                    { color: category.color },
-                  ]}
-                >
+                <Text style={[styles.categoryChipLabel, { color: category.color }]}>
                   {category.name}
                 </Text>
               </Pressable>
             ))}
           </View>
-
         </View>
 
         {/* ── Complete Setup ── */}
@@ -664,14 +596,10 @@ const OnboardingView: React.FC = () => {
           {!canComplete && (
             <View style={styles.hintList}>
               {!sheetCreated && (
-                <ThemedText style={styles.hintText}>
-                  • Create your spreadsheet first
-                </ThemedText>
+                <ThemedText style={styles.hintText}>• Create your spreadsheet first</ThemedText>
               )}
               {sheetCreated && accounts.length === 0 && (
-                <ThemedText style={styles.hintText}>
-                  • Add at least one account to track
-                </ThemedText>
+                <ThemedText style={styles.hintText}>• Add at least one account to track</ThemedText>
               )}
               {sheetCreated && categories.length === 0 && (
                 <ThemedText style={styles.hintText}>
@@ -709,12 +637,9 @@ const OnboardingView: React.FC = () => {
         <View style={{ flex: 1, padding: 28 }}>
           <View style={styles.drawerHeader}>
             <ThemedText type="title" style={{ fontSize: 22 }}>
-              {editingAccountIndex !== null ? "Edit Account" : "New Account"}
+              {editingAccountIndex !== null ? 'Edit Account' : 'New Account'}
             </ThemedText>
-            <Pressable
-              onPress={() => setAccountDrawerOpen(false)}
-              style={styles.closeButton}
-            >
+            <Pressable onPress={() => setAccountDrawerOpen(false)} style={styles.closeButton}>
               <IconSymbol name="close" size={20} color="#888" />
             </Pressable>
           </View>
@@ -753,7 +678,7 @@ const OnboardingView: React.FC = () => {
               disabled={!drawerAccountName.trim()}
             >
               <Text style={styles.primaryButtonText}>
-                {editingAccountIndex !== null ? "Save" : "Add Account"}
+                {editingAccountIndex !== null ? 'Save' : 'Add Account'}
               </Text>
             </Pressable>
           </View>
@@ -769,12 +694,9 @@ const OnboardingView: React.FC = () => {
         <View style={{ flex: 1, padding: 28 }}>
           <View style={styles.drawerHeader}>
             <ThemedText type="title" style={{ fontSize: 22 }}>
-              {editingCategoryIndex !== null ? "Edit Category" : "New Category"}
+              {editingCategoryIndex !== null ? 'Edit Category' : 'New Category'}
             </ThemedText>
-            <Pressable
-              onPress={() => setCategoryDrawerOpen(false)}
-              style={styles.closeButton}
-            >
+            <Pressable onPress={() => setCategoryDrawerOpen(false)} style={styles.closeButton}>
               <IconSymbol name="close" size={20} color="#888" />
             </Pressable>
           </View>
@@ -812,7 +734,7 @@ const OnboardingView: React.FC = () => {
               disabled={!newCategoryName.trim()}
             >
               <Text style={styles.primaryButtonText}>
-                {editingCategoryIndex !== null ? "Save" : "Add Category"}
+                {editingCategoryIndex !== null ? 'Save' : 'Add Category'}
               </Text>
             </Pressable>
           </View>
@@ -828,18 +750,18 @@ export default OnboardingView;
 // Styles
 // ===========================
 
-const ACCENT = "#2F4F3F";
+const ACCENT = '#2F4F3F';
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    flexDirection: "column",
+    flexDirection: 'column',
   },
 
   // Top bar
   topBar: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 40,
     paddingVertical: 14,
     gap: 14,
@@ -853,7 +775,7 @@ const styles = StyleSheet.create({
   appTitle: {
     color: ACCENT,
     fontSize: 17,
-    fontWeight: "700",
+    fontWeight: '700',
   },
   appTagline: {
     fontSize: 12,
@@ -861,10 +783,10 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   userInfo: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 10,
-    cursor: "pointer",
+    cursor: 'pointer',
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 20,
@@ -876,7 +798,7 @@ const styles = StyleSheet.create({
   },
   userName: {
     fontSize: 14,
-    fontWeight: "500",
+    fontWeight: '500',
   },
 
   // Scroll
@@ -898,12 +820,12 @@ const styles = StyleSheet.create({
   },
   sectionLocked: {
     opacity: 0.4,
-    pointerEvents: "none",
+    pointerEvents: 'none',
   } as any,
 
   sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 14,
     marginBottom: 20,
   },
@@ -922,28 +844,28 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 30,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     flexShrink: 0,
   },
   stepBadgeActive: {
     backgroundColor: ACCENT,
   },
   stepBadgeDone: {
-    backgroundColor: "#27AE60",
+    backgroundColor: '#27AE60',
   },
   stepBadgePending: {
-    backgroundColor: "transparent",
+    backgroundColor: 'transparent',
     borderWidth: 1.5,
-    borderColor: "rgba(0,0,0,0.15)",
+    borderColor: 'rgba(0,0,0,0.15)',
   },
   stepBadgeText: {
-    color: "#fff",
+    color: '#fff',
     fontSize: 15,
-    fontWeight: "700",
+    fontWeight: '700',
   },
   stepBadgeTextPending: {
-    color: "rgba(0,0,0,0.3)",
+    color: 'rgba(0,0,0,0.3)',
   },
 
   // Add icon button
@@ -952,8 +874,8 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   // Body text
@@ -966,15 +888,15 @@ const styles = StyleSheet.create({
 
   // Success badge
   successBadge: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
     marginTop: 14,
   },
   successText: {
     fontSize: 14,
-    fontWeight: "600",
-    color: "#27AE60",
+    fontWeight: '600',
+    color: '#27AE60',
   },
 
   // Privacy card
@@ -992,8 +914,8 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   checkboxRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 10,
   },
   checkbox: {
@@ -1001,8 +923,8 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 6,
     borderWidth: 1.5,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     flexShrink: 0,
   },
   checkboxChecked: {
@@ -1020,42 +942,42 @@ const styles = StyleSheet.create({
     backgroundColor: ACCENT,
     borderRadius: 20,
     height: 46,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     paddingHorizontal: 24,
-    alignSelf: "flex-start",
+    alignSelf: 'flex-start',
     minWidth: 200,
   },
   primaryButtonText: {
-    color: "#fff",
+    color: '#fff',
     fontSize: 15,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   buttonDisabled: {
     opacity: 0.4,
   },
   buttonDone: {
-    backgroundColor: "#27AE60",
+    backgroundColor: '#27AE60',
   },
   secondaryButton: {
     borderWidth: 1.5,
-    borderColor: "rgba(0,0,0,0.15)",
+    borderColor: 'rgba(0,0,0,0.15)',
     borderRadius: 20,
     height: 46,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     paddingHorizontal: 20,
   },
   secondaryButtonText: {
     fontSize: 15,
-    fontWeight: "500",
+    fontWeight: '500',
     opacity: 0.7,
   },
 
   // Account chips
   accountChip: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 10,
     paddingHorizontal: 14,
     paddingVertical: 10,
@@ -1065,7 +987,7 @@ const styles = StyleSheet.create({
   },
   chipMenuButton: {
     padding: 4,
-    marginLeft: "auto",
+    marginLeft: 'auto',
     opacity: 0.6,
   } as any,
   colorDot: {
@@ -1079,16 +1001,16 @@ const styles = StyleSheet.create({
   },
   balanceText: {
     fontSize: 15,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   removeButton: {
     padding: 4,
     opacity: 0.45,
   },
   totalRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginTop: 14,
     paddingTop: 14,
     paddingHorizontal: 14,
@@ -1100,19 +1022,19 @@ const styles = StyleSheet.create({
   },
   totalAmount: {
     fontSize: 17,
-    fontWeight: "700",
+    fontWeight: '700',
     color: ACCENT,
   },
 
   // Category chips
   categoryGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 10,
   },
   categoryChip: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
     paddingHorizontal: 14,
     paddingVertical: 8,
@@ -1123,23 +1045,23 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   categoryChipLabel: {
     fontSize: 13,
-    fontWeight: "500",
+    fontWeight: '500',
   },
 
   // Empty state
   emptyState: {
-    alignItems: "flex-start",
+    alignItems: 'flex-start',
     paddingVertical: 24,
     gap: 6,
   },
   emptyText: {
     fontSize: 15,
-    fontWeight: "600",
+    fontWeight: '600',
     marginTop: 8,
   },
   emptySubtext: {
@@ -1152,8 +1074,8 @@ const styles = StyleSheet.create({
     fontSize: 12,
     opacity: 0.55,
     marginBottom: 6,
-    fontWeight: "500",
-    textTransform: "uppercase",
+    fontWeight: '500',
+    textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   colorSwatch: {
@@ -1167,51 +1089,51 @@ const styles = StyleSheet.create({
     transform: [{ scale: 1.2 }],
   },
   drawerHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 24,
   },
   closeButton: {
     padding: 4,
   },
   drawerActions: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 12,
   },
   dangerButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
     borderWidth: 1.5,
-    borderColor: "#E53935",
+    borderColor: '#E53935',
     borderRadius: 20,
     height: 46,
     paddingHorizontal: 20,
   },
   dangerButtonText: {
-    color: "#E53935",
+    color: '#E53935',
     fontSize: 15,
-    fontWeight: "500",
+    fontWeight: '500',
   },
 
   // Complete setup
   completeSection: {
-    alignItems: "center",
+    alignItems: 'center',
     marginBottom: 28,
     gap: 14,
   },
   hintList: {
     gap: 4,
-    alignSelf: "flex-start",
+    alignSelf: 'flex-start',
   },
   hintText: {
     fontSize: 13,
     opacity: 0.5,
   },
   completeButton: {
-    alignSelf: "stretch",
+    alignSelf: 'stretch',
     minWidth: undefined,
   },
 });

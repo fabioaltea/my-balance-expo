@@ -4,7 +4,7 @@ export interface Transaction {
   date: string; // dd-MM-yyyy format
   description: string;
   amount: number; // Always positive, use type for direction
-  type: "income" | "expense";
+  type: 'income' | 'expense';
   account: string;
   category: string;
   location?: string;
@@ -24,7 +24,7 @@ export interface Movement {
   status?: string; // "Confirmed", "recurrent", "DELETED"
   transactions: Transaction[]; // Can contain multiple transactions across different accounts
   totalAmount: number; // Signed: sum of all transactions (positive for net income, negative for net expense)
-  type: "income" | "expense"; // Derived from totalAmount sign
+  type: 'income' | 'expense'; // Derived from totalAmount sign
 }
 
 export interface Account {
@@ -38,7 +38,7 @@ export interface Account {
 export interface Category {
   id: string;
   name: string;
-  type: "income" | "expense";
+  type: 'income' | 'expense';
   color?: string;
   icon?: string;
 }
@@ -72,7 +72,7 @@ export interface PendingRecurrence {
  */
 export interface MonthlyForecast {
   /** Type of forecast period */
-  periodType: "month" | "year";
+  periodType: 'month' | 'year';
   /** Current total balance (sum of all accounts) */
   currentBalance: number;
   /** Income already recorded in this period */

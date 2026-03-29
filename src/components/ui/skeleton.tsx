@@ -1,6 +1,6 @@
-import React, { useEffect, useRef } from "react";
-import { Animated, StyleSheet, ViewStyle } from "react-native";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
+import React, { useEffect, useRef } from 'react';
+import { Animated, StyleSheet, ViewStyle } from 'react-native';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
 
 interface SkeletonProps {
   width?: number | string;
@@ -10,17 +10,14 @@ interface SkeletonProps {
 }
 
 const Skeleton: React.FC<SkeletonProps> = ({
-  width = "100%",
+  width = '100%',
   height = 20,
   borderRadius = 8,
   style,
 }) => {
   const opacity = useRef(new Animated.Value(0.3)).current;
 
-  const baseColor = useThemeColor(
-    { light: "#E1E9EE", dark: "#3A3A3C" },
-    "tabIconDefault",
-  );
+  const baseColor = useThemeColor({ light: '#E1E9EE', dark: '#3A3A3C' }, 'tabIconDefault');
 
   useEffect(() => {
     const animation = Animated.loop(

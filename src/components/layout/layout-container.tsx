@@ -1,5 +1,5 @@
-import React from "react";
-import { View, StyleSheet, ScrollView } from "react-native";
+import React from 'react';
+import { View, StyleSheet, ScrollView } from 'react-native';
 
 interface LayoutContainerProps {
   children: React.ReactNode;
@@ -20,7 +20,7 @@ export function LayoutContainer({
 }: LayoutContainerProps) {
   const containerStyle = {
     flex: 1,
-    flexDirection: "column" as const,
+    flexDirection: 'column' as const,
     padding,
     gap,
   };

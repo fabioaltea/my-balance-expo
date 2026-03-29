@@ -1,61 +1,59 @@
-import React, { useMemo, useState, useCallback } from "react";
+import React, { useMemo, useState, useCallback } from 'react';
+import { Alert, View, StyleSheet, Pressable, Text as RNText } from 'react-native';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import { useDataContext, useAuthContext } from '@/src/state';
+import type { Account } from '@/src/state';
+import * as DocumentPicker from 'expo-document-picker';
+import * as Crypto from 'expo-crypto';
+import { OCRHelper } from '@/src/helpers/OCRHelper.web';
+import { useSpreadsheetMutation } from '@/src/hooks/useSpreadsheetMutation';
+import { TransactionsApiHelper } from '@/src/helpers/TransactionsApiHelper';
 import {
-  Alert,
-  View,
-  StyleSheet,
-  Pressable,
-  Text as RNText,
-} from "react-native";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import { useDataContext, useAuthContext } from "@/src/state";
-import type { Account } from "@/src/state";
-import * as DocumentPicker from "expo-document-picker";
-import * as Crypto from "expo-crypto";
-import { OCRHelper } from "@/src/helpers/OCRHelper.web";
-import { useSpreadsheetMutation } from "@/src/hooks/useSpreadsheetMutation";
-import { TransactionsApiHelper } from "@/src/helpers/TransactionsApiHelper";
-import { TransactionsMutationHelpers, type CreateMovementData, type OptimisticSnapshot } from "@/src/helpers/TransactionsMutationHelpers";
+  TransactionsMutationHelpers,
+  type CreateMovementData,
+  type OptimisticSnapshot,
+} from '@/src/helpers/TransactionsMutationHelpers';
 
 // Layout components
-import { LayoutContainer } from "@/src/components/layout/layout-container";
-import { LayoutRow } from "@/src/components/layout/layout-row";
-import { LayoutColumn } from "@/src/components/layout/layout-column";
+import { LayoutContainer } from '@/src/components/layout/layout-container';
+import { LayoutRow } from '@/src/components/layout/layout-row';
+import { LayoutColumn } from '@/src/components/layout/layout-column';
 
 // UI components
-import CompactAccountPicker from "@/src/components/ui/compact-account-picker";
-import SideDrawer from "@/src/components/ui/side-drawer";
+import CompactAccountPicker from '@/src/components/ui/compact-account-picker';
+import SideDrawer from '@/src/components/ui/side-drawer';
 
 // Card components
-import BalanceCard from "@/src/components/cards/balance-card";
-import MovementsCard from "@/src/components/cards/movements/recent-movements-card";
-import RecurringMovementsCard from "@/src/components/cards/movements/recurring-movements-card";
-import UnconfirmedMovementsCard from "@/src/components/cards/movements/unconfirmed-movements-card";
+import BalanceCard from '@/src/components/cards/balance-card';
+import MovementsCard from '@/src/components/cards/movements/recent-movements-card';
+import RecurringMovementsCard from '@/src/components/cards/movements/recurring-movements-card';
+import UnconfirmedMovementsCard from '@/src/components/cards/movements/unconfirmed-movements-card';
 
 // Chart components
 import {
   BreakdownStackedChart,
   IncomeExpenseChart,
   StackedBarChart,
-} from "@/src/components/charts";
-import Card from "@/src/components/core/card";
-import { ChartDataHelper } from "@/src/helpers/ChartDataHelper";
-import type { MonthlyData, IncomeExpenseData, PeriodBreakdownData } from "@/src/types/charts";
+} from '@/src/components/charts';
+import Card from '@/src/components/core/card';
+import { ChartDataHelper } from '@/src/helpers/ChartDataHelper';
+import type { MonthlyData, IncomeExpenseData, PeriodBreakdownData } from '@/src/types/charts';
 
 // View components for drawer content
-import AddView from "@/src/views/add-view";
-import Toast from "@/src/components/ui/toast";
-import SettingsView from "@/src/views/settings-view";
-import CommandBar from "./command-bar";
-import PeriodPicker from "@/src/components/ui/period-chips-picker";
-import ChipButton from "@/src/components/ui/chip-button";
-import { SummaryCard } from "@/src/components/cards";
-import ManageView from "@/src/views/manage-view.web";
-import MapView from "@/src/views/map-view.web";
+import AddView from '@/src/views/add-view';
+import Toast from '@/src/components/ui/toast';
+import SettingsView from '@/src/views/settings-view';
+import CommandBar from './command-bar';
+import PeriodPicker from '@/src/components/ui/period-chips-picker';
+import ChipButton from '@/src/components/ui/chip-button';
+import { SummaryCard } from '@/src/components/cards';
+import ManageView from '@/src/views/manage-view.web';
+import MapView from '@/src/views/map-view.web';
 
-type ToastStatus = "loading" | "success" | "error";
+type ToastStatus = 'loading' | 'success' | 'error';
 
 // Drawer content types
-type DrawerContentType = "add" | "edit" | "settings" | null;
+type DrawerContentType = 'add' | 'edit' | 'settings' | null;
 
 interface DrawerState {
   type: DrawerContentType;
@@ -70,7 +68,7 @@ interface DrawerState {
  * Layout completo per la modalità landscape con tutte le card disposte in griglia flessibile
  */
 export function LandscapeLayout() {
-  const backgroundColor = useThemeColor({}, "background");
+  const backgroundColor = useThemeColor({}, 'background');
 
   // Get data from centralized context
   const {
@@ -88,7 +86,8 @@ export function LandscapeLayout() {
   const [showManage, setShowManage] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const addMovement = useSpreadsheetMutation<CreateMovementData, OptimisticSnapshot>({
-    mutationFn: (spreadsheetId, data) => TransactionsApiHelper.createTransaction(spreadsheetId, data),
+    mutationFn: (spreadsheetId, data) =>
+      TransactionsApiHelper.createTransaction(spreadsheetId, data),
     onMutate: (qc, data) => TransactionsMutationHelpers.optimisticAddMovement(qc, data),
     onError: (qc, ctx) => TransactionsMutationHelpers.rollback(qc, ctx),
     onSuccess: (qc) => TransactionsMutationHelpers.invalidateMovementCaches(qc),
@@ -99,35 +98,30 @@ export function LandscapeLayout() {
     const sortedAccounts = [...accounts].sort((a, b) => b.balance - a.balance);
     return [
       {
-        accountId: "all",
-        name: "All",
+        accountId: 'all',
+        name: 'All',
         balance: totalBalance,
-        color: "#2F4F3F",
-        textColor: "#FFFFFF",
+        color: '#2F4F3F',
+        textColor: '#FFFFFF',
       },
       ...sortedAccounts,
     ];
   }, [accounts]);
 
-  const [selectedAccount, setSelectedAccount] = useState<string>("All");
+  const [selectedAccount, setSelectedAccount] = useState<string>('All');
 
   // Chart view mode state (months or years)
-  const [chartViewMode, setChartViewMode] = useState<"months" | "years">(
-    "months",
-  );
+  const [chartViewMode, setChartViewMode] = useState<'months' | 'years'>('months');
 
   // Drawer state — separate open flag from content so content persists during close animation
   const [drawerContent, setDrawerContent] = useState<DrawerState | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   // Drawer actions
-  const openDrawer = useCallback(
-    (type: DrawerContentType, props?: DrawerState["props"]) => {
-      setDrawerContent({ type, props });
-      setIsDrawerOpen(true);
-    },
-    [],
-  );
+  const openDrawer = useCallback((type: DrawerContentType, props?: DrawerState['props']) => {
+    setDrawerContent({ type, props });
+    setIsDrawerOpen(true);
+  }, []);
 
   const closeDrawer = useCallback(() => {
     setIsDrawerOpen(false);
@@ -137,10 +131,8 @@ export function LandscapeLayout() {
 
   // Toast state
   const [toastVisible, setToastVisible] = useState(false);
-  const [toastStatus, setToastStatus] = useState<ToastStatus>("loading");
-  const [toastMessage, setToastMessage] = useState<string | undefined>(
-    undefined,
-  );
+  const [toastStatus, setToastStatus] = useState<ToastStatus>('loading');
+  const [toastMessage, setToastMessage] = useState<string | undefined>(undefined);
 
   const handleToast = useCallback((status: ToastStatus, message?: string) => {
     setToastStatus(status);
@@ -151,14 +143,10 @@ export function LandscapeLayout() {
   // Date range state for period filtering
   const [dateRange, setDateRange] = useState(() => {
     const now = new Date();
-    const startDate = `01-${String(now.getMonth() + 1).padStart(2, "0")}-${now.getFullYear()}`;
-    const lastDay = new Date(
-      now.getFullYear(),
-      now.getMonth() + 1,
-      0,
-    ).getDate();
-    const endDate = `${lastDay}-${String(now.getMonth() + 1).padStart(2, "0")}-${now.getFullYear()}`;
-    return { startDate, endDate, label: "" };
+    const startDate = `01-${String(now.getMonth() + 1).padStart(2, '0')}-${now.getFullYear()}`;
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const endDate = `${lastDay}-${String(now.getMonth() + 1).padStart(2, '0')}-${now.getFullYear()}`;
+    return { startDate, endDate, label: '' };
   });
 
   // Calculate total months span from oldest movement to now
@@ -166,12 +154,11 @@ export function LandscapeLayout() {
     if (movements.length === 0) return 12;
     let oldest = Date.now();
     for (const m of movements) {
-      const [d, mo, y] = m.date.split("-").map(Number);
+      const [d, mo, y] = m.date.split('-').map(Number);
       const t = new Date(y, mo - 1, d).getTime();
       if (t < oldest) oldest = t;
     }
-    const months =
-      Math.ceil((Date.now() - oldest) / (30.44 * 24 * 60 * 60 * 1000)) + 1;
+    const months = Math.ceil((Date.now() - oldest) / (30.44 * 24 * 60 * 60 * 1000)) + 1;
     return Math.max(months, 6);
   }, [movements]);
 
@@ -187,15 +174,20 @@ export function LandscapeLayout() {
     [movements, chartMonthsToShow],
   );
 
-  const [breakdownType, setBreakdownType] = useState<"expense" | "income">(
-    "expense",
-  );
-  const [breakdownGroupBy, setBreakdownGroupBy] = useState<
-    "category" | "account"
-  >("category");
+  const [breakdownType, setBreakdownType] = useState<'expense' | 'income'>('expense');
+  const [breakdownGroupBy, setBreakdownGroupBy] = useState<'category' | 'account'>('category');
 
   const breakdownMonthly = useMemo(
-    () => ChartDataHelper.computeCategoryAccountBreakdown(movements, transactions, accounts, breakdownType, breakdownGroupBy, chartMonthsToShow, 0),
+    () =>
+      ChartDataHelper.computeCategoryAccountBreakdown(
+        movements,
+        transactions,
+        accounts,
+        breakdownType,
+        breakdownGroupBy,
+        chartMonthsToShow,
+        0,
+      ),
     [movements, transactions, accounts, breakdownType, breakdownGroupBy, chartMonthsToShow],
   );
 
@@ -276,66 +268,56 @@ export function LandscapeLayout() {
 
   // Select data based on chart view mode
   const balanceHistoryData =
-    chartViewMode === "months" ? balanceHistoryMonthly : balanceHistoryYearly;
-  const incomeExpenseData =
-    chartViewMode === "months" ? incomeExpenseMonthly : incomeExpenseYearly;
-  const breakdownData =
-    chartViewMode === "months" ? breakdownMonthly : breakdownYearly;
+    chartViewMode === 'months' ? balanceHistoryMonthly : balanceHistoryYearly;
+  const incomeExpenseData = chartViewMode === 'months' ? incomeExpenseMonthly : incomeExpenseYearly;
+  const breakdownData = chartViewMode === 'months' ? breakdownMonthly : breakdownYearly;
 
-  const cardBackground = useThemeColor({}, "cardBackground");
-  const textColor = useThemeColor({}, "text");
+  const cardBackground = useThemeColor({}, 'cardBackground');
+  const textColor = useThemeColor({}, 'text');
 
   const handleAddPress = () => {
-    openDrawer("add");
+    openDrawer('add');
   };
 
   const handleReloadPress = async () => {
-    handleToast("loading", "Loading");
+    handleToast('loading', 'Loading');
     try {
       await reloadData();
       setToastVisible(false);
     } catch (error) {
-      handleToast("error");
+      handleToast('error');
     }
   };
 
   const handleImportPress = useCallback(async () => {
-    console.log("Import statement pressed");
+    console.log('Import statement pressed');
     const result = await DocumentPicker.getDocumentAsync({
-      type: ["image/*", "application/pdf"],
+      type: ['image/*', 'application/pdf'],
       copyToCacheDirectory: true,
     });
     if (result.canceled || result.assets.length === 0) return;
-    console.log("Selected document:", result.assets[0]);
+    console.log('Selected document:', result.assets[0]);
     const asset = result.assets[0];
-    const isPdf =
-      asset.mimeType === "application/pdf" ||
-      asset.uri.toLowerCase().endsWith(".pdf");
+    const isPdf = asset.mimeType === 'application/pdf' || asset.uri.toLowerCase().endsWith('.pdf');
 
-    handleToast("loading", "Analisi documento...");
+    handleToast('loading', 'Analisi documento...');
 
     try {
-      
       const statementData = isPdf
         ? await OCRHelper.extractStatementDataFromPDF(asset.uri)
         : await OCRHelper.extractStatementData(asset.uri);
 
       if (statementData.transactions.length === 0) {
         setToastVisible(false);
-        Alert.alert(
-          "Nessuna transazione",
-          "Non sono state trovate transazioni nel documento.",
-        );
+        Alert.alert('Nessuna transazione', 'Non sono state trovate transazioni nel documento.');
         return;
       }
 
       // Resolve account name
-      let accountName = "";
+      let accountName = '';
       if (statementData.accountName) {
         const match = accounts.find((a) =>
-          statementData
-            .accountName!.toLowerCase()
-            .includes(a.name.toLowerCase()),
+          statementData.accountName!.toLowerCase().includes(a.name.toLowerCase()),
         );
         if (match) accountName = match.name;
       }
@@ -348,40 +330,34 @@ export function LandscapeLayout() {
           await addMovement.mutateAsync({
             movementId,
             description: tx.description,
-            category: "",
+            category: '',
             date: tx.date,
-            status: "unconfirmed",
+            status: 'unconfirmed',
             transactions: [
               {
-                amount:
-                  (tx.type === "income" ? "" : "-") +
-                  String(tx.amount).replace(".", ","),
+                amount: (tx.type === 'income' ? '' : '-') + String(tx.amount).replace('.', ','),
                 account: accountName,
-                type: tx.type === "income" ? "in" : "out",
+                type: tx.type === 'income' ? 'in' : 'out',
               },
             ],
           });
           saved++;
         } catch (error) {
-          console.error("Error saving statement transaction:", error);
+          console.error('Error saving statement transaction:', error);
         }
       }
 
-      handleToast("success", `${saved} transazioni importate`);
+      handleToast('success', `${saved} transazioni importate`);
     } catch (error) {
-      console.error("Statement import error:", error);
-      handleToast("error", "Impossibile analizzare il documento");
+      console.error('Statement import error:', error);
+      handleToast('error', 'Impossibile analizzare il documento');
     }
   }, [accounts, addMovement, handleToast]);
 
   // Helper to check if a date is within the range
-  const isDateInRange = (
-    dateStr: string,
-    start: string,
-    end: string,
-  ): boolean => {
+  const isDateInRange = (dateStr: string, start: string, end: string): boolean => {
     const parseDate = (str: string) => {
-      const [day, month, year] = str.split("-").map(Number);
+      const [day, month, year] = str.split('-').map(Number);
       return new Date(year, month - 1, day);
     };
     const date = parseDate(dateStr);
@@ -402,16 +378,14 @@ export function LandscapeLayout() {
     }
 
     // Filter by account (no filtering for 'All')
-    if (selectedAccount !== "All") {
-      filtered = filtered.filter((m) =>
-        m.transactions.some((t) => t.account === selectedAccount),
-      );
+    if (selectedAccount !== 'All') {
+      filtered = filtered.filter((m) => m.transactions.some((t) => t.account === selectedAccount));
     }
 
     // Sort by date descending (most recent first)
     filtered = [...filtered].sort((a, b) => {
       const parseDate = (str: string) => {
-        const [day, month, year] = str.split("-").map(Number);
+        const [day, month, year] = str.split('-').map(Number);
         return new Date(year, month - 1, day).getTime();
       };
       return parseDate(b.date) - parseDate(a.date);
@@ -422,7 +396,7 @@ export function LandscapeLayout() {
 
   // Get the selected account object
   const currentAccount: Account | undefined = useMemo(() => {
-    if (selectedAccount === "All") {
+    if (selectedAccount === 'All') {
       return availableAccounts[0];
     }
     return availableAccounts.find((a) => a.name === selectedAccount);
@@ -453,7 +427,7 @@ export function LandscapeLayout() {
     <View
       style={[styles.container, { backgroundColor }]}
       // @ts-ignore – web-only prop
-      dataSet={{ landscapeDashboard: "" }}
+      dataSet={{ landscapeDashboard: '' }}
     >
       {/* Transparent scrollbar with left margin for all cards */}
       <style
@@ -509,9 +483,7 @@ export function LandscapeLayout() {
           <PeriodPicker
             setDateRange={setDateRange}
             isLoading={isLoading}
-            onModeChange={(mode) =>
-              setChartViewMode(mode === "month" ? "months" : "years")
-            }
+            onModeChange={(mode) => setChartViewMode(mode === 'month' ? 'months' : 'years')}
           />
         }
         rightContent={
@@ -541,12 +513,7 @@ export function LandscapeLayout() {
 
           {/* Balance History chart */}
           <LayoutColumn flex={1}>
-            <Card
-              backgroundColor={cardBackground}
-              color={textColor}
-              style={{ flex: 1 }}
-              compact
-            >
+            <Card backgroundColor={cardBackground} color={textColor} style={{ flex: 1 }} compact>
               <StackedBarChart
                 data={balanceHistoryData}
                 showLabels={true}
@@ -561,12 +528,7 @@ export function LandscapeLayout() {
 
           {/* Income/Expense chart */}
           <LayoutColumn flex={1}>
-            <Card
-              backgroundColor={cardBackground}
-              color={textColor}
-              style={{ flex: 1 }}
-              compact
-            >
+            <Card backgroundColor={cardBackground} color={textColor} style={{ flex: 1 }} compact>
               <IncomeExpenseChart
                 data={incomeExpenseData}
                 showLabels={true}
@@ -579,37 +541,26 @@ export function LandscapeLayout() {
 
           {/* Breakdown chart */}
           <LayoutColumn flex={1}>
-            <Card
-              backgroundColor={cardBackground}
-              color={textColor}
-              style={{ flex: 1 }}
-              compact
-            >
+            <Card backgroundColor={cardBackground} color={textColor} style={{ flex: 1 }} compact>
               <View style={chartControlStyles.controlsRow}>
                 <Pressable
                   style={chartControlStyles.pill}
                   onPress={() =>
-                    setBreakdownType(
-                      breakdownType === "expense" ? "income" : "expense",
-                    )
+                    setBreakdownType(breakdownType === 'expense' ? 'income' : 'expense')
                   }
                 >
                   <RNText style={chartControlStyles.pillText}>
-                    {breakdownType === "expense" ? "Expenses" : "Income"}
+                    {breakdownType === 'expense' ? 'Expenses' : 'Income'}
                   </RNText>
                 </Pressable>
                 <Pressable
                   style={chartControlStyles.pill}
                   onPress={() =>
-                    setBreakdownGroupBy(
-                      breakdownGroupBy === "category" ? "account" : "category",
-                    )
+                    setBreakdownGroupBy(breakdownGroupBy === 'category' ? 'account' : 'category')
                   }
                 >
                   <RNText style={chartControlStyles.pillText}>
-                    {breakdownGroupBy === "category"
-                      ? "Categories"
-                      : "Accounts"}
+                    {breakdownGroupBy === 'category' ? 'Categories' : 'Accounts'}
                   </RNText>
                 </Pressable>
               </View>
@@ -629,9 +580,7 @@ export function LandscapeLayout() {
           <LayoutColumn flex={1}>
             <MovementsCard
               movements={filteredMovements}
-              onMovementPress={(movement) =>
-                openDrawer("edit", { movementId: movement.id })
-              }
+              onMovementPress={(movement) => openDrawer('edit', { movementId: movement.id })}
             />
           </LayoutColumn>
 
@@ -639,21 +588,17 @@ export function LandscapeLayout() {
             <RecurringMovementsCard
               dateRange={dateRange}
               onRecurrencePress={(movement) =>
-                openDrawer("add", {
-                  recurrenceId: movement.recurrenceId || "",
+                openDrawer('add', {
+                  recurrenceId: movement.recurrenceId || '',
                 })
               }
-              onEditPress={(movement) =>
-                openDrawer("edit", { movementId: movement.id })
-              }
+              onEditPress={(movement) => openDrawer('edit', { movementId: movement.id })}
             />
           </LayoutColumn>
 
           <LayoutColumn flex={1}>
             <UnconfirmedMovementsCard
-              onMovementPress={(movement) =>
-                openDrawer("edit", { movementId: movement.id })
-              }
+              onMovementPress={(movement) => openDrawer('edit', { movementId: movement.id })}
             />
           </LayoutColumn>
         </LayoutRow>
@@ -661,7 +606,7 @@ export function LandscapeLayout() {
 
       {/* Side Drawer */}
       <SideDrawer isOpen={isDrawerOpen} onClose={closeDrawer} width="40%">
-        {drawerContent?.type === "add" && (
+        {drawerContent?.type === 'add' && (
           <AddView
             editingMovementId={drawerContent.props?.movementId}
             recurrenceId={drawerContent.props?.recurrenceId}
@@ -669,7 +614,7 @@ export function LandscapeLayout() {
             onToast={handleToast}
           />
         )}
-        {drawerContent?.type === "edit" && (
+        {drawerContent?.type === 'edit' && (
           <AddView
             editingMovementId={drawerContent.props?.movementId}
             recurrenceId={drawerContent.props?.recurrenceId}
@@ -677,9 +622,7 @@ export function LandscapeLayout() {
             onToast={handleToast}
           />
         )}
-        {drawerContent?.type === "settings" && (
-          <SettingsView user={user} logout={logout} />
-        )}
+        {drawerContent?.type === 'settings' && <SettingsView user={user} logout={logout} />}
       </SideDrawer>
 
       {/* Toast notification */}
@@ -696,15 +639,15 @@ export function LandscapeLayout() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    flexDirection: "column",
-    overflow: "visible",
+    flexDirection: 'column',
+    overflow: 'visible',
   },
 });
 
 const chartControlStyles = StyleSheet.create({
   controlsRow: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
     gap: 6,
     marginBottom: 4,
   },
@@ -712,12 +655,12 @@ const chartControlStyles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
-    backgroundColor: "rgba(128,128,128,0.2)",
+    backgroundColor: 'rgba(128,128,128,0.2)',
   },
   pillText: {
     fontSize: 11,
-    fontWeight: "600",
-    color: "#000",
+    fontWeight: '600',
+    color: '#000',
   },
 });
 

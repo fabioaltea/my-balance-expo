@@ -1,7 +1,7 @@
-import { ThemedText } from "../core/themed-text.native";
-import { View, StyleSheet, TextInput, Text } from "react-native";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import React from "react";
+import { ThemedText } from '../core/themed-text.native';
+import { View, StyleSheet, TextInput, Text } from 'react-native';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import React from 'react';
 interface ITextBoxProps {
   value: string;
   onChange: (text: string) => void;
@@ -19,11 +19,8 @@ const TextBox: React.FC<ITextBoxProps> = ({
   onFocus,
   onBlur,
 }) => {
-  const textColor = useThemeColor({ light: "#000", dark: "#fff" }, "text");
-  const placeholderColor = useThemeColor(
-    { light: "#aaa", dark: "#666" },
-    "tabIconDefault",
-  );
+  const textColor = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
+  const placeholderColor = useThemeColor({ light: '#aaa', dark: '#666' }, 'tabIconDefault');
 
   return (
     <View style={styles.container}>
@@ -36,7 +33,7 @@ const TextBox: React.FC<ITextBoxProps> = ({
         style={[styles.textInput, { color: textColor }]}
         value={value}
         onChangeText={onChange}
-        placeholder={placeholder || ""}
+        placeholder={placeholder || ''}
         placeholderTextColor={placeholderColor}
         onFocus={onFocus}
         onBlur={onBlur}
@@ -47,10 +44,10 @@ const TextBox: React.FC<ITextBoxProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: "row",
+    flexDirection: 'row',
     paddingHorizontal: 0,
     paddingVertical: 5,
-    alignItems: "center",
+    alignItems: 'center',
   },
   label: {
     flex: 0,
@@ -60,13 +57,13 @@ const styles = StyleSheet.create({
     maxWidth: 200,
   },
   textInput: {
-    display: "flex",
+    display: 'flex',
     flex: 1,
-    textAlign: "right",
+    textAlign: 'right',
     fontSize: 18,
     paddingHorizontal: 10,
     minWidth: 0, // Prevents text from overflowing
-    outlineColor: "transparent",
+    outlineColor: 'transparent',
   },
 });
 

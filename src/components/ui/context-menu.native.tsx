@@ -1,13 +1,13 @@
-import React from "react";
+import React from 'react';
 import {
   ContextMenu as ExpoContextMenu,
   Host,
   Button,
   Divider,
   ActivationMethod,
-} from "@expo/ui/swift-ui";
-import type { Ionicons } from "@expo/vector-icons";
-import { Pressable } from "react-native";
+} from '@expo/ui/swift-ui';
+import type { Ionicons } from '@expo/vector-icons';
+import { Pressable } from 'react-native';
 export interface IContextMenuOption {
   label: string;
   icon?: keyof typeof Ionicons.glyphMap;
@@ -27,19 +27,17 @@ export interface IContextMenuProps {
 
 // Map commonly used Ionicons names to SF Symbols
 const SF_SYMBOL_MAP: Record<string, string> = {
-  camera: "camera",
-  "document-attach": "doc",
-  "log-out-outline": "rectangle.portrait.and.arrow.right",
-  "close-circle-outline": "xmark.circle",
-  "trash-outline": "trash",
-  "repeat-outline": "repeat",
-  pencil: "pencil",
+  camera: 'camera',
+  'document-attach': 'doc',
+  'log-out-outline': 'rectangle.portrait.and.arrow.right',
+  'close-circle-outline': 'xmark.circle',
+  'trash-outline': 'trash',
+  'repeat-outline': 'repeat',
+  pencil: 'pencil',
 };
 
-function normalizeOption(
-  option: string | IContextMenuOption,
-): IContextMenuOption {
-  if (typeof option === "string") {
+function normalizeOption(option: string | IContextMenuOption): IContextMenuOption {
+  if (typeof option === 'string') {
     return { label: option };
   }
   return option;
@@ -50,25 +48,23 @@ const ContextMenu: React.FC<IContextMenuProps> = ({
   onSelectOption,
   children,
   hostStyle,
-  activationMethod = "longPress",
+  activationMethod = 'longPress',
 }) => {
   return (
     <Host {...(hostStyle ? { style: hostStyle } : { matchContents: true })}>
-      <ExpoContextMenu activationMethod={activationMethod} >
+      <ExpoContextMenu activationMethod={activationMethod}>
         <ExpoContextMenu.Trigger>
           <Pressable>{children}</Pressable>
         </ExpoContextMenu.Trigger>
         <ExpoContextMenu.Items>
           {options.map((option, index) => {
             const normalized = normalizeOption(option);
-            const sfSymbol = normalized.icon
-              ? SF_SYMBOL_MAP[normalized.icon]
-              : undefined;
+            const sfSymbol = normalized.icon ? SF_SYMBOL_MAP[normalized.icon] : undefined;
 
             return (
               <Button
                 key={index}
-                role={normalized.destructive ? "destructive" : "default"}
+                role={normalized.destructive ? 'destructive' : 'default'}
                 {...(sfSymbol ? { systemImage: sfSymbol as any } : {})}
                 onPress={() => onSelectOption(normalized.label)}
                 disabled={normalized.disabled}

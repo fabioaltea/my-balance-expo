@@ -1,1 +1,1 @@
-export { default } from "@rnmapbox/maps";
+export { default } from '@rnmapbox/maps';

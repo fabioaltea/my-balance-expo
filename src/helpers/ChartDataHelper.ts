@@ -1,36 +1,33 @@
-import type { Transaction, Movement, Account } from "../types/models";
+import type { Transaction, Movement, Account } from '../types/models';
 import type {
   MonthlyData,
   MonthlyAccountBalance,
   IncomeExpenseData,
   BreakdownItem,
   PeriodBreakdownData,
-} from "../types/charts";
-import { EXCLUDED_CATEGORIES } from "../constants/categories";
-import { parseDateFromDDMMYYYY } from "../utils/dateUtils";
+} from '../types/charts';
+import { EXCLUDED_CATEGORIES } from '../constants/categories';
+import { parseDateFromDDMMYYYY } from '../utils/dateUtils';
 
 // Default colors for categories
 const CATEGORY_COLORS: Record<string, string> = {
-  Alimentari: "#4CAF50",
-  Trasporti: "#2196F3",
-  Salute: "#F44336",
-  Intrattenimento: "#9C27B0",
-  Shopping: "#FF9800",
-  Bollette: "#607D8B",
-  Affitto: "#795548",
-  Stipendio: "#4CAF50",
-  Investimenti: "#3F51B5",
-  Regalo: "#E91E63",
-  Altro: "#9E9E9E",
+  Alimentari: '#4CAF50',
+  Trasporti: '#2196F3',
+  Salute: '#F44336',
+  Intrattenimento: '#9C27B0',
+  Shopping: '#FF9800',
+  Bollette: '#607D8B',
+  Affitto: '#795548',
+  Stipendio: '#4CAF50',
+  Investimenti: '#3F51B5',
+  Regalo: '#E91E63',
+  Altro: '#9E9E9E',
 };
 
 /**
  * Get a color for a category, falling back to a generated hue.
  */
-export function getColorForCategory(
-  category: string,
-  index: number,
-): string {
+export function getColorForCategory(category: string, index: number): string {
   if (CATEGORY_COLORS[category]) {
     return CATEGORY_COLORS[category];
   }
@@ -43,20 +40,20 @@ export function getColorForCategory(
  */
 export function getShortMonthLabel(monthIndex: number): string {
   const months = [
-    "Gen",
-    "Feb",
-    "Mar",
-    "Apr",
-    "Mag",
-    "Giu",
-    "Lug",
-    "Ago",
-    "Set",
-    "Ott",
-    "Nov",
-    "Dic",
+    'Gen',
+    'Feb',
+    'Mar',
+    'Apr',
+    'Mag',
+    'Giu',
+    'Lug',
+    'Ago',
+    'Set',
+    'Ott',
+    'Nov',
+    'Dic',
   ];
-  return months[monthIndex] || "";
+  return months[monthIndex] || '';
 }
 
 /**
@@ -110,7 +107,7 @@ export class ChartDataHelper {
 
       transactionsUpToMonth.forEach((t) => {
         const currentBalance = accountBalances.get(t.account) || 0;
-        const signedAmount = t.type === "income" ? t.amount : -t.amount;
+        const signedAmount = t.type === 'income' ? t.amount : -t.amount;
         accountBalances.set(t.account, currentBalance + signedAmount);
       });
 
@@ -118,15 +115,12 @@ export class ChartDataHelper {
         accountId: acc.accountId,
         accountName: acc.name,
         balance: accountBalances.get(acc.name) || 0,
-        color: acc.color || "#2F4F3F",
+        color: acc.color || '#2F4F3F',
       }));
 
-      const totalBalance = accountsData.reduce(
-        (sum, acc) => sum + acc.balance,
-        0,
-      );
+      const totalBalance = accountsData.reduce((sum, acc) => sum + acc.balance, 0);
 
-      const monthLabel = `${String(month + 1).padStart(2, "0")}/${year}`;
+      const monthLabel = `${String(month + 1).padStart(2, '0')}/${year}`;
 
       return {
         month: monthLabel,
@@ -191,7 +185,7 @@ export class ChartDataHelper {
           }
         });
 
-      const monthLabel = `${String(month + 1).padStart(2, "0")}/${year}`;
+      const monthLabel = `${String(month + 1).padStart(2, '0')}/${year}`;
 
       return {
         month: monthLabel,
@@ -212,13 +206,12 @@ export class ChartDataHelper {
     movements: Movement[],
     transactions: Transaction[],
     accounts: Account[],
-    type: "income" | "expense",
-    groupBy: "category" | "account",
+    type: 'income' | 'expense',
+    groupBy: 'category' | 'account',
     monthsToShow: number = 12,
     monthOffset: number = 0,
   ): PeriodBreakdownData[] {
-    const hasData =
-      groupBy === "category" ? movements.length > 0 : transactions.length > 0;
+    const hasData = groupBy === 'category' ? movements.length > 0 : transactions.length > 0;
     if (!hasData) {
       return [];
     }
@@ -249,16 +242,13 @@ export class ChartDataHelper {
 
     // Track all unique categories/accounts for consistent coloring
     const allGroupKeys = new Set<string>();
-    if (groupBy === "category") {
+    if (groupBy === 'category') {
       movements
         .filter((m) => !EXCLUDED_CATEGORIES.includes(m.category))
         .forEach((m) => {
           const isIncome = m.totalAmount >= 0;
-          if (
-            (type === "expense" && !isIncome) ||
-            (type === "income" && isIncome)
-          ) {
-            allGroupKeys.add(m.category || "Altro");
+          if ((type === 'expense' && !isIncome) || (type === 'income' && isIncome)) {
+            allGroupKeys.add(m.category || 'Altro');
           }
         });
     } else {
@@ -266,8 +256,8 @@ export class ChartDataHelper {
         .filter((t) => !EXCLUDED_CATEGORIES.includes(t.category))
         .forEach((t) => {
           if (
-            (type === "expense" && t.type === "expense") ||
-            (type === "income" && t.type === "income")
+            (type === 'expense' && t.type === 'expense') ||
+            (type === 'income' && t.type === 'income')
           ) {
             allGroupKeys.add(t.account);
           }
@@ -278,18 +268,18 @@ export class ChartDataHelper {
     return months.map(({ year, month, startDate, endDate }) => {
       const groupedAmounts = new Map<string, number>();
 
-      if (groupBy === "category") {
+      if (groupBy === 'category') {
         const monthMovements = movements.filter((m) => {
           if (EXCLUDED_CATEGORIES.includes(m.category)) return false;
           const movementDate = parseDateFromDDMMYYYY(m.date);
           if (!movementDate) return false;
           if (movementDate < startDate || movementDate > endDate) return false;
           const isIncome = m.totalAmount >= 0;
-          return type === "income" ? isIncome : !isIncome;
+          return type === 'income' ? isIncome : !isIncome;
         });
 
         monthMovements.forEach((m) => {
-          const key = m.category || "Altro";
+          const key = m.category || 'Altro';
           const current = groupedAmounts.get(key) || 0;
           groupedAmounts.set(key, current + Math.abs(m.totalAmount));
         });
@@ -314,7 +304,7 @@ export class ChartDataHelper {
         const index = groupKeyArray.indexOf(key);
         let color: string;
 
-        if (groupBy === "account") {
+        if (groupBy === 'account') {
           const account = accountMap.get(key);
           color = account?.color || getColorForCategory(key, index);
         } else {
@@ -334,7 +324,7 @@ export class ChartDataHelper {
       const total = items.reduce((sum, item) => sum + item.amount, 0);
 
       return {
-        month: `${String(month + 1).padStart(2, "0")}/${year}`,
+        month: `${String(month + 1).padStart(2, '0')}/${year}`,
         year,
         monthIndex: month,
         date: endDate,

@@ -1,19 +1,13 @@
-import React, { useEffect, useRef } from "react";
-import {
-  View,
-  StyleSheet,
-  Animated,
-  Pressable,
-  Dimensions,
-} from "react-native";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
+import React, { useEffect, useRef } from 'react';
+import { View, StyleSheet, Animated, Pressable, Dimensions } from 'react-native';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
 
 interface SideDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   children?: React.ReactNode;
   width?: number | string; // percentage or fixed width
-  side?: "right" | "left";
+  side?: 'right' | 'left';
 }
 
 /**
@@ -25,21 +19,22 @@ const SideDrawer: React.FC<SideDrawerProps> = ({
   isOpen,
   onClose,
   children,
-  width = "40%",
-  side = "right",
+  width = '40%',
+  side = 'right',
 }) => {
-  const backgroundColor = useThemeColor({ light: "#FFFFFF" }, "menuBackground");
-  const screenWidth = Dimensions.get("window").width;
+  const backgroundColor = useThemeColor({ light: '#FFFFFF' }, 'menuBackground');
+  const screenWidth = Dimensions.get('window').width;
 
   // Calculate drawer width in pixels for animation
-  const drawerWidth = typeof width === "string" && width.endsWith("%")
-    ? (parseFloat(width) / 100) * screenWidth
-    : typeof width === "number"
-      ? width
-      : screenWidth * 0.4;
+  const drawerWidth =
+    typeof width === 'string' && width.endsWith('%')
+      ? (parseFloat(width) / 100) * screenWidth
+      : typeof width === 'number'
+        ? width
+        : screenWidth * 0.4;
 
   // Initialize off-screen
-  const hiddenValue = side === "left" ? -drawerWidth : drawerWidth;
+  const hiddenValue = side === 'left' ? -drawerWidth : drawerWidth;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const translateX = useRef(new Animated.Value(hiddenValue)).current;
 
@@ -74,7 +69,7 @@ const SideDrawer: React.FC<SideDrawerProps> = ({
   }, [isOpen, drawerWidth, hiddenValue]);
 
   return (
-    <View style={styles.overlay} pointerEvents={isOpen ? "auto" : "none"}>
+    <View style={styles.overlay} pointerEvents={isOpen ? 'auto' : 'none'}>
       {/* Semi-transparent backdrop */}
       <Animated.View style={[styles.backdrop, { opacity: overlayOpacity }]}>
         <Pressable style={styles.backdropPressable} onPress={onClose} />
@@ -83,17 +78,17 @@ const SideDrawer: React.FC<SideDrawerProps> = ({
       {/* Animated drawer container - handles animation only */}
       <Animated.View
         style={[
-          side === "left" ? styles.drawerAnimatedContainerLeft : styles.drawerAnimatedContainerRight,
+          side === 'left'
+            ? styles.drawerAnimatedContainerLeft
+            : styles.drawerAnimatedContainerRight,
           {
             width: drawerWidth,
             transform: [{ translateX }],
-          }
+          },
         ]}
       >
         {/* Content wrapper - handles padding and background */}
-        <View style={[styles.drawerContent, { backgroundColor }]}>
-          {children}
-        </View>
+        <View style={[styles.drawerContent, { backgroundColor }]}>{children}</View>
       </Animated.View>
     </View>
   );
@@ -107,20 +102,20 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   backdropPressable: {
     flex: 1,
   },
   drawerAnimatedContainerRight: {
-    position: "absolute",
+    position: 'absolute',
     top: 0,
     bottom: 0,
     right: 0,
     padding: 15,
   },
   drawerAnimatedContainerLeft: {
-    position: "absolute",
+    position: 'absolute',
     top: 0,
     bottom: 0,
     left: 0,
@@ -131,7 +126,7 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 35,
     // Shadow follows the borderRadius
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOffset: { width: -2, height: 0 },
     shadowOpacity: 0.25,
     shadowRadius: 50,

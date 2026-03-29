@@ -1,13 +1,13 @@
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import { StyleSheet, View, Text, Platform } from "react-native";
-import React from "react";
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import { StyleSheet, View, Text, Platform } from 'react-native';
+import React from 'react';
 
 interface ICardProps {
   backgroundColor?: string;
   color?: string;
   label?: string;
   children: React.ReactNode;
-  style?: import("react-native").ViewStyle;
+  style?: import('react-native').ViewStyle;
   compact?: boolean;
 }
 
@@ -19,30 +19,29 @@ const Card: React.FC<ICardProps> = ({
   style,
   compact = false,
 }) => {
-  const themeBackground = useThemeColor({}, "cardBackground");
-  const themeColor = useThemeColor({}, "cardColor");
+  const themeBackground = useThemeColor({}, 'cardBackground');
+  const themeColor = useThemeColor({}, 'cardColor');
   const styles = StyleSheet.create({
     //Card
     card: {
       backgroundColor: backgroundColor ?? themeBackground,
       color: color ?? themeColor,
       borderRadius: 30,
-      overflow: "hidden",
+      overflow: 'hidden',
 
       paddingRight: 10,
       paddingVertical: 15,
-      justifyContent: "center",
+      justifyContent: 'center',
       flexShrink: 1,
-      ...(Platform.OS === "web"
+      ...(Platform.OS === 'web'
         ? {
-            boxShadow:
-              "0 2px 8px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.06)",
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.06)',
             paddingLeft: 12,
           }
         : {
             paddingLeft: 24,
             minHeight: 100,
-            shadowColor: "#000",
+            shadowColor: '#000',
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.08,
             shadowRadius: 8,
@@ -52,14 +51,14 @@ const Card: React.FC<ICardProps> = ({
 
     cardLabel: {
       fontSize: 18,
-      fontWeight: "600",
-      color: "#848484ff",
+      fontWeight: '600',
+      color: '#848484ff',
       marginBottom: 10,
       marginLeft: 10,
     },
   });
 
-  const hasFlex = style && "flex" in style;
+  const hasFlex = style && 'flex' in style;
 
   return (
     <View style={style}>
@@ -68,7 +67,15 @@ const Card: React.FC<ICardProps> = ({
           <Text style={styles.cardLabel}>{label}</Text>
         </View>
       )}
-      <View style={[styles.card, hasFlex && { flex: 1 }, compact && { paddingLeft: 8, paddingRight: 12 }]}>{children}</View>
+      <View
+        style={[
+          styles.card,
+          hasFlex && { flex: 1 },
+          compact && { paddingLeft: 8, paddingRight: 12 },
+        ]}
+      >
+        {children}
+      </View>
     </View>
   );
 };

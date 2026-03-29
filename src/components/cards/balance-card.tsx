@@ -1,11 +1,11 @@
-import React, { useState } from "react";
-import { TouchableOpacity, StyleSheet, View, Text } from "react-native";
+import React, { useState } from 'react';
+import { TouchableOpacity, StyleSheet, View, Text } from 'react-native';
 // import { IconSymbol } from "../ui/icon-symbol";
-import Card from "@/src/components/core/card";
-import Skeleton from "@/src/components/ui/skeleton";
-import type { Account } from "@/src/state";
-import { useDataContext } from "../../state/DataProvider";
-import IconSymbol from "@/src/components/ui/icon-symbol";
+import Card from '@/src/components/core/card';
+import Skeleton from '@/src/components/ui/skeleton';
+import type { Account } from '@/src/state';
+import { useDataContext } from '../../state/DataProvider';
+import IconSymbol from '@/src/components/ui/icon-symbol';
 
 interface IBalanceCardProps {
   account?: Account;
@@ -25,25 +25,22 @@ const BalanceCard: React.FC<IBalanceCardProps> = ({ account }) => {
           width={180}
           height={36}
           borderRadius={8}
-          style={{ backgroundColor: "rgba(255, 255, 255, 0.3)" }}
+          style={{ backgroundColor: 'rgba(255, 255, 255, 0.3)' }}
         />
       );
     }
 
     return (
-      <Text style={[styles.balanceAmount, { color: account?.textColor || "#FFFFFF" }]}>
+      <Text style={[styles.balanceAmount, { color: account?.textColor || '#FFFFFF' }]}>
         {isBalanceVisible
-          ? `€ ${account?.balance.toFixed(2).replace(".", ",") ?? ""}`
-          : "€ *****,**"}
+          ? `€ ${account?.balance.toFixed(2).replace('.', ',') ?? ''}`
+          : '€ *****,**'}
       </Text>
     );
   };
 
   return (
-    <Card
-      backgroundColor={account?.color || "#2F4F3F"}
-      color={account?.textColor || "#FFFFFF"}
-    >
+    <Card backgroundColor={account?.color || '#2F4F3F'} color={account?.textColor || '#FFFFFF'}>
       <View style={styles.balanceContent}>
         {renderBalanceContent()}
         <TouchableOpacity
@@ -51,9 +48,9 @@ const BalanceCard: React.FC<IBalanceCardProps> = ({ account }) => {
           disabled={showSkeleton}
         >
           <IconSymbol
-            name={isBalanceVisible ? "remove-red-eye" : "visibility-off"}
+            name={isBalanceVisible ? 'remove-red-eye' : 'visibility-off'}
             size={24}
-            color={account?.textColor || "#FFFFFF"}
+            color={account?.textColor || '#FFFFFF'}
           />
         </TouchableOpacity>
       </View>
@@ -63,16 +60,16 @@ const BalanceCard: React.FC<IBalanceCardProps> = ({ account }) => {
 
 const styles = StyleSheet.create({
   balanceContent: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     flex: 1,
     minHeight: 36,
   },
   balanceAmount: {
-    color: "#FFFFFF",
+    color: '#FFFFFF',
     fontSize: 36,
-    fontWeight: "bold",
+    fontWeight: 'bold',
     flex: 1,
     flexShrink: 1,
     flexGrow: 1,

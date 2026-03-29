@@ -1,13 +1,13 @@
-import { useState, useEffect, useCallback } from "react";
-import { Platform } from "react-native";
-import { AuthStorageHelper, User } from "../helpers/AuthStorageHelper";
-import { ApiHelper } from "../helpers/ApiHelper";
-import { HttpHelper } from "../helpers/HttpHelper";
-import { AuthHelper } from "../helpers/AuthHelper";
-import { queryClient } from "../providers/QueryProvider";
-import * as WebBrowser from "expo-web-browser";
-import { makeRedirectUri } from "expo-auth-session";
-import * as AuthSession from "expo-auth-session";
+import { useState, useEffect, useCallback } from 'react';
+import { Platform } from 'react-native';
+import { AuthStorageHelper, User } from '../helpers/AuthStorageHelper';
+import { ApiHelper } from '../helpers/ApiHelper';
+import { HttpHelper } from '../helpers/HttpHelper';
+import { AuthHelper } from '../helpers/AuthHelper';
+import { queryClient } from '../providers/QueryProvider';
+import * as WebBrowser from 'expo-web-browser';
+import { makeRedirectUri } from 'expo-auth-session';
+import * as AuthSession from 'expo-auth-session';
 
 // Required for web OAuth - completes the auth session when the popup redirects back
 WebBrowser.maybeCompleteAuthSession();
@@ -31,7 +31,7 @@ export const useAuth = () => {
     user: null,
     isLoading: true,
     error: null,
-    mode: "",
+    mode: '',
     dashboardReady: false,
     selectedSpreadsheetId: null,
   });
@@ -42,15 +42,15 @@ export const useAuth = () => {
 
   // Helper to handle session expired
   const handleSessionExpired = useCallback(async () => {
-    console.log("🚪 Session expired, clearing auth...");
+    console.log('🚪 Session expired, clearing auth...');
     await AuthStorageHelper.clearAll();
     queryClient.clear();
     setAuthState({
       isAuthenticated: false,
       user: null,
       isLoading: false,
-      error: "Your session has expired. Please login again.",
-      mode: "",
+      error: 'Your session has expired. Please login again.',
+      mode: '',
       dashboardReady: false,
       selectedSpreadsheetId: null,
     });
@@ -59,14 +59,14 @@ export const useAuth = () => {
   // Load user profile - single entry point after authentication
   // App data (transactions, accounts, categories) is loaded by DataProvider via React Query
   const loadUserProfile = useCallback(async () => {
-    console.log("🚀 LOAD USER PROFILE");
+    console.log('🚀 LOAD USER PROFILE');
     try {
-      console.log("📡 Getting user profile...");
+      console.log('📡 Getting user profile...');
 
       // Get user profile - token management is automatic via HttpHelper
       const profile = await ApiHelper.getUserProfile();
 
-      console.log("📊 Profile result:", {
+      console.log('📊 Profile result:', {
         success: !!profile,
         hasUser: !!profile?.user,
         spreadsheetId: profile?.user?.spreadsheetId,
@@ -75,7 +75,7 @@ export const useAuth = () => {
       });
 
       if (!profile || !profile.user) {
-        console.log("❌ No profile data received");
+        console.log('❌ No profile data received');
         await handleSessionExpired();
         return;
       }
@@ -83,19 +83,14 @@ export const useAuth = () => {
       await AuthStorageHelper.storeUser(profile.user);
 
       if (profile.user.spreadsheetId && profile.user.setupComplete) {
-        console.log(
-          "✅ User has spreadsheet configured:",
-          profile.user.spreadsheetId,
-        );
+        console.log('✅ User has spreadsheet configured:', profile.user.spreadsheetId);
 
         // Check if schema migration is needed
         const schemaVersion = profile.user.schemaVersion ?? 1;
         const migrationNeeded = schemaVersion < LATEST_SCHEMA_VERSION;
 
         if (migrationNeeded) {
-          console.log(
-            `🔄 Schema migration needed: v${schemaVersion} → v${LATEST_SCHEMA_VERSION}`,
-          );
+          console.log(`🔄 Schema migration needed: v${schemaVersion} → v${LATEST_SCHEMA_VERSION}`);
         }
 
         setAuthState({
@@ -103,42 +98,41 @@ export const useAuth = () => {
           user: profile.user,
           isLoading: false,
           error: null,
-          mode: migrationNeeded ? "migration" : "dashboard",
+          mode: migrationNeeded ? 'migration' : 'dashboard',
           dashboardReady: !migrationNeeded,
           selectedSpreadsheetId: profile.user.spreadsheetId,
         });
       } else {
-        console.log("🆕 Quickstart mode - setup not complete");
+        console.log('🆕 Quickstart mode - setup not complete');
 
         setAuthState({
           isAuthenticated: true,
           user: profile.user,
           isLoading: false,
           error: null,
-          mode: "quickstart",
+          mode: 'quickstart',
           dashboardReady: true,
           selectedSpreadsheetId: null,
         });
       }
     } catch (error) {
-      console.error("❌ Error loading user profile:", error);
+      console.error('❌ Error loading user profile:', error);
 
       const is401Error =
-        (error as any)?.message?.includes("401") ||
-        (error as any)?.message?.includes("expired") ||
-        (error as any)?.message?.includes("Unauthorized") ||
-        (error as any)?.message?.includes("No valid authentication token");
+        (error as any)?.message?.includes('401') ||
+        (error as any)?.message?.includes('expired') ||
+        (error as any)?.message?.includes('Unauthorized') ||
+        (error as any)?.message?.includes('No valid authentication token');
 
       if (is401Error) {
-        console.log("🔄 Session expired, logging out...");
+        console.log('🔄 Session expired, logging out...');
         await handleSessionExpired();
       } else {
-        console.log("🚪 General error during profile load");
+        console.log('🚪 General error during profile load');
         setAuthState((prev) => ({
           ...prev,
           isLoading: false,
-          error:
-            "Connection error. Please check your internet connection and try again.",
+          error: 'Connection error. Please check your internet connection and try again.',
         }));
       }
     }
@@ -146,45 +140,42 @@ export const useAuth = () => {
 
   // Initialize authentication state - check for stored tokens
   const initializeAuth = useCallback(async () => {
-    console.log("🚀 INITIALIZE AUTH - Checking for stored credentials");
+    console.log('🚀 INITIALIZE AUTH - Checking for stored credentials');
     try {
       setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
 
       const tokens = await AuthStorageHelper.getTokens();
       const user = await AuthStorageHelper.getUser();
 
-      console.log("🔑 Stored tokens found:", !!tokens);
-      console.log("👤 Stored user found:", !!user);
+      console.log('🔑 Stored tokens found:', !!tokens);
+      console.log('👤 Stored user found:', !!user);
 
       if (tokens && user) {
-        console.log("✅ Stored credentials found, loading data...");
+        console.log('✅ Stored credentials found, loading data...');
         // We have stored credentials, load user data
         await loadUserProfile();
         // await NotificationsHelpers.registerForPushNotificationsAsync();
       } else {
-        console.log("❌ No stored credentials, showing login");
+        console.log('❌ No stored credentials, showing login');
         // No stored credentials, show login
         setAuthState({
           isAuthenticated: false,
           user: null,
           isLoading: false,
           error: null,
-          mode: "",
+          mode: '',
           dashboardReady: false,
           selectedSpreadsheetId: null,
         });
       }
     } catch (error) {
-      console.error("❌ Auth initialization error:", error);
+      console.error('❌ Auth initialization error:', error);
       setAuthState({
         isAuthenticated: false,
         user: null,
         isLoading: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Authentication initialization failed",
-        mode: "",
+        error: error instanceof Error ? error.message : 'Authentication initialization failed',
+        mode: '',
         dashboardReady: false,
         selectedSpreadsheetId: null,
       });
@@ -197,12 +188,11 @@ export const useAuth = () => {
       // setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
 
       const deviceId = await AuthStorageHelper.getOrCreateDeviceId();
-      const isWeb = Platform.OS === "web";
+      const isWeb = Platform.OS === 'web';
 
       // Generate PKCE parameters
       const codeVerifier = AuthHelper.generateCodeVerifier();
-      const codeChallenge =
-        await AuthHelper.generateCodeChallenge(codeVerifier);
+      const codeChallenge = await AuthHelper.generateCodeChallenge(codeVerifier);
 
       // Use different client ID and redirect URI based on platform
       const clientId = isWeb
@@ -214,27 +204,22 @@ export const useAuth = () => {
         ? makeRedirectUri()
         : `${process.env.EXPO_PUBLIC_GOOGLE_REDIRECT_SCHEME}:/oauthredirect`;
 
-      console.log("🔑 OAuth config:", {
+      console.log('🔑 OAuth config:', {
         isWeb,
-        clientId: clientId?.substring(0, 20) + "...",
+        clientId: clientId?.substring(0, 20) + '...',
         redirectUri,
       });
 
       // Create OAuth request with PKCE
       const request = new AuthSession.AuthRequest({
         clientId,
-        scopes: [
-          "openid",
-          "profile",
-          "email",
-          "https://www.googleapis.com/auth/spreadsheets",
-        ],
+        scopes: ['openid', 'profile', 'email', 'https://www.googleapis.com/auth/spreadsheets'],
         redirectUri,
         responseType: AuthSession.ResponseType.Code,
         codeChallengeMethod: AuthSession.CodeChallengeMethod.S256,
         extraParams: {
-          access_type: "offline",
-          prompt: "consent", // Force Google to always return refresh token
+          access_type: 'offline',
+          prompt: 'consent', // Force Google to always return refresh token
         },
         usePKCE: true,
       });
@@ -243,16 +228,16 @@ export const useAuth = () => {
       request.codeChallenge = codeChallenge;
       request.codeVerifier = codeVerifier;
 
-      console.log("🚀 Initiating Google OAuth request");
+      console.log('🚀 Initiating Google OAuth request');
 
       // Define discovery endpoint
       const discovery = {
-        authorizationEndpoint: "https://accounts.google.com/o/oauth2/v2/auth",
+        authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
       };
 
       const result = await request.promptAsync(discovery);
 
-      if (result.type === "success" && (result as any).params?.code) {
+      if (result.type === 'success' && (result as any).params?.code) {
         // Use the stored code verifier from state, NOT the local variable
         setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
 
@@ -260,17 +245,12 @@ export const useAuth = () => {
           authorizationCode: (result as any).params.code,
           codeVerifier: codeVerifier,
           deviceId,
-          deviceType:
-            Platform.OS === "web"
-              ? "web"
-              : Platform.OS === "ios"
-                ? "ios"
-                : "android",
+          deviceType: Platform.OS === 'web' ? 'web' : Platform.OS === 'ios' ? 'ios' : 'android',
           redirectUri, // Pass redirectUri for web token exchange
         });
 
         if (authResponse.success) {
-          console.log("✅ Backend authentication successful, storing tokens");
+          console.log('✅ Backend authentication successful, storing tokens');
           await AuthStorageHelper.storeTokens({
             accessToken: authResponse.accessToken!,
             refreshToken: authResponse.refreshToken!,
@@ -281,19 +261,17 @@ export const useAuth = () => {
           }
 
           // Load user profile and data after successful login
-          console.log("🚀 Loading user data after successful login");
+          console.log('🚀 Loading user data after successful login');
           await loadUserProfile();
           // await NotificationsHelpers.registerForPushNotificationsAsync();
         } else {
-          throw new Error(
-            authResponse.error || "Backend authentication failed",
-          );
+          throw new Error(authResponse.error || 'Backend authentication failed');
         }
-      } else if (result.type === "error") {
+      } else if (result.type === 'error') {
         throw new Error(
           (result as any).params?.error_description ||
             (result as any).params?.error ||
-            "OAuth failed",
+            'OAuth failed',
         );
       } else {
         setAuthState((prev) => ({ ...prev, isLoading: false }));
@@ -302,7 +280,7 @@ export const useAuth = () => {
       setAuthState((prev) => ({
         ...prev,
         isLoading: false,
-        error: error.message || "Login failed",
+        error: error.message || 'Login failed',
       }));
     }
   }, []);
@@ -326,12 +304,12 @@ export const useAuth = () => {
         user: null,
         isLoading: false,
         error: null,
-        mode: "",
+        mode: '',
         dashboardReady: false,
         selectedSpreadsheetId: null,
       });
     } catch (error) {
-      console.error("Logout error:", error);
+      console.error('Logout error:', error);
       // Even if API call fails, clear local state
       await AuthStorageHelper.clearAll();
       setAuthState({
@@ -339,7 +317,7 @@ export const useAuth = () => {
         user: null,
         isLoading: false,
         error: null,
-        mode: "",
+        mode: '',
         dashboardReady: false,
         selectedSpreadsheetId: null,
       });
@@ -348,7 +326,7 @@ export const useAuth = () => {
 
   // Initialize on mount
   useEffect(() => {
-    console.log("🔧 useAuth useEffect mounting, calling initializeAuth");
+    console.log('🔧 useAuth useEffect mounting, calling initializeAuth');
     initializeAuth();
   }, [initializeAuth]);
 
@@ -364,12 +342,12 @@ export const useAuth = () => {
   const executeMigration = useCallback(async () => {
     try {
       setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
-      console.log("🔄 Starting schema migration...");
+      console.log('🔄 Starting schema migration...');
 
-      const result = await HttpHelper.post("/spreadsheet/migrate", {});
+      const result = await HttpHelper.post('/spreadsheet/migrate', {});
 
       if (result.success) {
-        console.log("✅ Migration completed:", result.data);
+        console.log('✅ Migration completed:', result.data);
         // Clear React Query cache to avoid serving stale data with old column layout
         queryClient.clear();
         // The migration API confirmed success — transition to dashboard directly
@@ -379,33 +357,33 @@ export const useAuth = () => {
           ...prev,
           isLoading: false,
           error: null,
-          mode: "dashboard",
+          mode: 'dashboard',
           dashboardReady: true,
         }));
       } else {
-        console.error("❌ Migration failed:", result);
+        console.error('❌ Migration failed:', result);
         setAuthState((prev) => ({
           ...prev,
           isLoading: false,
-          error: "Migration failed. Please try again later.",
+          error: 'Migration failed. Please try again later.',
         }));
       }
     } catch (error) {
-      console.error("❌ Migration error:", error);
+      console.error('❌ Migration error:', error);
       // The migration may have succeeded on the backend even if the request
       // failed (e.g. network timeout on a long-running migration).
       // Try reloading the profile — if schemaVersion is now up to date,
       // loadUserProfile will transition to dashboard mode automatically.
-      console.log("🔄 Attempting profile reload after migration error...");
+      console.log('🔄 Attempting profile reload after migration error...');
       try {
         queryClient.clear();
         await loadUserProfile();
       } catch (reloadError) {
-        console.error("❌ Profile reload also failed:", reloadError);
+        console.error('❌ Profile reload also failed:', reloadError);
         setAuthState((prev) => ({
           ...prev,
           isLoading: false,
-          error: "Migration failed. Please try again later.",
+          error: 'Migration failed. Please try again later.',
         }));
       }
     }
@@ -416,7 +394,7 @@ export const useAuth = () => {
     queryClient.clear();
     setAuthState((prev) => ({
       ...prev,
-      mode: "dashboard",
+      mode: 'dashboard',
       dashboardReady: true,
       selectedSpreadsheetId: spreadsheetId,
     }));

@@ -1,51 +1,46 @@
-import { View, StyleSheet, Pressable, Platform } from "react-native";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import DateTimePicker from "@react-native-community/datetimepicker";
-import { useState } from "react";
-import * as Haptics from "expo-haptics";
-import ModalPanel from "./modal-panel.native";
-import React from "react";
-import { ThemedText } from "../core";
+import { View, StyleSheet, Pressable, Platform } from 'react-native';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { useState } from 'react';
+import * as Haptics from 'expo-haptics';
+import ModalPanel from './modal-panel.native';
+import React from 'react';
+import { ThemedText } from '../core';
 
 interface IDatePickerProps {
   value: Date;
   onChange: (date: Date) => void;
   label?: string;
-  mode?: "date" | "time" | "datetime";
+  mode?: 'date' | 'time' | 'datetime';
 }
 
-const DatePicker: React.FC<IDatePickerProps> = ({
-  value,
-  onChange,
-  label,
-  mode = "date",
-}) => {
+const DatePicker: React.FC<IDatePickerProps> = ({ value, onChange, label, mode = 'date' }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [tempDate, setTempDate] = useState(value);
 
   // Theme colors
-  const textColor = useThemeColor({ light: "#000", dark: "#fff" }, "text");
+  const textColor = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
 
   const formatDate = (date: Date) => {
     switch (mode) {
-      case "time":
-        return date.toLocaleTimeString("it-IT", {
-          hour: "2-digit",
-          minute: "2-digit",
+      case 'time':
+        return date.toLocaleTimeString('it-IT', {
+          hour: '2-digit',
+          minute: '2-digit',
         });
-      case "datetime":
-        return date.toLocaleString("it-IT", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
+      case 'datetime':
+        return date.toLocaleString('it-IT', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
         });
       default:
-        return date.toLocaleDateString("it-IT", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
+        return date.toLocaleDateString('it-IT', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
         });
     }
   };
@@ -66,12 +61,12 @@ const DatePicker: React.FC<IDatePickerProps> = ({
 
   const getModalTitle = () => {
     switch (mode) {
-      case "time":
-        return "Select Time";
-      case "datetime":
-        return "Select Date and Time";
+      case 'time':
+        return 'Select Time';
+      case 'datetime':
+        return 'Select Date and Time';
       default:
-        return "Select Date";
+        return 'Select Date';
     }
   };
 
@@ -96,7 +91,7 @@ const DatePicker: React.FC<IDatePickerProps> = ({
           <DateTimePicker
             value={tempDate}
             mode={mode}
-            display={Platform.OS === "ios" ? "spinner" : "default"}
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
             onChange={(event, selectedDate) => {
               if (selectedDate) {
                 setTempDate(selectedDate);
@@ -112,10 +107,10 @@ const DatePicker: React.FC<IDatePickerProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: "row",
+    flexDirection: 'row',
     paddingHorizontal: 0,
     paddingVertical: 5,
-    alignItems: "center",
+    alignItems: 'center',
   },
   label: {
     flex: 0,
@@ -125,24 +120,24 @@ const styles = StyleSheet.create({
     maxWidth: 120,
   },
   textInput: {
-    display: "flex",
+    display: 'flex',
     flex: 1,
-    textAlign: "right",
+    textAlign: 'right',
     fontSize: 18,
     paddingHorizontal: 10,
     minWidth: 0, // Prevents text from overflowing
   },
   dateText: {
     flex: 1,
-    textAlign: "right",
+    textAlign: 'right',
     fontSize: 18,
     paddingHorizontal: 10,
   },
   pickerContainer: {
-    alignItems: "center",
+    alignItems: 'center',
   },
   picker: {
-    width: "100%",
+    width: '100%',
     height: 200,
   },
 });

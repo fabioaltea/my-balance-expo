@@ -1,57 +1,50 @@
-import React, { useState, useMemo, useRef } from "react";
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  Animated,
-  TouchableOpacity,
-  Text,
-} from "react-native";
-import { useDataContext } from "@/src/state/DataProvider";
-import { ChartDataHelper } from "@/src/helpers/ChartDataHelper";
-import { useIncomeExpenses } from "@/src/hooks/useIncomeExpenses";
-import type { MonthlyData } from "@/src/types/charts";
-import type { IncomeExpenseData } from "@/src/types/charts";
-import type { PeriodBreakdownData } from "@/src/types/charts";
+import React, { useState, useMemo, useRef } from 'react';
+import { View, StyleSheet, ScrollView, Animated, TouchableOpacity, Text } from 'react-native';
+import { useDataContext } from '@/src/state/DataProvider';
+import { ChartDataHelper } from '@/src/helpers/ChartDataHelper';
+import { useIncomeExpenses } from '@/src/hooks/useIncomeExpenses';
+import type { MonthlyData } from '@/src/types/charts';
+import type { IncomeExpenseData } from '@/src/types/charts';
+import type { PeriodBreakdownData } from '@/src/types/charts';
 import {
   StackedBarChart,
   IncomeExpenseChart,
   BreakdownStackedChart,
   ChartSkeleton,
-} from "@/src/components/charts";
-import Card from "@/src/components/core/card";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import { LinearGradient } from "expo-linear-gradient";
-import ModalPanel from "@/src/components/ui/modal-panel";
-import { ThemedText } from "@/src/components/core/themed-text";
+} from '@/src/components/charts';
+import Card from '@/src/components/core/card';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import { LinearGradient } from 'expo-linear-gradient';
+import ModalPanel from '@/src/components/ui/modal-panel';
+import { ThemedText } from '@/src/components/core/themed-text';
 
 const MONTHS_TO_SHOW = 12;
 const YEARS_TO_SHOW = 6;
 
-type ViewMode = "months" | "years";
+type ViewMode = 'months' | 'years';
 
 // Full month names for modal title
 const FULL_MONTH_NAMES = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ];
 
 const ChartsView: React.FC = () => {
   const { transactions, movements, accounts, isLoading } = useDataContext();
-  const cardBackground = useThemeColor({}, "cardBackground");
-  const textColor = useThemeColor({}, "text");
-  const subtleTextColor = useThemeColor({}, "tabIconDefault");
-  const menuBackground = useThemeColor({}, "menuBackground");
+  const cardBackground = useThemeColor({}, 'cardBackground');
+  const textColor = useThemeColor({}, 'text');
+  const subtleTextColor = useThemeColor({}, 'tabIconDefault');
+  const menuBackground = useThemeColor({}, 'menuBackground');
   const scrollY = useRef(new Animated.Value(0)).current;
   const fadeOpacity = scrollY.interpolate({
     inputRange: [0, 30],
@@ -60,7 +53,7 @@ const ChartsView: React.FC = () => {
   });
 
   // State for view mode (months or years)
-  const [viewMode, setViewMode] = useState<ViewMode>("months");
+  const [viewMode, setViewMode] = useState<ViewMode>('months');
 
   // State for navigation offset (0 = current period, 1 = 1 month ago, etc.)
   const [monthOffset, setMonthOffset] = useState(0);
@@ -71,35 +64,40 @@ const ChartsView: React.FC = () => {
   const [selectedMonth, setSelectedMonth] = useState<MonthlyData | null>(null);
 
   // State for income/expense modal
-  const [isIncomeExpenseModalVisible, setIsIncomeExpenseModalVisible] =
-    useState(false);
-  const [selectedIncomeExpense, setSelectedIncomeExpense] =
-    useState<IncomeExpenseData | null>(null);
+  const [isIncomeExpenseModalVisible, setIsIncomeExpenseModalVisible] = useState(false);
+  const [selectedIncomeExpense, setSelectedIncomeExpense] = useState<IncomeExpenseData | null>(
+    null,
+  );
 
   // State for breakdown charts (category vs account)
-  type GroupBy = "category" | "account";
-  const [expenseGroupBy, setExpenseGroupBy] = useState<GroupBy>("category");
-  const [incomeGroupBy, setIncomeGroupBy] = useState<GroupBy>("category");
+  type GroupBy = 'category' | 'account';
+  const [expenseGroupBy, setExpenseGroupBy] = useState<GroupBy>('category');
+  const [incomeGroupBy, setIncomeGroupBy] = useState<GroupBy>('category');
 
   // State for breakdown modals
-  const [isExpenseBreakdownModalVisible, setIsExpenseBreakdownModalVisible] =
-    useState(false);
+  const [isExpenseBreakdownModalVisible, setIsExpenseBreakdownModalVisible] = useState(false);
   const [selectedExpenseBreakdown, setSelectedExpenseBreakdown] =
     useState<PeriodBreakdownData | null>(null);
-  const [isIncomeBreakdownModalVisible, setIsIncomeBreakdownModalVisible] =
-    useState(false);
+  const [isIncomeBreakdownModalVisible, setIsIncomeBreakdownModalVisible] = useState(false);
   const [selectedIncomeBreakdown, setSelectedIncomeBreakdown] =
     useState<PeriodBreakdownData | null>(null);
 
   // Calculate monthly balances with offset
   const monthlyData = useMemo(
-    () => ChartDataHelper.computeMonthlyBalances(transactions, accounts, MONTHS_TO_SHOW, monthOffset),
+    () =>
+      ChartDataHelper.computeMonthlyBalances(transactions, accounts, MONTHS_TO_SHOW, monthOffset),
     [transactions, accounts, monthOffset],
   );
 
   // Calculate yearly data (fetch more months to aggregate into years)
   const yearlyRawData = useMemo(
-    () => ChartDataHelper.computeMonthlyBalances(transactions, accounts, YEARS_TO_SHOW * 12, yearOffset * 12),
+    () =>
+      ChartDataHelper.computeMonthlyBalances(
+        transactions,
+        accounts,
+        YEARS_TO_SHOW * 12,
+        yearOffset * 12,
+      ),
     [transactions, accounts, yearOffset],
   );
 
@@ -127,7 +125,7 @@ const ChartsView: React.FC = () => {
   }, [yearlyRawData]);
 
   // Get the data to display based on view mode
-  const chartData = viewMode === "months" ? monthlyData : yearlyData;
+  const chartData = viewMode === 'months' ? monthlyData : yearlyData;
 
   // Calculate income/expenses data
   const incomeExpenseMonthly = useIncomeExpenses({
@@ -167,17 +165,34 @@ const ChartsView: React.FC = () => {
       .slice(-YEARS_TO_SHOW);
   }, [incomeExpenseYearlyRaw]);
 
-  const incomeExpenseData =
-    viewMode === "months" ? incomeExpenseMonthly : incomeExpenseYearly;
+  const incomeExpenseData = viewMode === 'months' ? incomeExpenseMonthly : incomeExpenseYearly;
 
   // Calculate expense breakdown data
   const expenseBreakdownMonthly = useMemo(
-    () => ChartDataHelper.computeCategoryAccountBreakdown(movements, transactions, accounts, "expense", expenseGroupBy, MONTHS_TO_SHOW, monthOffset),
+    () =>
+      ChartDataHelper.computeCategoryAccountBreakdown(
+        movements,
+        transactions,
+        accounts,
+        'expense',
+        expenseGroupBy,
+        MONTHS_TO_SHOW,
+        monthOffset,
+      ),
     [movements, transactions, accounts, expenseGroupBy, monthOffset],
   );
 
   const expenseBreakdownYearlyRaw = useMemo(
-    () => ChartDataHelper.computeCategoryAccountBreakdown(movements, transactions, accounts, "expense", expenseGroupBy, YEARS_TO_SHOW * 12, yearOffset * 12),
+    () =>
+      ChartDataHelper.computeCategoryAccountBreakdown(
+        movements,
+        transactions,
+        accounts,
+        'expense',
+        expenseGroupBy,
+        YEARS_TO_SHOW * 12,
+        yearOffset * 12,
+      ),
     [movements, transactions, accounts, expenseGroupBy, yearOffset],
   );
 
@@ -221,16 +236,34 @@ const ChartsView: React.FC = () => {
   }, [expenseBreakdownYearlyRaw]);
 
   const expenseBreakdownData =
-    viewMode === "months" ? expenseBreakdownMonthly : expenseBreakdownYearly;
+    viewMode === 'months' ? expenseBreakdownMonthly : expenseBreakdownYearly;
 
   // Calculate income breakdown data
   const incomeBreakdownMonthly = useMemo(
-    () => ChartDataHelper.computeCategoryAccountBreakdown(movements, transactions, accounts, "income", incomeGroupBy, MONTHS_TO_SHOW, monthOffset),
+    () =>
+      ChartDataHelper.computeCategoryAccountBreakdown(
+        movements,
+        transactions,
+        accounts,
+        'income',
+        incomeGroupBy,
+        MONTHS_TO_SHOW,
+        monthOffset,
+      ),
     [movements, transactions, accounts, incomeGroupBy, monthOffset],
   );
 
   const incomeBreakdownYearlyRaw = useMemo(
-    () => ChartDataHelper.computeCategoryAccountBreakdown(movements, transactions, accounts, "income", incomeGroupBy, YEARS_TO_SHOW * 12, yearOffset * 12),
+    () =>
+      ChartDataHelper.computeCategoryAccountBreakdown(
+        movements,
+        transactions,
+        accounts,
+        'income',
+        incomeGroupBy,
+        YEARS_TO_SHOW * 12,
+        yearOffset * 12,
+      ),
     [movements, transactions, accounts, incomeGroupBy, yearOffset],
   );
 
@@ -272,10 +305,10 @@ const ChartsView: React.FC = () => {
   }, [incomeBreakdownYearlyRaw]);
 
   const incomeBreakdownData =
-    viewMode === "months" ? incomeBreakdownMonthly : incomeBreakdownYearly;
+    viewMode === 'months' ? incomeBreakdownMonthly : incomeBreakdownYearly;
 
   // Navigation handlers - scroll by 1 month or 1 year depending on mode
-  const canGoNext = viewMode === "months" ? monthOffset > 0 : yearOffset > 0;
+  const canGoNext = viewMode === 'months' ? monthOffset > 0 : yearOffset > 0;
 
   // Check if leftmost bar has any data (non-zero balance)
   const leftmostHasData = useMemo(() => {
@@ -288,7 +321,7 @@ const ChartsView: React.FC = () => {
 
   const goToPrevious = () => {
     if (!canGoPrevious) return;
-    if (viewMode === "months") {
+    if (viewMode === 'months') {
       setMonthOffset((prev) => prev + 1);
     } else {
       setYearOffset((prev) => prev + 1);
@@ -297,7 +330,7 @@ const ChartsView: React.FC = () => {
 
   const goToNext = () => {
     if (canGoNext) {
-      if (viewMode === "months") {
+      if (viewMode === 'months') {
         setMonthOffset((prev) => Math.max(0, prev - 1));
       } else {
         setYearOffset((prev) => Math.max(0, prev - 1));
@@ -307,7 +340,7 @@ const ChartsView: React.FC = () => {
 
   // Toggle view mode handler
   const toggleViewMode = () => {
-    setViewMode((prev) => (prev === "months" ? "years" : "months"));
+    setViewMode((prev) => (prev === 'months' ? 'years' : 'months'));
   };
 
   // Handle bar press - open modal
@@ -336,7 +369,7 @@ const ChartsView: React.FC = () => {
 
   // Format amount
   const formatAmount = (amount: number) => {
-    return `€${amount.toLocaleString("it-IT", {
+    return `€${amount.toLocaleString('it-IT', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })}`;
@@ -361,25 +394,19 @@ const ChartsView: React.FC = () => {
           </Card>
 
           {/* Income & Expenses Skeleton */}
-          <Text style={[styles.chartLabel, { color: textColor }]}>
-            Income & Expenses
-          </Text>
+          <Text style={[styles.chartLabel, { color: textColor }]}>Income & Expenses</Text>
           <Card backgroundColor={cardBackground} color={textColor}>
             <ChartSkeleton variant="bars" height={200} barCount={6} />
           </Card>
 
           {/* Expenses Breakdown Skeleton */}
-          <Text style={[styles.chartLabel, { color: textColor }]}>
-            Expenses Breakdown
-          </Text>
+          <Text style={[styles.chartLabel, { color: textColor }]}>Expenses Breakdown</Text>
           <Card backgroundColor={cardBackground} color={textColor}>
             <ChartSkeleton variant="bars" height={200} barCount={6} />
           </Card>
 
           {/* Income Breakdown Skeleton */}
-          <Text style={[styles.chartLabel, { color: textColor }]}>
-            Income Breakdown
-          </Text>
+          <Text style={[styles.chartLabel, { color: textColor }]}>Income Breakdown</Text>
           <Card backgroundColor={cardBackground} color={textColor}>
             <ChartSkeleton variant="bars" height={200} barCount={6} />
           </Card>
@@ -398,52 +425,27 @@ const ChartsView: React.FC = () => {
         <View style={styles.navigationContainer}>
           {/* View mode toggle */}
           <TouchableOpacity
-            style={[
-              styles.viewModeChip,
-              viewMode === "years" && styles.viewModeChipActive,
-            ]}
+            style={[styles.viewModeChip, viewMode === 'years' && styles.viewModeChipActive]}
             onPress={toggleViewMode}
           >
-            <Text
-              style={[
-                styles.viewModeText,
-                viewMode === "years" && styles.viewModeTextActive,
-              ]}
-            >
-              {viewMode === "months" ? "Months" : "Years"}
+            <Text style={[styles.viewModeText, viewMode === 'years' && styles.viewModeTextActive]}>
+              {viewMode === 'months' ? 'Months' : 'Years'}
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[
-              styles.arrowButton,
-              !canGoPrevious && styles.arrowButtonDisabled,
-            ]}
+            style={[styles.arrowButton, !canGoPrevious && styles.arrowButtonDisabled]}
             onPress={goToPrevious}
             disabled={!canGoPrevious}
           >
-            <Text
-              style={[
-                styles.arrowText,
-                !canGoPrevious && styles.arrowTextDisabled,
-              ]}
-            >
-              ←
-            </Text>
+            <Text style={[styles.arrowText, !canGoPrevious && styles.arrowTextDisabled]}>←</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[
-              styles.arrowButton,
-              !canGoNext && styles.arrowButtonDisabled,
-            ]}
+            style={[styles.arrowButton, !canGoNext && styles.arrowButtonDisabled]}
             onPress={goToNext}
             disabled={!canGoNext}
           >
-            <Text
-              style={[styles.arrowText, !canGoNext && styles.arrowTextDisabled]}
-            >
-              →
-            </Text>
+            <Text style={[styles.arrowText, !canGoNext && styles.arrowTextDisabled]}>→</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -452,24 +454,18 @@ const ChartsView: React.FC = () => {
         style={{ height: 20, marginBottom: -20, zIndex: 1, opacity: fadeOpacity }}
         pointerEvents="none"
       >
-        <LinearGradient
-          colors={[menuBackground, menuBackground + '00']}
-          style={{ flex: 1 }}
-        />
+        <LinearGradient colors={[menuBackground, menuBackground + '00']} style={{ flex: 1 }} />
       </Animated.View>
       <Animated.ScrollView
         style={styles.container}
         showsVerticalScrollIndicator={false}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: true },
-        )}
+        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+          useNativeDriver: true,
+        })}
         scrollEventThrottle={16}
       >
         {/* Balance History Chart */}
-        <Text style={[styles.chartLabel, { color: textColor, marginTop: 0 }]}>
-          Balance History
-        </Text>
+        <Text style={[styles.chartLabel, { color: textColor, marginTop: 0 }]}>Balance History</Text>
         <Card backgroundColor={cardBackground} color={textColor}>
           <StackedBarChart
             data={chartData}
@@ -484,9 +480,7 @@ const ChartsView: React.FC = () => {
         </Card>
 
         {/* Income/Expense Chart */}
-        <Text style={[styles.chartLabel, { color: textColor }]}>
-          Income & Expenses
-        </Text>
+        <Text style={[styles.chartLabel, { color: textColor }]}>Income & Expenses</Text>
         <Card backgroundColor={cardBackground} color={textColor}>
           <IncomeExpenseChart
             data={incomeExpenseData}
@@ -500,19 +494,15 @@ const ChartsView: React.FC = () => {
 
         {/* Expense Breakdown Chart */}
         <View style={styles.chartHeaderRow}>
-          <Text style={[styles.chartLabel, { color: textColor }]}>
-            Expenses Breakdown
-          </Text>
+          <Text style={[styles.chartLabel, { color: textColor }]}>Expenses Breakdown</Text>
           <TouchableOpacity
             style={styles.groupByChip}
             onPress={() =>
-              setExpenseGroupBy((prev) =>
-                prev === "category" ? "account" : "category",
-              )
+              setExpenseGroupBy((prev) => (prev === 'category' ? 'account' : 'category'))
             }
           >
             <Text style={styles.groupByText}>
-              {expenseGroupBy === "category" ? "Category" : "Account"}
+              {expenseGroupBy === 'category' ? 'Category' : 'Account'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -529,19 +519,15 @@ const ChartsView: React.FC = () => {
 
         {/* Income Breakdown Chart */}
         <View style={styles.chartHeaderRow}>
-          <Text style={[styles.chartLabel, { color: textColor }]}>
-            Income Breakdown
-          </Text>
+          <Text style={[styles.chartLabel, { color: textColor }]}>Income Breakdown</Text>
           <TouchableOpacity
             style={styles.groupByChip}
             onPress={() =>
-              setIncomeGroupBy((prev) =>
-                prev === "category" ? "account" : "category",
-              )
+              setIncomeGroupBy((prev) => (prev === 'category' ? 'account' : 'category'))
             }
           >
             <Text style={styles.groupByText}>
-              {incomeGroupBy === "category" ? "Category" : "Account"}
+              {incomeGroupBy === 'category' ? 'Category' : 'Account'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -562,10 +548,10 @@ const ChartsView: React.FC = () => {
           onClose={() => setIsModalVisible(false)}
           title={
             selectedMonth
-              ? viewMode === "months"
+              ? viewMode === 'months'
                 ? `${FULL_MONTH_NAMES[selectedMonth.monthIndex]} ${selectedMonth.year}`
                 : `Year ${selectedMonth.year}`
-              : ""
+              : ''
           }
           showConfirmButton={false}
           showCancelButton={true}
@@ -574,9 +560,7 @@ const ChartsView: React.FC = () => {
             <View style={styles.modalContent}>
               {/* Total Balance */}
               <View style={styles.totalSection}>
-                <Text style={[styles.totalLabel, { color: subtleTextColor }]}>
-                  Total Balance
-                </Text>
+                <Text style={[styles.totalLabel, { color: subtleTextColor }]}>Total Balance</Text>
                 <Text style={[styles.totalAmount, { color: textColor }]}>
                   {formatAmount(selectedMonth.totalBalance)}
                 </Text>
@@ -584,9 +568,7 @@ const ChartsView: React.FC = () => {
 
               {/* Accounts List */}
               <View style={styles.accountsSection}>
-                <Text style={[styles.sectionTitle, { color: subtleTextColor }]}>
-                  Accounts
-                </Text>
+                <Text style={[styles.sectionTitle, { color: subtleTextColor }]}>Accounts</Text>
               </View>
               <ScrollView
                 style={styles.accountsList}
@@ -601,14 +583,9 @@ const ChartsView: React.FC = () => {
                     <View key={index} style={styles.accountRow}>
                       <View style={styles.accountInfo}>
                         <View
-                          style={[
-                            styles.accountColorDot,
-                            { backgroundColor: account.color },
-                          ]}
+                          style={[styles.accountColorDot, { backgroundColor: account.color }]}
                         />
-                        <Text
-                          style={[styles.accountName, { color: textColor }]}
-                        >
+                        <Text style={[styles.accountName, { color: textColor }]}>
                           {account.accountName}
                         </Text>
                       </View>
@@ -616,7 +593,7 @@ const ChartsView: React.FC = () => {
                         style={[
                           styles.accountBalance,
                           {
-                            color: account.balance >= 0 ? "#4CAF50" : "#F44336",
+                            color: account.balance >= 0 ? '#4CAF50' : '#F44336',
                           },
                         ]}
                       >
@@ -635,10 +612,10 @@ const ChartsView: React.FC = () => {
           onClose={() => setIsIncomeExpenseModalVisible(false)}
           title={
             selectedIncomeExpense
-              ? viewMode === "months"
+              ? viewMode === 'months'
                 ? `${FULL_MONTH_NAMES[selectedIncomeExpense.monthIndex]} ${selectedIncomeExpense.year}`
                 : `Year ${selectedIncomeExpense.year}`
-              : ""
+              : ''
           }
           showConfirmButton={false}
           showCancelButton={true}
@@ -648,32 +625,18 @@ const ChartsView: React.FC = () => {
               {/* Income */}
               <View style={styles.incomeExpenseRow}>
                 <View style={styles.incomeExpenseItem}>
-                  <Text
-                    style={[
-                      styles.incomeExpenseLabel,
-                      { color: subtleTextColor },
-                    ]}
-                  >
+                  <Text style={[styles.incomeExpenseLabel, { color: subtleTextColor }]}>
                     Entrate
                   </Text>
-                  <Text
-                    style={[styles.incomeExpenseAmount, { color: "#4CAF50" }]}
-                  >
+                  <Text style={[styles.incomeExpenseAmount, { color: '#4CAF50' }]}>
                     {formatAmount(selectedIncomeExpense.income)}
                   </Text>
                 </View>
                 <View style={styles.incomeExpenseItem}>
-                  <Text
-                    style={[
-                      styles.incomeExpenseLabel,
-                      { color: subtleTextColor },
-                    ]}
-                  >
+                  <Text style={[styles.incomeExpenseLabel, { color: subtleTextColor }]}>
                     Uscite
                   </Text>
-                  <Text
-                    style={[styles.incomeExpenseAmount, { color: "#F44336" }]}
-                  >
+                  <Text style={[styles.incomeExpenseAmount, { color: '#F44336' }]}>
                     {formatAmount(selectedIncomeExpense.expenses)}
                   </Text>
                 </View>
@@ -681,26 +644,19 @@ const ChartsView: React.FC = () => {
 
               {/* Balance */}
               <View style={styles.balanceSection}>
-                <Text style={[styles.balanceLabel, { color: subtleTextColor }]}>
-                  Bilancio
-                </Text>
+                <Text style={[styles.balanceLabel, { color: subtleTextColor }]}>Bilancio</Text>
                 <Text
                   style={[
                     styles.balanceAmount,
                     {
                       color:
-                        selectedIncomeExpense.income -
-                          selectedIncomeExpense.expenses >=
-                        0
-                          ? "#4CAF50"
-                          : "#F44336",
+                        selectedIncomeExpense.income - selectedIncomeExpense.expenses >= 0
+                          ? '#4CAF50'
+                          : '#F44336',
                     },
                   ]}
                 >
-                  {formatAmount(
-                    selectedIncomeExpense.income -
-                      selectedIncomeExpense.expenses,
-                  )}
+                  {formatAmount(selectedIncomeExpense.income - selectedIncomeExpense.expenses)}
                 </Text>
               </View>
             </View>
@@ -713,10 +669,10 @@ const ChartsView: React.FC = () => {
           onClose={() => setIsExpenseBreakdownModalVisible(false)}
           title={
             selectedExpenseBreakdown
-              ? viewMode === "months"
+              ? viewMode === 'months'
                 ? `Expenses - ${FULL_MONTH_NAMES[selectedExpenseBreakdown.monthIndex]} ${selectedExpenseBreakdown.year}`
                 : `Expenses - Year ${selectedExpenseBreakdown.year}`
-              : ""
+              : ''
           }
           showConfirmButton={false}
           showCancelButton={true}
@@ -725,10 +681,8 @@ const ChartsView: React.FC = () => {
             <View style={styles.modalContent}>
               {/* Total */}
               <View style={styles.totalSection}>
-                <Text style={[styles.totalLabel, { color: subtleTextColor }]}>
-                  Total Expenses
-                </Text>
-                <Text style={[styles.totalAmount, { color: "#F44336" }]}>
+                <Text style={[styles.totalLabel, { color: subtleTextColor }]}>Total Expenses</Text>
+                <Text style={[styles.totalAmount, { color: '#F44336' }]}>
                   {formatAmount(selectedExpenseBreakdown.total)}
                 </Text>
               </View>
@@ -736,7 +690,7 @@ const ChartsView: React.FC = () => {
               {/* Breakdown List */}
               <View style={styles.accountsSection}>
                 <Text style={[styles.sectionTitle, { color: subtleTextColor }]}>
-                  {expenseGroupBy === "category" ? "Categories" : "Accounts"}
+                  {expenseGroupBy === 'category' ? 'Categories' : 'Accounts'}
                 </Text>
               </View>
               <ScrollView
@@ -751,21 +705,10 @@ const ChartsView: React.FC = () => {
                   .map((item, index) => (
                     <View key={index} style={styles.accountRow}>
                       <View style={styles.accountInfo}>
-                        <View
-                          style={[
-                            styles.accountColorDot,
-                            { backgroundColor: item.color },
-                          ]}
-                        />
-                        <Text
-                          style={[styles.accountName, { color: textColor }]}
-                        >
-                          {item.name}
-                        </Text>
+                        <View style={[styles.accountColorDot, { backgroundColor: item.color }]} />
+                        <Text style={[styles.accountName, { color: textColor }]}>{item.name}</Text>
                       </View>
-                      <Text
-                        style={[styles.accountBalance, { color: "#F44336" }]}
-                      >
+                      <Text style={[styles.accountBalance, { color: '#F44336' }]}>
                         {formatAmount(item.amount)}
                       </Text>
                     </View>
@@ -781,10 +724,10 @@ const ChartsView: React.FC = () => {
           onClose={() => setIsIncomeBreakdownModalVisible(false)}
           title={
             selectedIncomeBreakdown
-              ? viewMode === "months"
+              ? viewMode === 'months'
                 ? `Income - ${FULL_MONTH_NAMES[selectedIncomeBreakdown.monthIndex]} ${selectedIncomeBreakdown.year}`
                 : `Income - Year ${selectedIncomeBreakdown.year}`
-              : ""
+              : ''
           }
           showConfirmButton={false}
           showCancelButton={true}
@@ -793,10 +736,8 @@ const ChartsView: React.FC = () => {
             <View style={styles.modalContent}>
               {/* Total */}
               <View style={styles.totalSection}>
-                <Text style={[styles.totalLabel, { color: subtleTextColor }]}>
-                  Total Income
-                </Text>
-                <Text style={[styles.totalAmount, { color: "#4CAF50" }]}>
+                <Text style={[styles.totalLabel, { color: subtleTextColor }]}>Total Income</Text>
+                <Text style={[styles.totalAmount, { color: '#4CAF50' }]}>
                   {formatAmount(selectedIncomeBreakdown.total)}
                 </Text>
               </View>
@@ -804,7 +745,7 @@ const ChartsView: React.FC = () => {
               {/* Breakdown List */}
               <View style={styles.accountsSection}>
                 <Text style={[styles.sectionTitle, { color: subtleTextColor }]}>
-                  {incomeGroupBy === "category" ? "Categories" : "Accounts"}
+                  {incomeGroupBy === 'category' ? 'Categories' : 'Accounts'}
                 </Text>
               </View>
               <ScrollView
@@ -819,21 +760,10 @@ const ChartsView: React.FC = () => {
                   .map((item, index) => (
                     <View key={index} style={styles.accountRow}>
                       <View style={styles.accountInfo}>
-                        <View
-                          style={[
-                            styles.accountColorDot,
-                            { backgroundColor: item.color },
-                          ]}
-                        />
-                        <Text
-                          style={[styles.accountName, { color: textColor }]}
-                        >
-                          {item.name}
-                        </Text>
+                        <View style={[styles.accountColorDot, { backgroundColor: item.color }]} />
+                        <Text style={[styles.accountName, { color: textColor }]}>{item.name}</Text>
                       </View>
-                      <Text
-                        style={[styles.accountBalance, { color: "#4CAF50" }]}
-                      >
+                      <Text style={[styles.accountBalance, { color: '#4CAF50' }]}>
                         {formatAmount(item.amount)}
                       </Text>
                     </View>
@@ -855,9 +785,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   pageHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
     marginBottom: 8,
@@ -867,54 +797,54 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   navigationContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
   },
   arrowButton: {
     padding: 8,
     paddingHorizontal: 12,
     borderRadius: 20,
-    backgroundColor: "#f0f0f0",
+    backgroundColor: '#f0f0f0',
   },
   arrowButtonDisabled: {
     opacity: 0.3,
   },
   arrowText: {
     fontSize: 18,
-    fontWeight: "bold",
+    fontWeight: 'bold',
   },
   arrowTextDisabled: {
-    color: "#999",
+    color: '#999',
   },
   viewModeChip: {
     paddingVertical: 8,
     paddingHorizontal: 14,
     borderRadius: 20,
-    backgroundColor: "#f0f0f0",
+    backgroundColor: '#f0f0f0',
   },
   viewModeChipActive: {
-    backgroundColor: "#2F4F3F",
+    backgroundColor: '#2F4F3F',
   },
   viewModeText: {
     fontSize: 13,
-    fontWeight: "600",
-    color: "#333",
+    fontWeight: '600',
+    color: '#333',
   },
   viewModeTextActive: {
-    color: "#fff",
+    color: '#fff',
   },
   chartLabel: {
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: '600',
     marginBottom: 10,
     marginTop: 10,
     paddingHorizontal: 10,
   },
   chartHeaderRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginTop: 10,
     marginBottom: 10,
     paddingHorizontal: 10,
@@ -923,22 +853,22 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 16,
-    backgroundColor: "#f0f0f0",
+    backgroundColor: '#f0f0f0',
   },
   groupByText: {
     fontSize: 12,
-    fontWeight: "600",
-    color: "#333",
+    fontWeight: '600',
+    color: '#333',
   },
   // Modal styles
   modalContent: {
     gap: 24,
   },
   totalSection: {
-    alignItems: "center",
+    alignItems: 'center',
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(128, 128, 128, 0.2)",
+    borderBottomColor: 'rgba(128, 128, 128, 0.2)',
   },
   totalLabel: {
     fontSize: 14,
@@ -946,7 +876,7 @@ const styles = StyleSheet.create({
   },
   totalAmount: {
     fontSize: 32,
-    fontWeight: "700",
+    fontWeight: '700',
   },
   accountsSection: {
     gap: 12,
@@ -960,22 +890,22 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: '600',
     marginBottom: 4,
   },
   accountRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 8,
-    backgroundColor: "rgba(128, 128, 128, 0.05)",
+    backgroundColor: 'rgba(128, 128, 128, 0.05)',
     borderRadius: 18,
     marginBottom: 8,
   },
   accountInfo: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 12,
   },
   accountColorDot: {
@@ -985,20 +915,20 @@ const styles = StyleSheet.create({
   },
   accountName: {
     fontSize: 16,
-    fontWeight: "500",
+    fontWeight: '500',
   },
   accountBalance: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   // Income/Expense modal styles
   incomeExpenseRow: {
-    flexDirection: "row",
-    justifyContent: "space-around",
+    flexDirection: 'row',
+    justifyContent: 'space-around',
     paddingVertical: 16,
   },
   incomeExpenseItem: {
-    alignItems: "center",
+    alignItems: 'center',
     gap: 8,
   },
   incomeExpenseLabel: {
@@ -1006,13 +936,13 @@ const styles = StyleSheet.create({
   },
   incomeExpenseAmount: {
     fontSize: 24,
-    fontWeight: "700",
+    fontWeight: '700',
   },
   balanceSection: {
-    alignItems: "center",
+    alignItems: 'center',
     paddingVertical: 16,
     borderTopWidth: 1,
-    borderTopColor: "rgba(128, 128, 128, 0.2)",
+    borderTopColor: 'rgba(128, 128, 128, 0.2)',
     gap: 8,
   },
   balanceLabel: {
@@ -1020,7 +950,7 @@ const styles = StyleSheet.create({
   },
   balanceAmount: {
     fontSize: 28,
-    fontWeight: "700",
+    fontWeight: '700',
   },
   bottomSpacer: {
     height: 100,

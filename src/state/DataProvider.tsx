@@ -1,5 +1,5 @@
-import React, { createContext, useContext, ReactNode } from "react";
-import { useMyBalanceData } from "../hooks/useMyBalanceData";
+import React, { createContext, useContext, ReactNode } from 'react';
+import { useMyBalanceData } from '../hooks/useMyBalanceData';
 import type {
   Transaction,
   Movement,
@@ -8,8 +8,8 @@ import type {
   PendingRecurrence,
   MonthlyForecast,
   AccountForecast,
-} from "../types/models";
-import { useAuthContext } from "./AuthProvider";
+} from '../types/models';
+import { useAuthContext } from './AuthProvider';
 
 interface DataContextType {
   // Raw data
@@ -33,14 +33,8 @@ interface DataContextType {
   reloadData: () => Promise<void>;
 
   // Helpers
-  getTotalIncome: (
-    filteredMovements: Movement[],
-    accountFilter?: string,
-  ) => number;
-  getTotalExpense: (
-    filteredMovements: Movement[],
-    accountFilter?: string,
-  ) => number;
+  getTotalIncome: (filteredMovements: Movement[], accountFilter?: string) => number;
+  getTotalExpense: (filteredMovements: Movement[], accountFilter?: string) => number;
   getBalance: (filteredMovements: Movement[]) => number;
   calculateForecast: (startDate: string, endDate: string) => MonthlyForecast;
 }
@@ -61,7 +55,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
 export const useDataContext = (): DataContextType => {
   const context = useContext(DataContext);
   if (context === undefined) {
-    throw new Error("useDataContext must be used within a DataProvider");
+    throw new Error('useDataContext must be used within a DataProvider');
   }
   return context;
 };

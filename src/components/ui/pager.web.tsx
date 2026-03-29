@@ -1,5 +1,5 @@
-import React, { useRef, useEffect, useState } from "react";
-import { View, ScrollView, StyleSheet, Dimensions } from "react-native";
+import React, { useRef, useEffect, useState } from 'react';
+import { View, ScrollView, StyleSheet, Dimensions } from 'react-native';
 
 export interface IPagerProps {
   children: React.ReactNode;
@@ -20,7 +20,7 @@ const Pager: React.FC<IPagerProps> = ({
   scrollEnabled = true,
 }) => {
   const scrollRef = useRef<ScrollView>(null);
-  const [pageWidth, setPageWidth] = useState(Dimensions.get("window").width);
+  const [pageWidth, setPageWidth] = useState(Dimensions.get('window').width);
   const [currentPage, setCurrentPage] = useState(selectedPage);
 
   // Filter out falsy children
@@ -80,7 +80,7 @@ const Pager: React.FC<IPagerProps> = ({
 const styles = StyleSheet.create({
   container: {
     height: 120,
-    overflow: "hidden",
+    overflow: 'hidden',
   },
   page: {
     flex: 1,

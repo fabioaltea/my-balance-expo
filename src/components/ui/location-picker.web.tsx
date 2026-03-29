@@ -1,14 +1,11 @@
-import { ThemedText } from "../core/themed-text.native";
-import { View, StyleSheet, Animated, TextInput } from "react-native";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import React, { useState, useRef, useEffect, useCallback } from "react";
-import { GoogleMap, MarkerF, useLoadScript } from "@react-google-maps/api";
-import {
-  capitalizeLocationQuery,
-  isLocationResolved,
-} from "@/src/utils/locationValue";
+import { ThemedText } from '../core/themed-text.native';
+import { View, StyleSheet, Animated, TextInput } from 'react-native';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { GoogleMap, MarkerF, useLoadScript } from '@react-google-maps/api';
+import { capitalizeLocationQuery, isLocationResolved } from '@/src/utils/locationValue';
 
-const LIBRARIES: "places"[] = ["places"];
+const LIBRARIES: 'places'[] = ['places'];
 
 export interface ILocation {
   address: string;
@@ -32,8 +29,8 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
   value,
   location,
   onChange,
-  label = "Location",
-  placeholder = "Enter location...",
+  label = 'Location',
+  placeholder = 'Enter location...',
   googleMapsApiKey,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -45,26 +42,21 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
 
   const cardHeight = useRef(new Animated.Value(30)).current;
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const placesServiceRef = useRef<google.maps.places.PlacesService | null>(
-    null,
-  );
+  const placesServiceRef = useRef<google.maps.places.PlacesService | null>(null);
 
-  const textColor = useThemeColor({ light: "#000", dark: "#fff" }, "text");
-  const placeholderColor = useThemeColor(
-    { light: "#aaa", dark: "#666" },
-    "tabIconDefault",
-  );
+  const textColor = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
+  const placeholderColor = useThemeColor({ light: '#aaa', dark: '#666' }, 'tabIconDefault');
 
   const { isLoaded } = useLoadScript({
-    googleMapsApiKey: googleMapsApiKey || "",
+    googleMapsApiKey: googleMapsApiKey || '',
     libraries: LIBRARIES,
-    language: "it",
-    region: "IT",
+    language: 'it',
+    region: 'IT',
   });
 
   useEffect(() => {
     if (isLoaded && !placesServiceRef.current) {
-      const div = document.createElement("div");
+      const div = document.createElement('div');
       placesServiceRef.current = new google.maps.places.PlacesService(div);
     }
   }, [isLoaded]);
@@ -115,30 +107,24 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
     (query: string) => {
       if (!placesServiceRef.current) return;
 
-      placesServiceRef.current.textSearch(
-        { query, region: "it" },
-        (results, status) => {
-          if (
-            status === google.maps.places.PlacesServiceStatus.OK &&
-            results?.length
-          ) {
-            const first = results[0];
-            const lat = first.geometry?.location?.lat();
-            const lng = first.geometry?.location?.lng();
-            if (lat != null && lng != null) {
-              const resolvedLocation = {
-                address: capitalizeLocationQuery(query),
-                latitude: lat,
-                longitude: lng,
-                placeId: first.place_id,
-              };
+      placesServiceRef.current.textSearch({ query, region: 'it' }, (results, status) => {
+        if (status === google.maps.places.PlacesServiceStatus.OK && results?.length) {
+          const first = results[0];
+          const lat = first.geometry?.location?.lat();
+          const lng = first.geometry?.location?.lng();
+          if (lat != null && lng != null) {
+            const resolvedLocation = {
+              address: capitalizeLocationQuery(query),
+              latitude: lat,
+              longitude: lng,
+              placeId: first.place_id,
+            };
 
-              showResolvedLocation(resolvedLocation);
-              onChange(resolvedLocation);
-            }
+            showResolvedLocation(resolvedLocation);
+            onChange(resolvedLocation);
           }
-        },
-      );
+        }
+      });
     },
     [onChange, showResolvedLocation],
   );
@@ -225,7 +211,7 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
       {isExpanded && markerPos && (
         <View style={styles.mapContainer}>
           <GoogleMap
-            mapContainerStyle={{ width: "100%", height: "100%" }}
+            mapContainerStyle={{ width: '100%', height: '100%' }}
             center={mapCenter}
             zoom={15}
             options={{ disableDefaultUI: true, zoomControl: true }}
@@ -240,16 +226,16 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
 
 const styles = StyleSheet.create({
   cardContent: {
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "flex-start",
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'flex-start',
   },
   inputRow: {
-    display: "flex",
-    flexDirection: "row",
+    display: 'flex',
+    flexDirection: 'row',
     paddingHorizontal: 0,
     paddingVertical: 15,
-    alignItems: "center",
+    alignItems: 'center',
     flex: 0,
   },
   label: {
@@ -260,19 +246,19 @@ const styles = StyleSheet.create({
     maxWidth: 200,
   },
   textInput: {
-    display: "flex",
+    display: 'flex',
     flex: 1,
-    textAlign: "right",
+    textAlign: 'right',
     fontSize: 18,
     paddingHorizontal: 10,
     minWidth: 0,
-    outlineColor: "transparent",
+    outlineColor: 'transparent',
   },
   mapContainer: {
     flex: 1,
     marginTop: 8,
     borderRadius: 20,
-    overflow: "hidden",
+    overflow: 'hidden',
   },
 });
 

@@ -1,6 +1,6 @@
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import { StyleSheet, View, Text } from "react-native";
-import React from "react";
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import { StyleSheet, View, Text } from 'react-native';
+import React from 'react';
 
 interface ICardProps {
   backgroundColor?: string;
@@ -9,18 +9,10 @@ interface ICardProps {
   children: React.ReactNode;
 }
 
-const InputGroup: React.FC<ICardProps> = ({
-  backgroundColor,
-  color,
-  label,
-  children,
-}) => {
-  const themeBackground = useThemeColor({}, "cardBackground");
-  const themeColor = useThemeColor({}, "cardColor");
-  const borderBottomColor = useThemeColor(
-    { light: "#e0e0e0", dark: "#333" },
-    "tabIconDefault"
-  );
+const InputGroup: React.FC<ICardProps> = ({ backgroundColor, color, label, children }) => {
+  const themeBackground = useThemeColor({}, 'cardBackground');
+  const themeColor = useThemeColor({}, 'cardColor');
+  const borderBottomColor = useThemeColor({ light: '#e0e0e0', dark: '#333' }, 'tabIconDefault');
 
   const validChildren = Array.isArray(children)
     ? children.filter(Boolean)
@@ -66,12 +58,12 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingHorizontal: 5,
     paddingVertical: 5,
-    overflow: "visible" as const,
+    overflow: 'visible' as const,
   },
   cardLabel: {
     fontSize: 18,
-    fontWeight: "600",
-    color: "#848484ff",
+    fontWeight: '600',
+    color: '#848484ff',
     marginBottom: 10,
     marginLeft: 10,
   },
@@ -79,7 +71,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     paddingVertical: 6,
     paddingHorizontal: 12,
-    overflow: "visible" as const,
+    overflow: 'visible' as const,
   },
   lastItem: {
     borderBottomWidth: 0,

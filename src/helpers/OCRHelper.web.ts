@@ -1,17 +1,17 @@
-import type Tesseract from "tesseract.js";
+import type Tesseract from 'tesseract.js';
 
 export interface OCRTransactionData {
   amount?: number;
   description?: string;
   date?: string; // dd-MM-yyyy
-  type?: "income" | "expense";
+  type?: 'income' | 'expense';
 }
 
 export interface OCRStatementLine {
   date: string; // dd-MM-yyyy
   description: string;
   amount: number;
-  type: "income" | "expense";
+  type: 'income' | 'expense';
 }
 
 export interface OCRStatementData {
@@ -28,24 +28,20 @@ export class OCRHelper {
   /**
    * Extracts text from an image URI using Tesseract.js (web).
    */
-  static async recognizeText(
-    imageUri: string
-  ): Promise<Tesseract.RecognizeResult> {
-    const { recognize } = await import("tesseract.js");
-    return recognize(imageUri, "ita+eng");
+  static async recognizeText(imageUri: string): Promise<Tesseract.RecognizeResult> {
+    const { recognize } = await import('tesseract.js');
+    return recognize(imageUri, 'ita+eng');
   }
 
   /**
    * Extracts transaction data from an image (receipt/invoice).
    * Returns parsed fields: amount, description, date, type.
    */
-  static async extractTransactionData(
-    imageUri: string
-  ): Promise<OCRTransactionData> {
+  static async extractTransactionData(imageUri: string): Promise<OCRTransactionData> {
     const result = await this.recognizeText(imageUri);
     const text = result.data.text;
     const lines = text
-      .split("\n")
+      .split('\n')
       .map((l: string) => l.trim())
       .filter(Boolean);
 
@@ -53,7 +49,7 @@ export class OCRHelper {
       amount: this.extractAmount(lines),
       description: this.extractDescription(lines),
       date: this.extractDate(text),
-      type: "expense", // receipts are typically expenses
+      type: 'expense', // receipts are typically expenses
     };
   }
 
@@ -65,14 +61,14 @@ export class OCRHelper {
     const amountRegex = /(\d{1,3}(?:[.,]\d{3})*[.,]\d{2}|\d+[.,]\d{2})/;
 
     const totalKeywords = [
-      "totale",
-      "total",
-      "importo",
-      "amount",
-      "da pagare",
-      "dovuto",
-      "saldo",
-      "netto",
+      'totale',
+      'total',
+      'importo',
+      'amount',
+      'da pagare',
+      'dovuto',
+      'saldo',
+      'netto',
     ];
 
     // First pass: look for a line with a total keyword + amount
@@ -106,12 +102,12 @@ export class OCRHelper {
    */
   private static parseAmount(raw: string): number {
     const normalized = raw
-      .replace(/[\u00A0\u2000-\u200B\u202F\u205F\u3000]/g, " ")
-      .replace(/\s+/g, "")
-      .replace(/(\d)[.,](\d{3})(?=[.,]\d{2}$)/g, "$1$2");
+      .replace(/[\u00A0\u2000-\u200B\u202F\u205F\u3000]/g, ' ')
+      .replace(/\s+/g, '')
+      .replace(/(\d)[.,](\d{3})(?=[.,]\d{2}$)/g, '$1$2');
 
-    if (normalized.includes(",")) {
-      return parseFloat(normalized.replace(/\./g, "").replace(",", "."));
+    if (normalized.includes(',')) {
+      return parseFloat(normalized.replace(/\./g, '').replace(',', '.'));
     }
 
     return parseFloat(normalized);
@@ -119,15 +115,15 @@ export class OCRHelper {
 
   private static normalizeWhitespace(input: string): string {
     return input
-      .replace(/[\u00A0\u2000-\u200B\u202F\u205F\u3000]/g, " ")
-      .replace(/\s+/g, " ")
+      .replace(/[\u00A0\u2000-\u200B\u202F\u205F\u3000]/g, ' ')
+      .replace(/\s+/g, ' ')
       .trim();
   }
 
   private static normalizeStatementLine(input: string): string {
     return this.normalizeWhitespace(input)
-      .replace(/(\d)\s*([.,])\s*(\d{2})(?=\b)/g, "$1$2$3")
-      .replace(/([+-])\s+(\d)/g, "$1$2")
+      .replace(/(\d)\s*([.,])\s*(\d{2})(?=\b)/g, '$1$2$3')
+      .replace(/([+-])\s+(\d)/g, '$1$2')
       .trim();
   }
 
@@ -136,7 +132,7 @@ export class OCRHelper {
 
     for (let i = 0; i < lines.length; i++) {
       const current = this.normalizeStatementLine(lines[i]);
-      const next = lines[i + 1] ? this.normalizeStatementLine(lines[i + 1]) : "";
+      const next = lines[i + 1] ? this.normalizeStatementLine(lines[i + 1]) : '';
 
       if (/(\d{1,3}(?:[ .]\d{3})*[.,])$/.test(current) && /^\d{2}\b/.test(next)) {
         merged.push(this.normalizeStatementLine(`${current}${next.slice(0, 2)}`));
@@ -152,31 +148,28 @@ export class OCRHelper {
     return merged;
   }
 
-  private static inferTransactionType(
-    line: string,
-    amountToken: string
-  ): "income" | "expense" {
-    if (/^\s*-/.test(amountToken)) return "expense";
-    if (/^\s*\+/.test(amountToken)) return "income";
+  private static inferTransactionType(line: string, amountToken: string): 'income' | 'expense' {
+    if (/^\s*-/.test(amountToken)) return 'expense';
+    if (/^\s*\+/.test(amountToken)) return 'income';
 
     const lower = line.toLowerCase();
     const incomeKeywords = [
-      "accredito",
-      "accrediti",
-      "stipendio",
-      "rimborso",
-      "versamento",
-      "bonifico a vostro favore",
-      "incasso",
-      "interessi creditori",
-      "giroconto in entrata",
+      'accredito',
+      'accrediti',
+      'stipendio',
+      'rimborso',
+      'versamento',
+      'bonifico a vostro favore',
+      'incasso',
+      'interessi creditori',
+      'giroconto in entrata',
     ];
 
     if (incomeKeywords.some((keyword) => lower.includes(keyword))) {
-      return "income";
+      return 'income';
     }
 
-    return "expense";
+    return 'expense';
   }
 
   private static findLastAmountToken(line: string): string | null {
@@ -220,8 +213,8 @@ export class OCRHelper {
   private static parseDateToken(token: string): string | null {
     const match = token.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/);
     if (!match) return null;
-    const day = match[1].padStart(2, "0");
-    const month = match[2].padStart(2, "0");
+    const day = match[1].padStart(2, '0');
+    const month = match[2].padStart(2, '0');
     let year = match[3];
     if (year.length === 2) year = `20${year}`;
     return `${day}-${month}-${year}`;
@@ -231,28 +224,31 @@ export class OCRHelper {
     const parts: string[] = [];
 
     const headerWithoutDates = group.header
-      .replace(/^\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4}\s+/, "")
-      .replace(/^\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4}\s+/, "");
+      .replace(/^\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4}\s+/, '')
+      .replace(/^\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4}\s+/, '');
     const headerAmount = this.findLastAmountToken(headerWithoutDates);
     const baseDescription = headerAmount
-      ? headerWithoutDates.replace(new RegExp(`${headerAmount.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`), "")
+      ? headerWithoutDates.replace(
+          new RegExp(`${headerAmount.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`),
+          '',
+        )
       : headerWithoutDates;
     const cleanBase = this.normalizeStatementLine(baseDescription).trim();
     if (cleanBase) parts.push(cleanBase);
 
     const skipPrefixes = [
-      "mediante la carta",
-      "carta n",
-      "cod.",
-      "abi",
-      "effettuato il",
-      "alle ore",
-      "via -",
-      "data incasso",
-      "numero avviso",
-      "codice azienda",
-      "nome azienda",
-      "iuv",
+      'mediante la carta',
+      'carta n',
+      'cod.',
+      'abi',
+      'effettuato il',
+      'alle ore',
+      'via -',
+      'data incasso',
+      'numero avviso',
+      'codice azienda',
+      'nome azienda',
+      'iuv',
     ];
 
     for (const detail of group.details) {
@@ -266,17 +262,15 @@ export class OCRHelper {
       if (parts.length >= 3) break;
     }
 
-    return this.normalizeStatementLine(parts.join(" ")) || "Transazione";
+    return this.normalizeStatementLine(parts.join(' ')) || 'Transazione';
   }
 
-  private static parseMovementGroups(
-    groups: StatementMovementGroup[]
-  ): OCRStatementLine[] {
+  private static parseMovementGroups(groups: StatementMovementGroup[]): OCRStatementLine[] {
     const transactions: OCRStatementLine[] = [];
     const seen = new Set<string>();
 
     for (const group of groups) {
-      const tokens = group.header.split(" ").filter(Boolean);
+      const tokens = group.header.split(' ').filter(Boolean);
       if (tokens.length < 3) continue;
 
       const operationDate = this.parseDateToken(tokens[0]);
@@ -285,7 +279,7 @@ export class OCRHelper {
       const amountToken = this.findLastAmountToken(group.header);
       if (!amountToken) continue;
 
-      const amount = this.parseAmount(amountToken.replace(/^[+-]/, ""));
+      const amount = this.parseAmount(amountToken.replace(/^[+-]/, ''));
       if (amount === 0 || isNaN(amount)) continue;
 
       const description = this.buildDescriptionFromMovementGroup(group);
@@ -315,11 +309,11 @@ export class OCRHelper {
     const match = text.match(dateRegex);
     if (!match) return undefined;
 
-    const day = match[1].padStart(2, "0");
-    const month = match[2].padStart(2, "0");
+    const day = match[1].padStart(2, '0');
+    const month = match[2].padStart(2, '0');
     let year = match[3];
     if (year.length === 2) {
-      year = "20" + year;
+      year = '20' + year;
     }
 
     return `${day}-${month}-${year}`;
@@ -348,13 +342,11 @@ export class OCRHelper {
   /**
    * Extracts multiple transactions from a bank statement image.
    */
-  static async extractStatementData(
-    imageUri: string
-  ): Promise<OCRStatementData> {
+  static async extractStatementData(imageUri: string): Promise<OCRStatementData> {
     const result = await this.recognizeText(imageUri);
     const text = result.data.text;
     const lines = text
-      .split("\n")
+      .split('\n')
       .map((l: string) => l.trim())
       .filter(Boolean);
 
@@ -368,14 +360,7 @@ export class OCRHelper {
    * Identifies the account name/IBAN from statement header lines.
    */
   private static extractAccountName(lines: string[]): string | undefined {
-    const accountKeywords = [
-      "conto",
-      "account",
-      "iban",
-      "carta",
-      "card",
-      "c/c",
-    ];
+    const accountKeywords = ['conto', 'account', 'iban', 'carta', 'card', 'c/c'];
 
     for (const line of lines) {
       const lower = line.toLowerCase();
@@ -398,15 +383,15 @@ export class OCRHelper {
 
     const groups = this.groupLinesByMovementPattern(candidateLines);
     if (groups.length >= 3) {
-      console.log("[OCRHelper.web] Statement parser strategy", {
-        strategy: "grouped-by-movement",
+      console.log('[OCRHelper.web] Statement parser strategy', {
+        strategy: 'grouped-by-movement',
         groups: groups.length,
       });
       return this.parseMovementGroups(groups);
     }
 
-    console.log("[OCRHelper.web] Statement parser strategy", {
-      strategy: "line-fallback",
+    console.log('[OCRHelper.web] Statement parser strategy', {
+      strategy: 'line-fallback',
       groups: groups.length,
     });
 
@@ -422,19 +407,17 @@ export class OCRHelper {
 
       const dateStartIndex = dateMatch.index ?? 0;
       const lineFromDate = line.substring(dateStartIndex).trim();
-      const anchoredDateMatch = lineFromDate.match(
-        /^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/
-      );
+      const anchoredDateMatch = lineFromDate.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/);
       if (!anchoredDateMatch) continue;
 
-      const day = anchoredDateMatch[1].padStart(2, "0");
-      const month = anchoredDateMatch[2].padStart(2, "0");
+      const day = anchoredDateMatch[1].padStart(2, '0');
+      const month = anchoredDateMatch[2].padStart(2, '0');
       let year = anchoredDateMatch[3];
-      if (year.length === 2) year = "20" + year;
+      if (year.length === 2) year = '20' + year;
       const date = `${day}-${month}-${year}`;
 
       const rawAmount = this.normalizeStatementLine(amountToken);
-      const amount = this.parseAmount(rawAmount.replace(/^[+-]/, ""));
+      const amount = this.parseAmount(rawAmount.replace(/^[+-]/, ''));
       if (amount === 0 || isNaN(amount)) continue;
 
       let afterDate = lineFromDate.substring(anchoredDateMatch[0].length).trim();
@@ -452,9 +435,7 @@ export class OCRHelper {
         afterDate = afterDate.substring(0, amountTokenIndex).trim();
       }
 
-      const descriptionPart = afterDate
-        .trim()
-        .replace(/^[\s|]+|[\s|]+$/g, "");
+      const descriptionPart = afterDate.trim().replace(/^[\s|]+|[\s|]+$/g, '');
 
       const signature = `${date}|${descriptionPart}|${amount.toFixed(2)}`;
       if (seen.has(signature)) continue;
@@ -462,7 +443,7 @@ export class OCRHelper {
 
       transactions.push({
         date,
-        description: descriptionPart || "Transazione",
+        description: descriptionPart || 'Transazione',
         amount,
         type: this.inferTransactionType(line, rawAmount),
       });
@@ -482,30 +463,30 @@ export class OCRHelper {
   private static loadPdfjs(): Promise<any> {
     if (this.pdfjsPromise) return this.pdfjsPromise;
 
-    const PDFJS_VERSION = "4.8.69";
+    const PDFJS_VERSION = '4.8.69';
     const CDN = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_VERSION}`;
 
     this.pdfjsPromise = new Promise((resolve, reject) => {
       // Load worker first
-      const workerScript = document.createElement("script");
+      const workerScript = document.createElement('script');
       workerScript.src = `${CDN}/pdf.worker.min.mjs`;
-      workerScript.type = "module";
+      workerScript.type = 'module';
 
       // Load main library
-      const mainScript = document.createElement("script");
+      const mainScript = document.createElement('script');
       mainScript.src = `${CDN}/pdf.min.mjs`;
-      mainScript.type = "module";
+      mainScript.type = 'module';
 
       mainScript.onload = () => {
         const pdfjsLib = (window as any).pdfjsLib;
         if (!pdfjsLib) {
-          reject(new Error("pdf.js failed to load"));
+          reject(new Error('pdf.js failed to load'));
           return;
         }
         pdfjsLib.GlobalWorkerOptions.workerSrc = `${CDN}/pdf.worker.min.mjs`;
         resolve(pdfjsLib);
       };
-      mainScript.onerror = () => reject(new Error("Failed to load pdf.js"));
+      mainScript.onerror = () => reject(new Error('Failed to load pdf.js'));
 
       document.head.appendChild(workerScript);
       document.head.appendChild(mainScript);
@@ -514,9 +495,7 @@ export class OCRHelper {
     return this.pdfjsPromise;
   }
 
-  static async extractStatementDataFromPDF(
-    pdfUri: string
-  ): Promise<OCRStatementData> {
+  static async extractStatementDataFromPDF(pdfUri: string): Promise<OCRStatementData> {
     const pdfjsLib = await this.loadPdfjs();
     const pdf = await pdfjsLib.getDocument(pdfUri).promise;
     const pageLines: string[] = [];
@@ -533,7 +512,7 @@ export class OCRHelper {
       .filter(Boolean);
 
     const transactions = this.extractStatementLines(lines);
-    console.log("[OCRHelper.web] PDF parse diagnostics", {
+    console.log('[OCRHelper.web] PDF parse diagnostics', {
       pages: pdf.numPages,
       lineCount: lines.length,
       transactionCount: transactions.length,
@@ -552,7 +531,7 @@ export class OCRHelper {
 
     const positionedItems = items
       .map((item) => {
-        const text = this.normalizeWhitespace(String(item?.str ?? ""));
+        const text = this.normalizeWhitespace(String(item?.str ?? ''));
         const x = Number(item?.transform?.[4] ?? 0);
         const y = Number(item?.transform?.[5] ?? 0);
         return { text, x, y };
@@ -578,7 +557,7 @@ export class OCRHelper {
     return rows
       .map((row) => {
         row.items.sort((a, b) => a.x - b.x);
-        return this.normalizeStatementLine(row.items.map((item) => item.text).join(" "));
+        return this.normalizeStatementLine(row.items.map((item) => item.text).join(' '));
       })
       .filter(Boolean);
   }

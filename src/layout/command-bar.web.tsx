@@ -1,11 +1,10 @@
-import React, { ReactNode } from "react";
-import { View, Text, StyleSheet, Image } from "react-native";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import { useAuthContext } from "@/src/state";
-import ContextMenu from "@/src/components/ui/context-menu";
+import React, { ReactNode } from 'react';
+import { View, Text, StyleSheet, Image } from 'react-native';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import { useAuthContext } from '@/src/state';
+import ContextMenu from '@/src/components/ui/context-menu';
 
-const LANDING_BASE_URL =
-  process.env.EXPO_PUBLIC_LANDING_URL || "https://mybalance.tech";
+const LANDING_BASE_URL = process.env.EXPO_PUBLIC_LANDING_URL || 'https://mybalance.tech';
 
 interface LandscapeCommandBarProps {
   accountSelector: ReactNode;
@@ -26,29 +25,29 @@ export function CommandBar({
   onManage,
   onMap,
 }: LandscapeCommandBarProps) {
-  const textColor = useThemeColor({}, "text");
+  const textColor = useThemeColor({}, 'text');
   const borderColor = useThemeColor(
-    { light: "rgba(0,0,0,0.08)", dark: "rgba(255,255,255,0.1)" },
-    "cardBorder",
+    { light: 'rgba(0,0,0,0.08)', dark: 'rgba(255,255,255,0.1)' },
+    'cardBorder',
   );
   const backgroundColor = useThemeColor(
-    { light: "rgba(255, 255, 255, 0.6)", dark: "rgba(255, 255, 255, 0.1)" },
-    "cardBackground",
+    { light: 'rgba(255, 255, 255, 0.6)', dark: 'rgba(255, 255, 255, 0.1)' },
+    'cardBackground',
   );
 
   const { logout } = useAuthContext();
 
   const handleMenuOption = (option: string) => {
-    if (option.toLowerCase() === "logout") {
+    if (option.toLowerCase() === 'logout') {
       logout();
-    } else if (option === "Manage") {
+    } else if (option === 'Manage') {
       onManage?.();
-    } else if (option === "Map") {
+    } else if (option === 'Map') {
       onMap?.();
-    } else if (option === "Privacy Policy") {
-      window.open(`${LANDING_BASE_URL}/#/privacy-policy`, "_blank");
-    } else if (option === "Terms of Service") {
-      window.open(`${LANDING_BASE_URL}/#/terms-of-service`, "_blank");
+    } else if (option === 'Privacy Policy') {
+      window.open(`${LANDING_BASE_URL}/#/privacy-policy`, '_blank');
+    } else if (option === 'Terms of Service') {
+      window.open(`${LANDING_BASE_URL}/#/terms-of-service`, '_blank');
     }
   };
 
@@ -59,24 +58,24 @@ export function CommandBar({
         <ContextMenu
           options={[
             {
-              label: "Manage",
-              icon: "settings-outline",
+              label: 'Manage',
+              icon: 'settings-outline',
             },
             {
-              label: "Map",
-              icon: "map-outline",
+              label: 'Map',
+              icon: 'map-outline',
             },
             {
-              label: "Privacy Policy",
-              icon: "shield-checkmark-outline",
+              label: 'Privacy Policy',
+              icon: 'shield-checkmark-outline',
             },
             {
-              label: "Terms of Service",
-              icon: "document-text-outline",
+              label: 'Terms of Service',
+              icon: 'document-text-outline',
             },
             {
-              label: "Logout",
-              icon: "log-out-outline",
+              label: 'Logout',
+              icon: 'log-out-outline',
               destructive: true,
             },
           ]}
@@ -85,13 +84,11 @@ export function CommandBar({
         >
           <View style={styles.logoSection}>
             <Image
-              source={require("@/assets/images/icon.png")}
+              source={require('@/assets/images/icon.png')}
               style={styles.logo}
               resizeMode="contain"
             />
-            <Text style={[styles.brandText, { color: "#2F4F3F" }]}>
-              MyBalance
-            </Text>
+            <Text style={[styles.brandText, { color: '#2F4F3F' }]}>MyBalance</Text>
           </View>
         </ContextMenu>
 
@@ -122,26 +119,26 @@ export function CommandBar({
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     padding: 10,
     height: 60,
     zIndex: 100,
   },
   content: {
-    boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
+    boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
     borderRadius: 20,
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 12,
     paddingVertical: 6,
     height: 48,
-    overflow: "visible",
+    overflow: 'visible',
   },
   logoSection: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 6,
   },
   logo: {
@@ -151,7 +148,7 @@ const styles = StyleSheet.create({
   },
   brandText: {
     fontSize: 15,
-    fontWeight: "600",
+    fontWeight: '600',
     letterSpacing: -0.3,
   },
   divider: {
@@ -161,24 +158,24 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   selectorSection: {
-    flexDirection: "row",
-    alignItems: "center",
-    overflow: "visible",
+    flexDirection: 'row',
+    alignItems: 'center',
+    overflow: 'visible',
     zIndex: 101,
   },
   periodSection: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     flex: 1,
-    overflow: "visible",
+    overflow: 'visible',
     zIndex: 101,
   },
   spacer: {
     flex: 1,
   },
   rightSection: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 });
 

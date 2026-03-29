@@ -1,9 +1,9 @@
-import React from "react";
-import { View, Text, StyleSheet } from "react-native";
-import Card from "@/src/components/core/card";
-import ChartSkeleton from "@/src/components/charts/chart-skeleton";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import { useDataContext } from "@/src/state/DataProvider";
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import Card from '@/src/components/core/card';
+import ChartSkeleton from '@/src/components/charts/chart-skeleton';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import { useDataContext } from '@/src/state/DataProvider';
 
 type Props = {
   income: number;
@@ -59,9 +59,9 @@ const SummaryCard: React.FC<Props> = ({
   const expensePercentage = total > 0 ? (expense / total) * 100 : 0;
 
   // Theme colors
-  const textColor = useThemeColor({}, "text");
-  const subtleTextColor = useThemeColor({}, "tabIconDefault");
-  const cardBackground = useThemeColor({}, "cardBackground");
+  const textColor = useThemeColor({}, 'text');
+  const subtleTextColor = useThemeColor({}, 'tabIconDefault');
+  const cardBackground = useThemeColor({}, 'cardBackground');
 
   // Calculate flex values for progress bar segments
   let incomeFlex: number, expenseFlex: number, balanceFlex: number;
@@ -89,7 +89,7 @@ const SummaryCard: React.FC<Props> = ({
   }
 
   const formatAmount = (amount: number) => {
-    return `€${Math.abs(amount).toLocaleString("it-IT", {
+    return `€${Math.abs(amount).toLocaleString('it-IT', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })}`;
@@ -97,8 +97,7 @@ const SummaryCard: React.FC<Props> = ({
 
   // Show skeleton if loading AND no data yet (both income and expense are 0)
   // OR if period is transitioning (changing month/year)
-  const showSkeleton =
-    (isLoading && income === 0 && expense === 0) || isTransitioning;
+  const showSkeleton = (isLoading && income === 0 && expense === 0) || isTransitioning;
 
   if (showSkeleton) {
     return (
@@ -118,15 +117,10 @@ const SummaryCard: React.FC<Props> = ({
         {/* Balance Display */}
         <View style={styles.balanceRow}>
           <Text style={[styles.balanceLabel, { color: textColor }]}>
-            {balance >= 0 ? "Savings" : "Loss"}
+            {balance >= 0 ? 'Savings' : 'Loss'}
           </Text>
-          <Text
-            style={[
-              styles.balanceAmount,
-              { color: balance >= 0 ? "#4CAF50" : "#F44336" },
-            ]}
-          >
-            {balance >= 0 ? "+" : ""}
+          <Text style={[styles.balanceAmount, { color: balance >= 0 ? '#4CAF50' : '#F44336' }]}>
+            {balance >= 0 ? '+' : ''}
             {formatAmount(balance)}
           </Text>
         </View>
@@ -135,13 +129,7 @@ const SummaryCard: React.FC<Props> = ({
         <View style={styles.progressBarContainer}>
           <View style={styles.progressBar}>
             {/* Income (green) - always on the left */}
-            <View
-              style={[
-                styles.progressSegment,
-                styles.incomeSegment,
-                { flex: incomeFlex },
-              ]}
-            />
+            <View style={[styles.progressSegment, styles.incomeSegment, { flex: incomeFlex }]} />
             {/* Balance (blue for savings, yellow for loss) - always in the center */}
             <View
               style={[
@@ -151,13 +139,7 @@ const SummaryCard: React.FC<Props> = ({
               ]}
             />
             {/* Expense (red) - always on the right */}
-            <View
-              style={[
-                styles.progressSegment,
-                styles.expenseSegment,
-                { flex: expenseFlex },
-              ]}
-            />
+            <View style={[styles.progressSegment, styles.expenseSegment, { flex: expenseFlex }]} />
           </View>
         </View>
 
@@ -165,20 +147,14 @@ const SummaryCard: React.FC<Props> = ({
         <View style={styles.detailsSection}>
           <View style={styles.detailRow}>
             <View style={styles.detailLabel}>
-              <View
-                style={[styles.colorIndicator, { backgroundColor: "#4CAF50" }]}
-              />
-              <Text style={[styles.detailText, { color: textColor }]}>
-                Incomes
-              </Text>
+              <View style={[styles.colorIndicator, { backgroundColor: '#4CAF50' }]} />
+              <Text style={[styles.detailText, { color: textColor }]}>Incomes</Text>
             </View>
             <View style={styles.detailValue}>
               <Text style={[styles.detailAmount, { color: textColor }]}>
                 {formatAmount(income)}
               </Text>
-              <Text
-                style={[styles.detailPercentage, { color: subtleTextColor }]}
-              >
+              <Text style={[styles.detailPercentage, { color: subtleTextColor }]}>
                 {incomePercentage.toFixed(1)}%
               </Text>
             </View>
@@ -186,20 +162,14 @@ const SummaryCard: React.FC<Props> = ({
 
           <View style={styles.detailRow}>
             <View style={styles.detailLabel}>
-              <View
-                style={[styles.colorIndicator, { backgroundColor: "#F44336" }]}
-              />
-              <Text style={[styles.detailText, { color: textColor }]}>
-                Outcomes
-              </Text>
+              <View style={[styles.colorIndicator, { backgroundColor: '#F44336' }]} />
+              <Text style={[styles.detailText, { color: textColor }]}>Outcomes</Text>
             </View>
             <View style={styles.detailValue}>
               <Text style={[styles.detailAmount, { color: textColor }]}>
                 {formatAmount(expense)}
               </Text>
-              <Text
-                style={[styles.detailPercentage, { color: subtleTextColor }]}
-              >
+              <Text style={[styles.detailPercentage, { color: subtleTextColor }]}>
                 {expensePercentage.toFixed(1)}%
               </Text>
             </View>
@@ -212,9 +182,9 @@ const SummaryCard: React.FC<Props> = ({
 
 const styles = StyleSheet.create({
   chipsRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 16,
     gap: 8,
   },
@@ -223,47 +193,47 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 25,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     minHeight: 48,
   },
   incomeChip: {
-    backgroundColor: "#4CAF50",
+    backgroundColor: '#4CAF50',
   },
   balanceChip: {
-    backgroundColor: "#2196F3",
+    backgroundColor: '#2196F3',
   },
   expenseChip: {
-    backgroundColor: "#F44336",
+    backgroundColor: '#F44336',
   },
   selectedChip: {
     transform: [{ scale: 1.05 }],
-    shadowColor: "#000000",
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 4,
   },
   chipText: {
-    color: "#FFFFFF",
+    color: '#FFFFFF',
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   balanceRow: {
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     height: 28,
     marginBottom: 0,
   },
   balanceLabel: {
     fontSize: 22,
-    fontWeight: "500",
+    fontWeight: '500',
   },
   balanceAmount: {
     fontSize: 24,
-    fontWeight: "bold",
+    fontWeight: 'bold',
   },
   detailsSection: {
     gap: 12,
@@ -271,22 +241,22 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   detailRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 8,
     paddingVertical: 4,
     height: 42,
   },
   detailRowSelected: {
-    backgroundColor: "#e0e0e05a",
+    backgroundColor: '#e0e0e05a',
     padding: 8,
     borderRadius: 12,
     marginHorizontal: -4,
   },
   detailLabel: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
   },
   colorIndicator: {
@@ -296,14 +266,14 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: 16,
-    fontWeight: "500",
+    fontWeight: '500',
   },
   detailValue: {
-    alignItems: "flex-end",
+    alignItems: 'flex-end',
   },
   detailAmount: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   detailPercentage: {
     fontSize: 12,
@@ -315,25 +285,25 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     height: 15,
-    backgroundColor: "#E0E0E0",
+    backgroundColor: '#E0E0E0',
     borderRadius: 6,
-    flexDirection: "row",
-    overflow: "hidden",
+    flexDirection: 'row',
+    overflow: 'hidden',
   },
   progressSegment: {
-    height: "100%",
+    height: '100%',
   },
   incomeSegment: {
-    backgroundColor: "#4CAF50", // Verde per entrate
+    backgroundColor: '#4CAF50', // Verde per entrate
   },
   expenseSegment: {
-    backgroundColor: "#F44336", // Rosso per uscite
+    backgroundColor: '#F44336', // Rosso per uscite
   },
   savingsSegment: {
-    backgroundColor: "#2196F3", // Azzurro per risparmi
+    backgroundColor: '#2196F3', // Azzurro per risparmi
   },
   lossSegment: {
-    backgroundColor: "#FFC107", // Giallo per perdite
+    backgroundColor: '#FFC107', // Giallo per perdite
   },
 });
 

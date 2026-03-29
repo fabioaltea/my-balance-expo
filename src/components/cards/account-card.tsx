@@ -1,10 +1,10 @@
-import React from "react";
-import { View, StyleSheet, Pressable } from "react-native";
-import { ThemedText } from "../core/themed-text.native";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import type { Account } from "@/src/state";
-import * as Haptics from "expo-haptics";
-import IconSymbol from "@/src/components/ui/icon-symbol";
+import React from 'react';
+import { View, StyleSheet, Pressable } from 'react-native';
+import { ThemedText } from '../core/themed-text.native';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import type { Account } from '@/src/state';
+import * as Haptics from 'expo-haptics';
+import IconSymbol from '@/src/components/ui/icon-symbol';
 
 interface IAccountCardProps {
   account: Account;
@@ -12,13 +12,10 @@ interface IAccountCardProps {
 }
 
 const AccountCard: React.FC<IAccountCardProps> = ({ account, onPress }) => {
-  const borderColor = useThemeColor(
-    { light: "#e0e0e0", dark: "#333" },
-    "tabIconDefault",
-  );
+  const borderColor = useThemeColor({ light: '#e0e0e0', dark: '#333' }, 'tabIconDefault');
 
   const formatBalance = (amount: number) => {
-    return `€ ${amount.toFixed(2).replace(".", ",")}`;
+    return `€ ${amount.toFixed(2).replace('.', ',')}`;
   };
 
   const handlePress = () => {
@@ -29,16 +26,13 @@ const AccountCard: React.FC<IAccountCardProps> = ({ account, onPress }) => {
   };
 
   const getTransactionText = (count: number = 0) => {
-    if (count === 0) return "No transactions";
-    if (count === 1) return "1 transaction";
+    if (count === 0) return 'No transactions';
+    if (count === 1) return '1 transaction';
     return `${count} transactions`;
   };
 
   return (
-    <Pressable
-      onPress={handlePress}
-      style={[styles.container, { borderColor }]}
-    >
+    <Pressable onPress={handlePress} style={[styles.container, { borderColor }]}>
       {/* Account Header */}
       <View style={styles.header}>
         <View
@@ -46,9 +40,8 @@ const AccountCard: React.FC<IAccountCardProps> = ({ account, onPress }) => {
             styles.colorIndicator,
             {
               backgroundColor: account.color,
-              borderColor:
-                account.color === "#ffffff" ? borderColor : "transparent",
-              borderWidth: account.color === "#ffffff" ? 1 : 0,
+              borderColor: account.color === '#ffffff' ? borderColor : 'transparent',
+              borderWidth: account.color === '#ffffff' ? 1 : 0,
             },
           ]}
         />
@@ -63,7 +56,7 @@ const AccountCard: React.FC<IAccountCardProps> = ({ account, onPress }) => {
         <IconSymbol
           name="chevron-right"
           size={16}
-          color={useThemeColor({ light: "#666", dark: "#999" }, "text")}
+          color={useThemeColor({ light: '#666', dark: '#999' }, 'text')}
         />
       </View>
 
@@ -74,7 +67,7 @@ const AccountCard: React.FC<IAccountCardProps> = ({ account, onPress }) => {
           style={[
             styles.balanceAmount,
             {
-              color: account.balance >= 0 ? "#22c55e" : "#ef4444",
+              color: account.balance >= 0 ? '#22c55e' : '#ef4444',
             },
           ]}
         >
@@ -89,17 +82,12 @@ const AccountCard: React.FC<IAccountCardProps> = ({ account, onPress }) => {
             styles.colorSample,
             {
               backgroundColor: account.color,
-              borderColor:
-                account.color === "#ffffff" ? borderColor : "transparent",
-              borderWidth: account.color === "#ffffff" ? 1 : 0,
+              borderColor: account.color === '#ffffff' ? borderColor : 'transparent',
+              borderWidth: account.color === '#ffffff' ? 1 : 0,
             },
           ]}
         >
-          <ThemedText
-            style={[styles.colorSampleText, { color: account.textColor }]}
-          >
-            Aa
-          </ThemedText>
+          <ThemedText style={[styles.colorSampleText, { color: account.textColor }]}>Aa</ThemedText>
         </View>
         <View style={styles.colorInfo}>
           <ThemedText style={styles.colorLabel}>Brand Colors</ThemedText>
@@ -118,7 +106,7 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 16,
     borderWidth: 1,
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
@@ -128,8 +116,8 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 16,
   },
   colorIndicator: {
@@ -143,7 +131,7 @@ const styles = StyleSheet.create({
   },
   accountName: {
     fontSize: 18,
-    fontWeight: "700",
+    fontWeight: '700',
     marginBottom: 2,
   },
   transactionCount: {
@@ -160,39 +148,39 @@ const styles = StyleSheet.create({
   },
   balanceAmount: {
     fontSize: 28,
-    fontWeight: "800",
+    fontWeight: '800',
   },
   colorPreview: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingTop: 12,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#e0e0e0",
+    borderTopColor: '#e0e0e0',
   },
   colorSample: {
     width: 40,
     height: 24,
     borderRadius: 8,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: 12,
   },
   colorSampleText: {
     fontSize: 12,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   colorInfo: {
     flex: 1,
   },
   colorLabel: {
     fontSize: 12,
-    fontWeight: "600",
+    fontWeight: '600',
     marginBottom: 2,
   },
   colorValues: {
     fontSize: 11,
     opacity: 0.6,
-    fontFamily: "monospace",
+    fontFamily: 'monospace',
   },
 });
 

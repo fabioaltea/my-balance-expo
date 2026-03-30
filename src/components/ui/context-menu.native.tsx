@@ -1,11 +1,6 @@
 import React from 'react';
-import {
-  ContextMenu as ExpoContextMenu,
-  Host,
-  Button,
-  Divider,
-  ActivationMethod,
-} from '@expo/ui/swift-ui';
+import { ContextMenu as ExpoContextMenu, Host, Button, ActivationMethod } from '@expo/ui/swift-ui';
+import { disabled as disabledModifier } from '@expo/ui/swift-ui/modifiers';
 import type { Ionicons } from '@expo/vector-icons';
 import { Pressable } from 'react-native';
 export interface IContextMenuOption {
@@ -67,10 +62,9 @@ const ContextMenu: React.FC<IContextMenuProps> = ({
                 role={normalized.destructive ? 'destructive' : 'default'}
                 {...(sfSymbol ? { systemImage: sfSymbol as any } : {})}
                 onPress={() => onSelectOption(normalized.label)}
-                disabled={normalized.disabled}
-              >
-                {normalized.label}
-              </Button>
+                label={normalized.label}
+                modifiers={normalized.disabled ? [disabledModifier()] : undefined}
+              />
             );
           })}
         </ExpoContextMenu.Items>

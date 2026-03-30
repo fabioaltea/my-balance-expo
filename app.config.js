@@ -45,6 +45,7 @@ export default ({ config }) => ({
         },
       ],
       ITSAppUsesNonExemptEncryption: false,
+      NSLocationWhenInUseUsageDescription: "Allow $(PRODUCT_NAME) to access your location",
     },
   },
   android: {

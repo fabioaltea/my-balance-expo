@@ -11,16 +11,16 @@
  * - MovementDataHelper: All pure computation (grouping, filtering, forecasts)
  */
 
-import { useCallback, useMemo } from "react";
-import { useSpreadsheetQuery } from "./useSpreadsheetQuery";
-import { useQueryClient } from "@tanstack/react-query";
-import { QUERY_KEYS } from "@/src/constants/queryKeys";
-import { TransactionsApiHelper } from "../helpers/TransactionsApiHelper";
-import { AccountsApiHelper } from "../helpers/AccountsApiHelper";
-import { CategoriesApiHelper } from "../helpers/CategoriesApiHelper";
-import type { Transaction, Account, Category } from "../types/models";
-import { MovementDataHelper } from "../helpers/MovementDataHelper";
-import { getCurrentMonthPeriod } from "../utils/dateUtils";
+import { useCallback, useMemo } from 'react';
+import { useSpreadsheetQuery } from './useSpreadsheetQuery';
+import { useQueryClient } from '@tanstack/react-query';
+import { QUERY_KEYS } from '@/src/constants/queryKeys';
+import { TransactionsApiHelper } from '../helpers/TransactionsApiHelper';
+import { AccountsApiHelper } from '../helpers/AccountsApiHelper';
+import { CategoriesApiHelper } from '../helpers/CategoriesApiHelper';
+import type { Transaction, Account, Category } from '../types/models';
+import { MovementDataHelper } from '../helpers/MovementDataHelper';
+import { getCurrentMonthPeriod } from '../utils/dateUtils';
 
 // Re-export types from centralized location for backward compatibility
 export type {
@@ -31,7 +31,7 @@ export type {
   PendingRecurrence,
   MonthlyForecast,
   AccountForecast,
-} from "../types/models";
+} from '../types/models';
 
 export const useMyBalanceData = (
   spreadsheetId: string | null,
@@ -78,14 +78,10 @@ export const useMyBalanceData = (
     gcTime: 1000 * 60 * 60 * 24,
   });
 
-  const isLoading =
-    isLoadingTransactions || isLoadingAccounts || isLoadingCategories;
+  const isLoading = isLoadingTransactions || isLoadingAccounts || isLoadingCategories;
 
   const error =
-    transactionsError?.message ||
-    accountsError?.message ||
-    categoriesError?.message ||
-    null;
+    transactionsError?.message || accountsError?.message || categoriesError?.message || null;
 
   const reloadData = async () => {
     await Promise.all([
@@ -117,11 +113,7 @@ export const useMyBalanceData = (
   );
 
   const pendingRecurrences = useMemo(
-    () =>
-      MovementDataHelper.calculatePendingRecurrences(
-        recurringMovements,
-        allMovements,
-      ),
+    () => MovementDataHelper.calculatePendingRecurrences(recurringMovements, allMovements),
     [recurringMovements, allMovements],
   );
 
@@ -144,12 +136,7 @@ export const useMyBalanceData = (
   }, [calculateForecast]);
 
   const accountForecasts = useMemo(
-    () =>
-      MovementDataHelper.calculateAccountForecasts(
-        accounts,
-        transactions,
-        pendingRecurrences,
-      ),
+    () => MovementDataHelper.calculateAccountForecasts(accounts, transactions, pendingRecurrences),
     [accounts, transactions, pendingRecurrences],
   );
 

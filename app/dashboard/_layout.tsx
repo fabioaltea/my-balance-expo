@@ -1,9 +1,7 @@
-import React from "react";
+import React from 'react';
 
 const TabLayout: React.FC = () => {
- 
-  return (
-    <></>);
-}
+  return <></>;
+};
 
 export default TabLayout;

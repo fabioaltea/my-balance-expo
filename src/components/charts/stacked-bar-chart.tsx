@@ -5,12 +5,12 @@
  * Each bar represents a month, with segments stacked for each account.
  */
 
-import React, { useMemo, useRef, useEffect } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView } from "react-native";
-import * as Haptics from "expo-haptics";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import type { MonthlyData } from "@/src/types/charts";
-import { getShortMonthLabel } from "@/src/helpers/ChartDataHelper";
+import React, { useMemo, useRef, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView } from 'react-native';
+import * as Haptics from 'expo-haptics';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import type { MonthlyData } from '@/src/types/charts';
+import { getShortMonthLabel } from '@/src/helpers/ChartDataHelper';
 
 interface StackedBarChartProps {
   data: MonthlyData[];
@@ -20,7 +20,7 @@ interface StackedBarChartProps {
   showLegend?: boolean;
   showTotal?: boolean;
   onBarPress?: (monthData: MonthlyData) => void;
-  viewMode?: "months" | "years";
+  viewMode?: 'months' | 'years';
   scrollable?: boolean;
 }
 
@@ -35,12 +35,12 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
   showLegend = true,
   showTotal = true,
   onBarPress,
-  viewMode = "months",
+  viewMode = 'months',
   scrollable = false,
 }) => {
-  const textColor = useThemeColor({}, "text");
-  const subtleTextColor = useThemeColor({}, "tabIconDefault");
-  const cardBackground = useThemeColor({}, "cardBackground");
+  const textColor = useThemeColor({}, 'text');
+  const subtleTextColor = useThemeColor({}, 'tabIconDefault');
+  const cardBackground = useThemeColor({}, 'cardBackground');
   const scrollRef = useRef<ScrollView>(null);
 
   // Calculate chart dimensions
@@ -53,16 +53,14 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
 
     // For stacked bars, we need to sum positive balances only
     const maxTotal = Math.max(
-      ...data.map((d) =>
-        d.accounts.reduce((sum, acc) => sum + Math.max(0, acc.balance), 0)
-      )
+      ...data.map((d) => d.accounts.reduce((sum, acc) => sum + Math.max(0, acc.balance), 0)),
     );
 
     // Calculate nice Y-axis labels
     const roundedMax = Math.ceil(maxTotal / 1000) * 1000;
     const step = roundedMax / 4;
     const labels = [0, step, step * 2, step * 3, roundedMax].map((v) =>
-      v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v.toString()
+      v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v.toString(),
     );
 
     return { maxValue: roundedMax || 1000, yAxisLabels: labels };
@@ -94,7 +92,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
   const visibleData = useMemo(() => {
     if (data.length === 0) return [];
     if (scrollable) return data;
-    const screenWidth = Dimensions.get("window").width;
+    const screenWidth = Dimensions.get('window').width;
     const containerPadding = 32;
     const cardPadding = 48;
     const availableWidth = screenWidth - containerPadding - cardPadding - yAxisWidth;
@@ -112,23 +110,23 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
   if (data.length === 0) {
     return (
       <View style={[styles.emptyContainer, { height }]}>
-        <Text style={[styles.emptyText, { color: subtleTextColor }]}>
-          No data available
-        </Text>
+        <Text style={[styles.emptyText, { color: subtleTextColor }]}>No data available</Text>
       </View>
     );
   }
 
   const barsContent = (
-    <View style={[
-      scrollable ? styles.barsRowScrollable : styles.barsRow,
-      scrollable && { width: visibleData.length * barTotalWidth + BAR_GAP },
-    ]}>
+    <View
+      style={[
+        scrollable ? styles.barsRowScrollable : styles.barsRow,
+        scrollable && { width: visibleData.length * barTotalWidth + BAR_GAP },
+      ]}
+    >
       {visibleData.map((monthData, monthIndex) => {
         // Calculate total height for positive balances
         const positiveTotal = monthData.accounts.reduce(
           (sum, acc) => sum + Math.max(0, acc.balance),
-          0
+          0,
         );
         const barHeightPercent = (positiveTotal / maxValue) * 100;
 
@@ -142,7 +140,11 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
         return (
           <TouchableOpacity
             key={monthIndex}
-            style={scrollable ? [styles.barColumnFixed, { width: barWidth, marginHorizontal: BAR_GAP / 2 }] : styles.barColumn}
+            style={
+              scrollable
+                ? [styles.barColumnFixed, { width: barWidth, marginHorizontal: BAR_GAP / 2 }]
+                : styles.barColumn
+            }
             onPress={handleBarPress}
             activeOpacity={onBarPress ? 0.7 : 1}
           >
@@ -161,8 +163,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
               {monthData.accounts
                 .filter((acc) => acc.balance > 0)
                 .map((account, accIndex) => {
-                  const segmentHeight =
-                    (account.balance / positiveTotal) * 100;
+                  const segmentHeight = (account.balance / positiveTotal) * 100;
                   return (
                     <View
                       key={accIndex}
@@ -181,29 +182,21 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
             {/* Label */}
             {showLabels && (
               <View style={styles.xAxisLabelContainer}>
-                {viewMode === "months" ? (
+                {viewMode === 'months' ? (
                   <>
-                    <Text
-                      style={[styles.xAxisLabel, { color: subtleTextColor }]}
-                    >
+                    <Text style={[styles.xAxisLabel, { color: subtleTextColor }]}>
                       {getShortMonthLabel(monthData.monthIndex)}
                     </Text>
-                    <Text
-                      style={[styles.xAxisLabelYear, { color: subtleTextColor }]}
-                    >
+                    <Text style={[styles.xAxisLabelYear, { color: subtleTextColor }]}>
                       {String(monthData.year).slice(-2)}
                     </Text>
                   </>
                 ) : (
                   <>
-                    <Text
-                      style={[styles.xAxisLabel, { color: subtleTextColor }]}
-                    >
+                    <Text style={[styles.xAxisLabel, { color: subtleTextColor }]}>
                       {String(monthData.year).slice(0, 2)}
                     </Text>
-                    <Text
-                      style={[styles.xAxisLabelYear, { color: subtleTextColor }]}
-                    >
+                    <Text style={[styles.xAxisLabelYear, { color: subtleTextColor }]}>
                       {String(monthData.year).slice(-2)}
                     </Text>
                   </>
@@ -223,16 +216,8 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
         <View style={styles.legendContainer}>
           {uniqueAccounts.map((account, index) => (
             <View key={index} style={styles.legendItem}>
-              <View
-                style={[
-                  styles.legendColor,
-                  { backgroundColor: account.color },
-                ]}
-              />
-              <Text
-                style={[styles.legendText, { color: subtleTextColor }]}
-                numberOfLines={1}
-              >
+              <View style={[styles.legendColor, { backgroundColor: account.color }]} />
+              <Text style={[styles.legendText, { color: subtleTextColor }]} numberOfLines={1}>
                 {account.name}
               </Text>
             </View>
@@ -249,10 +234,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
               .slice()
               .reverse()
               .map((label, index) => (
-                <Text
-                  key={index}
-                  style={[styles.yAxisLabel, { color: subtleTextColor }]}
-                >
+                <Text key={index} style={[styles.yAxisLabel, { color: subtleTextColor }]}>
                   {label}
                 </Text>
               ))}
@@ -266,10 +248,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
             {yAxisLabels.slice(1).map((_, index) => (
               <View
                 key={index}
-                style={[
-                  styles.gridLine,
-                  { borderColor: subtleTextColor, opacity: 0.2 },
-                ]}
+                style={[styles.gridLine, { borderColor: subtleTextColor, opacity: 0.2 }]}
               />
             ))}
           </View>
@@ -293,12 +272,10 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
       {/* Total value display */}
       {showTotal && data.length > 0 && (
         <View style={styles.totalContainer}>
-          <Text style={[styles.totalLabel, { color: subtleTextColor }]}>
-            Current Total:
-          </Text>
+          <Text style={[styles.totalLabel, { color: subtleTextColor }]}>Current Total:</Text>
           <Text style={[styles.totalValue, { color: textColor }]}>
             €
-            {data[data.length - 1].totalBalance.toLocaleString("it-IT", {
+            {data[data.length - 1].totalBalance.toLocaleString('it-IT', {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             })}
@@ -312,25 +289,25 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    width: "100%",
-    justifyContent: "center",
+    width: '100%',
+    justifyContent: 'center',
   },
   emptyContainer: {
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   emptyText: {
     fontSize: 14,
   },
   legendContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     marginBottom: 12,
     gap: 12,
   },
   legendItem: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 6,
   },
   legendColor: {
@@ -343,14 +320,14 @@ const styles = StyleSheet.create({
     maxWidth: 80,
   },
   chartContainer: {
-    flexDirection: "row",
-    alignSelf: "stretch",
+    flexDirection: 'row',
+    alignSelf: 'stretch',
     padding: 0,
     paddingVertical: 4,
   },
   yAxis: {
-    justifyContent: "space-between",
-    alignItems: "flex-end",
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
     paddingRight: 2,
     paddingVertical: 10,
     paddingBottom: 25,
@@ -360,58 +337,58 @@ const styles = StyleSheet.create({
   },
   barsContainer: {
     flex: 1,
-    position: "relative",
+    position: 'relative',
     paddingTop: 20,
   },
   gridContainer: {
-    position: "absolute",
+    position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    justifyContent: "space-between",
+    justifyContent: 'space-between',
   },
   gridLine: {
     height: 1,
-    borderStyle: "dashed",
+    borderStyle: 'dashed',
   },
   scrollContainer: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    alignItems: "stretch",
+    alignItems: 'stretch',
   },
   barsRow: {
     flex: 1,
-    flexDirection: "row",
-    alignItems: "stretch",
-    justifyContent: "space-evenly",
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    justifyContent: 'space-evenly',
     paddingBottom: 0,
   },
   barsRowScrollable: {
     flex: 1,
-    flexDirection: "row",
-    alignItems: "stretch",
+    flexDirection: 'row',
+    alignItems: 'stretch',
   },
   barColumn: {
     flex: 1,
-    alignItems: "center",
+    alignItems: 'center',
   },
   barColumnFixed: {
-    alignItems: "center",
+    alignItems: 'center',
   },
   bar: {
     borderRadius: 8,
-    overflow: "hidden",
-    flexDirection: "column-reverse",
+    overflow: 'hidden',
+    flexDirection: 'column-reverse',
     minHeight: 2,
   },
   barSegment: {
-    width: "100%",
+    width: '100%',
   },
   xAxisLabelContainer: {
-    alignItems: "center",
+    alignItems: 'center',
     marginTop: 4,
   },
   xAxisLabel: {
@@ -424,21 +401,21 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   totalContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    alignSelf: "stretch",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    alignSelf: 'stretch',
     marginTop: 16,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: "rgba(128, 128, 128, 0.2)",
+    borderTopColor: 'rgba(128, 128, 128, 0.2)',
   },
   totalLabel: {
     fontSize: 14,
   },
   totalValue: {
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: '600',
   },
 });
 

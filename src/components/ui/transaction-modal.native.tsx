@@ -1,26 +1,19 @@
-import {
-  View,
-  StyleSheet,
-  Text,
-  Pressable,
-  Switch,
-  Dimensions,
-} from "react-native";
-import { ThemedText } from "../core/themed-text.native";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import { useEffect, useState } from "react";
-import ListPicker, { IListPickerItem } from "./list-picker.native";
-import CurrencyInput from "./currency-input";
-import * as Haptics from "expo-haptics";
-import ModalPanel from "./modal-panel.native";
-import React from "react";
+import { View, StyleSheet, Text, Pressable, Switch, Dimensions } from 'react-native';
+import { ThemedText } from '../core/themed-text.native';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import { useEffect, useState } from 'react';
+import ListPicker, { IListPickerItem } from './list-picker.native';
+import CurrencyInput from './currency-input';
+import * as Haptics from 'expo-haptics';
+import ModalPanel from './modal-panel.native';
+import React from 'react';
 
-const { height: SCREEN_HEIGHT } = Dimensions.get("window");
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export interface ITransactionData {
   accountName: string;
   amount: number;
-  type: "income" | "expense";
+  type: 'income' | 'expense';
 }
 
 interface ITransactionModalProps {
@@ -38,14 +31,12 @@ const TransactionModal: React.FC<ITransactionModalProps> = ({
   initialData,
   accounts,
   onSave,
-  title = "Transaction",
+  title = 'Transaction',
 }) => {
-  const [transactionType, setTransactionType] = useState<"income" | "expense">(
-    initialData?.type || "expense",
+  const [transactionType, setTransactionType] = useState<'income' | 'expense'>(
+    initialData?.type || 'expense',
   );
-  const [selectedAccount, setSelectedAccount] = useState(
-    initialData?.accountName || "",
-  );
+  const [selectedAccount, setSelectedAccount] = useState(initialData?.accountName || '');
   const [amount, setAmount] = useState(initialData?.amount || 0);
   const [showKeyboard, setShowKeyboard] = useState(false);
 
@@ -54,13 +45,13 @@ const TransactionModal: React.FC<ITransactionModalProps> = ({
     if (isVisible) {
       if (initialData) {
         // Edit mode: precompile with existing data
-        setTransactionType(initialData.type || "expense");
-        setSelectedAccount(initialData.accountName || "");
+        setTransactionType(initialData.type || 'expense');
+        setSelectedAccount(initialData.accountName || '');
         setAmount(initialData.amount || 0);
       } else {
         // New transaction: reset to defaults
-        setTransactionType("expense");
-        setSelectedAccount(accounts.length ===1 ? accounts[0].value : ""); // Auto-select if only one account
+        setTransactionType('expense');
+        setSelectedAccount(accounts.length === 1 ? accounts[0].value : ''); // Auto-select if only one account
         setAmount(0);
       }
       setShowKeyboard(false);
@@ -68,12 +59,9 @@ const TransactionModal: React.FC<ITransactionModalProps> = ({
   }, [isVisible, initialData]);
 
   // Theme colors
-  const backgroundColor = useThemeColor(
-    { light: "#fff", dark: "#1a1a1a" },
-    "background",
-  );
+  const backgroundColor = useThemeColor({ light: '#fff', dark: '#1a1a1a' }, 'background');
 
-  const handleToggle = (type: "income" | "expense") => {
+  const handleToggle = (type: 'income' | 'expense') => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setTransactionType(type);
   };
@@ -107,24 +95,19 @@ const TransactionModal: React.FC<ITransactionModalProps> = ({
         <View style={styles.inputRow}>
           <ThemedText style={styles.label}>Type</ThemedText>
           <Switch
-            trackColor={{ true: "#59a25bff" }}
-            ios_backgroundColor={"#9c1414ff"}
-            onValueChange={(value) =>
-              setTransactionType(value ? "income" : "expense")
-            }
-            value={transactionType === "income"}
+            trackColor={{ true: '#59a25bff' }}
+            ios_backgroundColor={'#9c1414ff'}
+            onValueChange={(value) => setTransactionType(value ? 'income' : 'expense')}
+            value={transactionType === 'income'}
           />
         </View>
 
         {/* Amount Section */}
         <View style={styles.inputRow}>
           <ThemedText style={styles.label}>Amount</ThemedText>
-          <Pressable
-            onPress={() => setShowKeyboard(!showKeyboard)}
-            style={styles.valueContainer}
-          >
+          <Pressable onPress={() => setShowKeyboard(!showKeyboard)} style={styles.valueContainer}>
             <ThemedText style={styles.amountText}>
-              {amount.toFixed(2).replace(".", ",")} €
+              {amount.toFixed(2).replace('.', ',')} €
             </ThemedText>
           </Pressable>
         </View>
@@ -153,11 +136,7 @@ const TransactionModal: React.FC<ITransactionModalProps> = ({
             confirmText="Conferma"
             cancelText="Annulla"
           >
-            <CurrencyInput
-              value={amount}
-              onChange={setAmount}
-              showConfirmButton={false}
-            />
+            <CurrencyInput value={amount} onChange={setAmount} showConfirmButton={false} />
           </ModalPanel>
         )}
       </View>
@@ -173,68 +152,68 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   inputRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 40,
   },
   amountRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 20,
     minHeight: 80, // Increased height for amount
   },
   label: {
     fontSize: 16,
-    fontWeight: "500",
+    fontWeight: '500',
     flex: 0,
     minWidth: 80,
   },
   valueContainer: {
     flex: 1,
-    alignItems: "flex-end",
+    alignItems: 'flex-end',
   },
   centerSection: {
-    alignItems: "center",
+    alignItems: 'center',
     paddingVertical: 30,
   },
   amountText: {
-    fontWeight: "bold",
+    fontWeight: 'bold',
     fontSize: 24,
   },
   confirmSection: {
     marginTop: 40,
     marginBottom: 20,
-    alignItems: "center",
+    alignItems: 'center',
   },
   currencyToggle: {
-    backgroundColor: "#f0f0f0",
+    backgroundColor: '#f0f0f0',
     borderRadius: 8,
     paddingVertical: 12,
     paddingHorizontal: 16,
     marginVertical: 16,
-    alignItems: "center",
+    alignItems: 'center',
   },
   currencyToggleText: {
     fontSize: 16,
-    fontWeight: "500",
-    color: "#007AFF",
+    fontWeight: '500',
+    color: '#007AFF',
   },
   toggleContainer: {
-    flexDirection: "row",
+    flexDirection: 'row',
     borderRadius: 20,
-    overflow: "hidden",
+    overflow: 'hidden',
     borderWidth: 1,
-    borderColor: "#e0e0e0",
+    borderColor: '#e0e0e0',
     minWidth: 200,
   },
   toggleButton: {
     flex: 1,
     paddingVertical: 8,
     paddingHorizontal: 16,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   toggleLeft: {
     borderTopRightRadius: 0,
@@ -245,19 +224,19 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 0,
   },
   toggleActiveExpense: {
-    backgroundColor: "#dc2626",
+    backgroundColor: '#dc2626',
   },
   toggleActiveIncome: {
-    backgroundColor: "#16a34a",
+    backgroundColor: '#16a34a',
   },
   toggleText: {
     fontSize: 14,
-    fontWeight: "500",
-    color: "#666",
+    fontWeight: '500',
+    color: '#666',
   },
   toggleActiveText: {
-    color: "#fff",
-    fontWeight: "600",
+    color: '#fff',
+    fontWeight: '600',
   },
 });
 

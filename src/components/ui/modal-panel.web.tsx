@@ -1,9 +1,9 @@
-import { View, StyleSheet, Pressable, Animated } from "react-native";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import { useRef, useEffect, ReactNode } from "react";
-import { ThemedText } from "../core/themed-text.native";
-import GlassButton from "./glass-button";
-import React from "react";
+import { View, StyleSheet, Pressable, Animated } from 'react-native';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import { useRef, useEffect, ReactNode } from 'react';
+import { ThemedText } from '../core/themed-text.native';
+import GlassButton from './glass-button';
+import React from 'react';
 
 interface IModalPanelProps {
   isVisible: boolean;
@@ -25,22 +25,16 @@ const ModalPanel: React.FC<IModalPanelProps> = ({
   title,
   showConfirmButton = true,
   showCancelButton = true,
-  confirmText = "Conferma",
-  cancelText = "Annulla",
+  confirmText = 'Conferma',
+  cancelText = 'Annulla',
   children,
   maxHeight,
 }) => {
   const opacityAnimation = useRef(new Animated.Value(0)).current;
 
-  const backgroundColor = useThemeColor(
-    { light: "#fff", dark: "#1a1a1a" },
-    "background",
-  );
-  const borderColor = useThemeColor(
-    { light: "#e0e0e0", dark: "#333" },
-    "tabIconDefault",
-  );
-  const overlayColor = "transparent";
+  const backgroundColor = useThemeColor({ light: '#fff', dark: '#1a1a1a' }, 'background');
+  const borderColor = useThemeColor({ light: '#e0e0e0', dark: '#333' }, 'tabIconDefault');
+  const overlayColor = 'transparent';
 
   useEffect(() => {
     if (isVisible) {
@@ -120,13 +114,13 @@ const ModalPanel: React.FC<IModalPanelProps> = ({
 
 const styles = StyleSheet.create({
   overlay: {
-    position: "absolute",
+    position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     zIndex: 1000,
   },
   backdrop: {
@@ -135,27 +129,27 @@ const styles = StyleSheet.create({
   panel: {
     borderRadius: 30,
     borderWidth: 0,
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 12,
     elevation: 8,
-    width: "90%",
+    width: '90%',
     maxWidth: 500,
     paddingTop: 16,
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 16,
     marginBottom: 16,
   },
   title: {
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: '600',
     flex: 1,
-    textAlign: "center",
+    textAlign: 'center',
   },
   spacer: {
     width: 48,

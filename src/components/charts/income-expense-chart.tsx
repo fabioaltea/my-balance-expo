@@ -4,12 +4,12 @@
  * Renders side-by-side bars for income (green) and expenses (red) per period.
  */
 
-import React, { useMemo, useRef, useEffect } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView } from "react-native";
-import * as Haptics from "expo-haptics";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import type { IncomeExpenseData } from "@/src/types/charts";
-import { getShortMonthLabel } from "@/src/helpers/ChartDataHelper";
+import React, { useMemo, useRef, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView } from 'react-native';
+import * as Haptics from 'expo-haptics';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import type { IncomeExpenseData } from '@/src/types/charts';
+import { getShortMonthLabel } from '@/src/helpers/ChartDataHelper';
 
 interface IncomeExpenseChartProps {
   data: IncomeExpenseData[];
@@ -17,12 +17,12 @@ interface IncomeExpenseChartProps {
   showLabels?: boolean;
   showYAxis?: boolean;
   onBarPress?: (data: IncomeExpenseData) => void;
-  viewMode?: "months" | "years";
+  viewMode?: 'months' | 'years';
   scrollable?: boolean;
 }
 
-const INCOME_COLOR = "#4CAF50";
-const EXPENSE_COLOR = "#F44336";
+const INCOME_COLOR = '#4CAF50';
+const EXPENSE_COLOR = '#F44336';
 
 const BAR_WIDTH = 12;
 const BAR_GAP = 2;
@@ -34,10 +34,10 @@ const IncomeExpenseChart: React.FC<IncomeExpenseChartProps> = ({
   showLabels = true,
   showYAxis = true,
   onBarPress,
-  viewMode = "months",
+  viewMode = 'months',
   scrollable = false,
 }) => {
-  const subtleTextColor = useThemeColor({}, "tabIconDefault");
+  const subtleTextColor = useThemeColor({}, 'tabIconDefault');
   const scrollRef = useRef<ScrollView>(null);
 
   // Calculate chart dimensions
@@ -54,7 +54,7 @@ const IncomeExpenseChart: React.FC<IncomeExpenseChartProps> = ({
   // Calculate visible data
   const visibleData = useMemo(() => {
     if (scrollable) return data;
-    const screenWidth = Dimensions.get("window").width;
+    const screenWidth = Dimensions.get('window').width;
     const containerPadding = 32;
     const cardPadding = 48;
     const availableWidth = screenWidth - containerPadding - cardPadding - yAxisWidth;
@@ -66,14 +66,12 @@ const IncomeExpenseChart: React.FC<IncomeExpenseChartProps> = ({
   const { maxValue, yAxisLabels } = useMemo(() => {
     if (visibleData.length === 0) return { maxValue: 0, yAxisLabels: [] };
 
-    const maxTotal = Math.max(
-      ...visibleData.map((d) => Math.max(d.income, d.expenses))
-    );
+    const maxTotal = Math.max(...visibleData.map((d) => Math.max(d.income, d.expenses)));
 
     const roundedMax = Math.ceil(maxTotal / 1000) * 1000;
     const step = roundedMax / 4;
     const labels = [0, step, step * 2, step * 3, roundedMax].map((v) =>
-      v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v.toString()
+      v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v.toString(),
     );
 
     return { maxValue: roundedMax || 1000, yAxisLabels: labels };
@@ -89,18 +87,18 @@ const IncomeExpenseChart: React.FC<IncomeExpenseChartProps> = ({
   if (data.length === 0) {
     return (
       <View style={[styles.emptyContainer, { height }]}>
-        <Text style={[styles.emptyText, { color: subtleTextColor }]}>
-          No data available
-        </Text>
+        <Text style={[styles.emptyText, { color: subtleTextColor }]}>No data available</Text>
       </View>
     );
   }
 
   const barsContent = (
-    <View style={[
-      scrollable ? styles.barsRowScrollable : styles.barsRow,
-      scrollable && { width: visibleData.length * (pairWidth + PAIR_GAP) + PAIR_GAP },
-    ]}>
+    <View
+      style={[
+        scrollable ? styles.barsRowScrollable : styles.barsRow,
+        scrollable && { width: visibleData.length * (pairWidth + PAIR_GAP) + PAIR_GAP },
+      ]}
+    >
       {visibleData.map((periodData, index) => {
         const incomeHeight = (periodData.income / maxValue) * 100;
         const expenseHeight = (periodData.expenses / maxValue) * 100;
@@ -115,7 +113,11 @@ const IncomeExpenseChart: React.FC<IncomeExpenseChartProps> = ({
         return (
           <TouchableOpacity
             key={index}
-            style={scrollable ? [styles.barPairColumnFixed, { width: pairWidth, marginHorizontal: PAIR_GAP / 2 }] : styles.barPairColumn}
+            style={
+              scrollable
+                ? [styles.barPairColumnFixed, { width: pairWidth, marginHorizontal: PAIR_GAP / 2 }]
+                : styles.barPairColumn
+            }
             onPress={handlePress}
             activeOpacity={onBarPress ? 0.7 : 1}
           >
@@ -154,29 +156,21 @@ const IncomeExpenseChart: React.FC<IncomeExpenseChartProps> = ({
             {/* Label */}
             {showLabels && (
               <View style={styles.xAxisLabelContainer}>
-                {viewMode === "months" ? (
+                {viewMode === 'months' ? (
                   <>
-                    <Text
-                      style={[styles.xAxisLabel, { color: subtleTextColor }]}
-                    >
+                    <Text style={[styles.xAxisLabel, { color: subtleTextColor }]}>
                       {getShortMonthLabel(periodData.monthIndex)}
                     </Text>
-                    <Text
-                      style={[styles.xAxisLabelYear, { color: subtleTextColor }]}
-                    >
+                    <Text style={[styles.xAxisLabelYear, { color: subtleTextColor }]}>
                       {String(periodData.year).slice(-2)}
                     </Text>
                   </>
                 ) : (
                   <>
-                    <Text
-                      style={[styles.xAxisLabel, { color: subtleTextColor }]}
-                    >
+                    <Text style={[styles.xAxisLabel, { color: subtleTextColor }]}>
                       {String(periodData.year).slice(0, 2)}
                     </Text>
-                    <Text
-                      style={[styles.xAxisLabelYear, { color: subtleTextColor }]}
-                    >
+                    <Text style={[styles.xAxisLabelYear, { color: subtleTextColor }]}>
                       {String(periodData.year).slice(-2)}
                     </Text>
                   </>
@@ -200,10 +194,7 @@ const IncomeExpenseChart: React.FC<IncomeExpenseChartProps> = ({
               .slice()
               .reverse()
               .map((label, index) => (
-                <Text
-                  key={index}
-                  style={[styles.yAxisLabel, { color: subtleTextColor }]}
-                >
+                <Text key={index} style={[styles.yAxisLabel, { color: subtleTextColor }]}>
                   {label}
                 </Text>
               ))}
@@ -217,10 +208,7 @@ const IncomeExpenseChart: React.FC<IncomeExpenseChartProps> = ({
             {yAxisLabels.slice(1).map((_, index) => (
               <View
                 key={index}
-                style={[
-                  styles.gridLine,
-                  { borderColor: subtleTextColor, opacity: 0.2 },
-                ]}
+                style={[styles.gridLine, { borderColor: subtleTextColor, opacity: 0.2 }]}
               />
             ))}
           </View>
@@ -247,25 +235,25 @@ const IncomeExpenseChart: React.FC<IncomeExpenseChartProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    width: "100%",
-    justifyContent: "center",
+    width: '100%',
+    justifyContent: 'center',
   },
   emptyContainer: {
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   emptyText: {
     fontSize: 14,
   },
   chartContainer: {
-    flexDirection: "row",
-    alignSelf: "stretch",
+    flexDirection: 'row',
+    alignSelf: 'stretch',
     padding: 0,
     paddingVertical: 4,
   },
   yAxis: {
-    justifyContent: "space-between",
-    alignItems: "flex-end",
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
     paddingRight: 2,
     paddingVertical: 10,
     paddingBottom: 25,
@@ -275,50 +263,50 @@ const styles = StyleSheet.create({
   },
   barsContainer: {
     flex: 1,
-    position: "relative",
+    position: 'relative',
     paddingTop: 20,
   },
   gridContainer: {
-    position: "absolute",
+    position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    justifyContent: "space-between",
+    justifyContent: 'space-between',
   },
   gridLine: {
     height: 1,
-    borderStyle: "dashed",
+    borderStyle: 'dashed',
   },
   scrollContainer: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    alignItems: "stretch",
+    alignItems: 'stretch',
   },
   barsRow: {
     flex: 1,
-    flexDirection: "row",
-    alignItems: "stretch",
-    justifyContent: "space-evenly",
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    justifyContent: 'space-evenly',
     paddingBottom: 0,
   },
   barsRowScrollable: {
     flex: 1,
-    flexDirection: "row",
-    alignItems: "stretch",
+    flexDirection: 'row',
+    alignItems: 'stretch',
   },
   barPairColumn: {
     flex: 1,
-    alignItems: "center",
+    alignItems: 'center',
   },
   barPairColumnFixed: {
-    alignItems: "center",
+    alignItems: 'center',
   },
   barPair: {
-    flexDirection: "row",
-    alignItems: "stretch",
+    flexDirection: 'row',
+    alignItems: 'stretch',
     flex: 1,
   },
   bar: {
@@ -326,7 +314,7 @@ const styles = StyleSheet.create({
     minHeight: 2,
   },
   xAxisLabelContainer: {
-    alignItems: "center",
+    alignItems: 'center',
     marginTop: 4,
   },
   xAxisLabel: {

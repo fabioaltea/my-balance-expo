@@ -1,5 +1,5 @@
-import { useMutation, useQueryClient, QueryClient } from "@tanstack/react-query";
-import { useAuthContext } from "@/src/state/AuthProvider";
+import { useMutation, useQueryClient, QueryClient } from '@tanstack/react-query';
+import { useAuthContext } from '@/src/state/AuthProvider';
 
 export interface SpreadsheetMutationOptions<TData, TContext> {
   mutationFn: (spreadsheetId: string, data: TData) => Promise<unknown>;
@@ -23,7 +23,7 @@ export function useSpreadsheetMutation<TData, TContext>({
 
   return useMutation({
     mutationFn: async (data: TData) => {
-      if (!selectedSpreadsheetId) throw new Error("No spreadsheet selected");
+      if (!selectedSpreadsheetId) throw new Error('No spreadsheet selected');
       return mutationFn(selectedSpreadsheetId, data);
     },
     onMutate: (data) => onMutate(queryClient, data),

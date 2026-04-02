@@ -1,5 +1,5 @@
-import React, { createContext, useContext, ReactNode } from "react";
-import { useAuth, AuthState } from "../hooks/useAuth";
+import React, { createContext, useContext, ReactNode } from 'react';
+import { useAuth, AuthState } from '../hooks/useAuth';
 
 interface AuthContextType extends AuthState {
   // Auth actions
@@ -27,7 +27,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 export const useAuthContext = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuthContext must be used within an AuthProvider");
+    throw new Error('useAuthContext must be used within an AuthProvider');
   }
   return context;
 };

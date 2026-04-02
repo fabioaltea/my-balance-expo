@@ -1,7 +1,7 @@
-import { View, StyleSheet, Pressable } from "react-native";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import React, { useRef, useEffect, useState } from "react";
-import { ThemedText } from "../core/themed-text.native";
+import { View, StyleSheet, Pressable } from 'react-native';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import React, { useRef, useEffect, useState } from 'react';
+import { ThemedText } from '../core/themed-text.native';
 
 interface RecurringMovement {
   recurrenceId?: string;
@@ -34,13 +34,13 @@ const RecurrencePickerWeb: React.FC<IRecurrencePickerWebProps> = ({
   onFrequencyChange,
   recurringMovements,
 }) => {
-  const textColor = useThemeColor({ light: "#000", dark: "#fff" }, "text");
+  const textColor = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
 
   // Calculate target height based on visible rows
   let rowCount = 1; // toggle row always visible
   if (isRecurrent) {
     rowCount += 1; // recurrence select
-    if (recurrenceSelection === "new") {
+    if (recurrenceSelection === 'new') {
       rowCount += 2; // repeat + every
     }
   }
@@ -59,29 +59,29 @@ const RecurrencePickerWeb: React.FC<IRecurrencePickerWebProps> = ({
   const selectStyle = {
     flex: 1,
     fontSize: 18,
-    textAlign: "right" as const,
+    textAlign: 'right' as const,
     color: textColor,
-    backgroundColor: "transparent",
-    border: "none",
-    outline: "none",
-    cursor: "pointer",
+    backgroundColor: 'transparent',
+    border: 'none',
+    outline: 'none',
+    cursor: 'pointer',
     fontFamily:
       "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-    width: "100%",
+    width: '100%',
   };
 
   return (
     // @ts-ignore
     <div
       style={{
-        position: "relative",
-        overflow: "hidden",
+        position: 'relative',
+        overflow: 'hidden',
         height: currentHeight,
-        transition: "height 250ms ease-out",
+        transition: 'height 250ms ease-out',
       }}
     >
       {/* @ts-ignore */}
-      <div style={{ position: "absolute", top: 0, left: 0, right: 0 }}>
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0 }}>
         {/* Toggle */}
         <View style={styles.fieldRow}>
           <ThemedText type="default" style={styles.fieldLabel}>
@@ -89,16 +89,10 @@ const RecurrencePickerWeb: React.FC<IRecurrencePickerWebProps> = ({
           </ThemedText>
           <Pressable
             onPress={onToggle}
-            style={[
-              styles.toggle,
-              { backgroundColor: isRecurrent ? "#2F4F3F" : "#ccc" },
-            ]}
+            style={[styles.toggle, { backgroundColor: isRecurrent ? '#2F4F3F' : '#ccc' }]}
           >
             <View
-              style={[
-                styles.toggleThumb,
-                { transform: [{ translateX: isRecurrent ? 20 : 2 }] },
-              ]}
+              style={[styles.toggleThumb, { transform: [{ translateX: isRecurrent ? 20 : 2 }] }]}
             />
           </Pressable>
         </View>
@@ -117,7 +111,7 @@ const RecurrencePickerWeb: React.FC<IRecurrencePickerWebProps> = ({
             >
               <option value="new">New</option>
               {recurringMovements.map((m) => (
-                <option key={m.recurrenceId} value={m.recurrenceId || ""}>
+                <option key={m.recurrenceId} value={m.recurrenceId || ''}>
                   {m.description} - {m.category}
                 </option>
               ))}
@@ -174,10 +168,10 @@ const RecurrencePickerWeb: React.FC<IRecurrencePickerWebProps> = ({
 
 const styles = StyleSheet.create({
   fieldRow: {
-    flexDirection: "row",
+    flexDirection: 'row',
     paddingHorizontal: 0,
     paddingVertical: 5,
-    alignItems: "center",
+    alignItems: 'center',
     height: ROW_HEIGHT,
     flex: 1,
   },
@@ -190,21 +184,21 @@ const styles = StyleSheet.create({
   },
   fieldValue: {
     flex: 1,
-    justifyContent: "flex-end",
+    justifyContent: 'flex-end',
     paddingHorizontal: 10,
   },
   toggle: {
     width: 44,
     height: 24,
     borderRadius: 12,
-    justifyContent: "center" as const,
-    marginLeft: "auto" as const,
+    justifyContent: 'center' as const,
+    marginLeft: 'auto' as const,
   },
   toggleThumb: {
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: "#fff",
+    backgroundColor: '#fff',
   },
 });
 

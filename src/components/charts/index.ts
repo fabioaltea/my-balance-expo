@@ -8,7 +8,7 @@
  * - StackedBarChart: Generic stacked bar chart component
  */
 
-export { default as ChartSkeleton } from "./chart-skeleton";
-export { default as IncomeExpenseChart } from "./income-expense-chart";
-export { default as BreakdownStackedChart } from "./breakdown-stacked-chart";
-export { default as StackedBarChart } from "./stacked-bar-chart";
+export { default as ChartSkeleton } from './chart-skeleton';
+export { default as IncomeExpenseChart } from './income-expense-chart';
+export { default as BreakdownStackedChart } from './breakdown-stacked-chart';
+export { default as StackedBarChart } from './stacked-bar-chart';

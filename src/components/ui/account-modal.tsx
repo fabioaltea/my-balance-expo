@@ -1,18 +1,12 @@
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  Pressable,
-  Dimensions,
-} from "react-native";
-import React, { useState, useEffect } from "react";
-import ModalPanel from "./modal-panel.native";
-import TextBox from "./text-box.native";
-import CurrencyInput from "./currency-input";
-import { COLOR_PALETTE, DEFAULT_TEXT_COLOR } from "@/src/constants/colors";
-import { ThemedText } from "../core/themed-text.native";
+import { View, StyleSheet, ScrollView, Pressable, Dimensions } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import ModalPanel from './modal-panel.native';
+import TextBox from './text-box.native';
+import CurrencyInput from './currency-input';
+import { COLOR_PALETTE, DEFAULT_TEXT_COLOR } from '@/src/constants/colors';
+import { ThemedText } from '../core/themed-text.native';
 
-const { height: SCREEN_HEIGHT } = Dimensions.get("window");
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export interface AccountModalData {
   name: string;
@@ -33,18 +27,18 @@ const AccountModal: React.FC<AccountModalProps> = ({
   isVisible,
   onClose,
   onConfirm,
-  title = "Account",
+  title = 'Account',
   initialData,
   balanceEditable = false,
 }) => {
-  const [name, setName] = useState("");
+  const [name, setName] = useState('');
   const [color, setColor] = useState(COLOR_PALETTE[0]);
   const [balance, setBalance] = useState(0);
   const [showKeyboard, setShowKeyboard] = useState(false);
 
   useEffect(() => {
     if (isVisible) {
-      setName(initialData?.name ?? "");
+      setName(initialData?.name ?? '');
       setColor(initialData?.color ?? COLOR_PALETTE[0]);
       setBalance(initialData?.balance ?? 0);
       setShowKeyboard(false);
@@ -57,7 +51,7 @@ const AccountModal: React.FC<AccountModalProps> = ({
   };
 
   const formatBalance = (amount: number): string => {
-    return amount.toFixed(2).replace(".", ",") + " €";
+    return amount.toFixed(2).replace('.', ',') + ' €';
   };
 
   return (
@@ -95,14 +89,9 @@ const AccountModal: React.FC<AccountModalProps> = ({
 
           {/* Balance section */}
           {balanceEditable && (
-            <Pressable
-              onPress={() => setShowKeyboard(true)}
-              style={styles.inputRow}
-            >
+            <Pressable onPress={() => setShowKeyboard(true)} style={styles.inputRow}>
               <ThemedText style={styles.label}>Balance</ThemedText>
-              <ThemedText style={styles.balanceText}>
-                {formatBalance(balance)}
-              </ThemedText>
+              <ThemedText style={styles.balanceText}>{formatBalance(balance)}</ThemedText>
             </Pressable>
           )}
 
@@ -140,11 +129,7 @@ const AccountModal: React.FC<AccountModalProps> = ({
           title="Edit Balance"
           maxHeight={SCREEN_HEIGHT * 0.5}
         >
-          <CurrencyInput
-            value={balance}
-            onChange={setBalance}
-            showConfirmButton={false}
-          />
+          <CurrencyInput value={balance} onChange={setBalance} showConfirmButton={false} />
         </ModalPanel>
       )}
     </ModalPanel>
@@ -155,12 +140,12 @@ export default AccountModal;
 
 const styles = StyleSheet.create({
   previewContainer: {
-    alignItems: "center",
+    alignItems: 'center',
     marginBottom: 24,
   },
   previewRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   previewDot: {
     width: 20,
@@ -171,24 +156,24 @@ const styles = StyleSheet.create({
   },
   previewName: {
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   inputRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingVertical: 15,
     flex: 1,
   },
   label: {
     fontSize: 16,
-    fontWeight: "500",
+    fontWeight: '500',
     minWidth: 80,
   },
   balanceText: {
-    fontWeight: "bold",
+    fontWeight: 'bold',
     fontSize: 18,
-    textAlign: "right",
+    textAlign: 'right',
     flex: 1,
   },
   colorScrollView: {
@@ -196,7 +181,7 @@ const styles = StyleSheet.create({
     marginHorizontal: -20,
   },
   colorScrollContent: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 12,
     paddingHorizontal: 20,
   },
@@ -207,6 +192,6 @@ const styles = StyleSheet.create({
   },
   selectedColorItem: {
     borderWidth: 3,
-    borderColor: "#007AFF",
+    borderColor: '#007AFF',
   },
 });

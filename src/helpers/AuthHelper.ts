@@ -1,4 +1,4 @@
-import * as Crypto from "expo-crypto";
+import * as Crypto from 'expo-crypto';
 
 /**
  * PKCE utility functions for OAuth2 security — RFC 7636 compliant.
@@ -9,9 +9,8 @@ export class AuthHelper {
    * Generate a 64-character code verifier using RFC 7636 compliant characters.
    */
   static generateCodeVerifier(): string {
-    const charset =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~";
-    let result = "";
+    const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+    let result = '';
     for (let i = 0; i < 64; i++) {
       result += charset.charAt(Math.floor(Math.random() * charset.length));
     }
@@ -28,9 +27,6 @@ export class AuthHelper {
       { encoding: Crypto.CryptoEncoding.BASE64 },
     );
 
-    return hashBase64
-      .replace(/\+/g, "-")
-      .replace(/\//g, "_")
-      .replace(/=+$/, "");
+    return hashBase64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   }
 }

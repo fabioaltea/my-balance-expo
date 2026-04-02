@@ -1,37 +1,31 @@
-import { View, StyleSheet, ScrollView, Pressable, Alert } from "react-native";
-import React, { useState, useEffect } from "react";
-import * as Crypto from "expo-crypto";
-import { ThemedText } from "@/src/components/core/themed-text";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import TextBox from "@/src/components/ui/text-box";
-import InputGroup from "@/src/components/ui/input-group";
-import { useAuthContext, useDataContext } from "@/src/state";
-import {
-  formatDateToDDMMYYYY,
-  parseDateFromDDMMYYYY,
-} from "@/src/utils/dateUtils";
-import { useRouter } from "expo-router";
-import { ITransaction } from "@/src/components/ui/transactions";
-import TransactionsWeb from "@/src/components/ui/transactions.web";
-import { useSpreadsheetMutation } from "@/src/hooks/useSpreadsheetMutation";
-import { TransactionsApiHelper } from "@/src/helpers/TransactionsApiHelper";
+import { View, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import * as Crypto from 'expo-crypto';
+import { ThemedText } from '@/src/components/core/themed-text';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import TextBox from '@/src/components/ui/text-box';
+import InputGroup from '@/src/components/ui/input-group';
+import { useAuthContext, useDataContext } from '@/src/state';
+import { formatDateToDDMMYYYY, parseDateFromDDMMYYYY } from '@/src/utils/dateUtils';
+import { useRouter } from 'expo-router';
+import { ITransaction } from '@/src/components/ui/transactions';
+import TransactionsWeb from '@/src/components/ui/transactions.web';
+import { useSpreadsheetMutation } from '@/src/hooks/useSpreadsheetMutation';
+import { TransactionsApiHelper } from '@/src/helpers/TransactionsApiHelper';
 import {
   TransactionsMutationHelpers,
   type CreateMovementData,
   type UpdateMovementData,
   type DeleteMovementData,
   type OptimisticSnapshot,
-} from "@/src/helpers/TransactionsMutationHelpers";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import LocationPicker, { ILocation } from "@/src/components/ui/location-picker";
-import {
-  parseLocationValue,
-  serializeLocationValue,
-} from "@/src/utils/locationValue";
-import RecurrencePickerWeb from "@/src/components/ui/recurrence-picker.web";
-import { ScreenView } from "../components";
+} from '@/src/helpers/TransactionsMutationHelpers';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import LocationPicker, { ILocation } from '@/src/components/ui/location-picker';
+import { parseLocationValue, serializeLocationValue } from '@/src/utils/locationValue';
+import RecurrencePickerWeb from '@/src/components/ui/recurrence-picker.web';
+import { ScreenView } from '../components';
 
-export type ToastStatus = "loading" | "success" | "error";
+export type ToastStatus = 'loading' | 'success' | 'error';
 
 interface AddViewProps {
   editingMovementId?: string;
@@ -40,63 +34,37 @@ interface AddViewProps {
   onToast?: (status: ToastStatus) => void;
 }
 
-const AddView: React.FC<AddViewProps> = ({
-  editingMovementId,
-  recurrenceId,
-  onClose,
-  onToast,
-}) => {
+const AddView: React.FC<AddViewProps> = ({ editingMovementId, recurrenceId, onClose, onToast }) => {
   const router = useRouter();
 
   const closeView = () => {
     onClose ? onClose() : router.back();
   };
   const { selectedSpreadsheetId } = useAuthContext();
-  const {
-    accounts,
-    categories,
-    movements,
-    recurringMovements,
-    unconfirmedMovements,
-  } = useDataContext();
+  const { accounts, categories, movements, recurringMovements, unconfirmedMovements } =
+    useDataContext();
 
   // React Query mutations
-  const addMovement = useSpreadsheetMutation<
-    CreateMovementData,
-    OptimisticSnapshot
-  >({
+  const addMovement = useSpreadsheetMutation<CreateMovementData, OptimisticSnapshot>({
     mutationFn: (spreadsheetId, data) =>
       TransactionsApiHelper.createTransaction(spreadsheetId, data),
-    onMutate: (qc, data) =>
-      TransactionsMutationHelpers.optimisticAddMovement(qc, data),
+    onMutate: (qc, data) => TransactionsMutationHelpers.optimisticAddMovement(qc, data),
     onError: (qc, ctx) => TransactionsMutationHelpers.rollback(qc, ctx),
     onSuccess: (qc) => TransactionsMutationHelpers.invalidateMovementCaches(qc),
   });
-  const updateMovement = useSpreadsheetMutation<
-    UpdateMovementData,
-    OptimisticSnapshot
-  >({
+  const updateMovement = useSpreadsheetMutation<UpdateMovementData, OptimisticSnapshot>({
     mutationFn: (spreadsheetId, data) => {
       const { movementId, ...updates } = data;
-      return TransactionsApiHelper.updateMovement(
-        spreadsheetId,
-        movementId,
-        updates,
-      );
+      return TransactionsApiHelper.updateMovement(spreadsheetId, movementId, updates);
     },
-    onMutate: (qc, data) =>
-      TransactionsMutationHelpers.optimisticUpdateMovement(qc, data),
+    onMutate: (qc, data) => TransactionsMutationHelpers.optimisticUpdateMovement(qc, data),
     onError: (qc, ctx) => TransactionsMutationHelpers.rollback(qc, ctx),
     onSuccess: (qc) => TransactionsMutationHelpers.invalidateMovementCaches(qc),
   });
-  const deleteMovement = useSpreadsheetMutation<
-    DeleteMovementData,
-    OptimisticSnapshot
-  >({
+  const deleteMovement = useSpreadsheetMutation<DeleteMovementData, OptimisticSnapshot>({
     mutationFn: (spreadsheetId, data) =>
       TransactionsApiHelper.deleteMovement(spreadsheetId, data.movementId),
-    onMutate: (qc, data) =>
-      TransactionsMutationHelpers.optimisticDeleteMovement(qc, data),
+    onMutate: (qc, data) => TransactionsMutationHelpers.optimisticDeleteMovement(qc, data),
     onError: (qc, ctx) => TransactionsMutationHelpers.rollback(qc, ctx),
     onSuccess: (qc) => TransactionsMutationHelpers.invalidateMovementCaches(qc),
   });
@@ -115,21 +83,19 @@ const AddView: React.FC<AddViewProps> = ({
 
   // Derive submitting state from mutations
   const isSubmitting =
-    addMovement.isPending ||
-    updateMovement.isPending ||
-    deleteMovement.isPending;
+    addMovement.isPending || updateMovement.isPending || deleteMovement.isPending;
 
-  const [description, setDescription] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
+  const [description, setDescription] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [transactions, setTransactions] = useState<ITransaction[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<ILocation>({
-    address: "",
+    address: '',
   });
   const [isSaving, setIsSaving] = useState(false);
   const [isRecurrent, setIsRecurrent] = useState(false);
-  const [recurrenceSelection, setRecurrenceSelection] = useState<string>("new");
-  const [recurrenceUnit, setRecurrenceUnit] = useState<string>("M");
+  const [recurrenceSelection, setRecurrenceSelection] = useState<string>('new');
+  const [recurrenceUnit, setRecurrenceUnit] = useState<string>('M');
   const [recurrenceFrequency, setRecurrenceFrequency] = useState<number>(1);
 
   const recurrencePattern = `P${recurrenceFrequency}${recurrenceUnit}`;
@@ -138,8 +104,7 @@ const AddView: React.FC<AddViewProps> = ({
   const isEditingRecurring =
     isEditing &&
     editingMovement &&
-    (editingMovement.status?.toLowerCase() === "recurrent" ||
-      editingMovement.recurrencePattern);
+    (editingMovement.status?.toLowerCase() === 'recurrent' || editingMovement.recurrencePattern);
 
   // Pre-populate form when editing an existing movement
   useEffect(() => {
@@ -155,16 +120,14 @@ const AddView: React.FC<AddViewProps> = ({
 
     setSelectedLocation(parseLocationValue(editingMovement.location));
 
-    const mappedTransactions: ITransaction[] = editingMovement.transactions.map(
-      (t, index) => ({
-        id: index + 1,
-        accountName: t.account,
-        amount: t.amount,
-        type: t.type,
-        transactionID: t.transactionId,
-        movementID: t.movementId,
-      }),
-    );
+    const mappedTransactions: ITransaction[] = editingMovement.transactions.map((t, index) => ({
+      id: index + 1,
+      accountName: t.account,
+      amount: t.amount,
+      type: t.type,
+      transactionID: t.transactionId,
+      movementID: t.movementId,
+    }));
     setTransactions(mappedTransactions);
     if (editingMovement.recurrencePattern) {
       const match = editingMovement.recurrencePattern.match(/^P(\d+)([DWMY])$/);
@@ -174,10 +137,7 @@ const AddView: React.FC<AddViewProps> = ({
       }
     }
     // Pre-populate recurrence link for non-template movements
-    if (
-      editingMovement.recurrenceId &&
-      editingMovement.status?.toLowerCase() !== "recurrent"
-    ) {
+    if (editingMovement.recurrenceId && editingMovement.status?.toLowerCase() !== 'recurrent') {
       setIsRecurrent(true);
       setRecurrenceSelection(editingMovement.recurrenceId);
     }
@@ -191,26 +151,19 @@ const AddView: React.FC<AddViewProps> = ({
     setSelectedCategory(recurringTemplate.category);
     setSelectedLocation(parseLocationValue(recurringTemplate.location));
 
-    const mappedTransactions: ITransaction[] =
-      recurringTemplate.transactions.map((t, index) => ({
-        id: index + 1,
-        accountName: t.account,
-        amount: t.amount,
-        type: t.type,
-      }));
+    const mappedTransactions: ITransaction[] = recurringTemplate.transactions.map((t, index) => ({
+      id: index + 1,
+      accountName: t.account,
+      amount: t.amount,
+      type: t.type,
+    }));
     setTransactions(mappedTransactions);
   }, [recurringTemplate, editingMovement]);
 
   // Theme colors
-  const textColor = useThemeColor({ light: "#000", dark: "#fff" }, "text");
-  const placeholderColor = useThemeColor(
-    { light: "#aaa", dark: "#666" },
-    "tabIconDefault",
-  );
-  const borderColor = useThemeColor(
-    { light: "#e0e0e0", dark: "#333" },
-    "tabIconDefault",
-  );
+  const textColor = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
+  const placeholderColor = useThemeColor({ light: '#aaa', dark: '#666' }, 'tabIconDefault');
+  const borderColor = useThemeColor({ light: '#e0e0e0', dark: '#333' }, 'tabIconDefault');
 
   const allCategories = categories.map((category) => ({
     label: category.name,
@@ -226,10 +179,7 @@ const AddView: React.FC<AddViewProps> = ({
 
   const handleAddTransaction = () => {
     const newId = Math.max(...transactions.map((t) => t.id), 0) + 1;
-    setTransactions([
-      ...transactions,
-      { id: newId, accountName: "", amount: 0, type: "expense" },
-    ]);
+    setTransactions([...transactions, { id: newId, accountName: '', amount: 0, type: 'expense' }]);
   };
 
   const handleDeleteTransaction = (id: number) => {
@@ -237,46 +187,40 @@ const AddView: React.FC<AddViewProps> = ({
   };
 
   const handleTransactionAccountChange = (id: number, accountName: string) => {
-    setTransactions(
-      transactions.map((t) => (t.id === id ? { ...t, accountName } : t)),
-    );
+    setTransactions(transactions.map((t) => (t.id === id ? { ...t, accountName } : t)));
   };
 
   const handleTransactionAmountChange = (id: number, amount: number) => {
     setTransactions(
-      transactions.map((t) =>
-        t.id === id ? { ...t, amount: Math.abs(amount) } : t,
-      ),
+      transactions.map((t) => (t.id === id ? { ...t, amount: Math.abs(amount) } : t)),
     );
   };
 
   const handleTransactionTypeToggle = (id: number) => {
     setTransactions(
       transactions.map((t) =>
-        t.id === id
-          ? { ...t, type: t.type === "income" ? "expense" : "income" }
-          : t,
+        t.id === id ? { ...t, type: t.type === 'income' ? 'expense' : 'income' } : t,
       ),
     );
   };
 
   const getTotalAmount = () => {
     return transactions.reduce((sum, t) => {
-      return sum + (t.type === "income" ? t.amount : -t.amount);
+      return sum + (t.type === 'income' ? t.amount : -t.amount);
     }, 0);
   };
 
   // --- Date helpers ---
   const formatDateForInput = (date: Date): string => {
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   };
 
   const handleDateChange = (text: string) => {
     if (!text) return;
-    const [year, month, day] = text.split("-").map(Number);
+    const [year, month, day] = text.split('-').map(Number);
     const newDate = new Date(year, month - 1, day);
     if (!isNaN(newDate.getTime())) {
       setSelectedDate(newDate);
@@ -285,60 +229,51 @@ const AddView: React.FC<AddViewProps> = ({
 
   // --- Menu action handler ---
   const handleMenuAction = (value: string) => {
-    if (value === "delete") {
+    if (value === 'delete') {
       handleDeleteMovement();
     }
   };
 
   const validateMovement = (): boolean => {
     if (!description.trim()) {
-      Alert.alert("Error", "Please enter a description");
+      Alert.alert('Error', 'Please enter a description');
       return false;
     }
     if (!selectedCategory) {
-      Alert.alert("Error", "Please select a category");
+      Alert.alert('Error', 'Please select a category');
       return false;
     }
     if (!selectedDate) {
-      Alert.alert("Error", "Please select a date");
+      Alert.alert('Error', 'Please select a date');
       return false;
     }
-    const validTransactions = transactions.filter(
-      (t) => t.accountName && t.amount > 0,
-    );
+    const validTransactions = transactions.filter((t) => t.accountName && t.amount > 0);
     if (validTransactions.length === 0) {
-      Alert.alert(
-        "Error",
-        "Please add at least one transaction with a valid account and amount",
-      );
+      Alert.alert('Error', 'Please add at least one transaction with a valid account and amount');
       return false;
     }
     if (!selectedSpreadsheetId) {
-      Alert.alert("Error", "No spreadsheet selected");
+      Alert.alert('Error', 'No spreadsheet selected');
       return false;
     }
     return true;
   };
 
   const handleDeleteMovement = async () => {
-    if (
-      !confirm(
-        "Are you sure you want to delete this movement? This action cannot be undone.",
-      )
-    )
+    if (!confirm('Are you sure you want to delete this movement? This action cannot be undone.'))
       return;
     if (!selectedSpreadsheetId || !editingMovementId) return;
 
     setIsSaving(true);
-    onToast?.("loading");
+    onToast?.('loading');
     closeView();
 
     try {
       await deleteMovement.mutateAsync({ movementId: editingMovementId });
-      onToast?.("success");
+      onToast?.('success');
     } catch (error) {
-      console.error("Error deleting movement:", error);
-      onToast?.("error");
+      console.error('Error deleting movement:', error);
+      onToast?.('error');
     }
   };
 
@@ -346,36 +281,28 @@ const AddView: React.FC<AddViewProps> = ({
     if (!description.trim()) return false;
     if (!selectedCategory) return false;
     if (!selectedDate) return false;
-    const validTransactions = transactions.filter(
-      (t) => t.accountName && t.amount > 0,
-    );
+    const validTransactions = transactions.filter((t) => t.accountName && t.amount > 0);
     if (validTransactions.length === 0) return false;
     if (!selectedSpreadsheetId) return false;
-    if (isRecurrent && recurrenceSelection === "new" && !recurrencePattern)
-      return false;
-    if (isRecurrent && recurrenceSelection !== "new" && !recurrenceSelection)
-      return false;
+    if (isRecurrent && recurrenceSelection === 'new' && !recurrencePattern) return false;
+    if (isRecurrent && recurrenceSelection !== 'new' && !recurrenceSelection) return false;
     return true;
   };
 
   const handleSubmit = async () => {
     if (!validateMovement()) return;
 
-    const validTransactions = transactions.filter(
-      (t) => t.accountName && t.amount > 0,
-    );
+    const validTransactions = transactions.filter((t) => t.accountName && t.amount > 0);
 
     const formattedDate = formatDateToDDMMYYYY(selectedDate);
     const transactionsData = validTransactions.map((transaction) => ({
-      ...(transaction.transactionID
-        ? { transactionId: transaction.transactionID }
-        : {}),
+      ...(transaction.transactionID ? { transactionId: transaction.transactionID } : {}),
       amount:
-        transaction.type === "income"
-          ? String(transaction.amount).replace(".", ",")
-          : String(-transaction.amount).replace(".", ","),
+        transaction.type === 'income'
+          ? String(transaction.amount).replace('.', ',')
+          : String(-transaction.amount).replace('.', ','),
       account: transaction.accountName,
-      type: (transaction.type === "income" ? "in" : "out") as "in" | "out",
+      type: (transaction.type === 'income' ? 'in' : 'out') as 'in' | 'out',
     }));
 
     const baseData = {
@@ -387,7 +314,7 @@ const AddView: React.FC<AddViewProps> = ({
     };
 
     setIsSaving(true);
-    onToast?.("loading");
+    onToast?.('loading');
     closeView();
 
     try {
@@ -399,18 +326,18 @@ const AddView: React.FC<AddViewProps> = ({
         };
         if (isEditingRecurring && editingMovement) {
           movementData.recurrenceId = editingMovement.recurrenceId;
-          movementData.status = "recurrent";
+          movementData.status = 'recurrent';
           movementData.recurrencePattern = recurrencePattern;
-        } else if (isRecurrent && recurrenceSelection !== "new") {
+        } else if (isRecurrent && recurrenceSelection !== 'new') {
           // Link to existing recurrence
           movementData.recurrenceId = recurrenceSelection;
-        } else if (isRecurrent && recurrenceSelection === "new") {
+        } else if (isRecurrent && recurrenceSelection === 'new') {
           // Create new recurrence template, then link this movement
           const newRecurrenceId = Crypto.randomUUID();
           await addMovement.mutateAsync({
             ...baseData,
             recurrenceId: newRecurrenceId,
-            status: "recurrent",
+            status: 'recurrent',
             recurrencePattern,
           });
           movementData.recurrenceId = newRecurrenceId;
@@ -419,20 +346,20 @@ const AddView: React.FC<AddViewProps> = ({
           movementId: editingMovementId,
           ...movementData,
         });
-      } else if (isRecurrent && recurrenceSelection === "new") {
+      } else if (isRecurrent && recurrenceSelection === 'new') {
         // Create new recurring template + linked movement
         const newRecurrenceId = Crypto.randomUUID();
         await addMovement.mutateAsync({
           ...baseData,
           recurrenceId: newRecurrenceId,
-          status: "recurrent",
+          status: 'recurrent',
           recurrencePattern,
         });
         await addMovement.mutateAsync({
           ...baseData,
           recurrenceId: newRecurrenceId,
         });
-      } else if (isRecurrent && recurrenceSelection !== "new") {
+      } else if (isRecurrent && recurrenceSelection !== 'new') {
         // Link to existing recurrence
         await addMovement.mutateAsync({
           ...baseData,
@@ -447,10 +374,10 @@ const AddView: React.FC<AddViewProps> = ({
         await addMovement.mutateAsync(movementData as any);
       }
 
-      onToast?.("success");
+      onToast?.('success');
     } catch (error) {
-      console.error("Error saving movement:", error);
-      onToast?.("error");
+      console.error('Error saving movement:', error);
+      onToast?.('error');
     }
   };
 
@@ -460,16 +387,12 @@ const AddView: React.FC<AddViewProps> = ({
         {/* Header */}
         <View style={styles.headerContainer}>
           <ThemedText type="title" style={styles.title}>
-            {isEditingRecurring
-              ? "Edit Recurrent"
-              : isEditing
-                ? "Edit Movement"
-                : "New Movement"}
+            {isEditingRecurring ? 'Edit Recurrent' : isEditing ? 'Edit Movement' : 'New Movement'}
           </ThemedText>
           <View
             style={{
-              flexDirection: "row",
-              alignItems: "center",
+              flexDirection: 'row',
+              alignItems: 'center',
               gap: 8,
               opacity: isSaving ? 0.5 : 1,
             }}
@@ -483,16 +406,16 @@ const AddView: React.FC<AddViewProps> = ({
                   disabled={isSaving}
                   onChange={(e: any) => {
                     handleMenuAction(e.target.value);
-                    e.target.value = "";
+                    e.target.value = '';
                   }}
                   style={{
-                    position: "absolute",
+                    position: 'absolute',
                     top: 0,
                     left: 0,
-                    width: "100%",
-                    height: "100%",
+                    width: '100%',
+                    height: '100%',
                     opacity: 0,
-                    cursor: "pointer",
+                    cursor: 'pointer',
                   }}
                 >
                   <option value="" disabled />
@@ -500,20 +423,13 @@ const AddView: React.FC<AddViewProps> = ({
                 </select>
               </View>
             )}
-            <Pressable
-              onPress={closeView}
-              disabled={isSaving}
-              style={styles.iconButton}
-            >
+            <Pressable onPress={closeView} disabled={isSaving} style={styles.iconButton}>
               <MaterialIcons name="close" size={20} color={textColor} />
             </Pressable>
           </View>
         </View>
 
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          pointerEvents={isSaving ? "none" : "auto"}
-        >
+        <ScrollView showsVerticalScrollIndicator={false} pointerEvents={isSaving ? 'none' : 'auto'}>
           {/* Description + Category + Date */}
           <InputGroup>
             <TextBox
@@ -536,15 +452,15 @@ const AddView: React.FC<AddViewProps> = ({
                   style={{
                     flex: 1,
                     fontSize: 18,
-                    textAlign: "right",
+                    textAlign: 'right',
                     color: selectedCategory ? textColor : placeholderColor,
-                    backgroundColor: "transparent",
-                    border: "none",
-                    outline: "none",
-                    cursor: "pointer",
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    outline: 'none',
+                    cursor: 'pointer',
                     fontFamily:
                       "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-                    width: "100%",
+                    width: '100%',
                   }}
                 >
                   <option value="" disabled>
@@ -562,7 +478,7 @@ const AddView: React.FC<AddViewProps> = ({
             {/* Date — native HTML date input */}
             <View style={styles.fieldRow}>
               <ThemedText type="default" style={styles.fieldLabel}>
-                {isEditingRecurring ? "Start" : "Date"}
+                {isEditingRecurring ? 'Start' : 'Date'}
               </ThemedText>
               <View style={styles.fieldValue}>
                 {/* @ts-ignore — HTML input element for web */}
@@ -572,15 +488,15 @@ const AddView: React.FC<AddViewProps> = ({
                   onChange={(e: any) => handleDateChange(e.target.value)}
                   style={{
                     flex: 1,
-                    textAlign: "right" as any,
+                    textAlign: 'right' as any,
                     fontSize: 18,
-                    border: "none",
-                    outline: "none",
-                    backgroundColor: "transparent",
+                    border: 'none',
+                    outline: 'none',
+                    backgroundColor: 'transparent',
                     color: textColor,
                     fontFamily:
                       "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-                    cursor: "pointer",
+                    cursor: 'pointer',
                   }}
                 />
               </View>
@@ -602,15 +518,15 @@ const AddView: React.FC<AddViewProps> = ({
                     style={{
                       flex: 1,
                       fontSize: 18,
-                      textAlign: "right",
+                      textAlign: 'right',
                       color: textColor,
-                      backgroundColor: "transparent",
-                      border: "none",
-                      outline: "none",
-                      cursor: "pointer",
+                      backgroundColor: 'transparent',
+                      border: 'none',
+                      outline: 'none',
+                      cursor: 'pointer',
                       fontFamily:
                         "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-                      width: "100%",
+                      width: '100%',
                     }}
                   >
                     <option value="D">Daily</option>
@@ -628,21 +544,19 @@ const AddView: React.FC<AddViewProps> = ({
                   {/* @ts-ignore — HTML select for web */}
                   <select
                     value={recurrenceFrequency}
-                    onChange={(e: any) =>
-                      setRecurrenceFrequency(Number(e.target.value))
-                    }
+                    onChange={(e: any) => setRecurrenceFrequency(Number(e.target.value))}
                     style={{
                       flex: 1,
                       fontSize: 18,
-                      textAlign: "right",
+                      textAlign: 'right',
                       color: textColor,
-                      backgroundColor: "transparent",
-                      border: "none",
-                      outline: "none",
-                      cursor: "pointer",
+                      backgroundColor: 'transparent',
+                      border: 'none',
+                      outline: 'none',
+                      cursor: 'pointer',
                       fontFamily:
                         "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-                      width: "100%",
+                      width: '100%',
                     }}
                   >
                     {[1, 2, 3, 4, 5, 6, 7, 10, 14, 30].map((n) => (
@@ -708,7 +622,7 @@ const AddView: React.FC<AddViewProps> = ({
         <View style={styles.totalRow}>
           <ThemedText style={styles.totalLabel}>Total:</ThemedText>
           <ThemedText style={styles.totalAmount}>
-            {getTotalAmount().toFixed(2).replace(".", ",")}€
+            {getTotalAmount().toFixed(2).replace('.', ',')}€
           </ThemedText>
         </View>
         <Pressable
@@ -716,8 +630,7 @@ const AddView: React.FC<AddViewProps> = ({
           disabled={isSaving || isSubmitting || !isFormValid()}
           style={[
             styles.submitButton,
-            (isSaving || isSubmitting || !isFormValid()) &&
-              styles.submitButtonDisabled,
+            (isSaving || isSubmitting || !isFormValid()) && styles.submitButtonDisabled,
           ]}
         >
           <ThemedText
@@ -726,11 +639,7 @@ const AddView: React.FC<AddViewProps> = ({
               (isSaving || isSubmitting || !isFormValid()) && { opacity: 0.6 },
             ]}
           >
-            {isSaving || isSubmitting
-              ? "Saving"
-              : isEditing
-                ? "Update"
-                : "Insert"}
+            {isSaving || isSubmitting ? 'Saving' : isEditing ? 'Update' : 'Insert'}
           </ThemedText>
         </Pressable>
       </View>
@@ -745,26 +654,26 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 30,
     padding: 10,
   },
   title: {
     flex: 1,
-    textAlign: "left",
+    textAlign: 'left',
   },
   iconButton: {
     padding: 10,
     borderRadius: 15,
-    backgroundColor: "rgba(47, 79, 63, 0.08)",
+    backgroundColor: 'rgba(47, 79, 63, 0.08)',
   },
   fieldRow: {
-    flexDirection: "row",
+    flexDirection: 'row',
     paddingHorizontal: 0,
     paddingVertical: 5,
-    alignItems: "center",
+    alignItems: 'center',
     flex: 1,
   },
   fieldLabel: {
@@ -776,63 +685,63 @@ const styles = StyleSheet.create({
   },
   fieldValue: {
     flex: 1,
-    justifyContent: "flex-end",
+    justifyContent: 'flex-end',
     paddingHorizontal: 10,
   },
   dateInput: {
     flex: 1,
-    textAlign: "right",
+    textAlign: 'right',
     fontSize: 18,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderWidth: 0,
   } as any,
   bottomSection: {
-    position: "absolute",
+    position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    alignItems: "center",
-    backgroundColor: "#2F4F3F",
+    alignItems: 'center',
+    backgroundColor: '#2F4F3F',
     paddingTop: 20,
     paddingBottom: 20,
     paddingHorizontal: 20,
     borderRadius: 30,
   },
   totalRow: {
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
   },
   totalLabel: {
     fontSize: 18,
-    color: "#fff",
-    fontWeight: "600",
+    color: '#fff',
+    fontWeight: '600',
   },
   totalAmount: {
     fontSize: 22,
-    fontWeight: "bold",
-    color: "#fff",
+    fontWeight: 'bold',
+    color: '#fff',
     marginVertical: 8,
   },
   submitButton: {
-    backgroundColor: "#fff",
+    backgroundColor: '#fff',
     borderRadius: 25,
     paddingVertical: 16,
     paddingHorizontal: 60,
     marginTop: 16,
-    width: "100%",
-    alignItems: "center",
+    width: '100%',
+    alignItems: 'center',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 4,
-    shadowColor: "#000",
+    shadowColor: '#000',
   },
   submitText: {
-    color: "#2F4F3F",
+    color: '#2F4F3F',
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   submitButtonDisabled: {
     opacity: 0.6,

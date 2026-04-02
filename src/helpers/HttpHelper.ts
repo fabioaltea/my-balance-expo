@@ -1,12 +1,12 @@
-import { User, AuthStorageHelper } from "./AuthStorageHelper";
+import { User, AuthStorageHelper } from './AuthStorageHelper';
 
 // Get API URL from environment or use default
-const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8080";
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8080';
 // Auth service URL - separate service for authentication
-const AUTH_URL = process.env.EXPO_PUBLIC_AUTH_URL || "http://localhost:8082";
+const AUTH_URL = process.env.EXPO_PUBLIC_AUTH_URL || 'http://localhost:8082';
 
-console.log("🌐 API_URL configured as:", API_URL);
-console.log("🔐 AUTH_URL configured as:", AUTH_URL);
+console.log('🌐 API_URL configured as:', API_URL);
+console.log('🔐 AUTH_URL configured as:', AUTH_URL);
 
 /**
  * Custom error for authentication failures that require re-login
@@ -14,7 +14,7 @@ console.log("🔐 AUTH_URL configured as:", AUTH_URL);
 export class AuthenticationError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = "AuthenticationError";
+    this.name = 'AuthenticationError';
   }
 }
 
@@ -30,18 +30,15 @@ export interface HttpResponse<T = any> {
 export class HttpHelper {
   public static endpointUri = API_URL;
   public static authUri = AUTH_URL;
-  private static unauthorizedHandler: (() => Promise<void> | void) | null =
-    null;
+  private static unauthorizedHandler: (() => Promise<void> | void) | null = null;
   private static isHandlingUnauthorized = false;
 
-  static setUnauthorizedHandler(
-    handler: (() => Promise<void> | void) | null,
-  ): void {
+  static setUnauthorizedHandler(handler: (() => Promise<void> | void) | null): void {
     this.unauthorizedHandler = handler;
   }
 
   static async handleUnauthorized(
-    message = "Your session has expired. Please login again.",
+    message = 'Your session has expired. Please login again.',
   ): Promise<void> {
     if (this.isHandlingUnauthorized) {
       return;
@@ -54,9 +51,9 @@ export class HttpHelper {
         await this.unauthorizedHandler();
       }
     } catch (error) {
-      console.error("❌ Unauthorized handler failed:", error);
+      console.error('❌ Unauthorized handler failed:', error);
     } finally {
-      console.log("🚪 Unauthorized session detected:", message);
+      console.log('🚪 Unauthorized session detected:', message);
       this.isHandlingUnauthorized = false;
     }
   }
@@ -69,48 +66,48 @@ export class HttpHelper {
     deviceId: string,
   ): Promise<{ accessToken: string; refreshToken: string } | null> {
     try {
-      console.log("🔄 Calling refresh token API...");
-      console.log("🔄 Endpoint:", `${this.authUri}/auth/refresh`);
-      console.log("🔄 Device ID:", deviceId);
+      console.log('🔄 Calling refresh token API...');
+      console.log('🔄 Endpoint:', `${this.authUri}/auth/refresh`);
+      console.log('🔄 Device ID:', deviceId);
 
       const response = await fetch(`${this.authUri}/auth/refresh`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ refreshToken, deviceId }),
       });
 
-      console.log("🔄 Response status:", response.status, response.statusText);
+      console.log('🔄 Response status:', response.status, response.statusText);
 
       const result = await response.json();
-      console.log("🔄 Response body:", JSON.stringify(result, null, 2));
+      console.log('🔄 Response body:', JSON.stringify(result, null, 2));
 
       if (!response.ok || !result.success) {
-        console.error("❌ Token refresh API failed:");
-        console.error("   Status:", response.status);
-        console.error("   Error:", result.error);
-        console.error("   Code:", result.code);
+        console.error('❌ Token refresh API failed:');
+        console.error('   Status:', response.status);
+        console.error('   Error:', result.error);
+        console.error('   Code:', result.code);
 
         if (response.status === 401) {
-          await this.handleUnauthorized(result.error || "Token refresh failed");
+          await this.handleUnauthorized(result.error || 'Token refresh failed');
         }
 
         return null;
       }
 
       if (result.accessToken && result.refreshToken) {
-        console.log("✅ Tokens refreshed successfully via API");
+        console.log('✅ Tokens refreshed successfully via API');
         return {
           accessToken: result.accessToken,
           refreshToken: result.refreshToken,
         };
       }
 
-      console.error("❌ Response missing tokens");
+      console.error('❌ Response missing tokens');
       return null;
     } catch (error) {
-      console.error("❌ Token refresh API error:", error);
+      console.error('❌ Token refresh API error:', error);
       return null;
     }
   }
@@ -123,32 +120,29 @@ export class HttpHelper {
       let tokens = await AuthStorageHelper.getTokens();
 
       if (!tokens) {
-        console.log("❌ No tokens available");
-        throw new AuthenticationError("No authentication tokens available");
+        console.log('❌ No tokens available');
+        throw new AuthenticationError('No authentication tokens available');
       }
 
       // Check if access token is expired
       if (AuthStorageHelper.isTokenExpired(tokens.accessToken)) {
-        console.log("⚠️ Access token expired, attempting refresh...");
+        console.log('⚠️ Access token expired, attempting refresh...');
 
         // Check if refresh token is valid
         if (AuthStorageHelper.isTokenExpired(tokens.refreshToken)) {
-          console.log("❌ Refresh token also expired");
-          throw new AuthenticationError("Refresh token expired");
+          console.log('❌ Refresh token also expired');
+          throw new AuthenticationError('Refresh token expired');
         }
 
         // Get device ID
         const deviceId = await AuthStorageHelper.getOrCreateDeviceId();
 
         // Refresh the token
-        const newTokens = await this.refreshTokensViaApi(
-          tokens.refreshToken,
-          deviceId,
-        );
+        const newTokens = await this.refreshTokensViaApi(tokens.refreshToken, deviceId);
 
         if (!newTokens) {
-          console.log("❌ Token refresh failed");
-          throw new AuthenticationError("Token refresh failed");
+          console.log('❌ Token refresh failed');
+          throw new AuthenticationError('Token refresh failed');
         }
 
         // Store new tokens
@@ -159,7 +153,7 @@ export class HttpHelper {
 
       return tokens.accessToken;
     } catch (error) {
-      console.error("❌ Error getting valid access token:", error);
+      console.error('❌ Error getting valid access token:', error);
 
       if (error instanceof AuthenticationError) {
         await this.handleUnauthorized(error.message);
@@ -175,16 +169,16 @@ export class HttpHelper {
       const accessToken = await this.getValidAccessToken();
 
       if (!accessToken) {
-        throw new Error("No valid authentication token available");
+        throw new Error('No valid authentication token available');
       }
 
       const url = `${this.endpointUri}${endpoint}`;
       const response = await fetch(url, {
-        method: "GET",
+        method: 'GET',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${accessToken}`,
-          "X-Authorization": `Bearer ${accessToken}`,
+          'X-Authorization': `Bearer ${accessToken}`,
           ...options.headers,
         },
       });
@@ -194,64 +188,50 @@ export class HttpHelper {
       if (!response.ok) {
         // If 401 Unauthorized, throw AuthenticationError to trigger logout
         if (response.status === 401) {
-          await this.handleUnauthorized(
-            result.error || "Authentication failed",
-          );
-          throw new AuthenticationError(
-            result.error || "Authentication failed",
-          );
+          await this.handleUnauthorized(result.error || 'Authentication failed');
+          throw new AuthenticationError(result.error || 'Authentication failed');
         }
-        throw new Error(
-          result.error || `GET request failed: ${response.statusText}`,
-        );
+        throw new Error(result.error || `GET request failed: ${response.statusText}`);
       }
 
       return { success: true, ...result };
     } catch (error) {
-      console.error("GET request error:", error);
+      console.error('GET request error:', error);
       throw error;
     }
   }
 
   // Generic POST method with automatic token management
-  static async post(
-    endpoint: string,
-    data: any,
-    options: any = {},
-  ): Promise<HttpResponse> {
+  static async post(endpoint: string, data: any, options: any = {}): Promise<HttpResponse> {
     try {
       const accessToken = await this.getValidAccessToken();
 
       if (!accessToken) {
-        throw new Error("No valid authentication token available");
+        throw new Error('No valid authentication token available');
       }
 
       const url = `${this.endpointUri}${endpoint}`;
-      console.log("POST request to:", url, "with data:", data);
+      console.log('POST request to:', url, 'with data:', data);
 
       const response = await fetch(url, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${accessToken}`,
-          "X-Authorization": `Bearer ${accessToken}`,
+          'X-Authorization': `Bearer ${accessToken}`,
           ...options.headers,
         },
         body: JSON.stringify(data),
       });
 
-      console.log(
-        "POST response status:",
-        response.status,
-        response.statusText,
-      );
+      console.log('POST response status:', response.status, response.statusText);
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("POST error response:", errorText);
+        console.error('POST error response:', errorText);
         if (response.status === 401) {
-          await this.handleUnauthorized(errorText || "Authentication failed");
-          throw new AuthenticationError(errorText || "Authentication failed");
+          await this.handleUnauthorized(errorText || 'Authentication failed');
+          throw new AuthenticationError(errorText || 'Authentication failed');
         }
         throw new Error(
           `POST request failed: ${response.status} ${
@@ -265,37 +245,31 @@ export class HttpHelper {
         const result = JSON.parse(responseText);
         return { success: true, ...result };
       } catch (jsonError) {
-        console.error("POST JSON parse error:", responseText);
-        throw new Error(
-          `Invalid JSON response: ${responseText.substring(0, 100)}`,
-        );
+        console.error('POST JSON parse error:', responseText);
+        throw new Error(`Invalid JSON response: ${responseText.substring(0, 100)}`);
       }
     } catch (error) {
-      console.error("POST request error:", error);
+      console.error('POST request error:', error);
       throw error;
     }
   }
 
   // Generic PUT method with automatic token management
-  static async put(
-    endpoint: string,
-    data: any,
-    options: any = {},
-  ): Promise<HttpResponse> {
+  static async put(endpoint: string, data: any, options: any = {}): Promise<HttpResponse> {
     try {
       const accessToken = await this.getValidAccessToken();
 
       if (!accessToken) {
-        throw new Error("No valid authentication token available");
+        throw new Error('No valid authentication token available');
       }
 
       const url = `${this.endpointUri}${endpoint}`;
       const response = await fetch(url, {
-        method: "PUT",
+        method: 'PUT',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${accessToken}`,
-          "X-Authorization": `Bearer ${accessToken}`,
+          'X-Authorization': `Bearer ${accessToken}`,
           ...options.headers,
         },
         body: JSON.stringify(data),
@@ -305,45 +279,36 @@ export class HttpHelper {
 
       if (!response.ok) {
         if (response.status === 401) {
-          await this.handleUnauthorized(
-            result.error || "Authentication failed",
-          );
-          throw new AuthenticationError(
-            result.error || "Authentication failed",
-          );
+          await this.handleUnauthorized(result.error || 'Authentication failed');
+          throw new AuthenticationError(result.error || 'Authentication failed');
         }
 
-        throw new Error(
-          result.error || `PUT request failed: ${response.statusText}`,
-        );
+        throw new Error(result.error || `PUT request failed: ${response.statusText}`);
       }
 
       return { success: true, ...result };
     } catch (error) {
-      console.error("PUT request error:", error);
+      console.error('PUT request error:', error);
       throw error;
     }
   }
 
   // Generic DELETE method with automatic token management
-  static async delete(
-    endpoint: string,
-    options: any = {},
-  ): Promise<HttpResponse> {
+  static async delete(endpoint: string, options: any = {}): Promise<HttpResponse> {
     try {
       const accessToken = await this.getValidAccessToken();
 
       if (!accessToken) {
-        throw new Error("No valid authentication token available");
+        throw new Error('No valid authentication token available');
       }
 
       const url = `${this.endpointUri}${endpoint}`;
       const response = await fetch(url, {
-        method: "DELETE",
+        method: 'DELETE',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${accessToken}`,
-          "X-Authorization": `Bearer ${accessToken}`,
+          'X-Authorization': `Bearer ${accessToken}`,
           ...options.headers,
         },
       });
@@ -352,22 +317,16 @@ export class HttpHelper {
 
       if (!response.ok) {
         if (response.status === 401) {
-          await this.handleUnauthorized(
-            result.error || "Authentication failed",
-          );
-          throw new AuthenticationError(
-            result.error || "Authentication failed",
-          );
+          await this.handleUnauthorized(result.error || 'Authentication failed');
+          throw new AuthenticationError(result.error || 'Authentication failed');
         }
 
-        throw new Error(
-          result.error || `DELETE request failed: ${response.statusText}`,
-        );
+        throw new Error(result.error || `DELETE request failed: ${response.statusText}`);
       }
 
       return { success: true, ...result };
     } catch (error) {
-      console.error("DELETE request error:", error);
+      console.error('DELETE request error:', error);
       throw error;
     }
   }

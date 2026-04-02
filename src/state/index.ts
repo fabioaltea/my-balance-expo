@@ -1,7 +1,7 @@
 // Centralized exports for state management
 
 // Authentication
-export { AuthProvider, useAuthContext } from "./AuthProvider";
+export { AuthProvider, useAuthContext } from './AuthProvider';
 
 // Platform detection
 export {
@@ -10,10 +10,10 @@ export {
   PlatformSwitch,
   DeviceSwitch,
   OrientationSwitch,
-} from "./PlatformProvider";
+} from './PlatformProvider';
 
 // Data management - Centralized context
-export { DataProvider, useDataContext } from "./DataProvider";
+export { DataProvider, useDataContext } from './DataProvider';
 export type {
   Transaction,
   Movement,
@@ -22,8 +22,8 @@ export type {
   PendingRecurrence,
   MonthlyForecast,
   AccountForecast,
-} from "../types/models";
+} from '../types/models';
 
 // Date utilities
-export { DATE_RANGES } from "./AppState.types";
-export type { IDateRange } from "./AppState.types";
+export { DATE_RANGES } from './AppState.types';
+export type { IDateRange } from './AppState.types';

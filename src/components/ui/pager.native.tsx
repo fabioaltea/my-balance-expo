@@ -1,6 +1,6 @@
-import React, { useRef, useEffect } from "react";
-import { View, StyleSheet } from "react-native";
-import PagerView from "react-native-pager-view";
+import React, { useRef, useEffect } from 'react';
+import { View, StyleSheet } from 'react-native';
+import PagerView from 'react-native-pager-view';
 
 export interface IPagerProps {
   children: React.ReactNode;
@@ -45,9 +45,7 @@ const Pager: React.FC<IPagerProps> = ({
     const pageIndex = selectedPage || 0;
     return (
       <View style={[styles.container, style]}>
-        <View style={styles.page}>
-          {validChildren[pageIndex]}
-        </View>
+        <View style={styles.page}>{validChildren[pageIndex]}</View>
       </View>
     );
   }

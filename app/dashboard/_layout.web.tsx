@@ -1,12 +1,12 @@
-import React, { Suspense } from "react";
-import { View, Text, StyleSheet, Pressable } from "react-native";
-import { useRouter, usePathname, Slot } from "expo-router";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import React, { Suspense } from 'react';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { useRouter, usePathname, Slot } from 'expo-router';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
-import { LandscapeLayout } from "@/src/layout/landscape-layout.web";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import { useAuthContext, usePlatformContext } from "@/src/state";
-import PortraitLayout from "@/src/layout/portrait-layout.web";
+import { LandscapeLayout } from '@/src/layout/landscape-layout.web';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import { useAuthContext, usePlatformContext } from '@/src/state';
+import PortraitLayout from '@/src/layout/portrait-layout.web';
 
 // // Lazy import: prevents Metro from resolving web-only dependencies on iOS
 // const DashboardLandscapeLayout = React.lazy(
@@ -22,17 +22,17 @@ interface NavItem {
 
 const BASE_NAV_ITEMS: NavItem[] = [
   {
-    name: "charts",
-    route: "/dashboard/charts",
-    icon: "bar-chart",
-    label: "Charts",
+    name: 'charts',
+    route: '/dashboard/charts',
+    icon: 'bar-chart',
+    label: 'Charts',
   },
-  { name: "home", route: "/dashboard/home", icon: "home", label: "Home" },
+  { name: 'home', route: '/dashboard/home', icon: 'home', label: 'Home' },
   {
-    name: "settings",
-    route: "/dashboard/settings",
-    icon: "person",
-    label: "Profile",
+    name: 'settings',
+    route: '/dashboard/settings',
+    icon: 'person',
+    label: 'Profile',
   },
 ];
 
@@ -42,14 +42,14 @@ const BASE_NAV_ITEMS: NavItem[] = [
 function BottomTabs() {
   const router = useRouter();
   const pathname = usePathname();
-  const backgroundColor = useThemeColor({}, "menuBackground");
-  const textColor = useThemeColor({}, "text");
-  const accentColor = "#2F4F3F";
+  const backgroundColor = useThemeColor({}, 'menuBackground');
+  const textColor = useThemeColor({}, 'text');
+  const accentColor = '#2F4F3F';
   const { user } = useAuthContext();
-  const firstName = user?.name?.split(" ")[0] || "Profile";
+  const firstName = user?.name?.split(' ')[0] || 'Profile';
 
   const navItems = BASE_NAV_ITEMS.map((item) =>
-    item.name === "settings" ? { ...item, label: firstName } : item
+    item.name === 'settings' ? { ...item, label: firstName } : item,
   );
 
   return (
@@ -62,17 +62,8 @@ function BottomTabs() {
             style={styles.bottomTabItem}
             onPress={() => router.push(item.route as any)}
           >
-            <MaterialIcons
-              name={item.icon}
-              size={24}
-              color={isActive ? accentColor : textColor}
-            />
-            <Text
-              style={[
-                styles.bottomTabLabel,
-                { color: isActive ? accentColor : textColor },
-              ]}
-            >
+            <MaterialIcons name={item.icon} size={24} color={isActive ? accentColor : textColor} />
+            <Text style={[styles.bottomTabLabel, { color: isActive ? accentColor : textColor }]}>
               {item.label}
             </Text>
           </Pressable>
@@ -81,8 +72,6 @@ function BottomTabs() {
     </View>
   );
 }
-
-
 
 /**
  * Web-safe dashboard layout that adapts to screen size and orientation.
@@ -93,7 +82,7 @@ export function TabLayout() {
   const { orientation } = usePlatformContext();
 
   // Landscape mode: unified dashboard
-  if (orientation === "landscape") {
+  if (orientation === 'landscape') {
     return (
       <Suspense fallback={<View style={{ flex: 1 }} />}>
         <LandscapeLayout />
@@ -114,15 +103,15 @@ const styles = StyleSheet.create({
   },
   // Bottom tabs styles
   bottomTabs: {
-    flexDirection: "row",
+    flexDirection: 'row',
     borderTopWidth: 1,
-    borderTopColor: "#e0e0e0",
+    borderTopColor: '#e0e0e0',
     paddingBottom: 20,
     paddingTop: 8,
   },
   bottomTabItem: {
     flex: 1,
-    alignItems: "center",
+    alignItems: 'center',
     paddingVertical: 8,
   },
   bottomTabLabel: {
@@ -132,7 +121,7 @@ const styles = StyleSheet.create({
   // Landscape layout styles
   landscapeContainer: {
     flex: 1,
-    flexDirection: "column",
+    flexDirection: 'column',
   },
 });
 

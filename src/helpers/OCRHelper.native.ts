@@ -1,21 +1,21 @@
 import {
   recognizeText,
   type Text as TextRecognitionResult,
-} from "@infinitered/react-native-mlkit-text-recognition";
-import { extractText as extractPdfText } from "expo-pdf-text-extract";
+} from '@infinitered/react-native-mlkit-text-recognition';
+import { extractText as extractPdfText } from 'expo-pdf-text-extract';
 
 export interface OCRTransactionData {
   amount?: number;
   description?: string;
   date?: string; // dd-MM-yyyy
-  type?: "income" | "expense";
+  type?: 'income' | 'expense';
 }
 
 export interface OCRStatementLine {
   date: string; // dd-MM-yyyy
   description: string;
   amount: number;
-  type: "income" | "expense";
+  type: 'income' | 'expense';
 }
 
 export interface OCRStatementData {
@@ -35,13 +35,11 @@ export class OCRHelper {
    * Extracts transaction data from an image (receipt/invoice).
    * Returns parsed fields: amount, description, date, type.
    */
-  static async extractTransactionData(
-    imageUri: string
-  ): Promise<OCRTransactionData> {
+  static async extractTransactionData(imageUri: string): Promise<OCRTransactionData> {
     const result = await this.recognizeText(imageUri);
     const text = result.text;
     const lines = text
-      .split("\n")
+      .split('\n')
       .map((l) => l.trim())
       .filter(Boolean);
 
@@ -49,7 +47,7 @@ export class OCRHelper {
       amount: this.extractAmount(lines),
       description: this.extractDescription(lines),
       date: this.extractDate(text),
-      type: "expense", // receipts are typically expenses
+      type: 'expense', // receipts are typically expenses
     };
   }
 
@@ -63,14 +61,14 @@ export class OCRHelper {
 
     // Priority keywords for total amount
     const totalKeywords = [
-      "totale",
-      "total",
-      "importo",
-      "amount",
-      "da pagare",
-      "dovuto",
-      "saldo",
-      "netto",
+      'totale',
+      'total',
+      'importo',
+      'amount',
+      'da pagare',
+      'dovuto',
+      'saldo',
+      'netto',
     ];
 
     // First pass: look for a line with a total keyword + amount
@@ -104,12 +102,12 @@ export class OCRHelper {
    */
   private static parseAmount(raw: string): number {
     // Italian format: 1.234,56 → remove dots, replace comma with dot
-    if (raw.includes(",") && raw.includes(".")) {
-      return parseFloat(raw.replace(/\./g, "").replace(",", "."));
+    if (raw.includes(',') && raw.includes('.')) {
+      return parseFloat(raw.replace(/\./g, '').replace(',', '.'));
     }
     // Comma as decimal separator: 12,50
-    if (raw.includes(",")) {
-      return parseFloat(raw.replace(",", "."));
+    if (raw.includes(',')) {
+      return parseFloat(raw.replace(',', '.'));
     }
     return parseFloat(raw);
   }
@@ -123,11 +121,11 @@ export class OCRHelper {
     const match = text.match(dateRegex);
     if (!match) return undefined;
 
-    const day = match[1].padStart(2, "0");
-    const month = match[2].padStart(2, "0");
+    const day = match[1].padStart(2, '0');
+    const month = match[2].padStart(2, '0');
     let year = match[3];
     if (year.length === 2) {
-      year = "20" + year;
+      year = '20' + year;
     }
 
     return `${day}-${month}-${year}`;
@@ -158,13 +156,11 @@ export class OCRHelper {
    * Extracts multiple transactions from a bank statement image.
    * Tries to identify the account name and parse each statement line.
    */
-  static async extractStatementData(
-    imageUri: string
-  ): Promise<OCRStatementData> {
+  static async extractStatementData(imageUri: string): Promise<OCRStatementData> {
     const result = await this.recognizeText(imageUri);
     const text = result.text;
     const lines = text
-      .split("\n")
+      .split('\n')
       .map((l) => l.trim())
       .filter(Boolean);
 
@@ -178,14 +174,7 @@ export class OCRHelper {
    * Identifies the account name/IBAN from statement header lines.
    */
   private static extractAccountName(lines: string[]): string | undefined {
-    const accountKeywords = [
-      "conto",
-      "account",
-      "iban",
-      "carta",
-      "card",
-      "c/c",
-    ];
+    const accountKeywords = ['conto', 'account', 'iban', 'carta', 'card', 'c/c'];
 
     for (const line of lines) {
       const lower = line.toLowerCase();
@@ -203,8 +192,7 @@ export class OCRHelper {
   private static extractStatementLines(lines: string[]): OCRStatementLine[] {
     const transactions: OCRStatementLine[] = [];
     const dateRegex = /^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/;
-    const amountRegex =
-      /([+-]?\s*\d{1,3}(?:[.,]\d{3})*[.,]\d{2}|[+-]?\s*\d+[.,]\d{2})\s*€?$/;
+    const amountRegex = /([+-]?\s*\d{1,3}(?:[.,]\d{3})*[.,]\d{2}|[+-]?\s*\d+[.,]\d{2})\s*€?$/;
 
     for (const line of lines) {
       const dateMatch = line.match(dateRegex);
@@ -213,29 +201,29 @@ export class OCRHelper {
       const amountMatch = line.match(amountRegex);
       if (!amountMatch) continue;
 
-      const day = dateMatch[1].padStart(2, "0");
-      const month = dateMatch[2].padStart(2, "0");
+      const day = dateMatch[1].padStart(2, '0');
+      const month = dateMatch[2].padStart(2, '0');
       let year = dateMatch[3];
-      if (year.length === 2) year = "20" + year;
+      if (year.length === 2) year = '20' + year;
       const date = `${day}-${month}-${year}`;
 
-      const rawAmount = amountMatch[1].replace(/\s/g, "");
-      const isNegative = rawAmount.startsWith("-");
-      const amount = this.parseAmount(rawAmount.replace(/^[+-]/, ""));
+      const rawAmount = amountMatch[1].replace(/\s/g, '');
+      const isNegative = rawAmount.startsWith('-');
+      const amount = this.parseAmount(rawAmount.replace(/^[+-]/, ''));
       if (amount === 0 || isNaN(amount)) continue;
 
       // Extract description: text between the date and the amount
       const afterDate = line.substring(dateMatch[0].length);
       const descriptionPart = afterDate
-        .replace(amountRegex, "")
+        .replace(amountRegex, '')
         .trim()
-        .replace(/^[\s|]+|[\s|]+$/g, "");
+        .replace(/^[\s|]+|[\s|]+$/g, '');
 
       transactions.push({
         date,
-        description: descriptionPart || "Transazione",
+        description: descriptionPart || 'Transazione',
         amount,
-        type: isNegative ? "expense" : "income",
+        type: isNegative ? 'expense' : 'income',
       });
     }
 
@@ -248,12 +236,10 @@ export class OCRHelper {
    * Extracts multiple transactions from a PDF bank statement.
    * Uses native PDF text extraction (no OCR needed for text-based PDFs).
    */
-  static async extractStatementDataFromPDF(
-    pdfUri: string
-  ): Promise<OCRStatementData> {
+  static async extractStatementDataFromPDF(pdfUri: string): Promise<OCRStatementData> {
     const text = await extractPdfText(pdfUri);
     const lines = text
-      .split("\n")
+      .split('\n')
       .map((l) => l.trim())
       .filter(Boolean);
 

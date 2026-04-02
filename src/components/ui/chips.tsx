@@ -1,8 +1,8 @@
-import { View, StyleSheet } from "react-native";
-import GlassButton from "./glass-button";
-import React from "react";
+import { View, StyleSheet } from 'react-native';
+import GlassButton from './glass-button';
+import React from 'react';
 
-const CHIPS = ["All", "Income", "Expenses", "Transfers"];
+const CHIPS = ['All', 'Income', 'Expenses', 'Transfers'];
 
 const Chips: React.FC = () => {
   return (
@@ -16,9 +16,9 @@ const Chips: React.FC = () => {
 
 const styles = StyleSheet.create({
   wrapper: {
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "space-between",
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
   chip: {},
 });

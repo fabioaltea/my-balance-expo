@@ -1,7 +1,7 @@
-import { QueryClient } from "@tanstack/react-query";
-import { QUERY_KEYS } from "@/src/constants/queryKeys";
-import type { Transaction, Account } from "@/src/types/models";
-import FunctionHelper from "@/src/utils/FunctionHelper";
+import { QueryClient } from '@tanstack/react-query';
+import { QUERY_KEYS } from '@/src/constants/queryKeys';
+import type { Transaction, Account } from '@/src/types/models';
+import FunctionHelper from '@/src/utils/FunctionHelper';
 
 // ── Types ──
 
@@ -14,7 +14,7 @@ interface InputTransaction {
   transactionId?: string; // Se presente, aggiorna la transaction esistente
   amount: string;
   account: string;
-  type: "in" | "out";
+  type: 'in' | 'out';
 }
 
 export interface CreateMovementData {
@@ -73,43 +73,34 @@ function buildTransactions(
     date: metadata.date,
     description: metadata.description,
     amount: Math.abs(FunctionHelper.ConvertCurrencyToNumber(t.amount)),
-    type: t.type === "in" ? ("income" as const) : ("expense" as const),
+    type: t.type === 'in' ? ('income' as const) : ('expense' as const),
     account: t.account,
     category: metadata.category,
-    location: metadata.location || "",
+    location: metadata.location || '',
     recurrenceId: metadata.recurrenceId,
     recurrencePattern: metadata.recurrencePattern,
-    status: metadata.status || "Confirmed",
+    status: metadata.status || 'Confirmed',
   }));
 }
 
-function calcDeltasFromInputs(
-  inputs: InputTransaction[],
-): Record<string, number> {
+function calcDeltasFromInputs(inputs: InputTransaction[]): Record<string, number> {
   const delta: Record<string, number> = {};
   for (const t of inputs) {
-    delta[t.account] =
-      (delta[t.account] || 0) +
-      FunctionHelper.ConvertCurrencyToNumber(t.amount);
+    delta[t.account] = (delta[t.account] || 0) + FunctionHelper.ConvertCurrencyToNumber(t.amount);
   }
   return delta;
 }
 
-function calcReversedDeltas(
-  transactions: Transaction[],
-): Record<string, number> {
+function calcReversedDeltas(transactions: Transaction[]): Record<string, number> {
   const delta: Record<string, number> = {};
   for (const t of transactions) {
-    const reversal = t.type === "income" ? -t.amount : t.amount;
+    const reversal = t.type === 'income' ? -t.amount : t.amount;
     delta[t.account] = (delta[t.account] || 0) + reversal;
   }
   return delta;
 }
 
-function mergeDeltas(
-  a: Record<string, number>,
-  b: Record<string, number>,
-): Record<string, number> {
+function mergeDeltas(a: Record<string, number>, b: Record<string, number>): Record<string, number> {
   const merged = { ...a };
   for (const [key, value] of Object.entries(b)) {
     merged[key] = (merged[key] || 0) + value;
@@ -137,9 +128,7 @@ function updateAccountBalances(
 // ── Public class ──
 
 export class TransactionsMutationHelpers {
-  static async snapshotAndCancel(
-    queryClient: QueryClient,
-  ): Promise<OptimisticSnapshot> {
+  static async snapshotAndCancel(queryClient: QueryClient): Promise<OptimisticSnapshot> {
     await queryClient.cancelQueries({
       queryKey: QUERY_KEYS.transactions.all,
     });
@@ -149,27 +138,16 @@ export class TransactionsMutationHelpers {
       previousTransactions: queryClient.getQueryData<Transaction[]>(
         QUERY_KEYS.transactions.filtered(),
       ),
-      previousAccounts: queryClient.getQueryData<Account[]>(
-        QUERY_KEYS.accounts.all,
-      ),
+      previousAccounts: queryClient.getQueryData<Account[]>(QUERY_KEYS.accounts.all),
     };
   }
 
-  static rollback(
-    queryClient: QueryClient,
-    context: OptimisticSnapshot | undefined,
-  ): void {
+  static rollback(queryClient: QueryClient, context: OptimisticSnapshot | undefined): void {
     if (context?.previousTransactions) {
-      queryClient.setQueryData(
-        QUERY_KEYS.transactions.filtered(),
-        context.previousTransactions,
-      );
+      queryClient.setQueryData(QUERY_KEYS.transactions.filtered(), context.previousTransactions);
     }
     if (context?.previousAccounts) {
-      queryClient.setQueryData(
-        QUERY_KEYS.accounts.all,
-        context.previousAccounts,
-      );
+      queryClient.setQueryData(QUERY_KEYS.accounts.all, context.previousAccounts);
     }
   }
 
@@ -196,15 +174,12 @@ export class TransactionsMutationHelpers {
       status: newMovement.status,
     });
 
-    queryClient.setQueryData<Transaction[]>(
-      QUERY_KEYS.transactions.filtered(),
-      (old = []) => [...old, ...transactions],
-    );
+    queryClient.setQueryData<Transaction[]>(QUERY_KEYS.transactions.filtered(), (old = []) => [
+      ...old,
+      ...transactions,
+    ]);
 
-    updateAccountBalances(
-      queryClient,
-      calcDeltasFromInputs(newMovement.transactions),
-    );
+    updateAccountBalances(queryClient, calcDeltasFromInputs(newMovement.transactions));
 
     return snapshot;
   }
@@ -222,17 +197,17 @@ export class TransactionsMutationHelpers {
       date: data.date,
       description: data.description,
       amount: 0,
-      type: "expense",
-      account: "",
+      type: 'expense',
+      account: '',
       category: data.category,
       recurrenceId: data.recurrenceId,
-      status: "dismissed",
+      status: 'dismissed',
     };
 
-    queryClient.setQueryData<Transaction[]>(
-      QUERY_KEYS.transactions.filtered(),
-      (old = []) => [...old, dismissedTransaction],
-    );
+    queryClient.setQueryData<Transaction[]>(QUERY_KEYS.transactions.filtered(), (old = []) => [
+      ...old,
+      dismissedTransaction,
+    ]);
 
     return snapshot;
   }
@@ -247,10 +222,8 @@ export class TransactionsMutationHelpers {
       (t) => t.movementId === deletedMovement.movementId,
     );
 
-    queryClient.setQueryData<Transaction[]>(
-      QUERY_KEYS.transactions.filtered(),
-      (old = []) =>
-        old.filter((t) => t.movementId !== deletedMovement.movementId),
+    queryClient.setQueryData<Transaction[]>(QUERY_KEYS.transactions.filtered(), (old = []) =>
+      old.filter((t) => t.movementId !== deletedMovement.movementId),
     );
 
     updateAccountBalances(queryClient, calcReversedDeltas(toDelete));
@@ -278,14 +251,13 @@ export class TransactionsMutationHelpers {
         updatedMovement.movementId,
         updatedMovement.transactions,
         {
-          date: updatedMovement.date || firstOld?.date || "",
-          description:
-            updatedMovement.description || firstOld?.description || "",
-          category: updatedMovement.category || firstOld?.category || "",
+          date: updatedMovement.date || firstOld?.date || '',
+          description: updatedMovement.description || firstOld?.description || '',
+          category: updatedMovement.category || firstOld?.category || '',
           location:
             updatedMovement.location !== undefined
               ? updatedMovement.location
-              : firstOld?.location || "",
+              : firstOld?.location || '',
           recurrenceId:
             updatedMovement.recurrenceId !== undefined
               ? updatedMovement.recurrenceId
@@ -297,14 +269,14 @@ export class TransactionsMutationHelpers {
           status:
             updatedMovement.status !== undefined
               ? updatedMovement.status
-              : firstOld?.status || "Confirmed",
+              : firstOld?.status || 'Confirmed',
         },
       );
 
-      queryClient.setQueryData<Transaction[]>(
-        QUERY_KEYS.transactions.filtered(),
-        [...remaining, ...newTransactions],
-      );
+      queryClient.setQueryData<Transaction[]>(QUERY_KEYS.transactions.filtered(), [
+        ...remaining,
+        ...newTransactions,
+      ]);
 
       const delta = mergeDeltas(
         calcReversedDeltas(oldTransactions),
@@ -312,36 +284,34 @@ export class TransactionsMutationHelpers {
       );
       updateAccountBalances(queryClient, delta);
     } else {
-      queryClient.setQueryData<Transaction[]>(
-        QUERY_KEYS.transactions.filtered(),
-        (old = []) =>
-          old.map((t) => {
-            if (t.movementId !== updatedMovement.movementId) return t;
-            return {
-              ...t,
-              ...(updatedMovement.description !== undefined && {
-                description: updatedMovement.description,
-              }),
-              ...(updatedMovement.category !== undefined && {
-                category: updatedMovement.category,
-              }),
-              ...(updatedMovement.date !== undefined && {
-                date: updatedMovement.date,
-              }),
-              ...(updatedMovement.location !== undefined && {
-                location: updatedMovement.location,
-              }),
-              ...(updatedMovement.status !== undefined && {
-                status: updatedMovement.status,
-              }),
-              ...(updatedMovement.recurrenceId !== undefined && {
-                recurrenceId: updatedMovement.recurrenceId,
-              }),
-              ...(updatedMovement.recurrencePattern !== undefined && {
-                recurrencePattern: updatedMovement.recurrencePattern,
-              }),
-            };
-          }),
+      queryClient.setQueryData<Transaction[]>(QUERY_KEYS.transactions.filtered(), (old = []) =>
+        old.map((t) => {
+          if (t.movementId !== updatedMovement.movementId) return t;
+          return {
+            ...t,
+            ...(updatedMovement.description !== undefined && {
+              description: updatedMovement.description,
+            }),
+            ...(updatedMovement.category !== undefined && {
+              category: updatedMovement.category,
+            }),
+            ...(updatedMovement.date !== undefined && {
+              date: updatedMovement.date,
+            }),
+            ...(updatedMovement.location !== undefined && {
+              location: updatedMovement.location,
+            }),
+            ...(updatedMovement.status !== undefined && {
+              status: updatedMovement.status,
+            }),
+            ...(updatedMovement.recurrenceId !== undefined && {
+              recurrenceId: updatedMovement.recurrenceId,
+            }),
+            ...(updatedMovement.recurrencePattern !== undefined && {
+              recurrencePattern: updatedMovement.recurrencePattern,
+            }),
+          };
+        }),
       );
     }
 

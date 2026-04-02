@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useMemo, useRef, useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -8,27 +8,24 @@ import {
   LayoutAnimation,
   Platform,
   UIManager,
-} from "react-native";
-import Mapbox from "@/src/lib/mapbox";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { ThemedText } from "@/src/components/core/themed-text.native";
-import ModalPanel from "@/src/components/ui/modal-panel";
-import IconSymbol from "@/src/components/ui/icon-symbol";
-import { useColorScheme } from "@/src/hooks/use-color-scheme";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import { useDataContext } from "@/src/state";
-import type { Movement } from "@/src/types/models";
-import { MovementHelper } from "@/src/helpers/MovementHelper";
-import { compareDates, formatDateForDisplay } from "@/src/utils/dateUtils";
-import {
-  getLocationCoordinatesKey,
-  parseLocationValue,
-} from "@/src/utils/locationValue";
+} from 'react-native';
+import Mapbox from '@/src/lib/mapbox';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { ThemedText } from '@/src/components/core/themed-text.native';
+import ModalPanel from '@/src/components/ui/modal-panel';
+import IconSymbol from '@/src/components/ui/icon-symbol';
+import { useColorScheme } from '@/src/hooks/use-color-scheme';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import { useDataContext } from '@/src/state';
+import type { Movement } from '@/src/types/models';
+import { MovementHelper } from '@/src/helpers/MovementHelper';
+import { compareDates, formatDateForDisplay } from '@/src/utils/dateUtils';
+import { getLocationCoordinatesKey, parseLocationValue } from '@/src/utils/locationValue';
 
-Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_PUBLIC_TOKEN || "");
+Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_PUBLIC_TOKEN || '');
 
 const DEFAULT_CENTER: [number, number] = [9.1217, 39.2238];
-const EXPANDED_SHEET_HEIGHT = Dimensions.get("window").height * 0.8;
+const EXPANDED_SHEET_HEIGHT = Dimensions.get('window').height * 0.8;
 
 interface LocationGroup {
   key: string;
@@ -38,42 +35,26 @@ interface LocationGroup {
   movements: Movement[];
 }
 
-type SheetStep = "preview" | "details";
+type SheetStep = 'preview' | 'details';
 
 export default function MapViewNative() {
   const { movements, categories } = useDataContext();
   const cameraRef = useRef<Mapbox.Camera>(null);
-  const [selectedGroup, setSelectedGroup] = useState<LocationGroup | null>(
-    null,
-  );
-  const [sheetStep, setSheetStep] = useState<SheetStep>("preview");
-  const colorScheme = useColorScheme() ?? "light";
+  const [selectedGroup, setSelectedGroup] = useState<LocationGroup | null>(null);
+  const [sheetStep, setSheetStep] = useState<SheetStep>('preview');
+  const colorScheme = useColorScheme() ?? 'light';
 
-  const textColor = useThemeColor({}, "text");
-  const cardBackground = useThemeColor({}, "cardBackground");
-  const backgroundColor = useThemeColor({}, "background");
-  const subtextColor = useThemeColor(
-    { light: "#888", dark: "#999" },
-    "tabIconDefault",
-  );
-  const borderColor = useThemeColor(
-    { light: "#F0F0F0", dark: "#333333" },
-    "tabIconDefault",
-  );
-  const positiveAmountColor = useThemeColor(
-    { light: "#107c2bff", dark: "#34C759" },
-    "tint",
-  );
-  const primaryColor = "#2F4F3F";
-  const markerBorderColor =
-    colorScheme === "dark" ? "rgba(255, 255, 255, 0.9)" : "#2F4F3F";
-  const mapStyleURL =
-    colorScheme === "dark" ? Mapbox.StyleURL.Dark : Mapbox.StyleURL.Light;
+  const textColor = useThemeColor({}, 'text');
+  const cardBackground = useThemeColor({}, 'cardBackground');
+  const backgroundColor = useThemeColor({}, 'background');
+  const subtextColor = useThemeColor({ light: '#888', dark: '#999' }, 'tabIconDefault');
+  const borderColor = useThemeColor({ light: '#F0F0F0', dark: '#333333' }, 'tabIconDefault');
+  const positiveAmountColor = useThemeColor({ light: '#107c2bff', dark: '#34C759' }, 'tint');
+  const primaryColor = '#2F4F3F';
+  const markerBorderColor = colorScheme === 'dark' ? 'rgba(255, 255, 255, 0.9)' : '#2F4F3F';
+  const mapStyleURL = colorScheme === 'dark' ? Mapbox.StyleURL.Dark : Mapbox.StyleURL.Light;
 
-  if (
-    Platform.OS === "android" &&
-    UIManager.setLayoutAnimationEnabledExperimental
-  ) {
+  if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
     UIManager.setLayoutAnimationEnabledExperimental(true);
   }
 
@@ -109,9 +90,7 @@ export default function MapViewNative() {
     return Array.from(groups.values())
       .map((group) => ({
         ...group,
-        movements: [...group.movements].sort((a, b) =>
-          compareDates(b.date, a.date),
-        ),
+        movements: [...group.movements].sort((a, b) => compareDates(b.date, a.date)),
       }))
       .sort((a, b) => b.movements.length - a.movements.length);
   }, [movements]);
@@ -119,7 +98,7 @@ export default function MapViewNative() {
   const latestMovement = selectedGroup?.movements[0] ?? null;
   const canExpandSheet = (selectedGroup?.movements.length ?? 0) > 1;
   const visibleMovements =
-    sheetStep === "preview"
+    sheetStep === 'preview'
       ? latestMovement
         ? [latestMovement]
         : []
@@ -127,7 +106,7 @@ export default function MapViewNative() {
 
   const handleMarkerSelect = (group: LocationGroup) => {
     setSelectedGroup(group);
-    setSheetStep("preview");
+    setSheetStep('preview');
     cameraRef.current?.setCamera({
       centerCoordinate: [group.longitude, group.latitude],
       zoomLevel: 14,
@@ -137,7 +116,7 @@ export default function MapViewNative() {
 
   const closeSheet = () => {
     setSelectedGroup(null);
-    setSheetStep("preview");
+    setSheetStep('preview');
   };
 
   const toggleSheetStep = () => {
@@ -146,7 +125,7 @@ export default function MapViewNative() {
     }
 
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setSheetStep((current) => (current === "preview" ? "details" : "preview"));
+    setSheetStep((current) => (current === 'preview' ? 'details' : 'preview'));
   };
 
   return (
@@ -164,11 +143,7 @@ export default function MapViewNative() {
         zoomEnabled
         onPress={() => setSelectedGroup(null)}
       >
-        <Mapbox.Camera
-          ref={cameraRef}
-          zoomLevel={5.5}
-          centerCoordinate={DEFAULT_CENTER}
-        />
+        <Mapbox.Camera ref={cameraRef} zoomLevel={5.5} centerCoordinate={DEFAULT_CENTER} />
 
         {locationGroups.map((group) => (
           <Mapbox.PointAnnotation
@@ -196,7 +171,7 @@ export default function MapViewNative() {
         <MaterialIcons name="place" size={16} color={primaryColor} />
         <ThemedText style={[styles.infoBadgeText, { color: textColor }]}>
           {locationGroups.length} posizion
-          {locationGroups.length === 1 ? "e" : "i"}
+          {locationGroups.length === 1 ? 'e' : 'i'}
         </ThemedText>
       </View>
 
@@ -205,7 +180,7 @@ export default function MapViewNative() {
         onClose={closeSheet}
         showConfirmButton={false}
         showCancelButton={false}
-        maxHeight={sheetStep === "preview" ? 260 : EXPANDED_SHEET_HEIGHT}
+        maxHeight={sheetStep === 'preview' ? 260 : EXPANDED_SHEET_HEIGHT}
       >
         {selectedGroup && latestMovement && (
           <View>
@@ -214,11 +189,9 @@ export default function MapViewNative() {
                 <ThemedText style={styles.sheetTitle} numberOfLines={2}>
                   {selectedGroup.location}
                 </ThemedText>
-                <ThemedText
-                  style={[styles.sheetSubtitle, { color: subtextColor }]}
-                >
+                <ThemedText style={[styles.sheetSubtitle, { color: subtextColor }]}>
                   {selectedGroup.movements.length} moviment
-                  {selectedGroup.movements.length === 1 ? "o" : "i"}
+                  {selectedGroup.movements.length === 1 ? 'o' : 'i'}
                 </ThemedText>
               </View>
               <Pressable
@@ -230,43 +203,33 @@ export default function MapViewNative() {
                 onPress={toggleSheetStep}
               >
                 <MaterialIcons
-                  name={
-                    sheetStep === "preview"
-                      ? "keyboard-arrow-up"
-                      : "keyboard-arrow-down"
-                  }
+                  name={sheetStep === 'preview' ? 'keyboard-arrow-up' : 'keyboard-arrow-down'}
                   size={20}
                   color={textColor}
                 />
               </Pressable>
             </View>
 
-            <View
-              style={[styles.sheetDivider, { backgroundColor: borderColor }]}
-            />
+            <View style={[styles.sheetDivider, { backgroundColor: borderColor }]} />
 
             <ScrollView
-              style={sheetStep === "details" ? styles.movementsList : undefined}
+              style={sheetStep === 'details' ? styles.movementsList : undefined}
               showsVerticalScrollIndicator={false}
-              scrollEnabled={sheetStep === "details"}
+              scrollEnabled={sheetStep === 'details'}
             >
               {visibleMovements.map((movement, index) => {
-                const isPreview = sheetStep === "preview";
+                const isPreview = sheetStep === 'preview';
 
                 return (
                   <View
                     key={`${movement.id}-${sheetStep}-${index}`}
                     style={
                       isPreview
-                        ? [
-                            styles.previewCard,
-                            { backgroundColor: cardBackground },
-                          ]
+                        ? [styles.previewCard, { backgroundColor: cardBackground }]
                         : [
                             styles.movementRow,
                             { borderBottomColor: borderColor },
-                            index === visibleMovements.length - 1 &&
-                              styles.movementRowLast,
+                            index === visibleMovements.length - 1 && styles.movementRowLast,
                           ]
                     }
                   >
@@ -284,29 +247,17 @@ export default function MapViewNative() {
                         ]}
                       >
                         <IconSymbol
-                          name={MovementHelper.getMovementIcon(
-                            movement.category,
-                            categories,
-                          )}
+                          name={MovementHelper.getMovementIcon(movement.category, categories)}
                           size={isPreview ? 18 : 16}
                           color="#FFFFFF"
                         />
                       </View>
                       <View style={styles.previewTextBlock}>
-                        <ThemedText
-                          style={styles.previewTitle}
-                          numberOfLines={1}
-                        >
+                        <ThemedText style={styles.previewTitle} numberOfLines={1}>
                           {movement.description}
                         </ThemedText>
-                        <ThemedText
-                          style={[
-                            styles.previewSubtitle,
-                            { color: subtextColor },
-                          ]}
-                        >
-                          {formatDateForDisplay(movement.date, "it-IT")} •{" "}
-                          {movement.category}
+                        <ThemedText style={[styles.previewSubtitle, { color: subtextColor }]}>
+                          {formatDateForDisplay(movement.date, 'it-IT')} • {movement.category}
                         </ThemedText>
                       </View>
                     </View>
@@ -314,15 +265,12 @@ export default function MapViewNative() {
                       style={[
                         styles.previewAmount,
                         {
-                          color:
-                            movement.totalAmount > 0
-                              ? positiveAmountColor
-                              : textColor,
+                          color: movement.totalAmount > 0 ? positiveAmountColor : textColor,
                         },
                       ]}
                     >
-                      {movement.totalAmount > 0 ? "+" : ""}
-                      {movement.totalAmount.toFixed(2).replace(".", ",")}€
+                      {movement.totalAmount > 0 ? '+' : ''}
+                      {movement.totalAmount.toFixed(2).replace('.', ',')}€
                     </ThemedText>
                   </View>
                 );
@@ -340,16 +288,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   infoBadge: {
-    position: "absolute",
+    position: 'absolute',
     right: 16,
     bottom: 24,
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 20,
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOpacity: 0.12,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 6 },
@@ -357,22 +305,22 @@ const styles = StyleSheet.create({
   },
   infoBadgeText: {
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   marker: {
     width: 22,
     height: 22,
     borderRadius: 11,
     borderWidth: 3,
-    borderColor: "#FFFFFF",
+    borderColor: '#FFFFFF',
   },
   markerSelected: {
     transform: [{ scale: 1.15 }],
   },
   sheetHeader: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
     gap: 12,
   },
   sheetHeaderLeft: {
@@ -380,7 +328,7 @@ const styles = StyleSheet.create({
   },
   sheetTitle: {
     fontSize: 20,
-    fontWeight: "700",
+    fontWeight: '700',
   },
   sheetSubtitle: {
     fontSize: 14,
@@ -391,8 +339,8 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     width: 36,
     height: 36,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   sheetDivider: {
     height: StyleSheet.hairlineWidth,
@@ -401,14 +349,14 @@ const styles = StyleSheet.create({
   previewCard: {
     borderRadius: 22,
     padding: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     gap: 12,
   },
   previewCardLeft: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 12,
     flex: 1,
   },
@@ -416,15 +364,15 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   previewTextBlock: {
     flex: 1,
   },
   previewTitle: {
     fontSize: 15,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   previewSubtitle: {
     fontSize: 13,
@@ -432,15 +380,15 @@ const styles = StyleSheet.create({
   },
   previewAmount: {
     fontSize: 15,
-    fontWeight: "700",
+    fontWeight: '700',
   },
   movementsList: {
     maxHeight: 280,
   },
   movementRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     gap: 12,
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,

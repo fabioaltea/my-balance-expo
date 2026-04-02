@@ -13,12 +13,12 @@
  *   <ChartSkeleton variant="bars" barCount={6} height={220} />
  */
 
-import React from "react";
-import { View, StyleSheet } from "react-native";
-import Skeleton from "@/src/components/ui/skeleton";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
+import React from 'react';
+import { View, StyleSheet } from 'react-native';
+import Skeleton from '@/src/components/ui/skeleton';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
 
-type SkeletonVariant = "summary" | "forecast" | "bars" | "list";
+type SkeletonVariant = 'summary' | 'forecast' | 'bars' | 'list';
 
 interface ChartSkeletonProps {
   variant: SkeletonVariant;
@@ -33,13 +33,10 @@ const ChartSkeleton: React.FC<ChartSkeletonProps> = ({
   itemCount = 5,
   barCount = 6,
 }) => {
-  const borderColor = useThemeColor(
-    { light: "#F0F0F0", dark: "#333333" },
-    "tabIconDefault",
-  );
+  const borderColor = useThemeColor({ light: '#F0F0F0', dark: '#333333' }, 'tabIconDefault');
 
   // Summary variant: balance row + progress bar + 2 detail rows
-  if (variant === "summary") {
+  if (variant === 'summary') {
     return (
       <View style={{ height }}>
         {/* Balance Row */}
@@ -58,41 +55,21 @@ const ChartSkeleton: React.FC<ChartSkeletonProps> = ({
           <View style={styles.detailRow}>
             <View style={styles.detailLabel}>
               <Skeleton width={15} height={15} borderRadius={6} />
-              <Skeleton
-                width={70}
-                height={18}
-                borderRadius={4}
-                style={{ marginLeft: 8 }}
-              />
+              <Skeleton width={70} height={18} borderRadius={4} style={{ marginLeft: 8 }} />
             </View>
             <View style={styles.detailValue}>
               <Skeleton width={90} height={18} borderRadius={4} />
-              <Skeleton
-                width={40}
-                height={12}
-                borderRadius={4}
-                style={{ marginTop: 2 }}
-              />
+              <Skeleton width={40} height={12} borderRadius={4} style={{ marginTop: 2 }} />
             </View>
           </View>
           <View style={styles.detailRow}>
             <View style={styles.detailLabel}>
               <Skeleton width={15} height={15} borderRadius={6} />
-              <Skeleton
-                width={80}
-                height={18}
-                borderRadius={4}
-                style={{ marginLeft: 8 }}
-              />
+              <Skeleton width={80} height={18} borderRadius={4} style={{ marginLeft: 8 }} />
             </View>
             <View style={styles.detailValue}>
               <Skeleton width={90} height={18} borderRadius={4} />
-              <Skeleton
-                width={40}
-                height={12}
-                borderRadius={4}
-                style={{ marginTop: 2 }}
-              />
+              <Skeleton width={40} height={12} borderRadius={4} style={{ marginTop: 2 }} />
             </View>
           </View>
         </View>
@@ -101,7 +78,7 @@ const ChartSkeleton: React.FC<ChartSkeletonProps> = ({
   }
 
   // Forecast variant: bar visualization + delta + details
-  if (variant === "forecast") {
+  if (variant === 'forecast') {
     return (
       <View style={{ height }}>
         {/* Scale labels */}
@@ -111,32 +88,17 @@ const ChartSkeleton: React.FC<ChartSkeletonProps> = ({
         </View>
 
         {/* Bar */}
-        <Skeleton
-          width="100%"
-          height={20}
-          borderRadius={10}
-          style={{ marginVertical: 6 }}
-        />
+        <Skeleton width="100%" height={20} borderRadius={10} style={{ marginVertical: 6 }} />
 
         {/* Value labels */}
         <View style={[styles.row, { marginTop: 8 }]}>
-          <View style={{ alignItems: "center" }}>
+          <View style={{ alignItems: 'center' }}>
             <Skeleton width={45} height={22} borderRadius={8} />
-            <Skeleton
-              width={35}
-              height={10}
-              borderRadius={4}
-              style={{ marginTop: 2 }}
-            />
+            <Skeleton width={35} height={10} borderRadius={4} style={{ marginTop: 2 }} />
           </View>
-          <View style={{ alignItems: "center" }}>
+          <View style={{ alignItems: 'center' }}>
             <Skeleton width={45} height={22} borderRadius={8} />
-            <Skeleton
-              width={45}
-              height={10}
-              borderRadius={4}
-              style={{ marginTop: 2 }}
-            />
+            <Skeleton width={45} height={10} borderRadius={4} style={{ marginTop: 2 }} />
           </View>
         </View>
 
@@ -162,7 +124,7 @@ const ChartSkeleton: React.FC<ChartSkeletonProps> = ({
   }
 
   // Bars variant: vertical bar chart skeleton
-  if (variant === "bars") {
+  if (variant === 'bars') {
     const chartHeight = height - 30; // Leave space for labels
     const bars = Array.from({ length: barCount }, (_, i) => ({
       height: 30 + Math.random() * 50, // Random heights for visual interest
@@ -184,12 +146,7 @@ const ChartSkeleton: React.FC<ChartSkeletonProps> = ({
             {bars.map((bar, index) => (
               <View key={index} style={styles.barColumn}>
                 <Skeleton width={24} height={bar.height} borderRadius={4} />
-                <Skeleton
-                  width={20}
-                  height={10}
-                  borderRadius={4}
-                  style={{ marginTop: 4 }}
-                />
+                <Skeleton width={20} height={10} borderRadius={4} style={{ marginTop: 4 }} />
               </View>
             ))}
           </View>
@@ -199,7 +156,7 @@ const ChartSkeleton: React.FC<ChartSkeletonProps> = ({
   }
 
   // List variant: repeating item rows
-  if (variant === "list") {
+  if (variant === 'list') {
     return (
       <View>
         {Array.from({ length: itemCount }).map((_, index) => (
@@ -212,22 +169,12 @@ const ChartSkeleton: React.FC<ChartSkeletonProps> = ({
             ]}
           >
             {/* Icon placeholder */}
-            <Skeleton
-              width={50}
-              height={50}
-              borderRadius={25}
-              style={{ marginRight: 16 }}
-            />
+            <Skeleton width={50} height={50} borderRadius={25} style={{ marginRight: 16 }} />
 
             {/* Info placeholder */}
             <View style={styles.listItemInfo}>
               <Skeleton width={80} height={14} borderRadius={4} />
-              <Skeleton
-                width={140}
-                height={18}
-                borderRadius={4}
-                style={{ marginTop: 4 }}
-              />
+              <Skeleton width={140} height={18} borderRadius={4} style={{ marginTop: 4 }} />
             </View>
 
             {/* Amount placeholder */}
@@ -243,9 +190,9 @@ const ChartSkeleton: React.FC<ChartSkeletonProps> = ({
 
 const styles = StyleSheet.create({
   row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   progressBarContainer: {
     marginVertical: 16,
@@ -257,43 +204,43 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   detailRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 8,
     paddingVertical: 4,
     height: 42,
   },
   detailLabel: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   detailValue: {
-    alignItems: "flex-end",
+    alignItems: 'flex-end',
   },
   barsContainer: {
-    flexDirection: "row",
+    flexDirection: 'row',
   },
   yAxisSkeleton: {
     width: 24,
-    justifyContent: "space-between",
-    alignItems: "flex-end",
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
     paddingRight: 4,
     paddingVertical: 8,
   },
   barsRow: {
     flex: 1,
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-around",
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-around',
     paddingBottom: 0,
   },
   barColumn: {
-    alignItems: "center",
+    alignItems: 'center',
   },
   listItem: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: 10,
     borderBottomWidth: 1,
   },

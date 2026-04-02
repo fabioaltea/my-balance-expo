@@ -21,11 +21,8 @@ export interface IconSymbolProps {
   style?: object;
 }
 
-
-const IconSymbol:React.FC<IconSymbolProps>=({ name, color, size, style }:IconSymbolProps)=> {
+const IconSymbol: React.FC<IconSymbolProps> = ({ name, color, size, style }: IconSymbolProps) => {
   return <MaterialIcons name={name as IconName} color={color} size={size} style={style} />;
-}
-
-
+};
 
 export default IconSymbol;

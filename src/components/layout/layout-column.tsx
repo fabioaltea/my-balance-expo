@@ -1,5 +1,5 @@
-import React from "react";
-import { View, StyleSheet, ViewStyle } from "react-native";
+import React from 'react';
+import { View, StyleSheet, ViewStyle } from 'react-native';
 
 interface LayoutColumnProps {
   children: React.ReactNode;
@@ -23,7 +23,7 @@ export function LayoutColumn({
   minWidth,
 }: LayoutColumnProps) {
   const style: ViewStyle = {
-    flexDirection: "column",
+    flexDirection: 'column',
     gap,
     minHeight: 0,
   };

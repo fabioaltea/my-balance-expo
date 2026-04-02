@@ -1,14 +1,14 @@
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import { Slot } from "expo-router";
-import React from "react";
-import { StyleSheet, View } from "react-native";
-import { BottomTabs } from "react-native-screens";
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import { Slot } from 'expo-router';
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+import { BottomTabs } from 'react-native-screens';
 
 /**
  * Portrait layout - standard navigation with bottom tabs
  */
 function PortraitLayout() {
-  const backgroundColor = useThemeColor({}, "background");
+  const backgroundColor = useThemeColor({}, 'background');
 
   return (
     <View style={[styles.container, { backgroundColor }]}>
@@ -29,15 +29,15 @@ const styles = StyleSheet.create({
   },
   // Bottom tabs styles
   bottomTabs: {
-    flexDirection: "row",
+    flexDirection: 'row',
     borderTopWidth: 1,
-    borderTopColor: "#e0e0e0",
+    borderTopColor: '#e0e0e0',
     paddingBottom: 20,
     paddingTop: 8,
   },
   bottomTabItem: {
     flex: 1,
-    alignItems: "center",
+    alignItems: 'center',
     paddingVertical: 8,
   },
   bottomTabLabel: {
@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
   // Landscape layout styles
   landscapeContainer: {
     flex: 1,
-    flexDirection: "column",
+    flexDirection: 'column',
   },
 });
 

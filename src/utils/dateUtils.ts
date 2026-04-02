@@ -6,8 +6,8 @@
  * Format a Date object to dd-MM-yyyy string
  */
 export const formatDateToDDMMYYYY = (date: Date): string => {
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
   const year = date.getFullYear();
   return `${day}-${month}-${year}`;
 };
@@ -16,11 +16,11 @@ export const formatDateToDDMMYYYY = (date: Date): string => {
  * Parse dd-MM-yyyy string to Date object
  */
 export const parseDateFromDDMMYYYY = (dateStr: string): Date | null => {
-  if (!dateStr || typeof dateStr !== "string") {
+  if (!dateStr || typeof dateStr !== 'string') {
     return null;
   }
 
-  const parts = dateStr.split("-");
+  const parts = dateStr.split('-');
   if (parts.length !== 3) {
     return null;
   }
@@ -36,11 +36,7 @@ export const parseDateFromDDMMYYYY = (dateStr: string): Date | null => {
   const date = new Date(year, month, day);
 
   // Validate the date is correct (e.g., not 31-02-2024)
-  if (
-    date.getDate() !== day ||
-    date.getMonth() !== month ||
-    date.getFullYear() !== year
-  ) {
+  if (date.getDate() !== day || date.getMonth() !== month || date.getFullYear() !== year) {
     return null;
   }
 
@@ -71,11 +67,7 @@ export const compareDates = (date1: string, date2: string): number => {
 /**
  * Check if date is between start and end (inclusive)
  */
-export const isDateInRange = (
-  date: string,
-  startDate: string,
-  endDate: string,
-): boolean => {
+export const isDateInRange = (date: string, startDate: string, endDate: string): boolean => {
   return compareDates(date, startDate) >= 0 && compareDates(date, endDate) <= 0;
 };
 
@@ -123,21 +115,17 @@ export const getCurrentDate = (): string => {
  * Handles formats like: "2024-01-15T00:00:00.000Z" or "2024-01-15"
  */
 export const convertISOToLocalFormat = (isoString: string): string => {
-  if (!isoString || typeof isoString !== "string") {
-    console.warn(
-      "⚠️ convertISOToLocalFormat: Invalid input, using current date",
-      { isoString },
-    );
+  if (!isoString || typeof isoString !== 'string') {
+    console.warn('⚠️ convertISOToLocalFormat: Invalid input, using current date', { isoString });
     return getCurrentDate();
   }
 
   try {
     const date = new Date(isoString);
     if (isNaN(date.getTime())) {
-      console.warn(
-        "⚠️ convertISOToLocalFormat: Invalid ISO date, using current date",
-        { isoString },
-      );
+      console.warn('⚠️ convertISOToLocalFormat: Invalid ISO date, using current date', {
+        isoString,
+      });
       return getCurrentDate();
     }
     const formatted = formatDateToDDMMYYYY(date);
@@ -145,13 +133,13 @@ export const convertISOToLocalFormat = (isoString: string): string => {
     // Log first few conversions for debugging
     const debugCount = (global as any).__dateConversionCount || 0;
     if (debugCount < 3) {
-      console.log("🔄 Date conversion:", { from: isoString, to: formatted });
+      console.log('🔄 Date conversion:', { from: isoString, to: formatted });
       (global as any).__dateConversionCount = debugCount + 1;
     }
 
     return formatted;
   } catch (error) {
-    console.error("❌ Error converting ISO date:", isoString, error);
+    console.error('❌ Error converting ISO date:', isoString, error);
     return getCurrentDate();
   }
 };
@@ -159,10 +147,7 @@ export const convertISOToLocalFormat = (isoString: string): string => {
 /**
  * Format date for display (locale-aware)
  */
-export const formatDateForDisplay = (
-  dateStr: string,
-  locale: string = "it-IT",
-): string => {
+export const formatDateForDisplay = (dateStr: string, locale: string = 'it-IT'): string => {
   const date = parseDateFromDDMMYYYY(dateStr);
   if (!date) {
     return dateStr;
@@ -174,7 +159,7 @@ export const formatDateForDisplay = (
 // Recurrence Pattern Utilities
 // ===========================
 
-export type RecurrenceUnit = "D" | "W" | "M" | "Y";
+export type RecurrenceUnit = 'D' | 'W' | 'M' | 'Y';
 
 export interface ParsedRecurrencePattern {
   unit: RecurrenceUnit;
@@ -185,10 +170,8 @@ export interface ParsedRecurrencePattern {
  * Parse ISO 8601 duration pattern (e.g., P1W, P2M, P1Y)
  * Returns the unit and frequency
  */
-export const parseRecurrencePattern = (
-  pattern: string,
-): ParsedRecurrencePattern | null => {
-  if (!pattern || typeof pattern !== "string") {
+export const parseRecurrencePattern = (pattern: string): ParsedRecurrencePattern | null => {
+  if (!pattern || typeof pattern !== 'string') {
     return null;
   }
 
@@ -234,9 +217,7 @@ export const calculateExpectedOccurrences = (
 
   // If we have the template start date, enumerate actual occurrences
   // that fall within the period for accurate calculation
-  const templateStart = templateStartDate
-    ? parseDateFromDDMMYYYY(templateStartDate)
-    : null;
+  const templateStart = templateStartDate ? parseDateFromDDMMYYYY(templateStartDate) : null;
 
   if (templateStart) {
     let count = 0;
@@ -250,16 +231,16 @@ export const calculateExpectedOccurrences = (
 
       // Advance to next occurrence
       switch (unit) {
-        case "D":
+        case 'D':
           current.setDate(current.getDate() + frequency);
           break;
-        case "W":
+        case 'W':
           current.setDate(current.getDate() + frequency * 7);
           break;
-        case "M":
+        case 'M':
           current.setMonth(current.getMonth() + frequency);
           break;
-        case "Y":
+        case 'Y':
           current.setFullYear(current.getFullYear() + frequency);
           break;
       }
@@ -270,25 +251,22 @@ export const calculateExpectedOccurrences = (
 
   // Fallback: estimate based on period length (less accurate)
   const totalDays =
-    Math.floor(
-      (periodEnd.getTime() - periodStart.getTime()) / (1000 * 60 * 60 * 24),
-    ) + 1;
+    Math.floor((periodEnd.getTime() - periodStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
   switch (unit) {
-    case "D":
+    case 'D':
       return Math.floor(totalDays / frequency);
-    case "W":
+    case 'W':
       return Math.floor(totalDays / (frequency * 7));
-    case "M": {
+    case 'M': {
       const totalMonths =
         (periodEnd.getFullYear() - periodStart.getFullYear()) * 12 +
         (periodEnd.getMonth() - periodStart.getMonth()) +
         1;
       return Math.floor(totalMonths / frequency);
     }
-    case "Y": {
-      const years =
-        periodEnd.getFullYear() - periodStart.getFullYear() + 1;
+    case 'Y': {
+      const years = periodEnd.getFullYear() - periodStart.getFullYear() + 1;
       return Math.floor(years / frequency);
     }
     default:
@@ -374,18 +352,18 @@ export const getMonthPeriodsFromStartDate = (
       (currentYear === now.getFullYear() && currentMonth < now.getMonth());
 
     const monthNames = [
-      "Gennaio",
-      "Febbraio",
-      "Marzo",
-      "Aprile",
-      "Maggio",
-      "Giugno",
-      "Luglio",
-      "Agosto",
-      "Settembre",
-      "Ottobre",
-      "Novembre",
-      "Dicembre",
+      'Gennaio',
+      'Febbraio',
+      'Marzo',
+      'Aprile',
+      'Maggio',
+      'Giugno',
+      'Luglio',
+      'Agosto',
+      'Settembre',
+      'Ottobre',
+      'Novembre',
+      'Dicembre',
     ];
 
     periods.push({
@@ -476,8 +454,7 @@ export const getPastYearsPeriods = (
   startDate: string;
   endDate: string;
 }> => {
-  const periods: Array<{ year: number; startDate: string; endDate: string }> =
-    [];
+  const periods: Array<{ year: number; startDate: string; endDate: string }> = [];
   const currentYear = new Date().getFullYear();
 
   for (let i = 1; i <= maxYears; i++) {
@@ -506,7 +483,7 @@ export const getDayOfYear = (date: Date): number => {
  * Get total days in a year (365 or 366 for leap year)
  */
 export const getDaysInYear = (year: number): number => {
-  return ((year % 4 === 0 && year % 100 !== 0) || year % 400 === 0) ? 366 : 365;
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0 ? 366 : 365;
 };
 
 /**
@@ -532,15 +509,12 @@ export const getYearRangeUpToDay = (
  * Returns 'year' if the range spans from Jan 1 to Dec 31 (or current date for current year)
  * Returns 'month' otherwise
  */
-export const detectPeriodType = (
-  startDate: string,
-  endDate: string,
-): "month" | "year" => {
+export const detectPeriodType = (startDate: string, endDate: string): 'month' | 'year' => {
   const start = parseDateFromDDMMYYYY(startDate);
   const end = parseDateFromDDMMYYYY(endDate);
 
   if (!start || !end) {
-    return "month";
+    return 'month';
   }
 
   // Check if start is January 1st
@@ -548,13 +522,12 @@ export const detectPeriodType = (
 
   // Check if end is in December or the range spans multiple months
   const monthsDiff =
-    (end.getFullYear() - start.getFullYear()) * 12 +
-    (end.getMonth() - start.getMonth());
+    (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
 
   // If starts Jan 1 and spans more than 2 months, it's a year view
   if (isJanFirst && monthsDiff >= 2) {
-    return "year";
+    return 'year';
   }
 
-  return "month";
+  return 'month';
 };

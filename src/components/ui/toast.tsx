@@ -1,7 +1,7 @@
-import React from "react";
-import { View } from "react-native";
+import React from 'react';
+import { View } from 'react-native';
 
-type ToastStatus = "loading" | "success" | "error";
+type ToastStatus = 'loading' | 'success' | 'error';
 
 interface IToastProps {
   isVisible: boolean;

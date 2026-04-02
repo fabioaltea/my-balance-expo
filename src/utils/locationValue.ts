@@ -6,37 +6,33 @@ export interface ParsedLocationValue {
 }
 
 function isFiniteNumber(value: unknown): value is number {
-  return typeof value === "number" && Number.isFinite(value);
+  return typeof value === 'number' && Number.isFinite(value);
 }
 
 export function capitalizeLocationQuery(query: string): string {
   return query
-    .replace(/\|/g, " ")
-    .replace(/\s+/g, " ")
+    .replace(/\|/g, ' ')
+    .replace(/\s+/g, ' ')
     .trim()
     .replace(/\S+/g, (segment) => {
       const firstChar = segment.charAt(0);
-      return firstChar
-        ? `${firstChar.toLocaleUpperCase("it-IT")}${segment.slice(1)}`
-        : segment;
+      return firstChar ? `${firstChar.toLocaleUpperCase('it-IT')}${segment.slice(1)}` : segment;
     });
 }
 
 export function parseLocationValue(raw?: string | null): ParsedLocationValue {
-  const input = raw?.trim() || "";
+  const input = raw?.trim() || '';
 
   if (!input) {
     return {
-      address: "",
+      address: '',
       hasCoordinates: false,
     };
   }
 
-  const separatorIndex = input.indexOf("|");
-  const queryPart =
-    separatorIndex >= 0 ? input.slice(0, separatorIndex) : input;
-  const coordinatesPart =
-    separatorIndex >= 0 ? input.slice(separatorIndex + 1) : "";
+  const separatorIndex = input.indexOf('|');
+  const queryPart = separatorIndex >= 0 ? input.slice(0, separatorIndex) : input;
+  const coordinatesPart = separatorIndex >= 0 ? input.slice(separatorIndex + 1) : '';
 
   let latitude: number | undefined;
   let longitude: number | undefined;
@@ -76,10 +72,10 @@ export function serializeLocationValue(location: {
   latitude?: number;
   longitude?: number;
 }): string {
-  const address = capitalizeLocationQuery(location.address || "");
+  const address = capitalizeLocationQuery(location.address || '');
 
   if (!address) {
-    return "";
+    return '';
   }
 
   if (isFiniteNumber(location.latitude) && isFiniteNumber(location.longitude)) {
@@ -98,9 +94,7 @@ export function isLocationResolved(
     longitude?: number;
   } | null,
 ): boolean {
-  return (
-    isFiniteNumber(location?.latitude) && isFiniteNumber(location?.longitude)
-  );
+  return isFiniteNumber(location?.latitude) && isFiniteNumber(location?.longitude);
 }
 
 export function getLocationCoordinatesKey(

@@ -1,5 +1,5 @@
-import React, { createContext, useContext, ReactNode } from "react";
-import { usePlatform, PlatformInfo } from "@/src/hooks/use-platform";
+import React, { createContext, useContext, ReactNode } from 'react';
+import { usePlatform, PlatformInfo } from '@/src/hooks/use-platform';
 
 const PlatformContext = createContext<PlatformInfo | null>(null);
 
@@ -14,11 +14,7 @@ interface PlatformProviderProps {
 export function PlatformProvider({ children }: PlatformProviderProps) {
   const platformInfo = usePlatform();
 
-  return (
-    <PlatformContext.Provider value={platformInfo}>
-      {children}
-    </PlatformContext.Provider>
-  );
+  return <PlatformContext.Provider value={platformInfo}>{children}</PlatformContext.Provider>;
 }
 
 /**
@@ -28,7 +24,7 @@ export function PlatformProvider({ children }: PlatformProviderProps) {
 export function usePlatformContext(): PlatformInfo {
   const context = useContext(PlatformContext);
   if (!context) {
-    throw new Error("usePlatformContext must be used within a PlatformProvider");
+    throw new Error('usePlatformContext must be used within a PlatformProvider');
   }
   return context;
 }
@@ -44,18 +40,12 @@ interface PlatformSwitchProps {
   children?: ReactNode; // fallback
 }
 
-export function PlatformSwitch({
-  web,
-  native,
-  ios,
-  android,
-  children,
-}: PlatformSwitchProps) {
+export function PlatformSwitch({ web, native, ios, android, children }: PlatformSwitchProps) {
   const { platform, isWeb, isNative } = usePlatformContext();
 
   if (isWeb && web !== undefined) return <>{web}</>;
-  if (platform === "ios" && ios !== undefined) return <>{ios}</>;
-  if (platform === "android" && android !== undefined) return <>{android}</>;
+  if (platform === 'ios' && ios !== undefined) return <>{ios}</>;
+  if (platform === 'android' && android !== undefined) return <>{android}</>;
   if (isNative && native !== undefined) return <>{native}</>;
 
   return <>{children}</>;
@@ -71,17 +61,12 @@ interface DeviceSwitchProps {
   children?: ReactNode; // fallback
 }
 
-export function DeviceSwitch({
-  mobile,
-  tablet,
-  desktop,
-  children,
-}: DeviceSwitchProps) {
+export function DeviceSwitch({ mobile, tablet, desktop, children }: DeviceSwitchProps) {
   const { deviceType } = usePlatformContext();
 
-  if (deviceType === "mobile" && mobile !== undefined) return <>{mobile}</>;
-  if (deviceType === "tablet" && tablet !== undefined) return <>{tablet}</>;
-  if (deviceType === "desktop" && desktop !== undefined) return <>{desktop}</>;
+  if (deviceType === 'mobile' && mobile !== undefined) return <>{mobile}</>;
+  if (deviceType === 'tablet' && tablet !== undefined) return <>{tablet}</>;
+  if (deviceType === 'desktop' && desktop !== undefined) return <>{desktop}</>;
 
   return <>{children}</>;
 }
@@ -95,15 +80,11 @@ interface OrientationSwitchProps {
   children?: ReactNode; // fallback
 }
 
-export function OrientationSwitch({
-  portrait,
-  landscape,
-  children,
-}: OrientationSwitchProps) {
+export function OrientationSwitch({ portrait, landscape, children }: OrientationSwitchProps) {
   const { orientation } = usePlatformContext();
 
-  if (orientation === "portrait" && portrait !== undefined) return <>{portrait}</>;
-  if (orientation === "landscape" && landscape !== undefined) return <>{landscape}</>;
+  if (orientation === 'portrait' && portrait !== undefined) return <>{portrait}</>;
+  if (orientation === 'landscape' && landscape !== undefined) return <>{landscape}</>;
 
   return <>{children}</>;
 }

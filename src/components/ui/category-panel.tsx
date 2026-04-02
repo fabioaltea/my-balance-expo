@@ -1,10 +1,10 @@
-import React from "react";
-import { View, StyleSheet, ScrollView, Pressable } from "react-native";
-import IconSymbol, { IconName } from "@/src/components/ui/icon-symbol";
-import TextBox from "@/src/components/ui/text-box";
-import { COLOR_PALETTE, DEFAULT_COLOR } from "@/src/constants/colors";
-import { VALID_ICONS } from "@/src/constants/icons";
-import { ThemedText } from "../core/themed-text.native";
+import React from 'react';
+import { View, StyleSheet, ScrollView, Pressable } from 'react-native';
+import IconSymbol, { IconName } from '@/src/components/ui/icon-symbol';
+import TextBox from '@/src/components/ui/text-box';
+import { COLOR_PALETTE, DEFAULT_COLOR } from '@/src/constants/colors';
+import { VALID_ICONS } from '@/src/constants/icons';
+import { ThemedText } from '../core/themed-text.native';
 
 interface CategoryPanelProps {
   name: string;
@@ -30,12 +30,7 @@ const CategoryPanel: React.FC<CategoryPanelProps> = ({
       {/* Name input */}
       {!readonly && onNameChange && (
         <View style={styles.nameContainer}>
-          <TextBox
-            value={name}
-            onChange={onNameChange}
-            label="Name"
-            placeholder="Category name"
-          />
+          <TextBox value={name} onChange={onNameChange} label="Name" placeholder="Category name" />
         </View>
       )}
 
@@ -76,16 +71,12 @@ const CategoryPanel: React.FC<CategoryPanelProps> = ({
           <Pressable
             key={icon}
             onPress={() => onIconChange(icon as IconName)}
-            style={[
-              styles.iconItem,
-              selectedIcon === icon && styles.selectedItem,
-            ]}
+            style={[styles.iconItem, selectedIcon === icon && styles.selectedItem]}
           >
             <IconSymbol name={icon} size={28} color={selectedColor} />
           </Pressable>
         ))}
       </View>
-
     </ScrollView>
   );
 };
@@ -97,15 +88,15 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   previewContainer: {
-    alignItems: "center",
+    alignItems: 'center',
     marginBottom: 24,
   },
   previewIcon: {
     width: 72,
     height: 72,
     borderRadius: 36,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   sectionTitle: {
     marginBottom: 12,
@@ -116,7 +107,7 @@ const styles = StyleSheet.create({
     marginHorizontal: -20,
   },
   colorScrollContent: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 12,
     paddingHorizontal: 20,
   },
@@ -126,18 +117,18 @@ const styles = StyleSheet.create({
     borderRadius: 22,
   },
   iconGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
     paddingBottom: 40,
-    justifyContent: "center",
+    justifyContent: 'center',
   },
   iconItem: {
     width: 48,
     height: 48,
     borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   selectedItem: {
     borderWidth: 3,

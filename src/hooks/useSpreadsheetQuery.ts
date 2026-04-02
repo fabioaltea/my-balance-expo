@@ -1,5 +1,5 @@
-import { useQuery, UseQueryResult } from "@tanstack/react-query";
-import { useAuthContext } from "@/src/state/AuthProvider";
+import { useQuery, UseQueryResult } from '@tanstack/react-query';
+import { useAuthContext } from '@/src/state/AuthProvider';
 
 interface SpreadsheetQueryOptions<T> {
   queryKey: readonly unknown[];
@@ -26,7 +26,7 @@ export function useSpreadsheetQuery<T>({
     queryKey,
     queryFn: async () => {
       if (!selectedSpreadsheetId) {
-        throw new Error("No spreadsheet selected");
+        throw new Error('No spreadsheet selected');
       }
       return await fetchFn(selectedSpreadsheetId);
     },

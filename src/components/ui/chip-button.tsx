@@ -1,10 +1,10 @@
-import { View, Text, StyleSheet, Pressable } from "react-native";
-import * as Haptics from "expo-haptics";
-import { useEffect, useState } from "react";
-import ContextMenu from "./context-menu";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import React from "react";
-import { usePlatformContext } from "@/src/state";
+import { View, Text, StyleSheet, Pressable } from 'react-native';
+import * as Haptics from 'expo-haptics';
+import { useEffect, useState } from 'react';
+import ContextMenu from './context-menu';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import React from 'react';
+import { usePlatformContext } from '@/src/state';
 
 export interface IChipButtonProps {
   text: string;
@@ -27,23 +27,17 @@ const ChipButton: React.FC<IChipButtonProps> = ({
 }) => {
   const { orientation } = usePlatformContext();
 
-  const isLandscape = orientation === "landscape";
-  const [selectedOption, setSelectedOption] = useState("");
+  const isLandscape = orientation === 'landscape';
+  const [selectedOption, setSelectedOption] = useState('');
   const [size, setSize] = useState({ width: 0, height: 0 });
 
   // Colori del tema
   const inactiveBackground = useThemeColor(
-    { light: "#a8a8a8ff", dark: "#4a4a4a" },
-    "tabIconDefault",
+    { light: '#a8a8a8ff', dark: '#4a4a4a' },
+    'tabIconDefault',
   );
-  const activeBackground = useThemeColor(
-    { light: "#000", dark: "#fff" },
-    "text",
-  );
-  const textColor = useThemeColor(
-    { light: "#fff", dark: active ? "#000" : "#fff" },
-    "background",
-  );
+  const activeBackground = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
+  const textColor = useThemeColor({ light: '#fff', dark: active ? '#000' : '#fff' }, 'background');
 
   const dynamicStyles = StyleSheet.create({
     chipButton: {
@@ -70,7 +64,7 @@ const ChipButton: React.FC<IChipButtonProps> = ({
       try {
         await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       } catch (error) {
-        console.error("Haptic feedback error:", error);
+        console.error('Haptic feedback error:', error);
       }
 
       onPress();
@@ -100,9 +94,7 @@ const ChipButton: React.FC<IChipButtonProps> = ({
         }}
       >
         {/* Hidden measurer for layout */}
-        <View style={{ opacity: 0 }}>
-          {chipVisual}
-        </View>
+        <View style={{ opacity: 0 }}>{chipVisual}</View>
         {/* ContextMenu with measured size, Pressable inside for tap */}
         <View style={StyleSheet.absoluteFill}>
           {size.width > 0 && (
@@ -113,10 +105,7 @@ const ChipButton: React.FC<IChipButtonProps> = ({
               hostStyle={{ width: size.width, height: size.height }}
               activationMethod="longPress"
             >
-              <Pressable
-                onPress={handlePress}
-                style={{ width: size.width, height: size.height }}
-              >
+              <Pressable onPress={handlePress} style={{ width: size.width, height: size.height }}>
                 {chipVisual}
               </Pressable>
             </ContextMenu>
@@ -145,38 +134,38 @@ const ChipButton: React.FC<IChipButtonProps> = ({
 
 const styles = StyleSheet.create({
   chipWrapper: {
-    position: "relative",
+    position: 'relative',
     flexGrow: 2,
   },
   chipButton: {
     padding: 8,
     paddingHorizontal: 20,
     borderRadius: 20,
-    display: "flex",
+    display: 'flex',
     flexGrow: 1,
   },
   chipText: {
     fontSize: 18,
-    fontWeight: "500",
-    textAlign: "center",
-    wordWrap: "normal",
+    fontWeight: '500',
+    textAlign: 'center',
+    wordWrap: 'normal',
   },
   badge: {
-    position: "absolute",
+    position: 'absolute',
     top: -6,
     right: -2,
-    backgroundColor: "#FF3B30",
+    backgroundColor: '#FF3B30',
     borderRadius: 10,
     minWidth: 20,
     height: 20,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     paddingHorizontal: 6,
   },
   badgeText: {
-    color: "#FFFFFF",
+    color: '#FFFFFF',
     fontSize: 12,
-    fontWeight: "700",
+    fontWeight: '700',
   },
 });
 

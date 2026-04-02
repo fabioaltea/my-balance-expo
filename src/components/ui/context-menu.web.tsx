@@ -1,16 +1,8 @@
-import React from "react";
-import {
-  Pressable,
-  ScrollView,
-  View,
-  StyleSheet,
-  Text,
-  Dimensions,
-  Animated,
-} from "react-native";
-import { useState, useEffect, useRef, useCallback } from "react";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import { Ionicons } from "@expo/vector-icons";
+import React from 'react';
+import { Pressable, ScrollView, View, StyleSheet, Text, Dimensions, Animated } from 'react-native';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import { Ionicons } from '@expo/vector-icons';
 
 export interface IContextMenuOption {
   label: string;
@@ -32,10 +24,8 @@ const MENU_PADDING = 8;
 const MAX_HEIGHT = 250;
 const MENU_WIDTH = 200;
 
-function normalizeOption(
-  option: string | IContextMenuOption,
-): IContextMenuOption {
-  if (typeof option === "string") {
+function normalizeOption(option: string | IContextMenuOption): IContextMenuOption {
+  if (typeof option === 'string') {
     return { label: option };
   }
   return option;
@@ -43,7 +33,7 @@ function normalizeOption(
 
 const ContextMenu: React.FC<IContextMenuProps> = ({
   options,
-  selectedOption = "",
+  selectedOption = '',
   onSelectOption,
   children,
 }) => {
@@ -60,22 +50,19 @@ const ContextMenu: React.FC<IContextMenuProps> = ({
   const opacityAnim = useRef(new Animated.Value(0)).current;
   const translateYAnim = useRef(new Animated.Value(-10)).current;
 
-  const menuBackground = useThemeColor(
-    { light: "#f2f2f7", dark: "#1c1c1e" },
-    "cardBackground",
-  );
+  const menuBackground = useThemeColor({ light: '#f2f2f7', dark: '#1c1c1e' }, 'cardBackground');
   const borderColor = useThemeColor(
-    { light: "rgba(0,0,0,0.1)", dark: "rgba(255,255,255,0.1)" },
-    "cardBorder",
+    { light: 'rgba(0,0,0,0.1)', dark: 'rgba(255,255,255,0.1)' },
+    'cardBorder',
   );
-  const textColor = useThemeColor({}, "text");
+  const textColor = useThemeColor({}, 'text');
   const separatorColor = useThemeColor(
-    { light: "rgba(0,0,0,0.1)", dark: "rgba(255,255,255,0.1)" },
-    "tabIconDefault",
+    { light: 'rgba(0,0,0,0.1)', dark: 'rgba(255,255,255,0.1)' },
+    'tabIconDefault',
   );
   const pressedBackground = useThemeColor(
-    { light: "rgba(0,0,0,0.08)", dark: "rgba(255,255,255,0.08)" },
-    "tabIconDefault",
+    { light: 'rgba(0,0,0,0.08)', dark: 'rgba(255,255,255,0.08)' },
+    'tabIconDefault',
   );
 
   const openMenu = useCallback(() => {
@@ -153,10 +140,7 @@ const ContextMenu: React.FC<IContextMenuProps> = ({
     [onSelectOption],
   );
 
-  const calculatedHeight = Math.min(
-    options.length * ITEM_HEIGHT + MENU_PADDING * 2,
-    MAX_HEIGHT,
-  );
+  const calculatedHeight = Math.min(options.length * ITEM_HEIGHT + MENU_PADDING * 2, MAX_HEIGHT);
 
   const menuStyle = buttonPosition
     ? {
@@ -165,9 +149,8 @@ const ContextMenu: React.FC<IContextMenuProps> = ({
         height: calculatedHeight,
         width: MENU_WIDTH,
         left: (() => {
-          const screenWidth = Dimensions.get("window").width;
-          const buttonCenter =
-            buttonPosition.x + buttonPosition.width / 2;
+          const screenWidth = Dimensions.get('window').width;
+          const buttonCenter = buttonPosition.x + buttonPosition.width / 2;
           let proposedLeft = buttonCenter - MENU_WIDTH / 2;
           if (proposedLeft + MENU_WIDTH > screenWidth - 8) {
             proposedLeft = screenWidth - MENU_WIDTH - 8;
@@ -190,20 +173,14 @@ const ContextMenu: React.FC<IContextMenuProps> = ({
       {menuVisible && buttonPosition && (
         <>
           <Animated.View style={[styles.overlay, { opacity: opacityAnim }]}>
-            <Pressable
-              style={StyleSheet.absoluteFill}
-              onPress={closeMenu}
-            />
+            <Pressable style={StyleSheet.absoluteFill} onPress={closeMenu} />
           </Animated.View>
           <Animated.View
             style={[
               styles.menu,
               menuStyle,
               {
-                transform: [
-                  { scale: scaleAnim },
-                  { translateY: translateYAnim },
-                ],
+                transform: [{ scale: scaleAnim }, { translateY: translateYAnim }],
                 opacity: opacityAnim,
               },
             ]}
@@ -217,9 +194,9 @@ const ContextMenu: React.FC<IContextMenuProps> = ({
                 const isDestructive = normalized.destructive;
                 const isDisabled = normalized.disabled;
                 const itemColor = isDisabled
-                  ? "rgba(128,128,128,0.4)"
+                  ? 'rgba(128,128,128,0.4)'
                   : isDestructive
-                    ? "#ff3b30"
+                    ? '#ff3b30'
                     : normalized.color || textColor;
                 const isSelected = selectedOption === normalized.label;
                 const isLast = index === options.length - 1;
@@ -234,9 +211,7 @@ const ContextMenu: React.FC<IContextMenuProps> = ({
                             backgroundColor: pressedBackground,
                           },
                       ]}
-                      onPress={() =>
-                        !isDisabled && handleSelect(normalized.label)
-                      }
+                      onPress={() => !isDisabled && handleSelect(normalized.label)}
                       disabled={isDisabled}
                     >
                       <Text
@@ -258,12 +233,7 @@ const ContextMenu: React.FC<IContextMenuProps> = ({
                       )}
                     </Pressable>
                     {!isLast && (
-                      <View
-                        style={[
-                          styles.separator,
-                          { backgroundColor: separatorColor },
-                        ]}
-                      />
+                      <View style={[styles.separator, { backgroundColor: separatorColor }]} />
                     )}
                   </React.Fragment>
                 );
@@ -278,43 +248,43 @@ const ContextMenu: React.FC<IContextMenuProps> = ({
 
 const styles = StyleSheet.create({
   overlay: {
-    position: "fixed" as any,
+    position: 'fixed' as any,
     top: 0,
     left: 0,
-    width: "100%" as any,
-    height: "100%" as any,
+    width: '100%' as any,
+    height: '100%' as any,
     zIndex: 399,
-    backgroundColor: "transparent",
+    backgroundColor: 'transparent',
   },
   menu: {
-    position: "fixed" as any,
+    position: 'fixed' as any,
     zIndex: 400,
     borderWidth: 0.5,
     borderRadius: 20,
-    shadowColor: "#000000",
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.25,
     shadowRadius: 24,
     elevation: 16,
-    overflow: "hidden",
+    overflow: 'hidden',
   },
   scrollContent: {
     paddingVertical: MENU_PADDING,
   },
   menuItemContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 16,
     height: ITEM_HEIGHT,
   },
   menuItemText: {
     fontSize: 17,
-    fontWeight: "400",
+    fontWeight: '400',
     flex: 1,
   },
   menuItemTextSelected: {
-    fontWeight: "600",
+    fontWeight: '600',
   },
   menuItemIcon: {
     marginLeft: 12,

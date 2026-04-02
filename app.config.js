@@ -31,7 +31,6 @@ export default ({ config }) => ({
   icon: getIcon(),
   scheme: "mybalance",
   userInterfaceStyle: "automatic",
-  newArchEnabled: true,
   ios: {
     supportsTablet: true,
     bundleIdentifier: getBundleIdentifier(),
@@ -46,6 +45,7 @@ export default ({ config }) => ({
         },
       ],
       ITSAppUsesNonExemptEncryption: false,
+      NSLocationWhenInUseUsageDescription: "Allow $(PRODUCT_NAME) to access your location",
     },
   },
   android: {
@@ -55,7 +55,6 @@ export default ({ config }) => ({
       backgroundImage: "./assets/images/android-icon-background.png",
       monochromeImage: "./assets/images/android-icon-monochrome.png",
     },
-    edgeToEdgeEnabled: true,
     package: getBundleIdentifier(),
   },
   web: {

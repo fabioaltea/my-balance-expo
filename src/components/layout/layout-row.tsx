@@ -1,5 +1,5 @@
-import React from "react";
-import { View, StyleSheet, ViewStyle } from "react-native";
+import React from 'react';
+import { View, StyleSheet, ViewStyle } from 'react-native';
 
 interface LayoutRowProps {
   children: React.ReactNode;
@@ -13,15 +13,9 @@ interface LayoutRowProps {
  * Componente per una riga del layout dashboard.
  * Utilizza flexbox per disporre i figli orizzontalmente.
  */
-export function LayoutRow({
-  children,
-  flex,
-  gap = 10,
-  padding,
-  height,
-}: LayoutRowProps) {
+export function LayoutRow({ children, flex, gap = 10, padding, height }: LayoutRowProps) {
   const style: ViewStyle = {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap,
     minHeight: 0,
   };

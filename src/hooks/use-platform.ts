@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
-import { Platform, Dimensions, ScaledSize } from "react-native";
+import { useState, useEffect, useCallback } from 'react';
+import { Platform, Dimensions, ScaledSize } from 'react-native';
 
-export type PlatformType = "web" | "ios" | "android";
-export type DeviceType = "mobile" | "tablet" | "desktop";
-export type OrientationType = "portrait" | "landscape";
+export type PlatformType = 'web' | 'ios' | 'android';
+export type DeviceType = 'mobile' | 'tablet' | 'desktop';
+export type OrientationType = 'portrait' | 'landscape';
 
 export interface PlatformInfo {
   /** Current platform: 'web', 'ios', or 'android' */
@@ -34,26 +34,26 @@ const BREAKPOINTS = {
 };
 
 function getDeviceType(width: number): DeviceType {
-  if (width < BREAKPOINTS.mobile) return "mobile";
-  if (width < BREAKPOINTS.tablet) return "tablet";
-  return "desktop";
+  if (width < BREAKPOINTS.mobile) return 'mobile';
+  if (width < BREAKPOINTS.tablet) return 'tablet';
+  return 'desktop';
 }
 
 function getOrientation(width: number, height: number): OrientationType {
-  return width > height ? "landscape" : "portrait";
+  return width > height ? 'landscape' : 'portrait';
 }
 
 function getPlatformInfo(dimensions: ScaledSize): PlatformInfo {
   const { width, height } = dimensions;
   const platform = Platform.OS as PlatformType;
-  const isWeb = platform === "web";
+  const isWeb = platform === 'web';
   const isNative = !isWeb;
   const deviceType = getDeviceType(width);
   const orientation = getOrientation(width, height);
 
   // On web desktop in landscape, show sidebar; otherwise show bottom tabs
   // On native, always use native tabs (handled by NativeTabs component)
-  const showSidebar = isWeb && deviceType === "desktop" && orientation === "landscape";
+  const showSidebar = isWeb && deviceType === 'desktop' && orientation === 'landscape';
   const showBottomTabs = isWeb && !showSidebar;
 
   return {
@@ -74,18 +74,18 @@ function getPlatformInfo(dimensions: ScaledSize): PlatformInfo {
  */
 export function usePlatform(): PlatformInfo {
   const [platformInfo, setPlatformInfo] = useState<PlatformInfo>(() =>
-    getPlatformInfo(Dimensions.get("window"))
+    getPlatformInfo(Dimensions.get('window')),
   );
 
   const handleDimensionChange = useCallback(
     ({ window }: { window: ScaledSize; screen: ScaledSize }) => {
       setPlatformInfo(getPlatformInfo(window));
     },
-    []
+    [],
   );
 
   useEffect(() => {
-    const subscription = Dimensions.addEventListener("change", handleDimensionChange);
+    const subscription = Dimensions.addEventListener('change', handleDimensionChange);
     return () => subscription.remove();
   }, [handleDimensionChange]);
 
@@ -96,9 +96,9 @@ export function usePlatform(): PlatformInfo {
  * Simple check if we're on web platform.
  * Use this for conditional imports or simple platform checks.
  */
-export const isWeb = Platform.OS === "web";
+export const isWeb = Platform.OS === 'web';
 
 /**
  * Simple check if we're on native platform.
  */
-export const isNative = Platform.OS !== "web";
+export const isNative = Platform.OS !== 'web';

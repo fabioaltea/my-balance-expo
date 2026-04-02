@@ -1,11 +1,11 @@
-import { View, StyleSheet, ScrollView, Pressable, Platform } from "react-native";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import { useState, useEffect } from "react";
-import { ThemedText } from "../core/themed-text.native";
-import * as Haptics from "expo-haptics";
-import DateTimePicker from "@react-native-community/datetimepicker";
-import ModalPanel from "./modal-panel.native";
-import React from "react";
+import { View, StyleSheet, ScrollView, Pressable, Platform } from 'react-native';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import { useState, useEffect } from 'react';
+import { ThemedText } from '../core/themed-text.native';
+import * as Haptics from 'expo-haptics';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import ModalPanel from './modal-panel.native';
+import React from 'react';
 
 interface IRecurrencyPickerProps {
   isVisible: boolean;
@@ -15,7 +15,7 @@ interface IRecurrencyPickerProps {
   initialPattern?: string | null; // e.g., "P1M", "P2W", or null for none
 }
 
-type RecurrencyType = "daily" | "weekly" | "monthly" | "yearly";
+type RecurrencyType = 'daily' | 'weekly' | 'monthly' | 'yearly';
 
 interface RecurrencyOption {
   type: RecurrencyType;
@@ -23,18 +23,16 @@ interface RecurrencyOption {
 }
 
 const RECURRENCY_OPTIONS: RecurrencyOption[] = [
-  { type: "daily", label: "Daily" },
-  { type: "weekly", label: "Weekly" },
-  { type: "monthly", label: "Monthly" },
-  { type: "yearly", label: "Yearly" },
+  { type: 'daily', label: 'Daily' },
+  { type: 'weekly', label: 'Weekly' },
+  { type: 'monthly', label: 'Monthly' },
+  { type: 'yearly', label: 'Yearly' },
 ];
 
 const FREQUENCY_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 10, 14, 30];
 
 // Parse ISO 8601 duration pattern (e.g., "P1M", "P2W") into type and frequency
-const parsePattern = (
-  pattern: string,
-): { type: RecurrencyType; frequency: number } | null => {
+const parsePattern = (pattern: string): { type: RecurrencyType; frequency: number } | null => {
   const match = pattern.match(/^P(\d+)([DWMY])$/);
   if (!match) {
     return null;
@@ -45,17 +43,17 @@ const parsePattern = (
 
   let type: RecurrencyType;
   switch (unit) {
-    case "D":
-      type = "daily";
+    case 'D':
+      type = 'daily';
       break;
-    case "W":
-      type = "weekly";
+    case 'W':
+      type = 'weekly';
       break;
-    case "M":
-      type = "monthly";
+    case 'M':
+      type = 'monthly';
       break;
-    case "Y":
-      type = "yearly";
+    case 'Y':
+      type = 'yearly';
       break;
     default:
       return null;
@@ -98,25 +96,16 @@ const RecurrencyPicker: React.FC<IRecurrencyPickerProps> = ({
 
   // Theme colors
   const chipActiveBackground = useThemeColor(
-    { light: "#2F4F3F", dark: "#4a7c59" },
-    "tabIconDefault",
+    { light: '#2F4F3F', dark: '#4a7c59' },
+    'tabIconDefault',
   );
   const chipInactiveBackground = useThemeColor(
-    { light: "#e0e0e0", dark: "#333" },
-    "tabIconDefault",
+    { light: '#e0e0e0', dark: '#333' },
+    'tabIconDefault',
   );
-  const chipActiveText = useThemeColor(
-    { light: "#fff", dark: "#fff" },
-    "background",
-  );
-  const chipInactiveText = useThemeColor(
-    { light: "#666", dark: "#999" },
-    "tabIconDefault",
-  );
-  const subtextColor = useThemeColor(
-    { light: "#666", dark: "#999" },
-    "tabIconDefault",
-  );
+  const chipActiveText = useThemeColor({ light: '#fff', dark: '#fff' }, 'background');
+  const chipInactiveText = useThemeColor({ light: '#666', dark: '#999' }, 'tabIconDefault');
+  const subtextColor = useThemeColor({ light: '#666', dark: '#999' }, 'tabIconDefault');
   const handleTypeSelect = (type: RecurrencyType | null) => {
     Haptics.selectionAsync();
     setSelectedType(type);
@@ -135,20 +124,20 @@ const RecurrencyPicker: React.FC<IRecurrencyPickerProps> = ({
 
     let durationUnit: string;
     switch (selectedType) {
-      case "daily":
-        durationUnit = "D";
+      case 'daily':
+        durationUnit = 'D';
         break;
-      case "weekly":
-        durationUnit = "W";
+      case 'weekly':
+        durationUnit = 'W';
         break;
-      case "monthly":
-        durationUnit = "M";
+      case 'monthly':
+        durationUnit = 'M';
         break;
-      case "yearly":
-        durationUnit = "Y";
+      case 'yearly':
+        durationUnit = 'Y';
         break;
       default:
-        durationUnit = "M";
+        durationUnit = 'M';
     }
 
     const pattern = `P${frequency}${durationUnit}`;
@@ -157,13 +146,13 @@ const RecurrencyPicker: React.FC<IRecurrencyPickerProps> = ({
 
   const getRecurrenceDescription = (): string => {
     if (selectedType === null) {
-      return "No recurrence pattern";
+      return 'No recurrence pattern';
     }
     const typeLabels: Record<RecurrencyType, string> = {
-      daily: frequency === 1 ? "day" : "days",
-      weekly: frequency === 1 ? "week" : "weeks",
-      monthly: frequency === 1 ? "month" : "months",
-      yearly: frequency === 1 ? "year" : "years",
+      daily: frequency === 1 ? 'day' : 'days',
+      weekly: frequency === 1 ? 'week' : 'weeks',
+      monthly: frequency === 1 ? 'month' : 'months',
+      yearly: frequency === 1 ? 'year' : 'years',
     };
     return `Every ${frequency} ${typeLabels[selectedType]}`;
   };
@@ -188,7 +177,7 @@ const RecurrencyPicker: React.FC<IRecurrencyPickerProps> = ({
             <DateTimePicker
               value={pickerStartDate}
               mode="date"
-              display={Platform.OS === "ios" ? "compact" : "default"}
+              display={Platform.OS === 'ios' ? 'compact' : 'default'}
               onChange={(_event, selectedDate) => {
                 if (selectedDate) {
                   setPickerStartDate(selectedDate);
@@ -210,9 +199,7 @@ const RecurrencyPicker: React.FC<IRecurrencyPickerProps> = ({
                 styles.chip,
                 {
                   backgroundColor:
-                    selectedType === null
-                      ? chipActiveBackground
-                      : chipInactiveBackground,
+                    selectedType === null ? chipActiveBackground : chipInactiveBackground,
                 },
               ]}
             >
@@ -220,10 +207,7 @@ const RecurrencyPicker: React.FC<IRecurrencyPickerProps> = ({
                 style={[
                   styles.chipText,
                   {
-                    color:
-                      selectedType === null
-                        ? chipActiveText
-                        : chipInactiveText,
+                    color: selectedType === null ? chipActiveText : chipInactiveText,
                   },
                 ]}
               >
@@ -239,9 +223,7 @@ const RecurrencyPicker: React.FC<IRecurrencyPickerProps> = ({
                   style={[
                     styles.chip,
                     {
-                      backgroundColor: isActive
-                        ? chipActiveBackground
-                        : chipInactiveBackground,
+                      backgroundColor: isActive ? chipActiveBackground : chipInactiveBackground,
                     },
                   ]}
                 >
@@ -277,9 +259,7 @@ const RecurrencyPicker: React.FC<IRecurrencyPickerProps> = ({
                     style={[
                       styles.frequencyChip,
                       {
-                        backgroundColor: isActive
-                          ? chipActiveBackground
-                          : chipInactiveBackground,
+                        backgroundColor: isActive ? chipActiveBackground : chipInactiveBackground,
                       },
                     ]}
                   >
@@ -319,14 +299,14 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   datePickerContainer: {
-    alignItems: "flex-start",
+    alignItems: 'flex-start',
   },
   datePicker: {
     marginLeft: -10,
   },
   chipsContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 10,
   },
   chip: {
@@ -336,7 +316,7 @@ const styles = StyleSheet.create({
   },
   chipText: {
     fontSize: 15,
-    fontWeight: "500",
+    fontWeight: '500',
   },
   frequencyContainer: {
     gap: 10,
@@ -346,22 +326,22 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   frequencyText: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   summaryContainer: {
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: "rgba(0,0,0,0.1)",
+    borderTopColor: 'rgba(0,0,0,0.1)',
   },
   summaryText: {
     fontSize: 16,
-    textAlign: "center",
-    fontStyle: "italic",
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
 });
 

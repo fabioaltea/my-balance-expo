@@ -5,7 +5,7 @@
  * reducing client-side computation and improving performance
  */
 
-import { HttpHelper, AuthenticationError } from "./HttpHelper";
+import { HttpHelper, AuthenticationError } from './HttpHelper';
 
 export interface MonthlyAggregation {
   month: string; // YYYY-MM format
@@ -34,27 +34,21 @@ export class AggregationsApiHelper {
     toDate: string,
   ): Promise<MonthlyAggregation[]> {
     try {
-      console.log("🔄 Loading monthly aggregations from API...");
+      console.log('🔄 Loading monthly aggregations from API...');
 
       const response = await HttpHelper.get(
         `/aggregations/monthly?spreadsheet_id=${spreadsheetId}&from_date=${fromDate}&to_date=${toDate}`,
       );
 
       if (response.success) {
-        console.log(
-          "✅ Monthly aggregations loaded successfully:",
-          response.data?.length || 0,
-        );
+        console.log('✅ Monthly aggregations loaded successfully:', response.data?.length || 0);
         return response.data || [];
       } else {
-        console.error(
-          "❌ Failed to load monthly aggregations:",
-          response.error,
-        );
+        console.error('❌ Failed to load monthly aggregations:', response.error);
         return [];
       }
     } catch (error) {
-      console.error("❌ Error loading monthly aggregations:", error);
+      console.error('❌ Error loading monthly aggregations:', error);
       // Re-throw authentication errors to trigger logout
       if (error instanceof AuthenticationError) {
         throw error;
@@ -71,21 +65,21 @@ export class AggregationsApiHelper {
     year: string,
   ): Promise<YearlyAggregation | null> {
     try {
-      console.log("🔄 Loading yearly aggregation from API...");
+      console.log('🔄 Loading yearly aggregation from API...');
 
       const response = await HttpHelper.get(
         `/aggregations/yearly?spreadsheet_id=${spreadsheetId}&year=${year}`,
       );
 
       if (response.success) {
-        console.log("✅ Yearly aggregation loaded successfully");
+        console.log('✅ Yearly aggregation loaded successfully');
         return response.data;
       } else {
-        console.error("❌ Failed to load yearly aggregation:", response.error);
+        console.error('❌ Failed to load yearly aggregation:', response.error);
         return null;
       }
     } catch (error) {
-      console.error("❌ Error loading yearly aggregation:", error);
+      console.error('❌ Error loading yearly aggregation:', error);
       // Re-throw authentication errors to trigger logout
       if (error instanceof AuthenticationError) {
         throw error;

@@ -1,17 +1,14 @@
-import { ThemedText } from "../core/themed-text.native";
-import { View, StyleSheet, ActivityIndicator, Animated } from "react-native";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import React, { useState, useRef, useEffect } from "react";
-import * as Haptics from "expo-haptics";
-import {
-  capitalizeLocationQuery,
-  isLocationResolved,
-} from "@/src/utils/locationValue";
-import TextBox from "./text-box.native";
-import Mapbox from "@rnmapbox/maps";
-import GooglePlacesSDK from "react-native-google-places-sdk";
+import { ThemedText } from '../core/themed-text.native';
+import { View, StyleSheet, ActivityIndicator, Animated } from 'react-native';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import React, { useState, useRef, useEffect } from 'react';
+import * as Haptics from 'expo-haptics';
+import { capitalizeLocationQuery, isLocationResolved } from '@/src/utils/locationValue';
+import TextBox from './text-box.native';
+import Mapbox from '@rnmapbox/maps';
+import GooglePlacesSDK from 'react-native-google-places-sdk';
 
-Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_PUBLIC_TOKEN || "");
+Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_PUBLIC_TOKEN || '');
 
 export interface ILocation {
   address: string;
@@ -35,21 +32,20 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
   value,
   location,
   onChange,
-  label = "Location",
-  placeholder = "Enter location...",
+  label = 'Location',
+  placeholder = 'Enter location...',
   googleMapsApiKey,
   onFocus,
   onBlur,
 }) => {
-  const [selectedLocation, setSelectedLocation] = useState<ILocation | null>(
-    null,
-  );
+  const [selectedLocation, setSelectedLocation] = useState<ILocation | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const cameraRef = useRef<Mapbox.Camera>(null);
 
   const sdkInitialized = useRef(false);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasUserEditedQuery = useRef(false);
 
   useEffect(() => {
     if (googleMapsApiKey && !sdkInitialized.current) {
@@ -80,7 +76,7 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
   };
 
   useEffect(() => {
-    if (isLocationResolved(location)) {
+    if (location && isLocationResolved(location)) {
       setSelectedLocation(location);
       expandCard();
       centerMapOnLocation(location);
@@ -97,22 +93,55 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
 
   useEffect(() => {
     if (
-      !initialSearchDone.current &&
-      value &&
-      value.trim().length >= 3 &&
-      !isLocationResolved(location)
+      hasUserEditedQuery.current ||
+      initialSearchDone.current ||
+      !value ||
+      value.trim().length < 3 ||
+      isLocationResolved(location)
     ) {
-      initialSearchDone.current = true;
-      searchPlaces(value);
+      return;
     }
+
+    initialSearchDone.current = true;
+    searchPlaces(value);
+  }, [location, value]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!hasUserEditedQuery.current || isLocationResolved(location)) {
+      return;
+    }
+
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
+    const trimmedValue = value.trim();
+
+    if (!trimmedValue) {
+      setIsLoading(false);
+      collapseCard();
+      return;
+    }
+
+    if (trimmedValue.length < 3) {
+      setIsLoading(false);
+      return;
+    }
+
+    debounceTimer.current = setTimeout(() => {
+      searchPlaces(trimmedValue);
+    }, 1000);
+
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+    };
   }, [location, value]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const cardHeight = useRef(new Animated.Value(40)).current;
 
-  const placeholderColor = useThemeColor(
-    { light: "#666", dark: "#999" },
-    "tabIconDefault",
-  );
+  const placeholderColor = useThemeColor({ light: '#666', dark: '#999' }, 'tabIconDefault');
 
   const searchPlaces = async (text: string) => {
     const normalizedQuery = capitalizeLocationQuery(text);
@@ -123,16 +152,13 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
     try {
       if (googleMapsApiKey) {
         const predictions = await GooglePlacesSDK.fetchPredictions(text, {
-          countries: ["it"],
+          countries: ['it'],
         });
 
         const prediction = predictions[0];
 
         if (prediction) {
-          const place = await GooglePlacesSDK.fetchPlaceByID(
-            prediction.placeID,
-            ["coordinate"],
-          );
+          const place = await GooglePlacesSDK.fetchPlaceByID(prediction.placeID, ['coordinate']);
           const resolvedLocation: ILocation = {
             address: normalizedQuery,
             latitude: place.coordinate?.latitude,
@@ -151,7 +177,7 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
         setSelectedLocation(null);
       }
     } catch (error) {
-      console.error("Error searching places:", error);
+      console.error('Error searching places:', error);
       setSelectedLocation(null);
     } finally {
       setIsLoading(false);
@@ -159,24 +185,23 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
   };
 
   const handleTextChange = (text: string) => {
+    hasUserEditedQuery.current = true;
     onChange({ address: text });
-    initialSearchDone.current = false;
 
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
 
     if (!text.trim()) {
       setSelectedLocation(null);
+      setIsLoading(false);
       collapseCard();
       return;
     }
 
     setSelectedLocation(null);
 
-    if (text.length < 3) return;
-
-    debounceTimer.current = setTimeout(() => {
-      searchPlaces(text);
-    }, 600);
+    if (text.trim().length < 3) {
+      setIsLoading(false);
+    }
   };
 
   const expandCard = () => {
@@ -213,16 +238,12 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
       />
 
       {isLoading && (
-        <ActivityIndicator
-          size="small"
-          color={placeholderColor}
-          style={styles.loadingIcon}
-        />
+        <ActivityIndicator size="small" color={placeholderColor} style={styles.loadingIcon} />
       )}
 
       {isExpanded && (
         <View style={styles.expandedContent}>
-          <View style={[styles.mapContainer, { backgroundColor: "#f0f0f0" }]}>
+          <View style={[styles.mapContainer, { backgroundColor: '#f0f0f0' }]}>
             <Mapbox.MapView
               style={{ flex: 1 }}
               scrollEnabled={false}
@@ -234,24 +255,16 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
               compassEnabled={false}
               scaleBarEnabled={false}
             >
-              <Mapbox.Camera
-                ref={cameraRef}
-                zoomLevel={12}
-                centerCoordinate={[9.1217, 39.2238]}
-              />
-              {selectedLocation?.latitude != null &&
-                selectedLocation?.longitude != null && (
-                  <Mapbox.PointAnnotation
-                    id="selected-location"
-                    coordinate={[
-                      selectedLocation.longitude,
-                      selectedLocation.latitude,
-                    ]}
-                    title={selectedLocation.address}
-                  >
-                    <View style={styles.marker} />
-                  </Mapbox.PointAnnotation>
-                )}
+              <Mapbox.Camera ref={cameraRef} zoomLevel={12} centerCoordinate={[9.1217, 39.2238]} />
+              {selectedLocation?.latitude != null && selectedLocation?.longitude != null && (
+                <Mapbox.PointAnnotation
+                  id="selected-location"
+                  coordinate={[selectedLocation.longitude, selectedLocation.latitude]}
+                  title={selectedLocation.address}
+                >
+                  <View style={styles.marker} />
+                </Mapbox.PointAnnotation>
+              )}
             </Mapbox.MapView>
           </View>
         </View>
@@ -262,9 +275,9 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
 
 const styles = StyleSheet.create({
   cardContent: {
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "flex-start",
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'flex-start',
   },
   loadingIcon: {
     marginLeft: 8,
@@ -277,23 +290,23 @@ const styles = StyleSheet.create({
     height: 150,
     borderRadius: 20,
     marginBottom: 0,
-    overflow: "hidden",
+    overflow: 'hidden',
   },
   marker: {
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: "#FF0000",
+    backgroundColor: '#FF0000',
     borderWidth: 2,
-    borderColor: "#FFFFFF",
+    borderColor: '#FFFFFF',
   },
   resultsContainer: {
     flex: 1,
     maxHeight: 180,
   },
   resultItem: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 12,
     marginBottom: 4,
     borderBottomWidth: StyleSheet.hairlineWidth,

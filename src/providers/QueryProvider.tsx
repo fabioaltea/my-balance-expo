@@ -1,6 +1,6 @@
 /**
  * React Query Provider with cache persistence
- * 
+ *
  * This provider sets up React Query with:
  * - Differentiated TTL for different data types
  * - AsyncStorage persistence for offline capability
@@ -43,10 +43,7 @@ interface QueryProviderProps {
 
 export const QueryProvider: React.FC<QueryProviderProps> = ({ children }) => {
   return (
-    <PersistQueryClientProvider
-      client={queryClient}
-      persistOptions={{ persister }}
-    >
+    <PersistQueryClientProvider client={queryClient} persistOptions={{ persister }}>
       {children}
     </PersistQueryClientProvider>
   );

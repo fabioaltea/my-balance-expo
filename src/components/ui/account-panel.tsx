@@ -1,9 +1,9 @@
-import React from "react";
-import { View, StyleSheet, ScrollView, Pressable } from "react-native";
-import TextBox from "@/src/components/ui/text-box";
-import InlineCurrencyInput from "@/src/components/ui/inline-currency-input";
-import { COLOR_PALETTE, DEFAULT_COLOR } from "@/src/constants/colors";
-import { ThemedText } from "../core/themed-text.native";
+import React from 'react';
+import { View, StyleSheet, ScrollView, Pressable } from 'react-native';
+import TextBox from '@/src/components/ui/text-box';
+import InlineCurrencyInput from '@/src/components/ui/inline-currency-input';
+import { COLOR_PALETTE, DEFAULT_COLOR } from '@/src/constants/colors';
+import { ThemedText } from '../core/themed-text.native';
 
 interface AccountPanelProps {
   name: string;
@@ -42,7 +42,15 @@ const AccountPanel: React.FC<AccountPanelProps> = ({
       {!readonly && onBalanceChange && (
         <View style={styles.fieldContainer}>
           <ThemedText style={styles.sectionTitle}>Current Balance</ThemedText>
-          <View style={{ flex: 1, justifyContent: "flex-end", alignItems:"center", flexDirection: "row", gap: 4 }}>
+          <View
+            style={{
+              flex: 1,
+              justifyContent: 'flex-end',
+              alignItems: 'center',
+              flexDirection: 'row',
+              gap: 4,
+            }}
+          >
             <InlineCurrencyInput value={balance} onChange={onBalanceChange} />
             <ThemedText>€</ThemedText>
           </View>
@@ -69,7 +77,6 @@ const AccountPanel: React.FC<AccountPanelProps> = ({
           />
         ))}
       </ScrollView>
-
     </ScrollView>
   );
 };
@@ -79,9 +86,9 @@ export default AccountPanel;
 const styles = StyleSheet.create({
   fieldContainer: {
     marginBottom: 16,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   sectionTitle: {
     marginBottom: 12,
@@ -92,7 +99,7 @@ const styles = StyleSheet.create({
     marginHorizontal: -20,
   },
   colorScrollContent: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 12,
     paddingHorizontal: 20,
   },

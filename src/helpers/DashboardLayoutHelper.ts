@@ -87,7 +87,7 @@ export function parseLayout(jsonString: string): any {
     const simpleLayout = JSON.parse(jsonString) as SimpleLayout;
     return importLayoutFromJSON(simpleLayout);
   } catch (error) {
-    console.error("Failed to parse layout JSON:", error);
+    console.error('Failed to parse layout JSON:', error);
     return null;
   }
 }
@@ -101,7 +101,7 @@ export function validateLayout(layout: SimpleLayout): boolean {
   }
 
   for (const row of layout.rows) {
-    if (typeof row.flex !== "number" || row.flex <= 0) {
+    if (typeof row.flex !== 'number' || row.flex <= 0) {
       return false;
     }
 
@@ -110,7 +110,7 @@ export function validateLayout(layout: SimpleLayout): boolean {
     }
 
     for (const col of row.columns) {
-      if (typeof col.width !== "number" || col.width <= 0) {
+      if (typeof col.width !== 'number' || col.width <= 0) {
         return false;
       }
 
@@ -131,15 +131,15 @@ export const DEFAULT_SIMPLE_LAYOUT: SimpleLayout = {
     {
       flex: 1,
       columns: [
-        { width: 1, cards: ["home"] },
-        { width: 1, cards: ["charts"] },
+        { width: 1, cards: ['home'] },
+        { width: 1, cards: ['charts'] },
       ],
     },
     {
       flex: 1,
       columns: [
         { width: 2, cards: [] },
-        { width: 1, cards: ["settings"] },
+        { width: 1, cards: ['settings'] },
       ],
     },
   ],
@@ -148,11 +148,8 @@ export const DEFAULT_SIMPLE_LAYOUT: SimpleLayout = {
 /**
  * Salva il layout in cookie (per web)
  */
-export function saveLayoutToCookie(
-  layout: any,
-  cookieName: string = "dashboard_layout",
-): void {
-  if (typeof document === "undefined") return;
+export function saveLayoutToCookie(layout: any, cookieName: string = 'dashboard_layout'): void {
+  if (typeof document === 'undefined') return;
 
   const jsonString = stringifyLayout(layout);
   const encodedLayout = encodeURIComponent(jsonString);
@@ -167,22 +164,20 @@ export function saveLayoutToCookie(
 /**
  * Carica il layout da cookie (per web)
  */
-export function loadLayoutFromCookie(
-  cookieName: string = "dashboard_layout",
-): any | null {
-  if (typeof document === "undefined") return null;
+export function loadLayoutFromCookie(cookieName: string = 'dashboard_layout'): any | null {
+  if (typeof document === 'undefined') return null;
 
-  const cookies = document.cookie.split("; ");
+  const cookies = document.cookie.split('; ');
   const layoutCookie = cookies.find((c) => c.startsWith(`${cookieName}=`));
 
   if (!layoutCookie) return null;
 
   try {
-    const encodedLayout = layoutCookie.split("=")[1];
+    const encodedLayout = layoutCookie.split('=')[1];
     const jsonString = decodeURIComponent(encodedLayout);
     return parseLayout(jsonString);
   } catch (error) {
-    console.error("Failed to load layout from cookie:", error);
+    console.error('Failed to load layout from cookie:', error);
     return null;
   }
 }

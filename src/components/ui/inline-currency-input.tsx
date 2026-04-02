@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import { View, StyleSheet, Animated } from "react-native";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import { ThemedText } from "@/src/components/core/themed-text";
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { View, StyleSheet, Animated } from 'react-native';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import { ThemedText } from '@/src/components/core/themed-text';
 
 interface IInlineCurrencyInputProps {
   value: number;
@@ -14,14 +14,12 @@ const InlineCurrencyInput: React.FC<IInlineCurrencyInputProps> = ({
   onChange,
   placeholderColor: phColor,
 }) => {
-  const textColor = useThemeColor({ light: "#000", dark: "#fff" }, "text");
-  const placeholderColor = phColor || useThemeColor(
-    { light: "#aaa", dark: "#666" },
-    "tabIconDefault"
-  );
+  const textColor = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
+  const placeholderColor =
+    phColor || useThemeColor({ light: '#aaa', dark: '#666' }, 'tabIconDefault');
 
-  const [integerPart, setIntegerPart] = useState("0");
-  const [decimalPart, setDecimalPart] = useState("00");
+  const [integerPart, setIntegerPart] = useState('0');
+  const [decimalPart, setDecimalPart] = useState('00');
   const [typingDecimal, setTypingDecimal] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -47,7 +45,7 @@ const InlineCurrencyInput: React.FC<IInlineCurrencyInputProps> = ({
           duration: 500,
           useNativeDriver: true,
         }),
-      ])
+      ]),
     );
     blink.start();
     return () => blink.stop();
@@ -60,57 +58,61 @@ const InlineCurrencyInput: React.FC<IInlineCurrencyInputProps> = ({
       return;
     }
     const int = Math.floor(value).toString();
-    const dec = Math.round((value % 1) * 100).toString().padStart(2, "0");
+    const dec = Math.round((value % 1) * 100)
+      .toString()
+      .padStart(2, '0');
     setIntegerPart(int);
     setDecimalPart(dec);
   }, [value]);
 
   // Notify parent of changes
-  const notifyChange = useCallback((int: string, dec: string) => {
-    internalUpdate.current = true;
-    const newValue = parseInt(int || "0") + parseInt(dec || "0") / 100;
-    onChange(newValue);
-  }, [onChange]);
+  const notifyChange = useCallback(
+    (int: string, dec: string) => {
+      internalUpdate.current = true;
+      const newValue = parseInt(int || '0') + parseInt(dec || '0') / 100;
+      onChange(newValue);
+    },
+    [onChange],
+  );
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     const key = e.key;
 
     if (
-      key === "," || key === "." ||
-      (key >= "0" && key <= "9") ||
-      key === "Backspace" ||
-      key === "Delete"
+      key === ',' ||
+      key === '.' ||
+      (key >= '0' && key <= '9') ||
+      key === 'Backspace' ||
+      key === 'Delete'
     ) {
       e.preventDefault();
     } else {
       return;
     }
 
-    if (key === "," || key === ".") {
+    if (key === ',' || key === '.') {
       setTypingDecimal((prev) => !prev);
       return;
     }
 
-    if (key === "Backspace" || key === "Delete") {
+    if (key === 'Backspace' || key === 'Delete') {
       if (typingDecimal) {
-        const newDec = "0" + decimalPart[0];
+        const newDec = '0' + decimalPart[0];
         setDecimalPart(newDec);
         notifyChange(integerPart, newDec);
       } else {
-        const newInt = integerPart.length > 1
-          ? integerPart.slice(0, -1)
-          : "0";
+        const newInt = integerPart.length > 1 ? integerPart.slice(0, -1) : '0';
         setIntegerPart(newInt);
         notifyChange(newInt, decimalPart);
       }
       return;
     }
 
-    if (key >= "0" && key <= "9") {
+    if (key >= '0' && key <= '9') {
       if (!typingDecimal) {
         let newInt: string;
-        if (integerPart === "0") {
-          newInt = key === "0" ? "0" : key;
+        if (integerPart === '0') {
+          newInt = key === '0' ? '0' : key;
         } else if (integerPart.length < 7) {
           newInt = integerPart + key;
         } else {
@@ -120,8 +122,8 @@ const InlineCurrencyInput: React.FC<IInlineCurrencyInputProps> = ({
         notifyChange(newInt, decimalPart);
       } else {
         let newDec: string;
-        if (decimalPart === "00") {
-          newDec = "0" + key;
+        if (decimalPart === '00') {
+          newDec = '0' + key;
         } else {
           newDec = decimalPart[1] + key;
         }
@@ -131,7 +133,7 @@ const InlineCurrencyInput: React.FC<IInlineCurrencyInputProps> = ({
     }
   };
 
-  const isEmpty = integerPart === "0" && decimalPart === "00";
+  const isEmpty = integerPart === '0' && decimalPart === '00';
 
   return (
     <View style={styles.container}>
@@ -147,12 +149,12 @@ const InlineCurrencyInput: React.FC<IInlineCurrencyInputProps> = ({
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
         style={{
-          position: "absolute" as any,
+          position: 'absolute' as any,
           opacity: 0,
           width: 1,
           height: 1,
-          border: "none",
-          outline: "none",
+          border: 'none',
+          outline: 'none',
           padding: 0,
           margin: 0,
         }}
@@ -163,28 +165,31 @@ const InlineCurrencyInput: React.FC<IInlineCurrencyInputProps> = ({
         // @ts-ignore — web onClick
         onClick={() => inputRef.current?.focus()}
       >
-        <ThemedText style={[
-          styles.text,
-          { color: isEmpty && !isFocused ? placeholderColor : textColor },
-          !typingDecimal && isFocused && styles.activeText,
-        ]}>
+        <ThemedText
+          style={[
+            styles.text,
+            { color: isEmpty && !isFocused ? placeholderColor : textColor },
+            !typingDecimal && isFocused && styles.activeText,
+          ]}
+        >
           {integerPart}
         </ThemedText>
         {/* Blinker after integer part */}
         {isFocused && !typingDecimal && (
           <Animated.View style={[styles.blinker, { opacity: blinkAnim }]} />
         )}
-        <ThemedText style={[
-          styles.comma,
-          { color: isEmpty && !isFocused ? placeholderColor : textColor },
-        ]}>
+        <ThemedText
+          style={[styles.comma, { color: isEmpty && !isFocused ? placeholderColor : textColor }]}
+        >
           ,
         </ThemedText>
-        <ThemedText style={[
-          styles.text,
-          { color: isEmpty && !isFocused ? placeholderColor : textColor },
-          typingDecimal && isFocused && styles.activeText,
-        ]}>
+        <ThemedText
+          style={[
+            styles.text,
+            { color: isEmpty && !isFocused ? placeholderColor : textColor },
+            typingDecimal && isFocused && styles.activeText,
+          ]}
+        >
           {decimalPart}
         </ThemedText>
         {/* Blinker after decimal part */}
@@ -198,30 +203,30 @@ const InlineCurrencyInput: React.FC<IInlineCurrencyInputProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: "row",
-    alignItems: "center",
-    position: "relative",
+    flexDirection: 'row',
+    alignItems: 'center',
+    position: 'relative',
   },
   display: {
-    flexDirection: "row",
-    alignItems: "center",
-    cursor: "text",
+    flexDirection: 'row',
+    alignItems: 'center',
+    cursor: 'text',
     paddingVertical: 4,
     paddingHorizontal: 4,
   } as any,
   text: {
     fontSize: 15,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   activeText: {},
   comma: {
     fontSize: 15,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   blinker: {
     width: 1.5,
     height: 16,
-    backgroundColor: "#2F4F3F",
+    backgroundColor: '#2F4F3F',
     marginLeft: 1,
   },
 });

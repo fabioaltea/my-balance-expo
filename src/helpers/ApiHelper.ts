@@ -17,6 +17,7 @@ export class ApiHelper {
         deviceId: data.deviceId,
         deviceType: data.deviceType,
         redirectUri: data.redirectUri,
+        product: process.env.EXPO_PUBLIC_PRODUCT_NAME || 'MyBalance',
       };
 
       const response = await fetch(`${HttpHelper.authUri}/auth/google/callback`, {

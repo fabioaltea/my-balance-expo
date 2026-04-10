@@ -2,7 +2,6 @@ import { useThemeColor } from '@/src/hooks/use-theme-color';
 import { Slot } from 'expo-router';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { BottomTabs } from 'react-native-screens';
 
 /**
  * Portrait layout - standard navigation with bottom tabs
@@ -15,7 +14,6 @@ function PortraitLayout() {
       <View style={styles.content}>
         <Slot />
       </View>
-      <BottomTabs />
     </View>
   );
 }

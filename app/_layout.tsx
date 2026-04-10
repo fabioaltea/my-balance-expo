@@ -4,6 +4,7 @@ import { Stack } from 'expo-router';
 import Head from 'expo-router/head';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
+import '@/src/styles/global.css';
 
 import { useColorScheme } from '@/src/hooks/use-color-scheme';
 import {

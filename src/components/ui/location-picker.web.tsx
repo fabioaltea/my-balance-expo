@@ -41,8 +41,9 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
   } | null>(null);
 
   const cardHeight = useRef(new Animated.Value(30)).current;
-  const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const placesServiceRef = useRef<google.maps.places.PlacesService | null>(null);
+  const hasUserEditedQuery = useRef(false);
 
   const textColor = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
   const placeholderColor = useThemeColor({ light: '#aaa', dark: '#666' }, 'tabIconDefault');
@@ -130,47 +131,75 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
   );
 
   // Auto-expand map when mounting with a pre-existing location value (e.g. editing a movement)
-  const hasAutoSearched = useRef(false);
+  const initialSearchDone = useRef(false);
   useEffect(() => {
     if (location && isLocationResolved(location)) {
       showResolvedLocation(location);
-      hasAutoSearched.current = true;
+      initialSearchDone.current = true;
       return;
     }
 
     if (!value.trim()) {
       collapseCard();
-      hasAutoSearched.current = false;
+      initialSearchDone.current = false;
     }
   }, [collapseCard, location, showResolvedLocation, value]);
 
+  // Initial auto-search when value is pre-populated (edit mode) and user hasn't typed yet
   useEffect(() => {
     if (
-      isLoaded &&
-      placesServiceRef.current &&
-      value.trim().length >= 3 &&
-      !hasAutoSearched.current &&
-      !isLocationResolved(location)
+      hasUserEditedQuery.current ||
+      initialSearchDone.current ||
+      !value ||
+      value.trim().length < 3 ||
+      isLocationResolved(location)
     ) {
-      hasAutoSearched.current = true;
+      return;
+    }
+
+    initialSearchDone.current = true;
+    if (isLoaded && placesServiceRef.current) {
       searchAndShow(value.trim());
     }
-  }, [isLoaded, location, searchAndShow, value]);
+  }, [isLoaded, location, searchAndShow, value]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleTextChange = (text: string) => {
-    onChange({ address: text });
-    hasAutoSearched.current = false;
+  // Debounced search triggered by user edits
+  useEffect(() => {
+    if (!hasUserEditedQuery.current || isLocationResolved(location)) {
+      return;
+    }
 
-    if (!text.trim()) {
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+
+    const trimmedValue = value.trim();
+
+    if (!trimmedValue) {
       collapseCard();
       return;
     }
 
-    if (searchTimeout.current) clearTimeout(searchTimeout.current);
-    setMarkerPos(null);
-    if (text.length >= 3) {
+    if (trimmedValue.length < 3) return;
+
+    debounceTimer.current = setTimeout(() => {
+      if (isLoaded && placesServiceRef.current) {
+        searchAndShow(trimmedValue);
+      }
+    }, 600);
+
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    };
+  }, [collapseCard, isLoaded, location, searchAndShow, value]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleTextChange = (text: string) => {
+    hasUserEditedQuery.current = true;
+    onChange({ address: text });
+
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+
+    if (!text.trim()) {
+      setMarkerPos(null);
       collapseCard();
-      searchTimeout.current = setTimeout(() => searchAndShow(text), 600);
     }
   };
 
@@ -252,7 +281,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     paddingHorizontal: 10,
     minWidth: 0,
-    outlineColor: 'transparent',
   },
   mapContainer: {
     flex: 1,

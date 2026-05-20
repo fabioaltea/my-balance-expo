@@ -101,8 +101,14 @@ const SummaryCard: React.FC<Props> = ({
 
   if (showSkeleton) {
     return (
-      <Card backgroundColor={cardBackground} color={textColor}>
-        <ChartSkeleton variant="summary" height={200} />
+      <Card
+        backgroundColor={cardBackground}
+        color={textColor}
+        style={flexible ? { flex: 1 } : undefined}
+      >
+        <View style={flexible ? { flex: 1 } : { height: 200 }}>
+          <ChartSkeleton variant="summary" height={200} />
+        </View>
       </Card>
     );
   }

@@ -1,5 +1,5 @@
 import { View, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import * as Crypto from 'expo-crypto';
 import { ThemedText } from '@/src/components/core/themed-text';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
@@ -24,6 +24,7 @@ import LocationPicker, { ILocation } from '@/src/components/ui/location-picker';
 import { parseLocationValue, serializeLocationValue } from '@/src/utils/locationValue';
 import RecurrencePickerWeb from '@/src/components/ui/recurrence-picker.web';
 import { ScreenView } from '../components';
+import { MovementHelper } from '@/src/helpers/MovementHelper';
 
 export type ToastStatus = 'loading' | 'success' | 'error';
 
@@ -94,11 +95,25 @@ const AddView: React.FC<AddViewProps> = ({ editingMovementId, recurrenceId, onCl
   });
   const [isSaving, setIsSaving] = useState(false);
   const [isRecurrent, setIsRecurrent] = useState(false);
+  const hasManualCategorySelection = useRef(false);
   const [recurrenceSelection, setRecurrenceSelection] = useState<string>('new');
   const [recurrenceUnit, setRecurrenceUnit] = useState<string>('M');
   const [recurrenceFrequency, setRecurrenceFrequency] = useState<number>(1);
 
   const recurrencePattern = `P${recurrenceFrequency}${recurrenceUnit}`;
+
+  const handleDescriptionChange = (text: string) => {
+    setDescription(text);
+    if (!hasManualCategorySelection.current && !isEditing) {
+      const predicted = MovementHelper.predictCategory(text, movements, categories);
+      if (predicted) setSelectedCategory(predicted);
+    }
+  };
+
+  const handleCategoryChange = (value: string) => {
+    hasManualCategorySelection.current = true;
+    setSelectedCategory(value);
+  };
 
   const isEditing = !!editingMovementId;
   const isEditingRecurring =
@@ -111,7 +126,17 @@ const AddView: React.FC<AddViewProps> = ({ editingMovementId, recurrenceId, onCl
     if (!editingMovement) return;
 
     setDescription(editingMovement.description);
-    setSelectedCategory(editingMovement.category);
+
+    if (editingMovement.status?.toLowerCase() === 'unconfirmed' && editingMovement.description) {
+      const predicted = MovementHelper.predictCategory(
+        editingMovement.description,
+        movements,
+        categories,
+      );
+      setSelectedCategory(predicted || editingMovement.category);
+    } else {
+      setSelectedCategory(editingMovement.category);
+    }
 
     const parsedDate = parseDateFromDDMMYYYY(editingMovement.date);
     if (parsedDate) {
@@ -328,7 +353,10 @@ const AddView: React.FC<AddViewProps> = ({ editingMovementId, recurrenceId, onCl
           movementData.recurrenceId = editingMovement.recurrenceId;
           movementData.status = 'recurrent';
           movementData.recurrencePattern = recurrencePattern;
-        } else if (isRecurrent && recurrenceSelection !== 'new') {
+        } else if (editingMovement?.status?.toLowerCase() === 'unconfirmed') {
+          movementData.status = 'Confirmed';
+        }
+        if (isRecurrent && recurrenceSelection !== 'new') {
           // Link to existing recurrence
           movementData.recurrenceId = recurrenceSelection;
         } else if (isRecurrent && recurrenceSelection === 'new') {
@@ -434,7 +462,7 @@ const AddView: React.FC<AddViewProps> = ({ editingMovementId, recurrenceId, onCl
           <InputGroup>
             <TextBox
               value={description}
-              onChange={setDescription}
+              onChange={handleDescriptionChange}
               label="Description"
               placeholder="Insert Description"
             />
@@ -448,7 +476,7 @@ const AddView: React.FC<AddViewProps> = ({ editingMovementId, recurrenceId, onCl
                 {/* @ts-ignore — HTML select element for web */}
                 <select
                   value={selectedCategory}
-                  onChange={(e: any) => setSelectedCategory(e.target.value)}
+                  onChange={(e: any) => handleCategoryChange(e.target.value)}
                   style={{
                     flex: 1,
                     fontSize: 18,

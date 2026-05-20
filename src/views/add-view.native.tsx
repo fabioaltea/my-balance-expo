@@ -174,7 +174,17 @@ const AddView: React.FC<AddViewProps> = ({
     if (!editingMovement) return;
 
     setDescription(editingMovement.description);
-    setSelectedCategory(editingMovement.category);
+
+    if (editingMovement.status?.toLowerCase() === 'unconfirmed' && editingMovement.description) {
+      const predicted = MovementHelper.predictCategory(
+        editingMovement.description,
+        movements,
+        categories,
+      );
+      setSelectedCategory(predicted || editingMovement.category);
+    } else {
+      setSelectedCategory(editingMovement.category);
+    }
 
     const parsedDate = parseDateFromDDMMYYYY(editingMovement.date);
     if (parsedDate) {
@@ -477,7 +487,10 @@ const AddView: React.FC<AddViewProps> = ({
           movementData.status = 'recurrent';
           movementData.recurrencePattern = recurrencePattern || undefined;
           movementData.date = formattedRecurrenceStartDate;
-        } else if (isRecurrent && recurrenceSelection !== 'new') {
+        } else if (editingMovement?.status?.toLowerCase() === 'unconfirmed') {
+          movementData.status = 'Confirmed';
+        }
+        if (isRecurrent && recurrenceSelection !== 'new') {
           movementData.recurrenceId = recurrenceSelection;
         } else if (isRecurrent && recurrenceSelection === 'new') {
           const newRecurrenceId = Crypto.randomUUID();

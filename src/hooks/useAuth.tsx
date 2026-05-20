@@ -213,7 +213,7 @@ export const useAuth = () => {
       // Create OAuth request with PKCE
       const request = new AuthSession.AuthRequest({
         clientId,
-        scopes: ['openid', 'profile', 'email', 'https://www.googleapis.com/auth/spreadsheets'],
+        scopes: ['openid', 'profile', 'email', 'https://www.googleapis.com/auth/drive.file'],
         redirectUri,
         responseType: AuthSession.ResponseType.Code,
         codeChallengeMethod: AuthSession.CodeChallengeMethod.S256,

@@ -328,7 +328,10 @@ const AddView: React.FC<AddViewProps> = ({ editingMovementId, recurrenceId, onCl
           movementData.recurrenceId = editingMovement.recurrenceId;
           movementData.status = 'recurrent';
           movementData.recurrencePattern = recurrencePattern;
-        } else if (isRecurrent && recurrenceSelection !== 'new') {
+        } else if (editingMovement?.status?.toLowerCase() === 'unconfirmed') {
+          movementData.status = 'Confirmed';
+        }
+        if (isRecurrent && recurrenceSelection !== 'new') {
           // Link to existing recurrence
           movementData.recurrenceId = recurrenceSelection;
         } else if (isRecurrent && recurrenceSelection === 'new') {

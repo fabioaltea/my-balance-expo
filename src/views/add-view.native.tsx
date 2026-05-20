@@ -477,7 +477,10 @@ const AddView: React.FC<AddViewProps> = ({
           movementData.status = 'recurrent';
           movementData.recurrencePattern = recurrencePattern || undefined;
           movementData.date = formattedRecurrenceStartDate;
-        } else if (isRecurrent && recurrenceSelection !== 'new') {
+        } else if (editingMovement?.status?.toLowerCase() === 'unconfirmed') {
+          movementData.status = 'Confirmed';
+        }
+        if (isRecurrent && recurrenceSelection !== 'new') {
           movementData.recurrenceId = recurrenceSelection;
         } else if (isRecurrent && recurrenceSelection === 'new') {
           const newRecurrenceId = Crypto.randomUUID();

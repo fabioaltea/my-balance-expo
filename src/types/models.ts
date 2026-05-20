@@ -33,6 +33,9 @@ export interface Account {
   balance: number;
   color?: string;
   textColor?: string;
+  saltedgeConnectionId?: string;
+  saltedgeAccountId?: string;
+  saltedgeStatus?: 'active' | 'inactive' | 'error';
 }
 
 export interface Category {

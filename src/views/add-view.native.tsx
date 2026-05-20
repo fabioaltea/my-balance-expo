@@ -174,7 +174,17 @@ const AddView: React.FC<AddViewProps> = ({
     if (!editingMovement) return;
 
     setDescription(editingMovement.description);
-    setSelectedCategory(editingMovement.category);
+
+    if (editingMovement.status?.toLowerCase() === 'unconfirmed' && editingMovement.description) {
+      const predicted = MovementHelper.predictCategory(
+        editingMovement.description,
+        movements,
+        categories,
+      );
+      setSelectedCategory(predicted || editingMovement.category);
+    } else {
+      setSelectedCategory(editingMovement.category);
+    }
 
     const parsedDate = parseDateFromDDMMYYYY(editingMovement.date);
     if (parsedDate) {

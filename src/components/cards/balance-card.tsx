@@ -4,48 +4,7 @@ import Card from '@/src/components/core/card';
 import type { Account } from '@/src/state';
 import { useDataContext } from '../../state/DataProvider';
 import IconSymbol from '@/src/components/ui/icon-symbol';
-
-const DIGIT_HEIGHT = 36;
-const DIGIT_WIDTH = 24;
-const ROLL_ROWS = 50;
-const START_VALUE = 10457; // €10,457
-
-const DigitRoller: React.FC<{ digit: number; color: string }> = ({ digit, color }) => {
-  const posRef = useRef(10 + digit);
-  const ty = useRef(new Animated.Value(-(10 + digit) * DIGIT_HEIGHT)).current;
-  const prevRef = useRef(digit);
-
-  useEffect(() => {
-    const prev = prevRef.current;
-    if (prev === digit) return;
-    let steps = digit - prev;
-    if (steps < 0) steps += 10;
-    posRef.current += steps;
-    prevRef.current = digit;
-    Animated.timing(ty, {
-      toValue: -posRef.current * DIGIT_HEIGHT,
-      duration: 80,
-      useNativeDriver: true,
-    }).start();
-  }, [digit]);
-
-  return (
-    <View style={styles.digitContainer}>
-      <Animated.View style={{ transform: [{ translateY: ty }] }}>
-        {Array.from({ length: ROLL_ROWS }, (_, i) => (
-          <Text key={i} style={[styles.digitText, { color }]}>
-            {i % 10}
-          </Text>
-        ))}
-      </Animated.View>
-    </View>
-  );
-};
-
-const extractDigits = (value: number): number[] => {
-  const str = String(Math.max(0, value)).padStart(5, '0').slice(-5);
-  return str.split('').map(Number);
-};
+import AnimatedNumbers from 'react-native-animated-numbers';
 
 interface IBalanceCardProps {
   account?: Account;
@@ -54,29 +13,36 @@ interface IBalanceCardProps {
 const BalanceCard: React.FC<IBalanceCardProps> = ({ account }) => {
   const { isLoading } = useDataContext();
   const [isBalanceVisible, setIsBalanceVisible] = useState(true);
-  const [counter, setCounter] = useState(START_VALUE);
-  const counterRef = useRef(START_VALUE);
+
+  const [animateToNumber, setAnimateToNumber] = React.useState(1000);
+
+  const increase = () => {
+    setAnimateToNumber(animateToNumber + 1999);
+  };
 
   useEffect(() => {
     if (!isLoading) return;
     const id = setInterval(() => {
-      counterRef.current += 1;
-      setCounter(counterRef.current);
-    }, 50);
+      increase();
+    }, 100);
     return () => clearInterval(id);
   }, [isLoading]);
 
   const renderBalanceContent = () => {
     if (isLoading) {
-      const color = account?.textColor || '#FFFFFF';
-      const digits = extractDigits(counter);
       return (
         <View style={styles.odometerRow}>
-          <Text style={[styles.odometerSymbol, { color }]}>{'€ '}</Text>
-          {digits.slice(0, 5).map((d, i) => (
-            <DigitRoller key={`i${i}`} digit={d} color={color} />
-          ))}
-          <Text style={[styles.odometerSymbol, { color }]}>,00</Text>
+          <Text
+            style={{ fontSize: 36, fontWeight: 'bold', color: account?.textColor || '#FFFFFF' }}
+          >
+            {'€'}
+          </Text>
+          <AnimatedNumbers
+            includeComma
+            animateToNumber={animateToNumber}
+            animationDuration={100}
+            fontStyle={{ fontSize: 36, fontWeight: 'bold', color: account?.textColor || '#FFFFFF' }}
+          />
         </View>
       );
     }
@@ -95,7 +61,10 @@ const BalanceCard: React.FC<IBalanceCardProps> = ({ account }) => {
       <View style={styles.balanceContent}>
         {renderBalanceContent()}
         <TouchableOpacity
-          onPress={() => setIsBalanceVisible(!isBalanceVisible)}
+          onPress={() => {
+            setIsBalanceVisible(!isBalanceVisible);
+            increase();
+          }}
           disabled={isLoading}
         >
           <IconSymbol
@@ -123,25 +92,6 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 16,
     overflow: 'hidden',
-  },
-  odometerSymbol: {
-    fontSize: DIGIT_HEIGHT,
-    fontWeight: 'bold',
-    lineHeight: DIGIT_HEIGHT,
-    includeFontPadding: false,
-  },
-  digitContainer: {
-    height: DIGIT_HEIGHT,
-    width: DIGIT_WIDTH,
-    overflow: 'hidden',
-  },
-  digitText: {
-    height: DIGIT_HEIGHT,
-    lineHeight: DIGIT_HEIGHT,
-    fontSize: DIGIT_HEIGHT,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    includeFontPadding: false,
   },
   balanceAmount: {
     color: '#FFFFFF',

@@ -84,5 +84,6 @@
     "format",
     "add-format"
   ],
-  "private": true
+  "private": true,
+  "packageManager": "pnpm@9.4.0"
 }

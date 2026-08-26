@@ -38,9 +38,57 @@ yarn-error.*
 
 app-example
 
-# generated native folders
-/ios
-/android
+
 
 ios/certs/*
 .vercel
+
+# iOS generated/local artifacts
+ios/Pods/
+ios/build/
+ios/DerivedData/
+ios/*.xcuserstate
+ios/**/*.xcuserstate
+ios/xcuserdata/
+ios/**/xcuserdata/
+
+# Xcode user-specific files
+ios/**/*.pbxuser
+ios/**/*.mode1v3
+ios/**/*.mode2v3
+ios/**/*.perspectivev3
+
+# Signing / credentials
+ios/certs/
+ios/*.mobileprovision
+ios/*.p12
+ios/*.p8
+ios/*.pem
+ios/*.key
+
+# Fastlane local/private data, if present
+ios/fastlane/report.xml
+ios/fastlane/Preview.html
+ios/fastlane/screenshots/
+ios/fastlane/test_output/
+
+# =========================
+# Android
+# =========================
+/android
+
+# Android build artifacts (nel caso android venga generato localmente)
+android/.gradle/
+android/build/
+android/app/build/
+android/.cxx/
+android/local.properties
+
+# Android Studio / IntelliJ
+android/.idea/
+android/**/.idea/
+android/*.iml
+android/**/*.iml
+
+# Kotlin
+.kotlin/

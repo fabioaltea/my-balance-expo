@@ -99,6 +99,6 @@ export default ({ config }) => ({
     eas: {
       projectId: "2d2413da-2b7d-4cab-8be2-dc832515bde8",
     },
-    mapboxToken: process.env.MAPBOX_SECRET_TOKEN,
+    mapboxToken: process.env.MAPBOX_SECRET_TOKEN ||"",
   },
 });

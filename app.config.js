@@ -82,11 +82,11 @@ export default ({ config }) => ({
       },
     ],
     "@react-native-community/datetimepicker",
+    "expo-web-browser",
     [
       "@rnmapbox/maps",
       {
-        RNMapboxMapsVersion: "11.15.2",
-        RNMapboxMapsDownloadToken: process.env.MAPBOX_SECRET_TOKEN,
+        RNMapboxMapsVersion: "11.20.1"
       },
     ],
   ],

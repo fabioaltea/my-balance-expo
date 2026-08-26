@@ -15,33 +15,50 @@ echo "iOS directory: $IOS_DIR"
 
 cd "$PROJECT_ROOT"
 
-echo "==> Node"
+echo "==> Install Node.js"
+
+if ! command -v node >/dev/null 2>&1; then
+  brew install node@20
+fi
+
+export PATH="$(brew --prefix node@20)/bin:$PATH"
+
+echo "Node:"
 node --version
+
+echo "npm:"
+npm --version
 
 echo "==> Enable Corepack"
 corepack enable
 
-echo "==> pnpm 9.4.0"
+echo "==> Activate pnpm 9.4.0"
 corepack prepare pnpm@9.4.0 --activate
+
+echo "pnpm:"
 pnpm --version
 
 echo "==> Install JavaScript dependencies"
 pnpm install --frozen-lockfile
 
-echo "==> CocoaPods"
+echo "==> Install CocoaPods"
+
 cd "$IOS_DIR"
+
+if ! command -v pod >/dev/null 2>&1; then
+  brew install cocoapods
+fi
 
 pod --version
 
-echo "==> Install Pods"
 pod install
 
-echo "==> Verify CocoaPods xcconfig"
+echo "==> Verify CocoaPods"
 
 XCCONFIG="Pods/Target Support Files/Pods-MyBalance/Pods-MyBalance.release.xcconfig"
 
 if [ ! -f "$XCCONFIG" ]; then
-  echo "ERROR: CocoaPods xcconfig was not generated:"
+  echo "ERROR: Missing CocoaPods configuration:"
   echo "$XCCONFIG"
   exit 1
 fi
@@ -49,5 +66,5 @@ fi
 ls -lh "$XCCONFIG"
 
 echo "========================================"
-echo " Post Clone completed successfully"
+echo " Xcode Cloud dependencies ready"
 echo "========================================"

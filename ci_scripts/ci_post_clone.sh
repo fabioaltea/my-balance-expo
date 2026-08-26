@@ -12,8 +12,14 @@ echo "==> pnpm"
 corepack prepare pnpm@9.4.0 --activate
 pnpm --version
 
-echo "==> Install dependencies"
+echo "==> Install JS dependencies"
 pnpm install --frozen-lockfile
 
-echo "==> Expo prebuild"
+echo "==> Generate iOS project"
 pnpm exec expo prebuild --platform ios
+
+echo "==> Install CocoaPods dependencies"
+cd ios
+pod install --repo-update
+
+echo "==> iOS dependencies ready"

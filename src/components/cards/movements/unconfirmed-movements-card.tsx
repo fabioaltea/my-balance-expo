@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ThemedText } from '@/src/components/core/themed-text';
-import { TouchableOpacity, StyleSheet, View, Alert, ScrollView } from 'react-native';
+import { TouchableOpacity, StyleSheet, View, Alert, ScrollView, Platform } from 'react-native';
 import IconSymbol from '@/src/components/ui/icon-symbol';
 import Card from '@/src/components/core/card';
 import { usePlatformContext } from '@/src/state/PlatformProvider';
@@ -21,6 +21,9 @@ import {
 } from '@/src/helpers/TransactionsMutationHelpers';
 import ModalPanel from '@/src/components/ui/modal-panel';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { MovementSelectionBox, MovementSelectionToolbar } from './movement-selection-controls';
+
+const isWeb = Platform.OS === 'web';
 
 const sortMovements = (movements: Movement[]) => {
   return movements?.sort((a, b) => {
@@ -52,6 +55,7 @@ const UnconfirmedMovementsCard: React.FC<UnconfirmedMovementsCardProps> = ({ onM
 
   // Bottom sheet state for long press menu (portrait only)
   const [selectedMovement, setSelectedMovement] = useState<Movement | null>(null);
+  const [selectedMovementIds, setSelectedMovementIds] = useState<Set<string>>(new Set());
 
   const handleMovementPress = (movement: Movement) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -108,6 +112,10 @@ const UnconfirmedMovementsCard: React.FC<UnconfirmedMovementsCardProps> = ({ onM
   const borderColor = useThemeColor({ light: '#F0F0F0', dark: '#333333' }, 'tabIconDefault');
   const positiveAmountColor = useThemeColor({ light: '#107c2bff', dark: '#34C759' }, 'tint');
   const subtextColor = useThemeColor({ light: '#888', dark: '#999' }, 'tabIconDefault');
+  const selectedRowColor = useThemeColor(
+    { light: 'rgba(47, 79, 63, 0.055)', dark: 'rgba(214, 232, 222, 0.055)' },
+    'menuBackground',
+  );
 
   const dynamicStyles = StyleSheet.create({
     movementItem: {
@@ -119,17 +127,70 @@ const UnconfirmedMovementsCard: React.FC<UnconfirmedMovementsCardProps> = ({ onM
     },
   });
 
-  const sortedMovements = sortMovements(unconfirmedMovements || []);
+  const sortedMovements = useMemo(
+    () => sortMovements([...(unconfirmedMovements || [])]),
+    [unconfirmedMovements],
+  );
+
+  useEffect(() => {
+    const availableIds = new Set(sortedMovements.map((movement) => movement.id));
+    setSelectedMovementIds((current) => {
+      const next = new Set([...current].filter((id) => availableIds.has(id)));
+      return next.size === current.size ? current : next;
+    });
+  }, [sortedMovements]);
+
+  const toggleMovementSelection = (movementId: string) => {
+    setSelectedMovementIds((current) => {
+      const next = new Set(current);
+      if (next.has(movementId)) next.delete(movementId);
+      else next.add(movementId);
+      return next;
+    });
+  };
+
+  const selectedUnconfirmedMovements = sortedMovements.filter((movement) =>
+    selectedMovementIds.has(movement.id),
+  );
+
+  const handleSelectedConfirm = () => {
+    if (selectedUnconfirmedMovements.length === 1) {
+      setSelectedMovementIds(new Set());
+      handleMovementPress(selectedUnconfirmedMovements[0]);
+    }
+  };
+
+  const handleSelectedDismiss = async () => {
+    if (!selectedSpreadsheetId || !selectedUnconfirmedMovements.length) return;
+    const message =
+      selectedUnconfirmedMovements.length === 1
+        ? 'Dismiss this movement?'
+        : `Dismiss ${selectedUnconfirmedMovements.length} movements?`;
+    if (!confirm(message)) return;
+
+    try {
+      await Promise.all(
+        selectedUnconfirmedMovements.map((movement) =>
+          updateMovement.mutateAsync({ movementId: movement.id, status: 'DELETED' }),
+        ),
+      );
+      setSelectedMovementIds(new Set());
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (error) {
+      console.error('Error dismissing selected movements:', error);
+      Alert.alert('Error', 'Failed to dismiss selected movements');
+    }
+  };
 
   // Empty state when no unconfirmed movements
   if (!sortedMovements || sortedMovements.length === 0) {
     return (
       <Card
-        label={isLandscape ? 'Unconfirmed Movements' : ''}
+        label={isWeb || isLandscape ? 'Unconfirmed movements' : ''}
         style={isLandscape ? { flex: 1 } : undefined}
       >
         <View style={styles.emptyState}>
-          <IconSymbol name="check-circle" size={48} color="#999" />
+          <IconSymbol name="check-circle" size={isWeb ? 32 : 48} color="#999" />
           <View style={styles.emptyState}>
             <ThemedText style={[styles.emptyTitle, { color: '#999' }]}>You're all set!</ThemedText>
             <ThemedText style={[styles.emptyText, { color: subtextColor }]}>
@@ -143,8 +204,32 @@ const UnconfirmedMovementsCard: React.FC<UnconfirmedMovementsCardProps> = ({ onM
 
   return (
     <Card
-      label={isLandscape ? 'Unconfirmed Movements' : ''}
+      label={isWeb || isLandscape ? 'Unconfirmed movements' : ''}
+      headerAction={
+        isWeb && selectedUnconfirmedMovements.length ? (
+          <MovementSelectionToolbar
+            actions={[
+              ...(selectedUnconfirmedMovements.length === 1
+                ? [
+                    {
+                      label: 'Confirm movement',
+                      icon: 'check' as const,
+                      onPress: handleSelectedConfirm,
+                    },
+                  ]
+                : []),
+              {
+                label: 'Dismiss selected movements',
+                icon: 'close' as const,
+                onPress: handleSelectedDismiss,
+                destructive: true,
+              },
+            ]}
+          />
+        ) : undefined
+      }
       style={isLandscape ? { flex: 1 } : undefined}
+      compact={isWeb}
     >
       <ScrollView showsVerticalScrollIndicator={isLandscape} nestedScrollEnabled={true}>
         {sortedMovements.map((movement, index) => {
@@ -155,6 +240,7 @@ const UnconfirmedMovementsCard: React.FC<UnconfirmedMovementsCardProps> = ({ onM
             categories,
           );
           const amount = movement.totalAmount;
+          const isSelected = selectedMovementIds.has(movement.id);
 
           return (
             <TouchableOpacity
@@ -171,14 +257,22 @@ const UnconfirmedMovementsCard: React.FC<UnconfirmedMovementsCardProps> = ({ onM
               delayLongPress={300}
               activeOpacity={0.6}
               // @ts-ignore — web-only prop for CSS hover
-              dataSet={{ movementRow: '' }}
+              dataSet={{ movementRow: '', movementSelected: isSelected ? 'true' : undefined }}
               style={[
                 dynamicStyles.movementItem,
+                isWeb && isSelected && { backgroundColor: selectedRowColor },
                 index === sortedMovements.length - 1 && styles.lastMovementItem,
               ]}
             >
+              {isWeb ? (
+                <MovementSelectionBox
+                  selected={isSelected}
+                  onToggle={() => toggleMovementSelection(movement.id)}
+                  label={`Select ${movement.description}`}
+                />
+              ) : null}
               <View style={[styles.movementIcon, { backgroundColor: color }]}>
-                <IconSymbol name={icon} size={20} color="#FFFFFF" />
+                <IconSymbol name={icon} size={isWeb ? 17 : 20} color="#FFFFFF" />
               </View>
               <View style={styles.movementInfo}>
                 <ThemedText style={styles.movementDate}>
@@ -196,7 +290,7 @@ const UnconfirmedMovementsCard: React.FC<UnconfirmedMovementsCardProps> = ({ onM
                   {amount > 0 ? '+' : ''}
                   {amount.toFixed(2).replace('.', ',')}€
                 </ThemedText>
-                <IconSymbol name="chevron-right" size={20} color={subtextColor} />
+                {!isWeb ? <IconSymbol name="chevron-right" size={20} color={subtextColor} /> : null}
               </View>
             </TouchableOpacity>
           );
@@ -271,53 +365,53 @@ const styles = StyleSheet.create({
   movementItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: isWeb ? 8 : 10,
     borderBottomWidth: 1,
   },
   lastMovementItem: {
     borderBottomWidth: 0,
   },
   movementIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 30,
+    width: isWeb ? 36 : 50,
+    height: isWeb ? 36 : 50,
+    borderRadius: isWeb ? 12 : 30,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: isWeb ? 11 : 16,
   },
   movementInfo: {
     flex: 1,
   },
   movementDate: {
-    fontSize: 12,
+    fontSize: isWeb ? 11 : 12,
     marginBottom: 0,
   },
   movementDescription: {
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: isWeb ? 14 : 16,
+    fontWeight: isWeb ? '600' : '500',
     textTransform: 'capitalize',
   },
   rightSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: isWeb ? 6 : 8,
   },
   movementAmount: {
-    fontSize: 16,
+    fontSize: isWeb ? 14 : 16,
     fontWeight: '700',
   },
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: isWeb ? 6 : 8,
   },
   emptyTitle: {
-    fontSize: 18,
+    fontSize: isWeb ? 15 : 18,
     fontWeight: '600',
     marginTop: 8,
   },
   emptyText: {
-    fontSize: 14,
+    fontSize: isWeb ? 12 : 14,
     textAlign: 'center',
   },
   sheetHeader: {

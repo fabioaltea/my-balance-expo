@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { ThemedText } from '../../core/themed-text.native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ThemedText } from '../../core/themed-text';
 import { TouchableOpacity, StyleSheet, View, ScrollView, Platform } from 'react-native';
 import Card from '@/src/components/core/card';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
@@ -27,8 +27,11 @@ import {
 } from '@/src/helpers/TransactionsMutationHelpers';
 import ModalPanel from '@/src/components/ui/modal-panel';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { MovementSelectionBox, MovementSelectionToolbar } from './movement-selection-controls';
 
 type BadgeStatus = 'upcoming' | 'soon' | 'today' | 'overdue' | null;
+
+const isWeb = Platform.OS === 'web';
 
 interface RecurringMovementWithPending {
   movement: Movement;
@@ -81,6 +84,7 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
   // Bottom sheet state for long press menu (portrait only)
   const [selectedMovement, setSelectedMovement] = useState<Movement | null>(null);
   const [selectedPending, setSelectedPending] = useState<PendingRecurrence | null>(null);
+  const [selectedMovementIds, setSelectedMovementIds] = useState<Set<string>>(new Set());
 
   // Calculate the expected date object for a pending recurrence
   const getExpectedDateObj = (pending: PendingRecurrence): Date | null => {
@@ -192,6 +196,64 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
     );
   }, [recurringMovements, pendingRecurrences, movements, dateRange]);
 
+  useEffect(() => {
+    const availableIds = new Set(sortedMovements.map(({ movement }) => movement.id));
+    setSelectedMovementIds((current) => {
+      const next = new Set([...current].filter((id) => availableIds.has(id)));
+      return next.size === current.size ? current : next;
+    });
+  }, [sortedMovements]);
+
+  const toggleMovementSelection = (movementId: string) => {
+    setSelectedMovementIds((current) => {
+      const next = new Set(current);
+      if (next.has(movementId)) next.delete(movementId);
+      else next.add(movementId);
+      return next;
+    });
+  };
+
+  const selectedRecurringMovements = sortedMovements.filter(({ movement }) =>
+    selectedMovementIds.has(movement.id),
+  );
+  const dismissableRecurringMovements = selectedRecurringMovements.filter(({ pending }) => pending);
+
+  const handleSelectedEdit = () => {
+    if (selectedRecurringMovements.length === 1) {
+      setSelectedMovementIds(new Set());
+      handleMenuAction(selectedRecurringMovements[0].movement, 'edit');
+    }
+  };
+
+  const handleSelectedDismiss = async () => {
+    if (!dismissableRecurringMovements.length) return;
+    for (const { movement, pending } of dismissableRecurringMovements) {
+      await handleMenuAction(movement, 'dismiss', pending);
+    }
+    setSelectedMovementIds(new Set());
+  };
+
+  const handleSelectedDelete = async () => {
+    if (!selectedSpreadsheetId || !selectedRecurringMovements.length) return;
+    const message =
+      selectedRecurringMovements.length === 1
+        ? 'Delete this recurring movement? This action cannot be undone.'
+        : `Delete ${selectedRecurringMovements.length} recurring movements? This action cannot be undone.`;
+    if (!confirm(message)) return;
+
+    try {
+      await Promise.all(
+        selectedRecurringMovements.map(({ movement }) =>
+          deleteMovement.mutateAsync({ movementId: movement.id }),
+        ),
+      );
+      setSelectedMovementIds(new Set());
+    } catch (error) {
+      console.error('Error deleting selected recurring movements:', error);
+      alert('Failed to delete selected recurring movements');
+    }
+  };
+
   const handleQuickAdd = (movement: Movement) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
@@ -269,6 +331,10 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
   // Theme colors
   const borderColor = useThemeColor({ light: '#F0F0F0', dark: '#333333' }, 'tabIconDefault');
   const subtextColor = useThemeColor({ light: '#888', dark: '#999' }, 'tabIconDefault');
+  const selectedRowColor = useThemeColor(
+    { light: 'rgba(47, 79, 63, 0.055)', dark: 'rgba(214, 232, 222, 0.055)' },
+    'menuBackground',
+  );
 
   const dynamicStyles = StyleSheet.create({
     itemBorder: {
@@ -280,11 +346,11 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
   if (!recurringMovements || recurringMovements.length === 0) {
     return (
       <Card
-        label={isLandscape ? 'Recurring Movements' : ''}
+        label={isWeb || isLandscape ? 'Recurring movements' : ''}
         style={isLandscape ? { flex: 1 } : undefined}
       >
         <View style={styles.emptyState}>
-          <IconSymbol name="repeat" size={48} color="#999" />
+          <IconSymbol name="repeat" size={isWeb ? 32 : 48} color="#999" />
           <ThemedText style={[styles.emptyTitle, { color: '#999' }]}>
             No recurring movements
           </ThemedText>
@@ -391,8 +457,32 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
 
   return (
     <Card
-      label={isLandscape ? 'Recurring Movements' : ''}
+      label={isWeb || isLandscape ? 'Recurring movements' : ''}
+      headerAction={
+        isWeb && selectedRecurringMovements.length ? (
+          <MovementSelectionToolbar
+            actions={[
+              ...(selectedRecurringMovements.length === 1
+                ? [{ label: 'Edit recurrence', icon: 'edit' as const, onPress: handleSelectedEdit }]
+                : []),
+              {
+                label: 'Dismiss selected recurrences',
+                icon: 'visibility-off',
+                onPress: handleSelectedDismiss,
+                disabled: !dismissableRecurringMovements.length,
+              },
+              {
+                label: 'Delete selected recurrences',
+                icon: 'delete-outline',
+                onPress: handleSelectedDelete,
+                destructive: true,
+              },
+            ]}
+          />
+        ) : undefined
+      }
       style={isLandscape ? { flex: 1 } : undefined}
+      compact={isWeb}
     >
       <ScrollView showsVerticalScrollIndicator={isLandscape} nestedScrollEnabled={true}>
         {sortedMovements.map(({ movement, pending, badgeStatus, occurrencesInPeriod }, index) => {
@@ -404,6 +494,7 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
           );
           const amount = movement.totalAmount;
           const hasPending = badgeStatus !== null;
+          const isSelected = selectedMovementIds.has(movement.id);
 
           return (
             <TouchableOpacity
@@ -421,15 +512,23 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
               delayLongPress={300}
               activeOpacity={0.6}
               // @ts-ignore — web-only prop for CSS hover
-              dataSet={{ movementRow: '' }}
+              dataSet={{ movementRow: '', movementSelected: isSelected ? 'true' : undefined }}
               style={[
                 styles.recurringItem,
                 dynamicStyles.itemBorder,
+                isWeb && isSelected && { backgroundColor: selectedRowColor },
                 index === sortedMovements.length - 1 && styles.lastItem,
               ]}
             >
+              {isWeb ? (
+                <MovementSelectionBox
+                  selected={isSelected}
+                  onToggle={() => toggleMovementSelection(movement.id)}
+                  label={`Select ${movement.description}`}
+                />
+              ) : null}
               <View style={[styles.iconContainer, { backgroundColor: color }]}>
-                <IconSymbol name={icon} size={20} color="#FFFFFF" />
+                <IconSymbol name={icon} size={isWeb ? 17 : 20} color="#FFFFFF" />
               </View>
               <View style={styles.itemInfo}>
                 <ThemedText style={styles.itemDescription} numberOfLines={1}>
@@ -450,35 +549,9 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
                   </ThemedText>
                 </View>
               )}
-              {isLandscape && (
+              {isLandscape && !isWeb && (
                 <View style={styles.menuButton}>
                   <MaterialIcons name="more-vert" size={20} color={subtextColor} />
-                  {Platform.OS === 'web' && (
-                    // @ts-ignore — HTML select for web
-                    <select
-                      value=""
-                      onChange={(e: any) => {
-                        e.stopPropagation();
-                        handleMenuAction(movement, e.target.value, pending);
-                        e.target.value = '';
-                      }}
-                      onClick={(e: any) => e.stopPropagation()}
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100%',
-                        opacity: 0,
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <option value="" disabled />
-                      {hasPending && <option value="dismiss">Dismiss</option>}
-                      <option value="edit">Edit</option>
-                      <option value="delete">Delete</option>
-                    </select>
-                  )}
                 </View>
               )}
             </TouchableOpacity>
@@ -584,38 +657,38 @@ const styles = StyleSheet.create({
   recurringItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: isWeb ? 8 : 10,
     borderBottomWidth: 1,
   },
   lastItem: {
     borderBottomWidth: 0,
   },
   iconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 30,
+    width: isWeb ? 36 : 50,
+    height: isWeb ? 36 : 50,
+    borderRadius: isWeb ? 12 : 30,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: isWeb ? 11 : 16,
   },
   itemInfo: {
     flex: 1,
     marginRight: 8,
   },
   itemDescription: {
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: isWeb ? 14 : 16,
+    fontWeight: isWeb ? '600' : '500',
     textTransform: 'capitalize',
   },
   itemSubtitle: {
-    fontSize: 12,
+    fontSize: isWeb ? 11 : 12,
     marginTop: 2,
   },
   statusBadge: {
-    paddingHorizontal: 8,
+    paddingHorizontal: isWeb ? 6 : 8,
     paddingVertical: 2,
-    borderRadius: 12,
-    marginRight: 8,
+    borderRadius: isWeb ? 8 : 12,
+    marginRight: isWeb ? 4 : 8,
   },
   statusBadgeText: {
     fontSize: 10,
@@ -624,20 +697,20 @@ const styles = StyleSheet.create({
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: isWeb ? 6 : 8,
   },
   emptyTitle: {
-    fontSize: 18,
+    fontSize: isWeb ? 15 : 18,
     fontWeight: '600',
     marginTop: 8,
   },
   emptyText: {
-    fontSize: 14,
+    fontSize: isWeb ? 12 : 14,
     textAlign: 'center',
   },
   menuButton: {
     padding: 6,
-    borderRadius: 20,
+    borderRadius: isWeb ? 12 : 20,
     marginLeft: 4,
   },
   sheetHeader: {

@@ -15,8 +15,11 @@ const InlineCurrencyInput: React.FC<IInlineCurrencyInputProps> = ({
   placeholderColor: phColor,
 }) => {
   const textColor = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
-  const placeholderColor =
-    phColor || useThemeColor({ light: '#aaa', dark: '#666' }, 'tabIconDefault');
+  const defaultPlaceholderColor = useThemeColor(
+    { light: '#77847D', dark: '#929C97' },
+    'tabIconDefault',
+  );
+  const placeholderColor = phColor || defaultPlaceholderColor;
 
   const [integerPart, setIntegerPart] = useState('0');
   const [decimalPart, setDecimalPart] = useState('00');
@@ -49,7 +52,7 @@ const InlineCurrencyInput: React.FC<IInlineCurrencyInputProps> = ({
     );
     blink.start();
     return () => blink.stop();
-  }, [isFocused, typingDecimal]);
+  }, [blinkAnim, isFocused, typingDecimal]);
 
   // Sync from parent value
   useEffect(() => {

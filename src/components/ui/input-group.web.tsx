@@ -1,59 +1,68 @@
-import { useThemeColor } from '@/src/hooks/use-theme-color';
-import { useTheme } from '@react-navigation/native';
-import { use } from 'react';
-import { StyleSheet, View, Text } from 'react-native';
-import List from './list';
 import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 
-interface ICardProps {
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import List from './list';
+
+interface InputGroupProps {
   backgroundColor?: string;
   color?: string;
   label?: string;
+  action?: React.ReactNode;
   children: React.ReactNode;
 }
 
-const InputGroup: React.FC<ICardProps> = ({ backgroundColor, color, label, children }) => {
-  const themeBackground = useThemeColor({}, 'cardBackground');
-  const themeColor = useThemeColor({}, 'cardColor');
-  const styles = StyleSheet.create({
-    //Card
-    card: {
-      backgroundColor: backgroundColor ?? themeBackground,
-      color: color ?? themeColor,
-      borderRadius: 30,
-      marginBottom: 20,
-      flexGrow: 2,
-      paddingHorizontal: 5,
-      paddingVertical: 5,
-      overflow: 'visible' as const,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 0 },
-      shadowOpacity: 0.1,
-      shadowRadius: 12,
-      elevation: 5,
-    },
-
-    cardLabel: {
-      fontSize: 18,
-      fontWeight: '600',
-      color: '#848484ff',
-      marginBottom: 10,
-      marginLeft: 10,
-    },
-  });
+/** Desktop form section used by the add and edit movement drawer. */
+const InputGroup: React.FC<InputGroupProps> = ({ backgroundColor, label, action, children }) => {
+  const surfaceColor = useThemeColor({ light: '#FFFFFF', dark: '#232725' }, 'cardBackground');
+  const borderColor = useThemeColor(
+    { light: 'rgba(23, 38, 31, 0.11)', dark: 'rgba(255, 255, 255, 0.11)' },
+    'cardBorder',
+  );
+  const labelColor = useThemeColor({ light: '#657169', dark: '#AEB8B2' }, 'tabIconDefault');
 
   return (
-    <View style={{ padding: 10 }}>
-      {label && (
-        <View>
-          <Text style={styles.cardLabel}>{label}</Text>
+    <View style={styles.wrapper}>
+      {label || action ? (
+        <View style={styles.header}>
+          {label ? <Text style={[styles.label, { color: labelColor }]}>{label}</Text> : <View />}
+          {action}
         </View>
-      )}
-      <View style={styles.card}>
+      ) : null}
+      <View
+        style={[styles.surface, { backgroundColor: backgroundColor || surfaceColor, borderColor }]}
+      >
         <List>{children}</List>
       </View>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  wrapper: {
+    marginBottom: 16,
+  },
+  header: {
+    minHeight: 32,
+    marginBottom: 4,
+    paddingHorizontal: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  label: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  surface: {
+    paddingHorizontal: 2,
+    borderWidth: 1,
+    borderRadius: 16,
+    overflow: 'visible',
+  },
+});
 
 export default InputGroup;

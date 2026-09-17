@@ -39,7 +39,8 @@ const AddView: React.FC<AddViewProps> = ({ editingMovementId, recurrenceId, onCl
   const router = useRouter();
 
   const closeView = () => {
-    onClose ? onClose() : router.back();
+    if (onClose) onClose();
+    else router.back();
   };
   const { selectedSpreadsheetId } = useAuthContext();
   const { accounts, categories, movements, recurringMovements, unconfirmedMovements } =
@@ -89,7 +90,9 @@ const AddView: React.FC<AddViewProps> = ({ editingMovementId, recurrenceId, onCl
   const [description, setDescription] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [transactions, setTransactions] = useState<ITransaction[]>([]);
+  const [transactions, setTransactions] = useState<ITransaction[]>([
+    { id: 1, accountName: '', amount: 0, type: 'expense' },
+  ]);
   const [selectedLocation, setSelectedLocation] = useState<ILocation>({
     address: '',
   });
@@ -153,7 +156,11 @@ const AddView: React.FC<AddViewProps> = ({ editingMovementId, recurrenceId, onCl
       transactionID: t.transactionId,
       movementID: t.movementId,
     }));
-    setTransactions(mappedTransactions);
+    setTransactions(
+      mappedTransactions.length
+        ? mappedTransactions
+        : [{ id: 1, accountName: '', amount: 0, type: 'expense' }],
+    );
     if (editingMovement.recurrencePattern) {
       const match = editingMovement.recurrencePattern.match(/^P(\d+)([DWMY])$/);
       if (match) {
@@ -182,13 +189,48 @@ const AddView: React.FC<AddViewProps> = ({ editingMovementId, recurrenceId, onCl
       amount: t.amount,
       type: t.type,
     }));
-    setTransactions(mappedTransactions);
+    setTransactions(
+      mappedTransactions.length
+        ? mappedTransactions
+        : [{ id: 1, accountName: '', amount: 0, type: 'expense' }],
+    );
   }, [recurringTemplate, editingMovement]);
 
   // Theme colors
   const textColor = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
-  const placeholderColor = useThemeColor({ light: '#aaa', dark: '#666' }, 'tabIconDefault');
-  const borderColor = useThemeColor({ light: '#e0e0e0', dark: '#333' }, 'tabIconDefault');
+  const placeholderColor = useThemeColor({ light: '#77847D', dark: '#929C97' }, 'tabIconDefault');
+  const accentTextColor = '#2F4F3F';
+
+  const nativeFieldStyle: React.CSSProperties = {
+    flex: 1,
+    minWidth: 0,
+    padding: '8px 0',
+    fontSize: 15,
+    fontWeight: 500,
+    textAlign: 'right',
+    color: textColor,
+    backgroundColor: 'transparent',
+    border: 'none',
+    outline: 'none',
+    cursor: 'pointer',
+    fontFamily:
+      "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+  };
+
+  const compactSelectStyle: React.CSSProperties = {
+    flex: 1,
+    minWidth: 0,
+    fontSize: 14,
+    fontWeight: 500,
+    textAlign: 'right',
+    color: textColor,
+    backgroundColor: 'transparent',
+    border: 'none',
+    outline: 'none',
+    cursor: 'pointer',
+    fontFamily:
+      "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+  };
 
   const allCategories = categories.map((category) => ({
     label: category.name,
@@ -208,6 +250,10 @@ const AddView: React.FC<AddViewProps> = ({ editingMovementId, recurrenceId, onCl
   };
 
   const handleDeleteTransaction = (id: number) => {
+    if (transactions.length === 1) {
+      setTransactions([{ id: 1, accountName: '', amount: 0, type: 'expense' }]);
+      return;
+    }
     setTransactions(transactions.filter((t) => t.id !== id));
   };
 
@@ -415,7 +461,11 @@ const AddView: React.FC<AddViewProps> = ({ editingMovementId, recurrenceId, onCl
         {/* Header */}
         <View style={styles.headerContainer}>
           <ThemedText type="title" style={styles.title}>
-            {isEditingRecurring ? 'Edit Recurrent' : isEditing ? 'Edit Movement' : 'New Movement'}
+            {isEditingRecurring
+              ? 'Edit recurring movement'
+              : isEditing
+                ? 'Edit movement'
+                : 'New movement'}
           </ThemedText>
           <View
             style={{
@@ -428,7 +478,7 @@ const AddView: React.FC<AddViewProps> = ({ editingMovementId, recurrenceId, onCl
             {isEditing && (
               <View style={styles.iconButton}>
                 <MaterialIcons name="more-vert" size={20} color={textColor} />
-                {/* @ts-ignore — HTML select element for web */}
+                {/* @ts-ignore: HTML select element for web */}
                 <select
                   value=""
                   disabled={isSaving}
@@ -457,7 +507,11 @@ const AddView: React.FC<AddViewProps> = ({ editingMovementId, recurrenceId, onCl
           </View>
         </View>
 
-        <ScrollView showsVerticalScrollIndicator={false} pointerEvents={isSaving ? 'none' : 'auto'}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          pointerEvents={isSaving ? 'none' : 'auto'}
+          contentContainerStyle={styles.scrollContent}
+        >
           {/* Description + Category + Date */}
           <InputGroup>
             <TextBox
@@ -467,139 +521,103 @@ const AddView: React.FC<AddViewProps> = ({ editingMovementId, recurrenceId, onCl
               placeholder="Insert Description"
             />
 
-            {/* Category — native HTML select */}
+            {/* Category, native HTML select */}
             <View style={styles.fieldRow}>
               <ThemedText type="default" style={styles.fieldLabel}>
                 Category
               </ThemedText>
-              <View style={styles.fieldValue}>
-                {/* @ts-ignore — HTML select element for web */}
-                <select
-                  value={selectedCategory}
-                  onChange={(e: any) => handleCategoryChange(e.target.value)}
-                  style={{
-                    flex: 1,
-                    fontSize: 18,
-                    textAlign: 'right',
-                    color: selectedCategory ? textColor : placeholderColor,
-                    backgroundColor: 'transparent',
-                    border: 'none',
-                    outline: 'none',
-                    cursor: 'pointer',
-                    fontFamily:
-                      "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-                    width: '100%',
-                  }}
-                >
-                  <option value="" disabled>
-                    Select category
+              {/* @ts-ignore: native HTML select element for web */}
+              <select
+                aria-label="Category"
+                value={selectedCategory}
+                onChange={(e: any) => handleCategoryChange(e.target.value)}
+                style={{
+                  ...nativeFieldStyle,
+                  color: selectedCategory ? textColor : placeholderColor,
+                }}
+              >
+                <option value="" disabled>
+                  Select category
+                </option>
+                {allCategories.map((cat) => (
+                  <option key={cat.value} value={cat.value}>
+                    {cat.label}
                   </option>
-                  {allCategories.map((cat) => (
-                    <option key={cat.value} value={cat.value}>
-                      {cat.label}
-                    </option>
-                  ))}
-                </select>
-              </View>
+                ))}
+              </select>
             </View>
 
-            {/* Date — native HTML date input */}
+            {/* Date, native HTML date input */}
             <View style={styles.fieldRow}>
               <ThemedText type="default" style={styles.fieldLabel}>
                 {isEditingRecurring ? 'Start' : 'Date'}
               </ThemedText>
-              <View style={styles.fieldValue}>
-                {/* @ts-ignore — HTML input element for web */}
-                <input
-                  type="date"
-                  value={formatDateForInput(selectedDate)}
-                  onChange={(e: any) => handleDateChange(e.target.value)}
-                  style={{
-                    flex: 1,
-                    textAlign: 'right' as any,
-                    fontSize: 18,
-                    border: 'none',
-                    outline: 'none',
-                    backgroundColor: 'transparent',
-                    color: textColor,
-                    fontFamily:
-                      "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-                    cursor: 'pointer',
-                  }}
-                />
-              </View>
+              {/* @ts-ignore: native HTML date input for web */}
+              <input
+                aria-label={isEditingRecurring ? 'Start date' : 'Date'}
+                type="date"
+                value={formatDateForInput(selectedDate)}
+                onChange={(e: any) => handleDateChange(e.target.value)}
+                style={nativeFieldStyle}
+              />
             </View>
           </InputGroup>
 
-          {/* Recurrence Pattern — only when editing recurring */}
+          {/* Recurrence pattern, only when editing recurring */}
           {isEditingRecurring && (
-            <InputGroup label="Recurrence">
-              <View style={styles.fieldRow}>
-                <ThemedText type="default" style={styles.fieldLabel}>
+            <InputGroup>
+              <View style={styles.compactFieldRow}>
+                <ThemedText type="default" style={styles.compactFieldLabel}>
                   Repeat
                 </ThemedText>
-                <View style={styles.fieldValue}>
-                  {/* @ts-ignore — HTML select for web */}
-                  <select
-                    value={recurrenceUnit}
-                    onChange={(e: any) => setRecurrenceUnit(e.target.value)}
-                    style={{
-                      flex: 1,
-                      fontSize: 18,
-                      textAlign: 'right',
-                      color: textColor,
-                      backgroundColor: 'transparent',
-                      border: 'none',
-                      outline: 'none',
-                      cursor: 'pointer',
-                      fontFamily:
-                        "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-                      width: '100%',
-                    }}
-                  >
-                    <option value="D">Daily</option>
-                    <option value="W">Weekly</option>
-                    <option value="M">Monthly</option>
-                    <option value="Y">Yearly</option>
-                  </select>
-                </View>
+                {/* @ts-ignore: native HTML select for web */}
+                <select
+                  aria-label="Repeat interval"
+                  value={recurrenceUnit}
+                  onChange={(e: any) => setRecurrenceUnit(e.target.value)}
+                  style={compactSelectStyle}
+                >
+                  <option value="D">Daily</option>
+                  <option value="W">Weekly</option>
+                  <option value="M">Monthly</option>
+                  <option value="Y">Yearly</option>
+                </select>
               </View>
-              <View style={styles.fieldRow}>
-                <ThemedText type="default" style={styles.fieldLabel}>
+              <View style={styles.compactFieldRow}>
+                <ThemedText type="default" style={styles.compactFieldLabel}>
                   Every
                 </ThemedText>
-                <View style={styles.fieldValue}>
-                  {/* @ts-ignore — HTML select for web */}
-                  <select
-                    value={recurrenceFrequency}
-                    onChange={(e: any) => setRecurrenceFrequency(Number(e.target.value))}
-                    style={{
-                      flex: 1,
-                      fontSize: 18,
-                      textAlign: 'right',
-                      color: textColor,
-                      backgroundColor: 'transparent',
-                      border: 'none',
-                      outline: 'none',
-                      cursor: 'pointer',
-                      fontFamily:
-                        "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-                      width: '100%',
-                    }}
-                  >
-                    {[1, 2, 3, 4, 5, 6, 7, 10, 14, 30].map((n) => (
-                      <option key={n} value={n}>
-                        {n}
-                      </option>
-                    ))}
-                  </select>
-                </View>
+                {/* @ts-ignore: native HTML select for web */}
+                <select
+                  aria-label="Repeat frequency"
+                  value={recurrenceFrequency}
+                  onChange={(e: any) => setRecurrenceFrequency(Number(e.target.value))}
+                  style={compactSelectStyle}
+                >
+                  {[1, 2, 3, 4, 5, 6, 7, 10, 14, 30].map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </select>
               </View>
             </InputGroup>
           )}
 
-          {/* Transactions — inline list */}
-          <InputGroup label="Transactions">
+          {/* Transactions, inline list */}
+          <InputGroup
+            label="Transactions"
+            action={
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Add transaction"
+                onPress={handleAddTransaction}
+                style={styles.addTransactionButton}
+              >
+                <MaterialIcons name="add" size={19} color="#FFFFFF" />
+              </Pressable>
+            }
+          >
             <TransactionsWeb
               transactions={transactions}
               accounts={allAccounts}
@@ -607,13 +625,12 @@ const AddView: React.FC<AddViewProps> = ({ editingMovementId, recurrenceId, onCl
               onAccountChange={handleTransactionAccountChange}
               onAmountChange={handleTransactionAmountChange}
               onDelete={handleDeleteTransaction}
-              onAdd={handleAddTransaction}
             />
           </InputGroup>
 
-          {/* Recurrence section — for new movements and editing non-recurring */}
+          {/* Recurrence section for new movements and editing non-recurring */}
           {!isEditingRecurring && !recurrenceId && (
-            <InputGroup label="Recurrence">
+            <InputGroup>
               <RecurrencePickerWeb
                 isRecurrent={isRecurrent}
                 onToggle={() => setIsRecurrent(!isRecurrent)}
@@ -641,14 +658,14 @@ const AddView: React.FC<AddViewProps> = ({ editingMovementId, recurrenceId, onCl
           </InputGroup>
 
           {/* Spacer to scroll content above the bottom section */}
-          <View style={{ height: 160 }} />
+          <View style={{ height: 128 }} />
         </ScrollView>
       </View>
 
       {/* Bottom Total and Submit */}
       <View style={styles.bottomSection}>
         <View style={styles.totalRow}>
-          <ThemedText style={styles.totalLabel}>Total:</ThemedText>
+          <ThemedText style={styles.totalLabel}>Total</ThemedText>
           <ThemedText style={styles.totalAmount}>
             {getTotalAmount().toFixed(2).replace('.', ',')}€
           </ThemedText>
@@ -664,6 +681,7 @@ const AddView: React.FC<AddViewProps> = ({ editingMovementId, recurrenceId, onCl
           <ThemedText
             style={[
               styles.submitText,
+              { color: accentTextColor },
               (isSaving || isSubmitting || !isFormValid()) && { opacity: 0.6 },
             ]}
           >
@@ -681,95 +699,113 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  scrollContent: {
+    paddingHorizontal: 6,
+    paddingBottom: 12,
+  },
   headerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 30,
-    padding: 10,
+    marginBottom: 16,
+    paddingHorizontal: 8,
+    paddingTop: 6,
+    paddingBottom: 10,
   },
   title: {
     flex: 1,
     textAlign: 'left',
+    fontSize: 25,
+    lineHeight: 30,
+    letterSpacing: -0.5,
   },
   iconButton: {
-    padding: 10,
-    borderRadius: 15,
+    width: 38,
+    height: 38,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 12,
     backgroundColor: 'rgba(47, 79, 63, 0.08)',
   },
   fieldRow: {
+    minHeight: 44,
     flexDirection: 'row',
-    paddingHorizontal: 0,
-    paddingVertical: 5,
     alignItems: 'center',
-    flex: 1,
+    gap: 12,
   },
   fieldLabel: {
-    flex: 0,
+    width: 110,
     flexShrink: 0,
-    marginRight: 12,
-    minWidth: 100,
-    maxWidth: 140,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '500',
   },
-  fieldValue: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    paddingHorizontal: 10,
+  compactFieldRow: {
+    minHeight: 42,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
-  dateInput: {
-    flex: 1,
-    textAlign: 'right',
-    fontSize: 18,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderWidth: 0,
-  } as any,
+  compactFieldLabel: {
+    minWidth: 80,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '500',
+  },
+  addTransactionButton: {
+    width: 30,
+    height: 30,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#2F4F3F',
+  },
   bottomSection: {
     position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
+    bottom: 10,
+    left: 10,
+    right: 10,
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 16,
+    padding: 14,
+    borderRadius: 20,
     backgroundColor: '#2F4F3F',
-    paddingTop: 20,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-    borderRadius: 30,
+    boxShadow: '0 10px 32px rgba(17, 31, 24, 0.12)',
   },
   totalRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
+    flex: 1,
+    minWidth: 0,
   },
   totalLabel: {
-    fontSize: 18,
-    color: '#fff',
+    fontSize: 11,
+    lineHeight: 14,
     fontWeight: '600',
+    color: '#FFFFFF',
+    opacity: 0.72,
   },
   totalAmount: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginVertical: 8,
+    marginTop: 1,
+    fontSize: 20,
+    lineHeight: 24,
+    fontWeight: '700',
+    letterSpacing: -0.3,
+    color: '#FFFFFF',
   },
   submitButton: {
-    backgroundColor: '#fff',
-    borderRadius: 25,
-    paddingVertical: 16,
-    paddingHorizontal: 60,
-    marginTop: 16,
-    width: '100%',
+    minWidth: 132,
+    minHeight: 44,
+    borderRadius: 12,
+    paddingVertical: 11,
+    paddingHorizontal: 24,
     alignItems: 'center',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    shadowColor: '#000',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
   },
   submitText: {
-    color: '#2F4F3F',
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '700',
   },
   submitButtonDisabled: {
     opacity: 0.6,

@@ -1,26 +1,25 @@
-import { ThemedText } from '../core/themed-text.native';
-import { View, StyleSheet, TextInput, Text } from 'react-native';
-import { useThemeColor } from '@/src/hooks/use-theme-color';
 import React from 'react';
-interface ITextBoxProps {
+import { StyleSheet, TextInput, View } from 'react-native';
+
+import { ThemedText } from '@/src/components/core/themed-text';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+
+interface TextBoxProps {
   value: string;
   onChange: (text: string) => void;
   label?: string;
   placeholder?: string;
 }
 
-const TextBox: React.FC<ITextBoxProps> = ({ value, onChange, label, placeholder }) => {
-  const textColor = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
-  const placeholderColor = useThemeColor({ light: '#aaa', dark: '#666' }, 'tabIconDefault');
+const TextBox: React.FC<TextBoxProps> = ({ value, onChange, label, placeholder }) => {
+  const textColor = useThemeColor({ light: '#18221D', dark: '#F0F4F2' }, 'text');
+  const placeholderColor = useThemeColor({ light: '#77847D', dark: '#929C97' }, 'tabIconDefault');
 
   return (
     <View style={styles.container}>
-      {label && (
-        <ThemedText type="default" style={styles.label}>
-          {label}
-        </ThemedText>
-      )}
+      {label ? <ThemedText style={styles.label}>{label}</ThemedText> : null}
       <TextInput
+        accessibilityLabel={label}
         style={[styles.textInput, { color: textColor }]}
         value={value}
         onChangeText={onChange}
@@ -33,27 +32,27 @@ const TextBox: React.FC<ITextBoxProps> = ({ value, onChange, label, placeholder 
 
 const styles = StyleSheet.create({
   container: {
-    display: 'flex',
+    minHeight: 44,
     flexDirection: 'row',
-    paddingHorizontal: 0,
-    paddingVertical: 5,
     alignItems: 'center',
-    flex: 1,
+    gap: 12,
   },
   label: {
-    flex: 0,
+    width: 110,
     flexShrink: 0,
-    marginRight: 12,
-    minWidth: 120,
-    maxWidth: 200,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '500',
   },
   textInput: {
-    display: 'flex',
     flex: 1,
+    minWidth: 0,
+    paddingHorizontal: 0,
+    paddingVertical: 8,
+    borderWidth: 0,
     textAlign: 'right',
-    fontSize: 18,
-    paddingHorizontal: 10,
-    minWidth: 0, // Prevents text from overflowing
+    fontSize: 15,
+    lineHeight: 20,
     outlineColor: 'transparent',
   },
 });

@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useCallback } from 'react';
 import { Alert, View, StyleSheet, Pressable, Text as RNText } from 'react-native';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
 import { useDataContext, useAuthContext } from '@/src/state';
 import type { Account } from '@/src/state';
@@ -45,8 +46,7 @@ import Toast from '@/src/components/ui/toast';
 import SettingsView from '@/src/views/settings-view';
 import CommandBar from './command-bar';
 import PeriodPicker from '@/src/components/ui/period-chips-picker';
-import ChipButton from '@/src/components/ui/chip-button';
-import { SummaryCard } from '@/src/components/cards';
+import SummaryCard from '@/src/components/cards/summary-card.web';
 import ManageView from '@/src/views/manage-view.web';
 import MapView from '@/src/views/map-view.web';
 
@@ -68,7 +68,7 @@ interface DrawerState {
  * Layout completo per la modalità landscape con tutte le card disposte in griglia flessibile
  */
 export function LandscapeLayout() {
-  const backgroundColor = useThemeColor({}, 'background');
+  const backgroundColor = useThemeColor({ light: '#F2F5F3', dark: '#171A18' }, 'background');
 
   // Get data from centralized context
   const {
@@ -113,7 +113,7 @@ export function LandscapeLayout() {
   // Chart view mode state (months or years)
   const [chartViewMode, setChartViewMode] = useState<'months' | 'years'>('months');
 
-  // Drawer state — separate open flag from content so content persists during close animation
+  // Keep the content mounted while the drawer close animation finishes.
   const [drawerContent, setDrawerContent] = useState<DrawerState | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
@@ -274,6 +274,13 @@ export function LandscapeLayout() {
 
   const cardBackground = useThemeColor({}, 'cardBackground');
   const textColor = useThemeColor({}, 'text');
+  const mutedTextColor = useThemeColor({ light: '#58665F', dark: '#B3BCB7' }, 'tabIconDefault');
+  const controlBackground = useThemeColor({ light: '#EEF2EF', dark: '#2A302D' }, 'menuBackground');
+  const controlBorder = useThemeColor(
+    { light: 'rgba(36, 68, 55, 0.10)', dark: 'rgba(255, 255, 255, 0.10)' },
+    'cardBorder',
+  );
+  const accentColor = useThemeColor({ light: '#244437', dark: '#D6E8DE' }, 'tint');
 
   const handleAddPress = () => {
     openDrawer('add');
@@ -426,7 +433,7 @@ export function LandscapeLayout() {
   return (
     <View
       style={[styles.container, { backgroundColor }]}
-      // @ts-ignore – web-only prop
+      // @ts-ignore: web-only prop
       dataSet={{ landscapeDashboard: '' }}
     >
       {/* Transparent scrollbar with left margin for all cards */}
@@ -455,14 +462,43 @@ export function LandscapeLayout() {
               scrollbar-width: thin;
               scrollbar-color: rgba(128,128,128,0.25) transparent;
             }
+            [data-landscape-dashboard] * {
+              box-sizing: border-box;
+            }
+            [data-landscape-dashboard] [data-dashboard-card] {
+              transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+            }
+            [data-landscape-dashboard] [data-dashboard-card]:focus-within {
+              border-color: rgba(47, 79, 63, 0.38) !important;
+              box-shadow: 0 0 0 3px rgba(47, 79, 63, 0.10), 0 12px 30px rgba(17, 31, 24, 0.07) !important;
+            }
             [data-movement-row] {
-              transition: background-color 0.15s ease;
-              border-radius: 20px;
+              transition: background-color 180ms ease, box-shadow 180ms ease, transform 150ms ease;
+              border-radius: 0;
               padding-left: 10px !important;
               padding-right: 10px !important;
             }
-            [data-movement-row]:hover {
-              background-color: rgba(128, 128, 128, 0.08);
+            [data-movement-row]:not([data-movement-selected="true"]):hover {
+              background-color: rgba(47, 79, 63, 0.07);
+            }
+            [data-movement-row][data-movement-selected="true"]:hover {
+              background-color: rgba(47, 79, 63, 0.055);
+            }
+            [data-movement-row]:active {
+              transform: translateY(1px);
+            }
+            [data-movement-selection-control] {
+              transition: background-color 180ms ease, border-color 180ms ease, transform 150ms ease;
+            }
+            @media (prefers-reduced-motion: reduce) {
+              [data-landscape-dashboard] *,
+              [data-landscape-dashboard] *::before,
+              [data-landscape-dashboard] *::after {
+                scroll-behavior: auto !important;
+                transition-duration: 0.01ms !important;
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+              }
             }
           `,
         }}
@@ -488,21 +524,43 @@ export function LandscapeLayout() {
         }
         rightContent={
           <>
-            <ChipButton text="↻" onPress={handleReloadPress} />
-            <View style={{ width: 8 }} />
-            {/* <ChipButton text="↑" onPress={handleImportPress} /> */}
-            {/* <View style={{ width: 8 }} /> */}
-            <ChipButton text="+" onPress={handleAddPress} />
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Refresh dashboard"
+              onPress={handleReloadPress}
+              style={({ pressed, hovered }) => [
+                styles.iconButton,
+                { backgroundColor: controlBackground, borderColor: controlBorder },
+                hovered && styles.iconButtonHovered,
+                pressed && styles.iconButtonPressed,
+              ]}
+            >
+              <MaterialIcons name="refresh" size={19} color={mutedTextColor} />
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Add movement"
+              onPress={handleAddPress}
+              style={({ pressed, hovered }) => [
+                styles.iconButton,
+                styles.primaryIconButton,
+                { backgroundColor: accentColor, borderColor: accentColor },
+                hovered && styles.iconButtonHovered,
+                pressed && styles.iconButtonPressed,
+              ]}
+            >
+              <MaterialIcons name="add" size={20} color={backgroundColor} />
+            </Pressable>
           </>
         }
       />
 
       {/* Main dashboard grid */}
-      <LayoutContainer padding={12} gap={12}>
+      <LayoutContainer padding={16} gap={16}>
         {/* Row 1: Charts and Balance cards - fixed height so bars render correctly on web */}
-        <LayoutRow gap={12} height="45%">
+        <LayoutRow gap={16} height="45%">
           {/* Balance and Financial Summary */}
-          <LayoutColumn flex={1} gap={12}>
+          <LayoutColumn flex={0.86} gap={16}>
             <BalanceCard account={currentAccount} />
             <SummaryCard
               income={getTotalIncome(filteredMovements, selectedAccount)}
@@ -512,8 +570,11 @@ export function LandscapeLayout() {
           </LayoutColumn>
 
           {/* Balance History chart */}
-          <LayoutColumn flex={1}>
+          <LayoutColumn flex={1.08}>
             <Card backgroundColor={cardBackground} color={textColor} style={{ flex: 1 }} compact>
+              <RNText style={[styles.chartTitle, { color: mutedTextColor }]}>
+                Balance history
+              </RNText>
               <StackedBarChart
                 data={balanceHistoryData}
                 showLabels={true}
@@ -527,8 +588,11 @@ export function LandscapeLayout() {
           </LayoutColumn>
 
           {/* Income/Expense chart */}
-          <LayoutColumn flex={1}>
+          <LayoutColumn flex={1.08}>
             <Card backgroundColor={cardBackground} color={textColor} style={{ flex: 1 }} compact>
+              <RNText style={[styles.chartTitle, { color: mutedTextColor }]}>
+                Income and expenses
+              </RNText>
               <IncomeExpenseChart
                 data={incomeExpenseData}
                 showLabels={true}
@@ -540,29 +604,38 @@ export function LandscapeLayout() {
           </LayoutColumn>
 
           {/* Breakdown chart */}
-          <LayoutColumn flex={1}>
+          <LayoutColumn flex={1.08}>
             <Card backgroundColor={cardBackground} color={textColor} style={{ flex: 1 }} compact>
-              <View style={chartControlStyles.controlsRow}>
-                <Pressable
-                  style={chartControlStyles.pill}
-                  onPress={() =>
-                    setBreakdownType(breakdownType === 'expense' ? 'income' : 'expense')
-                  }
-                >
-                  <RNText style={chartControlStyles.pillText}>
-                    {breakdownType === 'expense' ? 'Expenses' : 'Income'}
-                  </RNText>
-                </Pressable>
-                <Pressable
-                  style={chartControlStyles.pill}
-                  onPress={() =>
-                    setBreakdownGroupBy(breakdownGroupBy === 'category' ? 'account' : 'category')
-                  }
-                >
-                  <RNText style={chartControlStyles.pillText}>
-                    {breakdownGroupBy === 'category' ? 'Categories' : 'Accounts'}
-                  </RNText>
-                </Pressable>
+              <View style={styles.chartHeader}>
+                <RNText style={[styles.chartTitle, { color: mutedTextColor }]}>Breakdown</RNText>
+                <View style={chartControlStyles.controlsRow}>
+                  <Pressable
+                    style={[
+                      chartControlStyles.pill,
+                      { backgroundColor: controlBackground, borderColor: controlBorder },
+                    ]}
+                    onPress={() =>
+                      setBreakdownType(breakdownType === 'expense' ? 'income' : 'expense')
+                    }
+                  >
+                    <RNText style={[chartControlStyles.pillText, { color: textColor }]}>
+                      {breakdownType === 'expense' ? 'Expenses' : 'Income'}
+                    </RNText>
+                  </Pressable>
+                  <Pressable
+                    style={[
+                      chartControlStyles.pill,
+                      { backgroundColor: controlBackground, borderColor: controlBorder },
+                    ]}
+                    onPress={() =>
+                      setBreakdownGroupBy(breakdownGroupBy === 'category' ? 'account' : 'category')
+                    }
+                  >
+                    <RNText style={[chartControlStyles.pillText, { color: textColor }]}>
+                      {breakdownGroupBy === 'category' ? 'Categories' : 'Accounts'}
+                    </RNText>
+                  </Pressable>
+                </View>
               </View>
               <BreakdownStackedChart
                 data={breakdownData}
@@ -576,15 +649,15 @@ export function LandscapeLayout() {
         </LayoutRow>
 
         {/* Row 2: Movements, Recurrent, and Unconfirmed side by side */}
-        <LayoutRow flex={1} gap={12}>
-          <LayoutColumn flex={1}>
+        <LayoutRow flex={1} gap={16}>
+          <LayoutColumn flex={1.2}>
             <MovementsCard
               movements={filteredMovements}
               onMovementPress={(movement) => openDrawer('edit', { movementId: movement.id })}
             />
           </LayoutColumn>
 
-          <LayoutColumn flex={1}>
+          <LayoutColumn flex={0.9}>
             <RecurringMovementsCard
               dateRange={dateRange}
               onRecurrencePress={(movement) =>
@@ -596,7 +669,7 @@ export function LandscapeLayout() {
             />
           </LayoutColumn>
 
-          <LayoutColumn flex={1}>
+          <LayoutColumn flex={0.9}>
             <UnconfirmedMovementsCard
               onMovementPress={(movement) => openDrawer('edit', { movementId: movement.id })}
             />
@@ -642,6 +715,40 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     overflow: 'visible',
   },
+  iconButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  primaryIconButton: {
+    boxShadow: '0 4px 12px rgba(36, 68, 55, 0.18)',
+  },
+  iconButtonHovered: {
+    opacity: 0.88,
+  },
+  iconButtonPressed: {
+    opacity: 0.78,
+    transform: [{ translateY: 1 }],
+  },
+  chartHeader: {
+    minHeight: 30,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  chartTitle: {
+    minHeight: 30,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '700',
+    letterSpacing: -0.1,
+    paddingHorizontal: 4,
+    paddingTop: 2,
+  },
 });
 
 const chartControlStyles = StyleSheet.create({
@@ -652,15 +759,16 @@ const chartControlStyles = StyleSheet.create({
     marginBottom: 4,
   },
   pill: {
+    minHeight: 28,
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingVertical: 5,
     borderRadius: 12,
-    backgroundColor: 'rgba(128,128,128,0.2)',
+    borderWidth: 1,
+    justifyContent: 'center',
   },
   pillText: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#000',
   },
 });
 

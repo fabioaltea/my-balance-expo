@@ -14,6 +14,7 @@ export interface IChipButtonProps {
   defaultOption?: string;
   onOptionSelect?: (option: string) => void;
   badge?: number;
+  minWidth?: number;
 }
 
 const ChipButton: React.FC<IChipButtonProps> = ({

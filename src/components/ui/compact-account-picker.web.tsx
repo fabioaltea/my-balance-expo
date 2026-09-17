@@ -1,6 +1,6 @@
 import { View, StyleSheet } from 'react-native';
 import React from 'react';
-import { ThemedText } from '../core/themed-text.native';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
 import type { Account } from '@/src/state';
 
@@ -19,22 +19,22 @@ const CompactAccountPicker: React.FC<CompactAccountPickerProps> = ({
   selectedAccount,
   setSelectedAccount,
 }) => {
-  const backgroundColor = useThemeColor(
-    { light: 'rgba(0,0,0,0.06)', dark: 'rgba(255,255,255,0.1)' },
-    'background',
-  );
+  const backgroundColor = useThemeColor({ light: '#EEF2EF', dark: '#2A302D' }, 'background');
   const textColor = useThemeColor({}, 'text');
+  const borderColor = useThemeColor(
+    { light: 'rgba(36, 68, 55, 0.10)', dark: 'rgba(255, 255, 255, 0.10)' },
+    'cardBorder',
+  );
+  const optionBackground = useThemeColor({ light: '#F9FBFA', dark: '#232725' }, 'cardBackground');
 
   const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedAccount(event.target.value);
   };
 
-  // Display label
-  const displayLabel = selectedAccount === 'All' ? 'All accounts' : selectedAccount;
-
   return (
-    <View style={[styles.container, { backgroundColor }]}>
+    <View style={[styles.container, { backgroundColor, borderColor }]}>
       <select
+        aria-label="Account"
         value={selectedAccount}
         onChange={handleSelectChange}
         style={{
@@ -43,21 +43,27 @@ const CompactAccountPicker: React.FC<CompactAccountPickerProps> = ({
           color: textColor,
           backgroundColor: 'transparent',
           border: 'none',
-          outline: 'none',
           cursor: 'pointer',
-          paddingRight: 20,
+          minWidth: 112,
+          paddingRight: 24,
           appearance: 'none',
           WebkitAppearance: 'none',
           MozAppearance: 'none',
         }}
       >
         {accounts.map((account) => (
-          <option key={account.name} value={account.name}>
+          <option
+            key={account.name}
+            value={account.name}
+            style={{ backgroundColor: optionBackground, color: textColor }}
+          >
             {account.name === 'All' ? 'All accounts' : account.name}
           </option>
         ))}
       </select>
-      <ThemedText style={styles.chevron}>▾</ThemedText>
+      <View style={styles.chevron} pointerEvents="none">
+        <MaterialIcons name="expand-more" size={18} color={textColor} />
+      </View>
     </View>
   );
 };
@@ -67,17 +73,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 18,
+    minHeight: 34,
+    paddingVertical: 7,
+    borderRadius: 12,
+    borderWidth: 1,
     gap: 4,
     position: 'relative',
   },
   chevron: {
-    fontSize: 10,
     opacity: 0.6,
-    pointerEvents: 'none',
     position: 'absolute',
-    right: 12,
+    right: 8,
   },
 });
 

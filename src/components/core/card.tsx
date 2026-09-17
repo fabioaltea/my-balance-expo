@@ -6,6 +6,8 @@ interface ICardProps {
   backgroundColor?: string;
   color?: string;
   label?: string;
+  /** Rendered by the web card header; accepted here for platform-resolved typing. */
+  headerAction?: React.ReactNode;
   children: React.ReactNode;
   style?: import('react-native').ViewStyle;
   compact?: boolean;

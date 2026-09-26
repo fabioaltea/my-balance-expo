@@ -6,6 +6,8 @@ interface ICardProps {
   backgroundColor?: string;
   color?: string;
   label?: string;
+  /** Rendered by the web implementation; accepted here for platform-resolved typing. */
+  action?: React.ReactNode;
   children: React.ReactNode;
 }
 

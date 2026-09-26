@@ -12,6 +12,7 @@ export interface MonthlyData {
   date: Date; // Last day of the month
   accounts: MonthlyAccountBalance[];
   totalBalance: number;
+  partial?: boolean;
 }
 
 export interface IncomeExpenseData {
@@ -21,6 +22,7 @@ export interface IncomeExpenseData {
   date: Date;
   income: number;
   expenses: number;
+  partial?: boolean;
 }
 
 export interface BreakdownItem {
@@ -37,4 +39,5 @@ export interface PeriodBreakdownData {
   date: Date;
   items: BreakdownItem[];
   total: number;
+  partial?: boolean;
 }

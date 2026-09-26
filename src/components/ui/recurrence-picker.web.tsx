@@ -1,7 +1,7 @@
 import { View, StyleSheet, Pressable } from 'react-native';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
 import React, { useRef, useEffect, useState } from 'react';
-import { ThemedText } from '../core/themed-text.native';
+import { ThemedText } from '@/src/components/core/themed-text';
 
 interface RecurringMovement {
   recurrenceId?: string;
@@ -21,7 +21,7 @@ interface IRecurrencePickerWebProps {
   recurringMovements: RecurringMovement[];
 }
 
-const ROW_HEIGHT = 40;
+const ROW_HEIGHT = 44;
 
 const RecurrencePickerWeb: React.FC<IRecurrencePickerWebProps> = ({
   isRecurrent,
@@ -35,6 +35,7 @@ const RecurrencePickerWeb: React.FC<IRecurrencePickerWebProps> = ({
   recurringMovements,
 }) => {
   const textColor = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
+  const accentColor = useThemeColor({ light: '#2F4F3F', dark: '#D6E8DE' }, 'tint');
 
   // Calculate target height based on visible rows
   let rowCount = 1; // toggle row always visible
@@ -56,10 +57,12 @@ const RecurrencePickerWeb: React.FC<IRecurrencePickerWebProps> = ({
     });
   }, [targetHeight]);
 
-  const selectStyle = {
+  const selectStyle: React.CSSProperties = {
     flex: 1,
-    fontSize: 18,
-    textAlign: 'right' as const,
+    width: '100%',
+    fontSize: 14,
+    fontWeight: 500,
+    textAlign: 'right',
     color: textColor,
     backgroundColor: 'transparent',
     border: 'none',
@@ -67,7 +70,6 @@ const RecurrencePickerWeb: React.FC<IRecurrencePickerWebProps> = ({
     cursor: 'pointer',
     fontFamily:
       "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-    width: '100%',
   };
 
   return (
@@ -83,13 +85,16 @@ const RecurrencePickerWeb: React.FC<IRecurrencePickerWebProps> = ({
       {/* @ts-ignore */}
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0 }}>
         {/* Toggle */}
-        <View style={styles.fieldRow}>
+        <View style={[styles.fieldRow, styles.toggleRow]}>
           <ThemedText type="default" style={styles.fieldLabel}>
             Recurrent
           </ThemedText>
           <Pressable
+            accessibilityRole="switch"
+            accessibilityState={{ checked: isRecurrent }}
+            accessibilityLabel="Recurring movement"
             onPress={onToggle}
-            style={[styles.toggle, { backgroundColor: isRecurrent ? '#2F4F3F' : '#ccc' }]}
+            style={[styles.toggle, { backgroundColor: isRecurrent ? accentColor : '#AAB3AE' }]}
           >
             <View
               style={[styles.toggleThumb, { transform: [{ translateX: isRecurrent ? 20 : 2 }] }]}
@@ -105,6 +110,7 @@ const RecurrencePickerWeb: React.FC<IRecurrencePickerWebProps> = ({
           <View style={styles.fieldValue}>
             {/* @ts-ignore */}
             <select
+              aria-label="Recurrence"
               value={recurrenceSelection}
               onChange={(e: any) => onSelectionChange(e.target.value)}
               style={selectStyle}
@@ -127,6 +133,7 @@ const RecurrencePickerWeb: React.FC<IRecurrencePickerWebProps> = ({
           <View style={styles.fieldValue}>
             {/* @ts-ignore */}
             <select
+              aria-label="Repeat interval"
               value={recurrenceUnit}
               onChange={(e: any) => onUnitChange(e.target.value)}
               style={selectStyle}
@@ -147,6 +154,7 @@ const RecurrencePickerWeb: React.FC<IRecurrencePickerWebProps> = ({
           <View style={styles.fieldValue}>
             {/* @ts-ignore */}
             <select
+              aria-label="Repeat frequency"
               value={recurrenceFrequency}
               onChange={(e: any) => onFrequencyChange(Number(e.target.value))}
               style={selectStyle}
@@ -168,24 +176,25 @@ const RecurrencePickerWeb: React.FC<IRecurrencePickerWebProps> = ({
 
 const styles = StyleSheet.create({
   fieldRow: {
-    flexDirection: 'row',
-    paddingHorizontal: 0,
-    paddingVertical: 5,
-    alignItems: 'center',
     height: ROW_HEIGHT,
-    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   fieldLabel: {
-    flex: 0,
-    flexShrink: 0,
-    marginRight: 12,
     minWidth: 100,
-    maxWidth: 140,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '500',
   },
   fieldValue: {
     flex: 1,
-    justifyContent: 'flex-end',
-    paddingHorizontal: 10,
+    minWidth: 0,
   },
   toggle: {
     width: 44,

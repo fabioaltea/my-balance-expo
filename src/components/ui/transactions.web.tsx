@@ -2,7 +2,7 @@ import { View, StyleSheet, Pressable } from 'react-native';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
 import React, { useRef, useEffect, useState } from 'react';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { ThemedText } from '../core/themed-text.native';
+import { ThemedText } from '@/src/components/core/themed-text';
 import InlineCurrencyInput from './inline-currency-input';
 
 export interface ITransaction {
@@ -21,11 +21,9 @@ interface ITransactionsWebProps {
   onAccountChange: (id: number, accountName: string) => void;
   onAmountChange: (id: number, amount: number) => void;
   onDelete: (id: number) => void;
-  onAdd: () => void;
 }
 
-const ROW_HEIGHT = 48;
-const ADD_BUTTON_HEIGHT = 50;
+const ROW_HEIGHT = 52;
 
 const TransactionsWeb: React.FC<ITransactionsWebProps> = ({
   transactions,
@@ -34,13 +32,12 @@ const TransactionsWeb: React.FC<ITransactionsWebProps> = ({
   onAccountChange,
   onAmountChange,
   onDelete,
-  onAdd,
 }) => {
   const textColor = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
   const placeholderColor = useThemeColor({ light: '#aaa', dark: '#666' }, 'tabIconDefault');
   const borderColor = useThemeColor({ light: '#e0e0e0', dark: '#333' }, 'tabIconDefault');
-
-  const targetHeight = transactions.length * ROW_HEIGHT + ADD_BUTTON_HEIGHT;
+  const rowBackground = useThemeColor({ light: '#FFFFFF', dark: '#232725' }, 'menuBackground');
+  const targetHeight = transactions.length * ROW_HEIGHT;
   const [currentHeight, setCurrentHeight] = useState(targetHeight);
   const prevTarget = useRef(targetHeight);
 
@@ -56,7 +53,7 @@ const TransactionsWeb: React.FC<ITransactionsWebProps> = ({
   }, [targetHeight]);
 
   return (
-    // @ts-ignore — native div wrapper for reliable overflow clipping + CSS transition on web
+    // @ts-ignore: native div wrapper for reliable overflow clipping and CSS transition on web
     <div
       style={{
         position: 'relative',
@@ -67,10 +64,22 @@ const TransactionsWeb: React.FC<ITransactionsWebProps> = ({
     >
       {/* @ts-ignore */}
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0 }}>
-        {transactions.map((t) => (
-          <View key={t.id} style={[styles.transactionRow, { borderBottomColor: borderColor }]}>
+        {transactions.map((t, index) => (
+          <View
+            key={t.id}
+            style={[
+              styles.transactionRow,
+              {
+                backgroundColor: rowBackground,
+                borderBottomColor: borderColor,
+                borderBottomWidth: index < transactions.length - 1 ? 1 : 0,
+              },
+            ]}
+          >
             {/* Type toggle */}
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t.type === 'income' ? 'Set as expense' : 'Set as income'}
               onPress={() => onTypeToggle(t.id)}
               style={[
                 styles.typeToggle,
@@ -87,8 +96,9 @@ const TransactionsWeb: React.FC<ITransactionsWebProps> = ({
             </Pressable>
 
             {/* Account dropdown */}
-            {/* @ts-ignore — HTML select element for web */}
+            {/* @ts-ignore: HTML select element for web */}
             <select
+              aria-label="Account"
               value={t.accountName}
               onChange={(e: any) => onAccountChange(t.id, e.target.value)}
               style={{
@@ -97,7 +107,6 @@ const TransactionsWeb: React.FC<ITransactionsWebProps> = ({
                 color: t.accountName ? textColor : placeholderColor,
                 backgroundColor: 'transparent',
                 border: 'none',
-                outline: 'none',
                 cursor: 'pointer',
                 fontFamily:
                   "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
@@ -126,16 +135,17 @@ const TransactionsWeb: React.FC<ITransactionsWebProps> = ({
             </ThemedText>
 
             {/* Delete button */}
-            <Pressable onPress={() => onDelete(t.id)} style={styles.deleteButton}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Delete transaction"
+              onPress={() => onDelete(t.id)}
+              style={styles.deleteButton}
+            >
               <MaterialIcons name="delete-outline" size={18} color="#999" />
             </Pressable>
           </View>
         ))}
 
-        {/* Add transaction button */}
-        <Pressable onPress={onAdd} style={styles.addButton}>
-          <MaterialIcons name="add" size={24} color="#fff" />
-        </Pressable>
         {/* @ts-ignore */}
       </div>
       {/* @ts-ignore */}
@@ -147,13 +157,13 @@ const styles = StyleSheet.create({
   transactionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
     height: ROW_HEIGHT,
+    paddingHorizontal: 2,
   },
   typeToggle: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 32,
+    height: 32,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -163,15 +173,11 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   deleteButton: {
-    padding: 4,
-    borderRadius: 4,
-  },
-  addButton: {
-    backgroundColor: '#2F4F3F',
-    borderRadius: 20,
-    height: ADD_BUTTON_HEIGHT,
-    justifyContent: 'center',
+    width: 32,
+    height: 32,
+    borderRadius: 10,
     alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

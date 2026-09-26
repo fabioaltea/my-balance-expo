@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Image } from 'react-native';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
 import { useAuthContext } from '@/src/state';
 import ContextMenu from '@/src/components/ui/context-menu';
+import { webPanelBackground } from '@/src/constants/theme';
 
 const LANDING_BASE_URL = process.env.EXPO_PUBLIC_LANDING_URL || 'https://mybalance.tech';
 
@@ -14,10 +15,7 @@ interface LandscapeCommandBarProps {
   onMap?: () => void;
 }
 
-/**
- * Compact iOS 26 style command bar for landscape mode (Web version)
- * Low height, glass morphism effect, with logo + account + period selectors
- */
+/** Desktop command bar. The native navigation remains unchanged. */
 export function CommandBar({
   accountSelector,
   periodSelector,
@@ -25,15 +23,13 @@ export function CommandBar({
   onManage,
   onMap,
 }: LandscapeCommandBarProps) {
-  const textColor = useThemeColor({}, 'text');
+  const mutedTextColor = useThemeColor({ light: '#66736C', dark: '#AEB8B2' }, 'tabIconDefault');
+  const brandColor = useThemeColor({ light: '#244437', dark: '#D6E8DE' }, 'tint');
   const borderColor = useThemeColor(
-    { light: 'rgba(0,0,0,0.08)', dark: 'rgba(255,255,255,0.1)' },
+    { light: 'rgba(23, 38, 31, 0.10)', dark: 'rgba(255,255,255,0.10)' },
     'cardBorder',
   );
-  const backgroundColor = useThemeColor(
-    { light: 'rgba(255, 255, 255, 0.6)', dark: 'rgba(255, 255, 255, 0.1)' },
-    'cardBackground',
-  );
+  const backgroundColor = useThemeColor(webPanelBackground, 'cardBackground');
 
   const { logout } = useAuthContext();
 
@@ -52,9 +48,8 @@ export function CommandBar({
   };
 
   return (
-    <View style={[styles.container]}>
+    <View style={styles.container}>
       <View style={[styles.content, { backgroundColor, borderColor }]}>
-        {/* Logo section */}
         <ContextMenu
           options={[
             {
@@ -81,6 +76,7 @@ export function CommandBar({
           ]}
           selectedOption=""
           onSelectOption={handleMenuOption}
+          activationMethod="singlePress"
         >
           <View style={styles.logoSection}>
             <Image
@@ -88,27 +84,23 @@ export function CommandBar({
               style={styles.logo}
               resizeMode="contain"
             />
-            <Text style={[styles.brandText, { color: '#2F4F3F' }]}>MyBalance</Text>
+            <View>
+              <Text style={[styles.brandText, { color: brandColor }]}>MyBalance</Text>
+            </View>
           </View>
         </ContextMenu>
 
-        {/* Divider */}
         <View style={[styles.divider, { backgroundColor: borderColor }]} />
 
-        {/* Account selector */}
         <View style={styles.selectorSection}>{accountSelector}</View>
 
-        {/* Divider */}
         <View style={[styles.divider, { backgroundColor: borderColor }]} />
 
-        {/* Period selector */}
         <View style={styles.periodSection}>{periodSelector}</View>
 
-        {/* Right content (optional) */}
         {rightContent && (
           <>
             <View style={styles.spacer} />
-            <View style={[styles.divider, { backgroundColor: borderColor }]} />
             <View style={styles.rightSection}>{rightContent}</View>
           </>
         )}
@@ -121,54 +113,62 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    padding: 10,
-    height: 60,
-    zIndex: 100,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 4,
+    minHeight: 68,
+    zIndex: 10,
   },
   content: {
-    boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
+    flex: 1,
+    boxShadow: '0 1px 2px rgba(17, 31, 24, 0.03), 0 8px 24px rgba(17, 31, 24, 0.05)',
     borderRadius: 20,
+    borderWidth: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    height: 48,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    minHeight: 52,
     overflow: 'visible',
   },
   logoSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 9,
+    paddingRight: 2,
   },
   logo: {
-    width: 24,
-    height: 24,
-    borderRadius: 6,
+    width: 30,
+    height: 30,
+    borderRadius: 8,
   },
   brandText: {
-    fontSize: 15,
-    fontWeight: '600',
-    letterSpacing: -0.3,
+    fontSize: 14,
+    lineHeight: 16,
+    fontWeight: '700',
+    letterSpacing: -0.2,
+  },
+  workspaceText: {
+    fontSize: 10,
+    lineHeight: 12,
+    fontWeight: '500',
   },
   divider: {
     width: 1,
-    height: 20,
-    marginHorizontal: 12,
-    opacity: 0.5,
+    height: 24,
+    marginHorizontal: 14,
   },
   selectorSection: {
     flexDirection: 'row',
     alignItems: 'center',
     overflow: 'visible',
-    zIndex: 101,
+    zIndex: 2,
   },
   periodSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
     overflow: 'visible',
-    zIndex: 101,
+    zIndex: 2,
   },
   spacer: {
     flex: 1,
@@ -176,6 +176,7 @@ const styles = StyleSheet.create({
   rightSection: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
   },
 });
 

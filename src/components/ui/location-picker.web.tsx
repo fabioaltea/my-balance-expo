@@ -1,4 +1,4 @@
-import { ThemedText } from '../core/themed-text.native';
+import { ThemedText } from '@/src/components/core/themed-text';
 import { View, StyleSheet, Animated, TextInput } from 'react-native';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
 import React, { useState, useRef, useEffect, useCallback } from 'react';
@@ -24,6 +24,8 @@ interface ILocationPickerProps {
 }
 
 const DEFAULT_CENTER = { lat: 39.2238, lng: 9.1217 };
+const COLLAPSED_HEIGHT = 44;
+const EXPANDED_HEIGHT = 250;
 
 const LocationPicker: React.FC<ILocationPickerProps> = ({
   value,
@@ -40,13 +42,13 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
     lng: number;
   } | null>(null);
 
-  const cardHeight = useRef(new Animated.Value(30)).current;
+  const cardHeight = useRef(new Animated.Value(COLLAPSED_HEIGHT)).current;
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const placesServiceRef = useRef<google.maps.places.PlacesService | null>(null);
   const hasUserEditedQuery = useRef(false);
 
   const textColor = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
-  const placeholderColor = useThemeColor({ light: '#aaa', dark: '#666' }, 'tabIconDefault');
+  const placeholderColor = useThemeColor({ light: '#77847D', dark: '#929C97' }, 'tabIconDefault');
 
   const { isLoaded } = useLoadScript({
     googleMapsApiKey: googleMapsApiKey || '',
@@ -66,7 +68,7 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
     if (!isExpanded) {
       setIsExpanded(true);
       Animated.timing(cardHeight, {
-        toValue: 200,
+        toValue: EXPANDED_HEIGHT,
         duration: 300,
         useNativeDriver: false,
       }).start();
@@ -78,7 +80,7 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
       setIsExpanded(false);
       setMarkerPos(null);
       Animated.timing(cardHeight, {
-        toValue: 30,
+        toValue: COLLAPSED_HEIGHT,
         duration: 300,
         useNativeDriver: false,
       }).start();
@@ -161,7 +163,7 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
     if (isLoaded && placesServiceRef.current) {
       searchAndShow(value.trim());
     }
-  }, [isLoaded, location, searchAndShow, value]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isLoaded, location, searchAndShow, value]);
 
   // Debounced search triggered by user edits
   useEffect(() => {
@@ -189,7 +191,7 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
     return () => {
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
     };
-  }, [collapseCard, isLoaded, location, searchAndShow, value]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [collapseCard, isLoaded, location, searchAndShow, value]);
 
   const handleTextChange = (text: string) => {
     hasUserEditedQuery.current = true;
@@ -260,32 +262,33 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
   },
   inputRow: {
-    display: 'flex',
+    minHeight: COLLAPSED_HEIGHT,
     flexDirection: 'row',
-    paddingHorizontal: 0,
-    paddingVertical: 15,
     alignItems: 'center',
-    flex: 0,
+    gap: 12,
   },
   label: {
-    flex: 0,
+    width: 110,
     flexShrink: 0,
-    marginRight: 12,
-    minWidth: 120,
-    maxWidth: 200,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '500',
   },
   textInput: {
-    display: 'flex',
     flex: 1,
-    textAlign: 'right',
-    fontSize: 18,
-    paddingHorizontal: 10,
     minWidth: 0,
+    paddingHorizontal: 0,
+    paddingVertical: 8,
+    borderWidth: 0,
+    textAlign: 'right',
+    fontSize: 15,
+    lineHeight: 20,
+    outlineColor: 'transparent',
   },
   mapContainer: {
     flex: 1,
-    marginTop: 8,
-    borderRadius: 20,
+    marginTop: 10,
+    borderRadius: 16,
     overflow: 'hidden',
   },
 });

@@ -151,6 +151,7 @@ const ChartsView: React.FC = () => {
       if (existing) {
         existing.income += monthData.income;
         existing.expenses += monthData.expenses;
+        existing.date = monthData.date;
       } else {
         yearMap.set(monthData.year, {
           ...monthData,
@@ -215,6 +216,7 @@ const ChartsView: React.FC = () => {
           }
         });
         existing.total += monthData.total;
+        existing.date = monthData.date;
       } else {
         yearMap.set(monthData.year, {
           ...monthData,
@@ -285,6 +287,7 @@ const ChartsView: React.FC = () => {
           }
         });
         existing.total += monthData.total;
+        existing.date = monthData.date;
       } else {
         yearMap.set(monthData.year, {
           ...monthData,
@@ -509,6 +512,7 @@ const ChartsView: React.FC = () => {
         <Card backgroundColor={cardBackground} color={textColor}>
           <BreakdownStackedChart
             data={expenseBreakdownData}
+            groupBy={expenseGroupBy}
             height={200}
             showLabels={true}
             showYAxis={true}
@@ -534,6 +538,7 @@ const ChartsView: React.FC = () => {
         <Card backgroundColor={cardBackground} color={textColor}>
           <BreakdownStackedChart
             data={incomeBreakdownData}
+            groupBy={incomeGroupBy}
             height={200}
             showLabels={true}
             showYAxis={true}
@@ -626,7 +631,7 @@ const ChartsView: React.FC = () => {
               <View style={styles.incomeExpenseRow}>
                 <View style={styles.incomeExpenseItem}>
                   <Text style={[styles.incomeExpenseLabel, { color: subtleTextColor }]}>
-                    Entrate
+                    Income
                   </Text>
                   <Text style={[styles.incomeExpenseAmount, { color: '#4CAF50' }]}>
                     {formatAmount(selectedIncomeExpense.income)}
@@ -634,7 +639,7 @@ const ChartsView: React.FC = () => {
                 </View>
                 <View style={styles.incomeExpenseItem}>
                   <Text style={[styles.incomeExpenseLabel, { color: subtleTextColor }]}>
-                    Uscite
+                    Expenses
                   </Text>
                   <Text style={[styles.incomeExpenseAmount, { color: '#F44336' }]}>
                     {formatAmount(selectedIncomeExpense.expenses)}
@@ -644,7 +649,7 @@ const ChartsView: React.FC = () => {
 
               {/* Balance */}
               <View style={styles.balanceSection}>
-                <Text style={[styles.balanceLabel, { color: subtleTextColor }]}>Bilancio</Text>
+                <Text style={[styles.balanceLabel, { color: subtleTextColor }]}>Net</Text>
                 <Text
                   style={[
                     styles.balanceAmount,

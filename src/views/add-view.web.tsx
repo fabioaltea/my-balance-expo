@@ -23,7 +23,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import LocationPicker, { ILocation } from '@/src/components/ui/location-picker';
 import { parseLocationValue, serializeLocationValue } from '@/src/utils/locationValue';
 import RecurrencePickerWeb from '@/src/components/ui/recurrence-picker.web';
-import { ScreenView } from '../components';
+import ScreenView from '@/src/components/core/screen-view.web';
 import { MovementHelper } from '@/src/helpers/MovementHelper';
 
 export type ToastStatus = 'loading' | 'success' | 'error';
@@ -199,6 +199,10 @@ const AddView: React.FC<AddViewProps> = ({ editingMovementId, recurrenceId, onCl
   // Theme colors
   const textColor = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
   const placeholderColor = useThemeColor({ light: '#77847D', dark: '#929C97' }, 'tabIconDefault');
+  const drawerBackgroundColor = useThemeColor(
+    { light: '#FFFFFF', dark: '#1D211F' },
+    'menuBackground',
+  );
   const accentTextColor = '#2F4F3F';
 
   const nativeFieldStyle: React.CSSProperties = {
@@ -456,7 +460,7 @@ const AddView: React.FC<AddViewProps> = ({ editingMovementId, recurrenceId, onCl
   };
 
   return (
-    <ScreenView>
+    <ScreenView backgroundColor={onClose ? drawerBackgroundColor : undefined}>
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.headerContainer}>

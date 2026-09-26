@@ -2,11 +2,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
 import React from 'react';
-const ScreenView: React.FC<React.PropsWithChildren> = ({ children }) => {
+interface ScreenViewProps extends React.PropsWithChildren {
+  backgroundColor?: string;
+}
+
+const ScreenView: React.FC<ScreenViewProps> = ({ children, backgroundColor }) => {
   const background = useThemeColor({}, 'background');
   return (
     <SafeAreaView
-      style={[styles.container, { backgroundColor: background }]}
+      style={[styles.container, { backgroundColor: backgroundColor ?? background }]}
       edges={['top', 'left', 'right']}
     >
       {children}

@@ -1,6 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ThemedText } from '@/src/components/core/themed-text';
-import { TouchableOpacity, StyleSheet, View, ScrollView, Alert, Platform } from 'react-native';
+import {
+  TouchableOpacity,
+  Pressable,
+  StyleSheet,
+  View,
+  ScrollView,
+  Alert,
+  Platform,
+} from 'react-native';
 import IconSymbol from '@/src/components/ui/icon-symbol';
 import Card from '@/src/components/core/card';
 import ChartSkeleton from '@/src/components/charts/chart-skeleton';
@@ -22,11 +30,32 @@ import {
 } from '@/src/helpers/TransactionsMutationHelpers';
 import ModalPanel from '@/src/components/ui/modal-panel';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { MovementSelectionIcon, MovementSelectionToolbar } from './movement-selection-controls';
 
 const isWeb = Platform.OS === 'web';
+type SortField = 'date' | 'amount';
+type SortDirection = 'asc' | 'desc';
 
 const styles = StyleSheet.create({
+  sortControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  sortControl: {
+    height: 28,
+    paddingHorizontal: 8,
+    borderWidth: 1,
+    borderRadius: 9,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  sortControlText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
   // Movements
   movementItem: {
     flexDirection: 'row',
@@ -124,15 +153,6 @@ const styles = StyleSheet.create({
   },
 });
 
-const sortMovements = (movements: Movement[]) => {
-  return movements?.sort((a, b) => {
-    // Use compareDates from dateUtils for string date comparison
-    // compareDates returns -1 if a < b, 0 if equal, 1 if a > b
-    // We want newest first, so we compare b to a (reverse order)
-    return compareDates(b.date, a.date);
-  });
-};
-
 interface MovementsCardProps {
   movements: Movement[];
   isTransitioning?: boolean;
@@ -149,8 +169,17 @@ const MovementsCard: React.FC<MovementsCardProps> = ({
 }) => {
   const { isLoading, categories } = useDataContext();
   const { selectedSpreadsheetId } = useAuthContext();
-  const [recentMovements, setRecentMovements] = useState(sortMovements(movements));
+  const [sortField, setSortField] = useState<SortField>('date');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [selectedMovementIds, setSelectedMovementIds] = useState<Set<string>>(new Set());
+  const recentMovements = useMemo(() => {
+    const direction = sortDirection === 'asc' ? 1 : -1;
+    return [...movements].sort(
+      (a, b) =>
+        direction *
+        (sortField === 'date' ? compareDates(a.date, b.date) : a.totalAmount - b.totalAmount),
+    );
+  }, [movements, sortField, sortDirection]);
   const { orientation } = usePlatformContext();
   const isLandscape = orientation === 'landscape';
 
@@ -201,16 +230,21 @@ const MovementsCard: React.FC<MovementsCardProps> = ({
   };
 
   useEffect(() => {
-    console.log('💳 MovementsCard: Updating with', movements?.length, 'movements');
-    const sorted = sortMovements(movements);
-
-    setRecentMovements(sorted);
-    const availableIds = new Set(sorted.map((movement) => movement.id));
+    const availableIds = new Set(movements.map((movement) => movement.id));
     setSelectedMovementIds((current) => {
       const next = new Set([...current].filter((id) => availableIds.has(id)));
       return next.size === current.size ? current : next;
     });
   }, [movements]);
+
+  const handleSortPress = (field: SortField) => {
+    if (field === sortField) {
+      setSortDirection((current) => (current === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortField(field);
+      setSortDirection('desc');
+    }
+  };
 
   const toggleMovementSelection = (movementId: string) => {
     setSelectedMovementIds((current) => {
@@ -262,6 +296,15 @@ const MovementsCard: React.FC<MovementsCardProps> = ({
     { light: 'rgba(47, 79, 63, 0.055)', dark: 'rgba(214, 232, 222, 0.055)' },
     'menuBackground',
   );
+  const sortTextColor = useThemeColor({ light: '#52665A', dark: '#D6E8DE' }, 'text');
+  const sortBorderColor = useThemeColor(
+    { light: 'rgba(47, 79, 63, 0.18)', dark: 'rgba(214, 232, 222, 0.22)' },
+    'tabIconDefault',
+  );
+  const sortActiveColor = useThemeColor(
+    { light: 'rgba(47, 79, 63, 0.07)', dark: 'rgba(214, 232, 222, 0.08)' },
+    'menuBackground',
+  );
 
   const dynamicStyles = StyleSheet.create({
     movementItem: {
@@ -273,9 +316,6 @@ const MovementsCard: React.FC<MovementsCardProps> = ({
       color: positiveAmountColor,
     },
   });
-
-  // Show only recent movements (limit to 13 like before)
-  // const recentMovements = sortMovements(movements);
 
   // Show skeleton if loading AND no movements yet OR if period is transitioning
   const showSkeleton = (isLoading && recentMovements?.length === 0) || isTransitioning;
@@ -329,20 +369,62 @@ const MovementsCard: React.FC<MovementsCardProps> = ({
     <Card
       label={isWeb || isLandscape ? listLabel : ''}
       headerAction={
-        isWeb && selectedMovements.length ? (
-          <MovementSelectionToolbar
-            actions={[
-              ...(selectedMovements.length === 1
-                ? [{ label: 'Edit movement', icon: 'edit' as const, onPress: handleSelectedEdit }]
-                : []),
-              {
-                label: 'Delete selected movements',
-                icon: 'delete-outline',
-                onPress: handleSelectedDelete,
-                destructive: true,
-              },
-            ]}
-          />
+        isWeb ? (
+          selectedMovements.length ? (
+            <MovementSelectionToolbar
+              actions={[
+                ...(selectedMovements.length === 1
+                  ? [{ label: 'Edit movement', icon: 'edit' as const, onPress: handleSelectedEdit }]
+                  : []),
+                {
+                  label: 'Delete selected movements',
+                  icon: 'delete-outline',
+                  onPress: handleSelectedDelete,
+                  destructive: true,
+                },
+              ]}
+            />
+          ) : (
+            <View style={styles.sortControls}>
+              {(['date', 'amount'] as const).map((field) => {
+                const active = sortField === field;
+                const nextDirection =
+                  active && sortDirection === 'desc' ? 'ascending' : 'descending';
+                return (
+                  <Pressable
+                    key={field}
+                    onPress={() => handleSortPress(field)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Sort by ${field} ${nextDirection}`}
+                    accessibilityState={{ selected: active }}
+                    style={({ pressed }) => [
+                      styles.sortControl,
+                      {
+                        borderColor: sortBorderColor,
+                        backgroundColor: active ? sortActiveColor : 'transparent',
+                        opacity: pressed ? 0.65 : 1,
+                      },
+                    ]}
+                  >
+                    <ThemedText style={[styles.sortControlText, { color: sortTextColor }]}>
+                      {field === 'date' ? 'Date' : 'Amount'}
+                    </ThemedText>
+                    <MaterialIcons
+                      name={
+                        active
+                          ? sortDirection === 'asc'
+                            ? 'arrow-upward'
+                            : 'arrow-downward'
+                          : 'unfold-more'
+                      }
+                      size={14}
+                      color={sortTextColor}
+                    />
+                  </Pressable>
+                );
+              })}
+            </View>
+          )
         ) : undefined
       }
       style={isLandscape ? { flex: 1 } : undefined}

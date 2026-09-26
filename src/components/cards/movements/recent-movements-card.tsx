@@ -136,6 +136,7 @@ const sortMovements = (movements: Movement[]) => {
 interface MovementsCardProps {
   movements: Movement[];
   isTransitioning?: boolean;
+  filter?: 'income' | 'expense' | null;
   /** Optional callback to override default navigation behavior */
   onMovementPress?: (movement: Movement) => void;
 }
@@ -143,6 +144,7 @@ interface MovementsCardProps {
 const MovementsCard: React.FC<MovementsCardProps> = ({
   movements,
   isTransitioning = false,
+  filter = null,
   onMovementPress,
 }) => {
   const { isLoading, categories } = useDataContext();
@@ -277,11 +279,23 @@ const MovementsCard: React.FC<MovementsCardProps> = ({
 
   // Show skeleton if loading AND no movements yet OR if period is transitioning
   const showSkeleton = (isLoading && recentMovements?.length === 0) || isTransitioning;
+  const listLabel =
+    filter === 'income'
+      ? 'Recent income'
+      : filter === 'expense'
+        ? 'Recent expenses'
+        : 'Recent movements';
+  const emptyTitle =
+    filter === 'income'
+      ? 'No income movements'
+      : filter === 'expense'
+        ? 'No expense movements'
+        : 'No movements';
 
   if (showSkeleton) {
     return (
       <Card
-        label={isWeb || isLandscape ? 'Recent movements' : ''}
+        label={isWeb || isLandscape ? listLabel : ''}
         style={isLandscape ? { flex: 1 } : undefined}
       >
         <ChartSkeleton variant="list" itemCount={5} />
@@ -293,15 +307,17 @@ const MovementsCard: React.FC<MovementsCardProps> = ({
   if (recentMovements?.length === 0) {
     return (
       <Card
-        label={isWeb || isLandscape ? 'Recent movements' : ''}
+        label={isWeb || isLandscape ? listLabel : ''}
         style={isLandscape ? { flex: 1 } : undefined}
       >
         <View style={styles.emptyState}>
           <IconSymbol name="search-off" size={isWeb ? 32 : 48} color="#999" />
           <View style={styles.emptyState}>
-            <ThemedText style={[styles.emptyTitle, { color: '#999' }]}>No movements</ThemedText>
+            <ThemedText style={[styles.emptyTitle, { color: '#999' }]}>{emptyTitle}</ThemedText>
             <ThemedText style={styles.emptyText}>
-              No movements found for the selected period
+              {filter
+                ? `No ${filter === 'income' ? 'income' : 'expense'} movements found for the selected period`
+                : 'No movements found for the selected period'}
             </ThemedText>
           </View>
         </View>
@@ -311,7 +327,7 @@ const MovementsCard: React.FC<MovementsCardProps> = ({
 
   return (
     <Card
-      label={isWeb || isLandscape ? 'Recent movements' : ''}
+      label={isWeb || isLandscape ? listLabel : ''}
       headerAction={
         isWeb && selectedMovements.length ? (
           <MovementSelectionToolbar

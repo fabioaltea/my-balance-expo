@@ -10,6 +10,9 @@ type Props = {
   expense: number;
   isTransitioning?: boolean;
   flexible?: boolean;
+  /** Used by the web card to filter recent movements. */
+  movementFilter?: 'income' | 'expense' | null;
+  onMovementFilterChange?: (filter: 'income' | 'expense' | null) => void;
 };
 
 /**

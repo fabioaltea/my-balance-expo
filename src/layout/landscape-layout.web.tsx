@@ -38,6 +38,7 @@ import {
 } from '@/src/components/charts';
 import Card from '@/src/components/core/card';
 import { ChartDataHelper } from '@/src/helpers/ChartDataHelper';
+import { EXCLUDED_CATEGORIES } from '@/src/constants/categories';
 import type { MonthlyData, IncomeExpenseData, PeriodBreakdownData } from '@/src/types/charts';
 
 // View components for drawer content
@@ -109,6 +110,7 @@ export function LandscapeLayout() {
   }, [accounts]);
 
   const [selectedAccount, setSelectedAccount] = useState<string>('All');
+  const [movementFilter, setMovementFilter] = useState<'income' | 'expense' | null>(null);
 
   // Chart view mode state (months or years)
   const [chartViewMode, setChartViewMode] = useState<'months' | 'years'>('months');
@@ -400,6 +402,25 @@ export function LandscapeLayout() {
     return filtered;
   }, [movements, selectedAccount, dateRange]);
 
+  const visibleRecentMovements = useMemo(() => {
+    if (!movementFilter) return filteredMovements;
+
+    return filteredMovements.filter((movement) => {
+      if (EXCLUDED_CATEGORIES.includes(movement.category)) return false;
+
+      if (selectedAccount === 'All') {
+        return movementFilter === 'income' ? movement.totalAmount > 0 : movement.totalAmount < 0;
+      }
+
+      return movement.transactions.some(
+        (transaction) =>
+          transaction.account === selectedAccount &&
+          transaction.type === movementFilter &&
+          transaction.amount > 0,
+      );
+    });
+  }, [filteredMovements, movementFilter, selectedAccount]);
+
   // Get the selected account object
   const currentAccount: Account | undefined = useMemo(() => {
     if (selectedAccount === 'All') {
@@ -572,6 +593,8 @@ export function LandscapeLayout() {
             <SummaryCard
               income={getTotalIncome(filteredMovements, selectedAccount)}
               expense={getTotalExpense(filteredMovements, selectedAccount)}
+              movementFilter={movementFilter}
+              onMovementFilterChange={setMovementFilter}
               flexible
             />
           </LayoutColumn>
@@ -659,7 +682,9 @@ export function LandscapeLayout() {
         <LayoutRow flex={1} gap={16}>
           <LayoutColumn flex={1.2}>
             <MovementsCard
-              movements={filteredMovements}
+              key={movementFilter ?? 'all'}
+              movements={visibleRecentMovements}
+              filter={movementFilter}
               onMovementPress={(movement) => openDrawer('edit', { movementId: movement.id })}
             />
           </LayoutColumn>

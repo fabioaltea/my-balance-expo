@@ -25,13 +25,28 @@ const BalanceCard: React.FC<BalanceCardProps> = ({ account }) => {
 
   return (
     <Card backgroundColor={account?.color || '#2F4F3F'} color={textColor}>
-      <View style={styles.content}>
-        <View style={styles.copy}>
-          <Text style={[styles.accountName, { color: textColor }]} numberOfLines={1}>
-            {account?.name === 'All' ? 'All accounts' : account?.name || 'Balance'}
+      <Text style={[styles.accountName, { color: textColor }]} numberOfLines={1}>
+        {account?.name === 'All' ? 'All accounts' : account?.name || 'Balance'}
+      </Text>
+      <View style={styles.amountRow}>
+        {isLoading ? (
+          <View style={styles.amountPlaceholder}>
+            <Skeleton
+              width="68%"
+              height={35}
+              borderRadius={6}
+              style={{ backgroundColor: textColor, opacity: 0.28 }}
+            />
+          </View>
+        ) : (
+          <Text
+            style={[styles.amount, { color: textColor }]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+          >
+            {isBalanceVisible ? formattedBalance : '€ ••••••'}
           </Text>
-          <Text style={[styles.label, { color: textColor }]}>Available balance</Text>
-        </View>
+        )}
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={isBalanceVisible ? 'Hide balance' : 'Show balance'}
@@ -49,30 +64,18 @@ const BalanceCard: React.FC<BalanceCardProps> = ({ account }) => {
           />
         </Pressable>
       </View>
-
-      {isLoading ? (
-        <Skeleton
-          width="68%"
-          height={35}
-          borderRadius={6}
-          style={{ marginTop: 14, backgroundColor: textColor, opacity: 0.28 }}
-        />
-      ) : (
-        <Text style={[styles.amount, { color: textColor }]} numberOfLines={1} adjustsFontSizeToFit>
-          {isBalanceVisible ? formattedBalance : '€ ••••••'}
-        </Text>
-      )}
     </Card>
   );
 };
 
 const styles = StyleSheet.create({
-  content: {
+  amountRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 14,
   },
-  copy: {
+  amountPlaceholder: {
     flex: 1,
     minWidth: 0,
   },
@@ -81,14 +84,9 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     fontWeight: '700',
   },
-  label: {
-    marginTop: 2,
-    fontSize: 11,
-    lineHeight: 15,
-    opacity: 0.72,
-  },
   amount: {
-    marginTop: 14,
+    flex: 1,
+    minWidth: 0,
     fontSize: 30,
     lineHeight: 36,
     fontWeight: '700',

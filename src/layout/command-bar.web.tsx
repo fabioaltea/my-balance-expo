@@ -86,7 +86,6 @@ export function CommandBar({
             />
             <View>
               <Text style={[styles.brandText, { color: brandColor }]}>MyBalance</Text>
-              <Text style={[styles.workspaceText, { color: mutedTextColor }]}>Overview</Text>
             </View>
           </View>
         </ContextMenu>

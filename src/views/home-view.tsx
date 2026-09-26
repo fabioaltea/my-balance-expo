@@ -16,6 +16,7 @@ import SummaryCard from '@/src/components/cards/summary-card';
 import { useDataContext } from '@/src/state';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
+import { EXCLUDED_CATEGORIES } from '@/src/constants/categories';
 
 interface HomeViewProps {
   accounts: Account[];
@@ -62,6 +63,7 @@ const HomeView: React.FC<HomeViewProps> = ({
   // Local state for date range
   const [dateRange, setDateRange] = useState<IDateRange>(DATE_RANGES.THIS_MONTH);
   const [viewMode, setViewMode] = useState<'recent' | 'recurring' | 'unconfirmed'>('recent');
+  const [movementFilter, setMovementFilter] = useState<'income' | 'expense' | null>(null);
   const [isPeriodTransitioning, setIsPeriodTransitioning] = useState<boolean>(false);
   const [summaryPagerIndex, setSummaryPagerIndex] = useState<number>(0);
 
@@ -142,6 +144,30 @@ const HomeView: React.FC<HomeViewProps> = ({
     // Show all movements in the selected period
     return dateFilteredMovements;
   }, [dateFilteredMovements]);
+
+  const visibleRecentMovements = useMemo(() => {
+    if (!movementFilter) return filteredMovements;
+
+    return filteredMovements.filter((movement) => {
+      if (EXCLUDED_CATEGORIES.includes(movement.category)) return false;
+
+      if (selectedAccount === 'All') {
+        return movementFilter === 'income' ? movement.totalAmount > 0 : movement.totalAmount < 0;
+      }
+
+      return movement.transactions.some(
+        (transaction) =>
+          transaction.account === selectedAccount &&
+          transaction.type === movementFilter &&
+          transaction.amount > 0,
+      );
+    });
+  }, [filteredMovements, movementFilter, selectedAccount]);
+
+  const handleMovementFilterChange = (filter: 'income' | 'expense' | null) => {
+    setMovementFilter(filter);
+    setViewMode('recent');
+  };
 
   // Count of pending items for badge (only today and overdue)
   const pendingCount = useMemo(() => {
@@ -255,6 +281,8 @@ const HomeView: React.FC<HomeViewProps> = ({
               income={getTotalIncome(dateFilteredMovements, selectedAccount)}
               expense={getTotalExpense(dateFilteredMovements, selectedAccount)}
               isTransitioning={isPeriodTransitioning}
+              movementFilter={movementFilter}
+              onMovementFilterChange={handleMovementFilterChange}
             />
             {currentForecast.hasEnoughData && (
               <ForecastCard forecast={currentForecast} isTransitioning={isPeriodTransitioning} />
@@ -271,7 +299,12 @@ const HomeView: React.FC<HomeViewProps> = ({
         />
         {viewMode === 'recurring' && <RecurringMovementsCard dateRange={dateRange} />}
         {viewMode === 'recent' && (
-          <MovementsCard movements={filteredMovements} isTransitioning={isPeriodTransitioning} />
+          <MovementsCard
+            key={movementFilter ?? 'all'}
+            movements={visibleRecentMovements}
+            filter={movementFilter}
+            isTransitioning={isPeriodTransitioning}
+          />
         )}
         {viewMode === 'unconfirmed' && <UnconfirmedMovementsCard />}
         <View style={{ height: 100 }}></View>

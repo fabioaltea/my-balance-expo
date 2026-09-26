@@ -39,6 +39,7 @@ interface RecurringMovementWithPending {
   nextOccurrenceDate: string | null;
   badgeStatus: BadgeStatus;
   occurrencesInPeriod: number;
+  periodTotal: number;
 }
 
 interface RecurringMovementsCardProps {
@@ -136,19 +137,25 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
     return 'upcoming'; // Future period
   };
 
-  // Calculate occurrences in the selected period for a recurring movement
-  const getOccurrencesInPeriod = (recurrenceId: string): number => {
-    return movements.filter(
-      (m: Movement) =>
-        m.recurrenceId === recurrenceId &&
-        m.status?.toLowerCase() !== 'recurrent' &&
-        isDateInRange(m.date, dateRange.startDate, dateRange.endDate),
-    ).length;
-  };
-
   // Combine recurring movements with their pending status
   // Sort: items with pending occurrences first (overdue, then today, then upcoming), then others at bottom
   const sortedMovements = useMemo((): RecurringMovementWithPending[] => {
+    const periodStats = new Map<string, { count: number; total: number }>();
+    for (const movement of movements) {
+      if (
+        !movement.recurrenceId ||
+        movement.status?.toLowerCase() === 'recurrent' ||
+        !isDateInRange(movement.date, dateRange.startDate, dateRange.endDate)
+      ) {
+        continue;
+      }
+
+      const stats = periodStats.get(movement.recurrenceId) ?? { count: 0, total: 0 };
+      stats.count += 1;
+      stats.total += movement.totalAmount;
+      periodStats.set(movement.recurrenceId, stats);
+    }
+
     const movementsWithPending = recurringMovements.map((movement: Movement) => {
       // Find pending recurrence for this movement (check overdue first, then current)
       const overduePending = pendingRecurrences?.find(
@@ -161,14 +168,15 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
       // Prioritize overdue, then current
       const pending = overduePending || currentPending || null;
       const badgeStatus = getBadgeStatus(pending);
-      const occurrencesInPeriod = getOccurrencesInPeriod(movement.recurrenceId || '');
+      const stats = periodStats.get(movement.recurrenceId || '');
 
       return {
         movement,
         pending,
         nextOccurrenceDate: pending ? pending.periodLabel : null,
         badgeStatus,
-        occurrencesInPeriod,
+        occurrencesInPeriod: stats?.count ?? 0,
+        periodTotal: stats?.total ?? 0,
       };
     });
 
@@ -335,6 +343,11 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
     { light: 'rgba(47, 79, 63, 0.055)', dark: 'rgba(214, 232, 222, 0.055)' },
     'menuBackground',
   );
+  const countBadgeBackground = useThemeColor(
+    { light: 'rgba(47, 79, 63, 0.10)', dark: 'rgba(214, 232, 222, 0.13)' },
+    'menuBackground',
+  );
+  const countBadgeTextColor = useThemeColor({ light: '#2F4F3F', dark: '#D6E8DE' }, 'text');
 
   const dynamicStyles = StyleSheet.create({
     itemBorder: {
@@ -442,13 +455,13 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
     }
   };
 
-  // Get the subtitle text (amount + date for overdue, today, and soon)
+  // Show the total for occurrences in the selected period and any pending date.
   const getSubtitleText = (
     status: BadgeStatus,
     pending: PendingRecurrence | null,
-    amount: number,
+    periodTotal: number,
   ): string => {
-    const amountStr = formatAmount(amount);
+    const amountStr = `${formatAmount(periodTotal)}${isWeb ? ' in current period' : ''}`;
     if ((status === 'overdue' || status === 'today' || status === 'soon') && pending) {
       return `${amountStr} • ${getExpectedDate(pending)}`;
     }
@@ -484,15 +497,19 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
       style={isLandscape ? { flex: 1 } : undefined}
       compact={isWeb}
     >
-      <ScrollView showsVerticalScrollIndicator={isLandscape} nestedScrollEnabled={true}>
-        {sortedMovements.map(({ movement, pending, badgeStatus, occurrencesInPeriod }, index) => {
+      <ScrollView
+        showsVerticalScrollIndicator={isLandscape}
+        nestedScrollEnabled={true}
+        style={isWeb ? styles.scrollViewWeb : undefined}
+      >
+        {sortedMovements.map((entry, index) => {
+          const { movement, pending, badgeStatus, occurrencesInPeriod, periodTotal } = entry;
           const icon = MovementHelper.getMovementIcon(movement.category, categories);
           const color = MovementHelper.getMovementColor(
             movement.type,
             movement.category,
             categories,
           );
-          const amount = movement.totalAmount;
           const hasPending = badgeStatus !== null;
           const isSelected = selectedMovementIds.has(movement.id);
           const previousSelected =
@@ -549,19 +566,32 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
                 </ThemedText>
                 <ThemedText style={[styles.itemSubtitle, { color: subtextColor }]}>
                   {hasPending
-                    ? getSubtitleText(badgeStatus, pending, amount)
-                    : `${formatAmount(amount)} • ${occurrencesInPeriod} occurrence${occurrencesInPeriod !== 1 ? 's' : ''} this period`}
+                    ? getSubtitleText(badgeStatus, pending, periodTotal)
+                    : `${formatAmount(periodTotal)}${isWeb ? ' in current period' : ''}`}
                 </ThemedText>
               </View>
-              {hasPending && (
-                <View style={[styles.statusBadge, { backgroundColor: getBadgeColor(badgeStatus) }]}>
-                  <ThemedText
-                    style={[styles.statusBadgeText, { color: getBadgeTextColor(badgeStatus) }]}
+              <View style={styles.badgeRow}>
+                {hasPending && (
+                  <View
+                    style={[styles.statusBadge, { backgroundColor: getBadgeColor(badgeStatus) }]}
                   >
-                    {getBadgeLabel(badgeStatus, pending)}
+                    <ThemedText
+                      style={[styles.statusBadgeText, { color: getBadgeTextColor(badgeStatus) }]}
+                    >
+                      {getBadgeLabel(badgeStatus, pending)}
+                    </ThemedText>
+                  </View>
+                )}
+                <View style={[styles.countBadge, { backgroundColor: countBadgeBackground }]}>
+                  <ThemedText
+                    accessibilityLabel={`${occurrencesInPeriod} ${occurrencesInPeriod === 1 ? 'occurrence' : 'occurrences'} this period`}
+                    style={[styles.countBadgeText, { color: countBadgeTextColor }]}
+                    numberOfLines={1}
+                  >
+                    {occurrencesInPeriod}
                   </ThemedText>
                 </View>
-              )}
+              </View>
               {isLandscape && !isWeb && (
                 <View style={styles.menuButton}>
                   <MaterialIcons name="more-vert" size={20} color={subtextColor} />
@@ -667,6 +697,9 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
 };
 
 const styles = StyleSheet.create({
+  scrollViewWeb: {
+    paddingRight: 12,
+  },
   recurringItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -686,6 +719,7 @@ const styles = StyleSheet.create({
   },
   itemInfo: {
     flex: 1,
+    minWidth: 0,
     marginRight: 8,
   },
   itemDescription: {
@@ -701,11 +735,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: isWeb ? 6 : 8,
     paddingVertical: 2,
     borderRadius: isWeb ? 8 : 12,
-    marginRight: isWeb ? 4 : 8,
   },
   statusBadgeText: {
     fontSize: 10,
     fontWeight: '600',
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexShrink: 0,
+    gap: isWeb ? 5 : 7,
+  },
+  countBadge: {
+    minWidth: isWeb ? 24 : 28,
+    paddingHorizontal: isWeb ? 7 : 8,
+    paddingVertical: 2,
+    borderRadius: isWeb ? 8 : 12,
+    alignItems: 'center',
+  },
+  countBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
   },
   emptyState: {
     alignItems: 'center',

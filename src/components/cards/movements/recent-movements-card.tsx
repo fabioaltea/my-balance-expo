@@ -22,7 +22,7 @@ import {
 } from '@/src/helpers/TransactionsMutationHelpers';
 import ModalPanel from '@/src/components/ui/modal-panel';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { MovementSelectionBox, MovementSelectionToolbar } from './movement-selection-controls';
+import { MovementSelectionIcon, MovementSelectionToolbar } from './movement-selection-controls';
 
 const isWeb = Platform.OS === 'web';
 
@@ -347,6 +347,11 @@ const MovementsCard: React.FC<MovementsCardProps> = ({
           // totalAmount is already signed (positive for income, negative for expense)
           const amount = movement.totalAmount;
           const isSelected = selectedMovementIds.has(movement.id);
+          const previousSelected =
+            index > 0 && selectedMovementIds.has(recentMovements[index - 1].id);
+          const nextSelected =
+            index < recentMovements.length - 1 &&
+            selectedMovementIds.has(recentMovements[index + 1].id);
 
           return (
             <TouchableOpacity
@@ -362,7 +367,12 @@ const MovementsCard: React.FC<MovementsCardProps> = ({
               }
               delayLongPress={300}
               // @ts-ignore — web-only prop for CSS hover
-              dataSet={{ movementRow: '', movementSelected: isSelected ? 'true' : undefined }}
+              dataSet={{
+                movementRow: '',
+                movementSelected: isSelected ? 'true' : undefined,
+                movementSelectedStart: isSelected && !previousSelected ? 'true' : undefined,
+                movementSelectedEnd: isSelected && !nextSelected ? 'true' : undefined,
+              }}
               style={[
                 dynamicStyles.movementItem,
                 isWeb && isSelected && { backgroundColor: selectedRowColor },
@@ -370,15 +380,18 @@ const MovementsCard: React.FC<MovementsCardProps> = ({
               ]}
             >
               {isWeb ? (
-                <MovementSelectionBox
+                <MovementSelectionIcon
                   selected={isSelected}
                   onToggle={() => toggleMovementSelection(movement.id)}
                   label={`Select ${movement.description}`}
+                  icon={icon}
+                  color={color}
                 />
-              ) : null}
-              <View style={[styles.movementIcon, { backgroundColor: color }]}>
-                <IconSymbol name={icon} size={isWeb ? 17 : 20} color="#FFFFFF" />
-              </View>
+              ) : (
+                <View style={[styles.movementIcon, { backgroundColor: color }]}>
+                  <IconSymbol name={icon} size={20} color="#FFFFFF" />
+                </View>
+              )}
               <View style={styles.movementInfo}>
                 <ThemedText style={[styles.movementDate]}>
                   {formatDateForDisplay(movement.date, 'it-IT')}

@@ -474,9 +474,20 @@ export function LandscapeLayout() {
             }
             [data-movement-row] {
               transition: background-color 180ms ease, box-shadow 180ms ease, transform 150ms ease;
-              border-radius: 0;
+              border-radius: 12px;
               padding-left: 10px !important;
               padding-right: 10px !important;
+            }
+            [data-movement-row][data-movement-selected="true"] {
+              border-radius: 0;
+            }
+            [data-movement-row][data-movement-selected-start="true"] {
+              border-top-left-radius: 12px;
+              border-top-right-radius: 12px;
+            }
+            [data-movement-row][data-movement-selected-end="true"] {
+              border-bottom-left-radius: 12px;
+              border-bottom-right-radius: 12px;
             }
             [data-movement-row]:not([data-movement-selected="true"]):hover {
               background-color: rgba(47, 79, 63, 0.07);
@@ -486,9 +497,6 @@ export function LandscapeLayout() {
             }
             [data-movement-row]:active {
               transform: translateY(1px);
-            }
-            [data-movement-selection-control] {
-              transition: background-color 180ms ease, border-color 180ms ease, transform 150ms ease;
             }
             @media (prefers-reduced-motion: reduce) {
               [data-landscape-dashboard] *,

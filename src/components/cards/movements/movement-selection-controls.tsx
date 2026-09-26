@@ -2,6 +2,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import IconSymbol from '@/src/components/ui/icon-symbol';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
 
 interface MovementSelectionToolbarProps {
@@ -56,17 +57,21 @@ export function MovementSelectionToolbar({ actions }: MovementSelectionToolbarPr
   );
 }
 
-interface MovementSelectionBoxProps {
+interface MovementSelectionIconProps {
   selected: boolean;
   onToggle: () => void;
   label: string;
+  icon: string;
+  color: string;
 }
 
-export function MovementSelectionBox({ selected, onToggle, label }: MovementSelectionBoxProps) {
-  const borderColor = useThemeColor(
-    { light: 'rgba(47, 79, 63, 0.28)', dark: 'rgba(214, 232, 222, 0.30)' },
-    'cardBorder',
-  );
+export function MovementSelectionIcon({
+  selected,
+  onToggle,
+  label,
+  icon,
+  color,
+}: MovementSelectionIconProps) {
   const accentColor = useThemeColor({ light: '#2F4F3F', dark: '#D6E8DE' }, 'tint');
   const checkColor = useThemeColor({ light: '#FFFFFF', dark: '#183027' }, 'background');
 
@@ -79,19 +84,17 @@ export function MovementSelectionBox({ selected, onToggle, label }: MovementSele
         event.stopPropagation();
         onToggle();
       }}
-      style={({ pressed }) => [styles.selectionHitArea, pressed && styles.pressed]}
+      style={({ pressed }) => [
+        styles.selectionIcon,
+        { backgroundColor: selected ? accentColor : color },
+        pressed && styles.pressed,
+      ]}
     >
-      <View
-        // @ts-ignore: web-only data attribute used for CSS state transitions.
-        dataSet={{ movementSelectionControl: '' }}
-        style={[
-          styles.checkbox,
-          { borderColor },
-          selected && { backgroundColor: accentColor, borderColor: accentColor },
-        ]}
-      >
-        {selected ? <MaterialIcons name="check" size={14} color={checkColor} /> : null}
-      </View>
+      {selected ? (
+        <MaterialIcons name="check" size={20} color={checkColor} />
+      ) : (
+        <IconSymbol name={icon} size={17} color="#FFFFFF" />
+      )}
     </Pressable>
   );
 }
@@ -111,18 +114,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  selectionHitArea: {
-    width: 30,
+  selectionIcon: {
+    width: 36,
     height: 36,
-    marginRight: 7,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkbox: {
-    width: 19,
-    height: 19,
-    borderRadius: 6,
-    borderWidth: 1,
+    borderRadius: 12,
+    marginRight: 11,
     alignItems: 'center',
     justifyContent: 'center',
   },

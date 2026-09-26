@@ -27,7 +27,7 @@ import {
 } from '@/src/helpers/TransactionsMutationHelpers';
 import ModalPanel from '@/src/components/ui/modal-panel';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { MovementSelectionBox, MovementSelectionToolbar } from './movement-selection-controls';
+import { MovementSelectionIcon, MovementSelectionToolbar } from './movement-selection-controls';
 
 type BadgeStatus = 'upcoming' | 'soon' | 'today' | 'overdue' | null;
 
@@ -495,6 +495,11 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
           const amount = movement.totalAmount;
           const hasPending = badgeStatus !== null;
           const isSelected = selectedMovementIds.has(movement.id);
+          const previousSelected =
+            index > 0 && selectedMovementIds.has(sortedMovements[index - 1].movement.id);
+          const nextSelected =
+            index < sortedMovements.length - 1 &&
+            selectedMovementIds.has(sortedMovements[index + 1].movement.id);
 
           return (
             <TouchableOpacity
@@ -512,7 +517,12 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
               delayLongPress={300}
               activeOpacity={0.6}
               // @ts-ignore — web-only prop for CSS hover
-              dataSet={{ movementRow: '', movementSelected: isSelected ? 'true' : undefined }}
+              dataSet={{
+                movementRow: '',
+                movementSelected: isSelected ? 'true' : undefined,
+                movementSelectedStart: isSelected && !previousSelected ? 'true' : undefined,
+                movementSelectedEnd: isSelected && !nextSelected ? 'true' : undefined,
+              }}
               style={[
                 styles.recurringItem,
                 dynamicStyles.itemBorder,
@@ -521,15 +531,18 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
               ]}
             >
               {isWeb ? (
-                <MovementSelectionBox
+                <MovementSelectionIcon
                   selected={isSelected}
                   onToggle={() => toggleMovementSelection(movement.id)}
                   label={`Select ${movement.description}`}
+                  icon={icon}
+                  color={color}
                 />
-              ) : null}
-              <View style={[styles.iconContainer, { backgroundColor: color }]}>
-                <IconSymbol name={icon} size={isWeb ? 17 : 20} color="#FFFFFF" />
-              </View>
+              ) : (
+                <View style={[styles.iconContainer, { backgroundColor: color }]}>
+                  <IconSymbol name={icon} size={20} color="#FFFFFF" />
+                </View>
+              )}
               <View style={styles.itemInfo}>
                 <ThemedText style={styles.itemDescription} numberOfLines={1}>
                   {movement.description}

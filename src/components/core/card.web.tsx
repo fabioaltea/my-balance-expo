@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View, type ViewStyle } from 'react-native';
 
 import { useThemeColor } from '@/src/hooks/use-theme-color';
+import { webPanelBackground } from '@/src/constants/theme';
 
 interface CardProps {
   backgroundColor?: string;
@@ -28,7 +29,7 @@ const Card: React.FC<CardProps> = ({
   style,
   compact = false,
 }) => {
-  const themeBackground = useThemeColor({}, 'cardBackground');
+  const themeBackground = useThemeColor(webPanelBackground, 'cardBackground');
   const borderColor = useThemeColor(
     { light: 'rgba(23, 38, 31, 0.10)', dark: 'rgba(255, 255, 255, 0.10)' },
     'cardBorder',

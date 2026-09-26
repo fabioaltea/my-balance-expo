@@ -272,7 +272,6 @@ export function LandscapeLayout() {
   const incomeExpenseData = chartViewMode === 'months' ? incomeExpenseMonthly : incomeExpenseYearly;
   const breakdownData = chartViewMode === 'months' ? breakdownMonthly : breakdownYearly;
 
-  const cardBackground = useThemeColor({}, 'cardBackground');
   const textColor = useThemeColor({}, 'text');
   const mutedTextColor = useThemeColor({ light: '#58665F', dark: '#B3BCB7' }, 'tabIconDefault');
   const controlBackground = useThemeColor({ light: '#EEF2EF', dark: '#2A302D' }, 'menuBackground');
@@ -579,7 +578,7 @@ export function LandscapeLayout() {
 
           {/* Balance History chart */}
           <LayoutColumn flex={1.08}>
-            <Card backgroundColor={cardBackground} color={textColor} style={{ flex: 1 }} compact>
+            <Card color={textColor} style={{ flex: 1 }} compact>
               <RNText style={[styles.chartTitle, { color: mutedTextColor }]}>
                 Balance history
               </RNText>
@@ -597,7 +596,7 @@ export function LandscapeLayout() {
 
           {/* Income/Expense chart */}
           <LayoutColumn flex={1.08}>
-            <Card backgroundColor={cardBackground} color={textColor} style={{ flex: 1 }} compact>
+            <Card color={textColor} style={{ flex: 1 }} compact>
               <RNText style={[styles.chartTitle, { color: mutedTextColor }]}>
                 Income and expenses
               </RNText>
@@ -613,7 +612,7 @@ export function LandscapeLayout() {
 
           {/* Breakdown chart */}
           <LayoutColumn flex={1.08}>
-            <Card backgroundColor={cardBackground} color={textColor} style={{ flex: 1 }} compact>
+            <Card color={textColor} style={{ flex: 1 }} compact>
               <View style={styles.chartHeader}>
                 <RNText style={[styles.chartTitle, { color: mutedTextColor }]}>Breakdown</RNText>
                 <View style={chartControlStyles.controlsRow}>

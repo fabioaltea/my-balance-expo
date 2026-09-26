@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Image } from 'react-native';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
 import { useAuthContext } from '@/src/state';
 import ContextMenu from '@/src/components/ui/context-menu';
+import { webPanelBackground } from '@/src/constants/theme';
 
 const LANDING_BASE_URL = process.env.EXPO_PUBLIC_LANDING_URL || 'https://mybalance.tech';
 
@@ -28,10 +29,7 @@ export function CommandBar({
     { light: 'rgba(23, 38, 31, 0.10)', dark: 'rgba(255,255,255,0.10)' },
     'cardBorder',
   );
-  const backgroundColor = useThemeColor(
-    { light: 'rgba(249, 251, 250, 0.94)', dark: 'rgba(35, 39, 37, 0.94)' },
-    'cardBackground',
-  );
+  const backgroundColor = useThemeColor(webPanelBackground, 'cardBackground');
 
   const { logout } = useAuthContext();
 

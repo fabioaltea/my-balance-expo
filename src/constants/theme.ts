@@ -8,6 +8,11 @@ import { Platform } from 'react-native';
 const tintColorLight = '#2F4F3F';
 const tintColorDark = '#fff';
 
+export const webPanelBackground = {
+  light: 'rgba(249, 251, 250, 0.94)',
+  dark: 'rgba(35, 39, 37, 0.94)',
+};
+
 export const Colors = {
   light: {
     text: '#11181C',

@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import { Alert, View, StyleSheet, Pressable, Text as RNText } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
@@ -36,6 +36,7 @@ import {
   IncomeExpenseChart,
   StackedBarChart,
 } from '@/src/components/charts';
+import ChartFocusPanel from '@/src/components/charts/chart-focus-panel.web';
 import Card from '@/src/components/core/card';
 import { ChartDataHelper } from '@/src/helpers/ChartDataHelper';
 import { EXCLUDED_CATEGORIES } from '@/src/constants/categories';
@@ -114,6 +115,11 @@ export function LandscapeLayout() {
 
   // Chart view mode state (months or years)
   const [chartViewMode, setChartViewMode] = useState<'months' | 'years'>('months');
+  const [hoveredChartPeriod, setHoveredChartPeriod] = useState<string | null>(null);
+  const [pinnedChartPeriod, setPinnedChartPeriod] = useState<string | null>(null);
+  const [expandedChart, setExpandedChart] = useState<'balance' | 'cashflow' | 'breakdown' | null>(
+    null,
+  );
 
   // Keep the content mounted while the drawer close animation finishes.
   const [drawerContent, setDrawerContent] = useState<DrawerState | null>(null);
@@ -151,46 +157,108 @@ export function LandscapeLayout() {
     return { startDate, endDate, label: '' };
   });
 
+  const selectedChartDate = useMemo(() => {
+    const [day, month, year] = dateRange.endDate.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  }, [dateRange.endDate]);
+
+  useEffect(() => {
+    setHoveredChartPeriod(null);
+    setPinnedChartPeriod(null);
+  }, [chartViewMode, dateRange.endDate, selectedAccount]);
+
+  const selectedChartPeriod =
+    hoveredChartPeriod ??
+    pinnedChartPeriod ??
+    (chartViewMode === 'years'
+      ? String(selectedChartDate.getFullYear())
+      : `${selectedChartDate.getFullYear()}-${String(selectedChartDate.getMonth() + 1).padStart(2, '0')}`);
+
   // Calculate total months span from oldest movement to now
   const chartMonthsToShow = useMemo(() => {
     if (movements.length === 0) return 12;
-    let oldest = Date.now();
+    const now = new Date();
+    let oldestMonth = now.getFullYear() * 12 + now.getMonth();
     for (const m of movements) {
       const [d, mo, y] = m.date.split('-').map(Number);
-      const t = new Date(y, mo - 1, d).getTime();
-      if (t < oldest) oldest = t;
+      if (!d || !mo || !y) continue;
+      oldestMonth = Math.min(oldestMonth, y * 12 + mo - 1);
     }
-    const months = Math.ceil((Date.now() - oldest) / (30.44 * 24 * 60 * 60 * 1000)) + 1;
-    return Math.max(months, 6);
+    const months = now.getFullYear() * 12 + now.getMonth() - oldestMonth + 1;
+    return Math.max(months, 12);
   }, [movements]);
+
+  const chartAccounts = useMemo(
+    () =>
+      selectedAccount === 'All'
+        ? accounts
+        : accounts.filter((account) => account.name === selectedAccount),
+    [accounts, selectedAccount],
+  );
+  const chartTransactions = useMemo(
+    () =>
+      selectedAccount === 'All'
+        ? transactions
+        : transactions.filter((transaction) => transaction.account === selectedAccount),
+    [transactions, selectedAccount],
+  );
+  const chartMovements = useMemo(() => {
+    if (selectedAccount === 'All') return movements;
+    return chartTransactions.map((transaction) => ({
+      id: transaction.transactionId,
+      date: transaction.date,
+      description: transaction.description,
+      category: transaction.category,
+      transactions: [transaction],
+      totalAmount: transaction.type === 'income' ? transaction.amount : -transaction.amount,
+      type: transaction.type,
+    }));
+  }, [movements, chartTransactions, selectedAccount]);
 
   // Chart data hooks - load all available periods for scrollable charts
   // Monthly data
   const balanceHistoryMonthly = useMemo(
-    () => ChartDataHelper.computeMonthlyBalances(transactions, accounts, chartMonthsToShow, 0),
-    [transactions, accounts, chartMonthsToShow],
+    () =>
+      ChartDataHelper.computeMonthlyBalances(
+        chartTransactions,
+        chartAccounts,
+        chartMonthsToShow,
+        0,
+      ),
+    [chartTransactions, chartAccounts, chartMonthsToShow],
   );
 
   const incomeExpenseMonthly = useMemo(
-    () => ChartDataHelper.computeIncomeExpenses(movements, chartMonthsToShow, 0),
-    [movements, chartMonthsToShow],
+    () => ChartDataHelper.computeIncomeExpenses(chartMovements, chartMonthsToShow, 0),
+    [chartMovements, chartMonthsToShow],
   );
 
   const [breakdownType, setBreakdownType] = useState<'expense' | 'income'>('expense');
   const [breakdownGroupBy, setBreakdownGroupBy] = useState<'category' | 'account'>('category');
 
+  useEffect(() => {
+    if (selectedAccount !== 'All') setBreakdownGroupBy('category');
+  }, [selectedAccount]);
+
   const breakdownMonthly = useMemo(
     () =>
       ChartDataHelper.computeCategoryAccountBreakdown(
-        movements,
-        transactions,
-        accounts,
+        chartMovements,
+        chartTransactions,
+        chartAccounts,
         breakdownType,
         breakdownGroupBy,
         chartMonthsToShow,
         0,
       ),
-    [movements, transactions, accounts, breakdownType, breakdownGroupBy, chartMonthsToShow],
+    [
+      chartMovements,
+      chartTransactions,
+      chartAccounts,
+      breakdownType,
+      breakdownGroupBy,
+      chartMonthsToShow,
+    ],
   );
 
   // Aggregate monthly data into yearly for "years" view mode
@@ -208,7 +276,13 @@ export function LandscapeLayout() {
       });
     });
 
-    return Array.from(yearMap.values()).sort((a, b) => a.year - b.year);
+    return Array.from(yearMap.values())
+      .sort((a, b) => a.year - b.year)
+      .map((year) => ({
+        ...year,
+        partial:
+          year.year === balanceHistoryMonthly[0].year && balanceHistoryMonthly[0].monthIndex !== 0,
+      }));
   }, [balanceHistoryMonthly]);
 
   const incomeExpenseYearly = useMemo((): IncomeExpenseData[] => {
@@ -221,6 +295,7 @@ export function LandscapeLayout() {
       if (existing) {
         existing.income += monthData.income;
         existing.expenses += monthData.expenses;
+        existing.date = monthData.date;
       } else {
         yearMap.set(monthData.year, {
           ...monthData,
@@ -230,7 +305,13 @@ export function LandscapeLayout() {
       }
     });
 
-    return Array.from(yearMap.values()).sort((a, b) => a.year - b.year);
+    return Array.from(yearMap.values())
+      .sort((a, b) => a.year - b.year)
+      .map((year) => ({
+        ...year,
+        partial:
+          year.year === incomeExpenseMonthly[0].year && incomeExpenseMonthly[0].monthIndex !== 0,
+      }));
   }, [incomeExpenseMonthly]);
 
   const breakdownYearly = useMemo((): PeriodBreakdownData[] => {
@@ -250,6 +331,7 @@ export function LandscapeLayout() {
           }
         });
         existing.total += monthData.total;
+        existing.date = monthData.date;
       } else {
         yearMap.set(monthData.year, {
           ...monthData,
@@ -265,14 +347,52 @@ export function LandscapeLayout() {
       data.items.sort((a, b) => b.amount - a.amount);
     });
 
-    return Array.from(yearMap.values()).sort((a, b) => a.year - b.year);
+    return Array.from(yearMap.values())
+      .sort((a, b) => a.year - b.year)
+      .map((year) => ({
+        ...year,
+        partial: year.year === breakdownMonthly[0].year && breakdownMonthly[0].monthIndex !== 0,
+      }));
   }, [breakdownMonthly]);
 
   // Select data based on chart view mode
-  const balanceHistoryData =
-    chartViewMode === 'months' ? balanceHistoryMonthly : balanceHistoryYearly;
-  const incomeExpenseData = chartViewMode === 'months' ? incomeExpenseMonthly : incomeExpenseYearly;
-  const breakdownData = chartViewMode === 'months' ? breakdownMonthly : breakdownYearly;
+  const inSelectedWindow = useCallback(
+    (period: { year: number; monthIndex: number }) => {
+      if (chartViewMode === 'years') {
+        return (
+          period.year <= selectedChartDate.getFullYear() &&
+          period.year > selectedChartDate.getFullYear() - 6
+        );
+      }
+      const selectedMonthNumber =
+        selectedChartDate.getFullYear() * 12 + selectedChartDate.getMonth();
+      const periodMonthNumber = period.year * 12 + period.monthIndex;
+      return (
+        periodMonthNumber <= selectedMonthNumber && periodMonthNumber > selectedMonthNumber - 12
+      );
+    },
+    [chartViewMode, selectedChartDate],
+  );
+
+  const balanceHistoryData = useMemo(
+    () =>
+      (chartViewMode === 'months' ? balanceHistoryMonthly : balanceHistoryYearly).filter(
+        inSelectedWindow,
+      ),
+    [chartViewMode, balanceHistoryMonthly, balanceHistoryYearly, inSelectedWindow],
+  );
+  const incomeExpenseData = useMemo(
+    () =>
+      (chartViewMode === 'months' ? incomeExpenseMonthly : incomeExpenseYearly).filter(
+        inSelectedWindow,
+      ),
+    [chartViewMode, incomeExpenseMonthly, incomeExpenseYearly, inSelectedWindow],
+  );
+  const breakdownData = useMemo(
+    () =>
+      (chartViewMode === 'months' ? breakdownMonthly : breakdownYearly).filter(inSelectedWindow),
+    [chartViewMode, breakdownMonthly, breakdownYearly, inSelectedWindow],
+  );
 
   const textColor = useThemeColor({}, 'text');
   const mutedTextColor = useThemeColor({ light: '#58665F', dark: '#B3BCB7' }, 'tabIconDefault');
@@ -585,7 +705,7 @@ export function LandscapeLayout() {
 
       {/* Main dashboard grid */}
       <LayoutContainer padding={16} gap={16}>
-        {/* Row 1: Charts and Balance cards - fixed height so bars render correctly on web */}
+        {/* Compact charts share the selected period; each can be opened for inspection. */}
         <LayoutRow gap={16} height="45%">
           {/* Balance and Financial Summary */}
           <LayoutColumn flex={0.86} gap={16}>
@@ -602,9 +722,19 @@ export function LandscapeLayout() {
           {/* Balance History chart */}
           <LayoutColumn flex={1.08}>
             <Card color={textColor} style={{ flex: 1 }} compact>
-              <RNText style={[styles.chartTitle, { color: mutedTextColor }]}>
-                Balance history
-              </RNText>
+              <View style={styles.chartHeader}>
+                <RNText style={[styles.chartTitle, { color: mutedTextColor }]}>
+                  Balance history
+                </RNText>
+                <Pressable
+                  onPress={() => setExpandedChart('balance')}
+                  accessibilityRole="button"
+                  accessibilityLabel="Expand balance history"
+                  style={styles.expandButton}
+                >
+                  <MaterialIcons name="open-in-full" size={15} color={mutedTextColor} />
+                </Pressable>
+              </View>
               <StackedBarChart
                 data={balanceHistoryData}
                 showLabels={true}
@@ -613,6 +743,9 @@ export function LandscapeLayout() {
                 showTotal={false}
                 viewMode={chartViewMode}
                 scrollable
+                selectedKey={selectedChartPeriod}
+                onHoverKeyChange={setHoveredChartPeriod}
+                onSelectKey={setPinnedChartPeriod}
               />
             </Card>
           </LayoutColumn>
@@ -620,15 +753,28 @@ export function LandscapeLayout() {
           {/* Income/Expense chart */}
           <LayoutColumn flex={1.08}>
             <Card color={textColor} style={{ flex: 1 }} compact>
-              <RNText style={[styles.chartTitle, { color: mutedTextColor }]}>
-                Income and expenses
-              </RNText>
+              <View style={styles.chartHeader}>
+                <RNText style={[styles.chartTitle, { color: mutedTextColor }]}>
+                  Income and expenses
+                </RNText>
+                <Pressable
+                  onPress={() => setExpandedChart('cashflow')}
+                  accessibilityRole="button"
+                  accessibilityLabel="Expand income and expenses"
+                  style={styles.expandButton}
+                >
+                  <MaterialIcons name="open-in-full" size={15} color={mutedTextColor} />
+                </Pressable>
+              </View>
               <IncomeExpenseChart
                 data={incomeExpenseData}
                 showLabels={true}
                 showYAxis={true}
                 viewMode={chartViewMode}
                 scrollable
+                selectedKey={selectedChartPeriod}
+                onHoverKeyChange={setHoveredChartPeriod}
+                onSelectKey={setPinnedChartPeriod}
               />
             </Card>
           </LayoutColumn>
@@ -660,19 +806,37 @@ export function LandscapeLayout() {
                     onPress={() =>
                       setBreakdownGroupBy(breakdownGroupBy === 'category' ? 'account' : 'category')
                     }
+                    disabled={selectedAccount !== 'All'}
+                    accessibilityLabel={
+                      selectedAccount === 'All'
+                        ? 'Change grouping'
+                        : 'Grouped by category when an account is selected'
+                    }
                   >
                     <RNText style={[chartControlStyles.pillText, { color: textColor }]}>
                       {breakdownGroupBy === 'category' ? 'Categories' : 'Accounts'}
                     </RNText>
                   </Pressable>
+                  <Pressable
+                    onPress={() => setExpandedChart('breakdown')}
+                    accessibilityRole="button"
+                    accessibilityLabel="Expand breakdown"
+                    style={styles.expandButton}
+                  >
+                    <MaterialIcons name="open-in-full" size={15} color={mutedTextColor} />
+                  </Pressable>
                 </View>
               </View>
               <BreakdownStackedChart
                 data={breakdownData}
+                groupBy={breakdownGroupBy}
                 showLabels={true}
                 showYAxis={true}
                 viewMode={chartViewMode}
                 scrollable
+                selectedKey={selectedChartPeriod}
+                onHoverKeyChange={setHoveredChartPeriod}
+                onSelectKey={setPinnedChartPeriod}
               />
             </Card>
           </LayoutColumn>
@@ -730,6 +894,23 @@ export function LandscapeLayout() {
         {drawerContent?.type === 'settings' && <SettingsView user={user} logout={logout} />}
       </SideDrawer>
 
+      {expandedChart && (
+        <ChartFocusPanel
+          kind={expandedChart}
+          viewMode={chartViewMode}
+          selectedKey={selectedChartPeriod}
+          onHoverKeyChange={setHoveredChartPeriod}
+          onSelectKey={setPinnedChartPeriod}
+          onClose={() => setExpandedChart(null)}
+          balanceData={balanceHistoryData}
+          incomeExpenseData={incomeExpenseData}
+          breakdownData={breakdownData}
+          breakdownType={breakdownType}
+          breakdownGroupBy={breakdownGroupBy}
+          accountName={selectedAccount}
+        />
+      )}
+
       {/* Toast notification */}
       <Toast
         isVisible={toastVisible}
@@ -771,6 +952,13 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     justifyContent: 'space-between',
     gap: 8,
+  },
+  expandButton: {
+    width: 27,
+    height: 27,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   chartTitle: {
     minHeight: 30,

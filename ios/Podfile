@@ -18,7 +18,8 @@ ENV['EX_DEV_CLIENT_NETWORK_INSPECTOR'] ||= podfile_properties['EX_DEV_CLIENT_NET
 ENV['RCT_USE_RN_DEP'] ||= '1' if podfile_properties['ios.buildReactNativeFromSource'] != 'true'
 ENV['RCT_USE_PREBUILT_RNCORE'] ||= '1' if podfile_properties['ios.buildReactNativeFromSource'] != 'true'
 ENV['RCT_HERMES_V1_ENABLED'] ||= '1' if podfile_properties['expo.useHermesV1'] == 'true'
-platform :ios, podfile_properties['ios.deploymentTarget'] || '15.1'
+ios_deployment_target = podfile_properties['ios.deploymentTarget'] || '15.1'
+platform :ios, ios_deployment_target
 
 prepare_react_native_project!
 
@@ -74,5 +75,16 @@ target 'MyBalance' do
       :mac_catalyst_enabled => false,
       :ccache_enabled => ccache_enabled?(podfile_properties),
     )
+
+    # Resource and privacy bundle targets can retain older podspec deployment targets.
+    minimum_ios_version = Gem::Version.new(ios_deployment_target)
+    installer.pods_project.targets.each do |pod_target|
+      pod_target.build_configurations.each do |configuration|
+        current_version = configuration.build_settings['IPHONEOS_DEPLOYMENT_TARGET']
+        next if current_version && Gem::Version.new(current_version) >= minimum_ios_version
+
+        configuration.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = ios_deployment_target
+      end
+    end
   end
 end

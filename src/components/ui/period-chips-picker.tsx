@@ -1,7 +1,7 @@
-import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
+import { View, StyleSheet, Pressable } from 'react-native';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import ChipButton from './chip-button';
-import { useState, useMemo, useEffect } from 'react';
-import React from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { formatDateToDDMMYYYY } from '@/src/utils/dateUtils';
 import { usePlatformContext, type IDateRange } from '@/src/state';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
@@ -182,46 +182,41 @@ const PeriodPicker: React.FC<PeriodPickerProps> = ({
     return [];
   }, [selectedYear, currentYear, currentMonthIndex, months]);
 
-  const inactiveBackground = useThemeColor(
-    { light: '#a8a8a8ff', dark: '#4a4a4a' },
-    'tabIconDefault',
+  const controlBackground = useThemeColor({ light: '#EEF2EF', dark: '#2A302D' }, 'menuBackground');
+  const controlColor = useThemeColor({ light: '#34443C', dark: '#E7ECE9' }, 'text');
+  const borderColor = useThemeColor(
+    { light: 'rgba(36, 68, 55, 0.12)', dark: 'rgba(255, 255, 255, 0.10)' },
+    'cardBorder',
   );
-  const activeBackground = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
 
-  const dynamicStyles = StyleSheet.create({
-    chipButton: {
-      ...styles.chipButton,
-      backgroundColor: inactiveBackground,
-    },
-  });
+  const arrowStyle = { backgroundColor: controlBackground, borderColor };
 
   return (
     <View style={[styles.wrapper, !isLandscape && { marginBottom: 16 }]}>
-      <TouchableOpacity
-        style={[styles.arrowButton, dynamicStyles.chipButton]}
-        onPress={goToPreviousMonth}
-      >
-        <Text style={[styles.arrowText, isLandscape && { fontSize: 13 }]}>←</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={[
-          styles.arrowButton,
-          !canGoNext() && styles.arrowButtonDisabled,
-          dynamicStyles.chipButton,
-        ]}
-        onPress={goToNextMonth}
-        disabled={!canGoNext()}
-      >
-        <Text
-          style={[
-            styles.arrowText,
-            !canGoNext() && styles.arrowTextDisabled,
-            isLandscape && { fontSize: 13 },
-          ]}
+      <View style={styles.arrows}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Previous period"
+          style={({ pressed }) => [styles.arrowButton, arrowStyle, pressed && styles.pressed]}
+          onPress={goToPreviousMonth}
         >
-          →
-        </Text>
-      </TouchableOpacity>
+          <MaterialIcons name="chevron-left" size={20} color={controlColor} />
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Next period"
+          style={({ pressed }) => [
+            styles.arrowButton,
+            arrowStyle,
+            !canGoNext() && styles.arrowButtonDisabled,
+            pressed && styles.pressed,
+          ]}
+          onPress={goToNextMonth}
+          disabled={!canGoNext()}
+        >
+          <MaterialIcons name="chevron-right" size={20} color={controlColor} />
+        </Pressable>
+      </View>
       <ChipButton
         text="Months"
         key="Months"
@@ -246,39 +241,21 @@ const PeriodPicker: React.FC<PeriodPickerProps> = ({
 
 const styles = StyleSheet.create({
   wrapper: {
-    display: 'flex',
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
+  arrows: { flexDirection: 'row', gap: 4 },
   arrowButton: {
-    padding: 8,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    backgroundColor: '#f0f0f0',
+    width: 38,
+    height: 38,
+    borderRadius: 18,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  arrowButtonDisabled: {
-    opacity: 0.3,
-  },
-  arrowText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  arrowTextDisabled: {
-    color: '#e3e3e3',
-  },
-  chipWrapper: {
-    position: 'relative',
-    flexGrow: 1,
-  },
-  chipButton: {
-    padding: 8,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-    display: 'flex',
-  },
+  arrowButtonDisabled: { opacity: 0.38 },
+  pressed: { opacity: 0.82 },
 });
 
 export default PeriodPicker;

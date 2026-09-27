@@ -5,6 +5,7 @@ import { useThemeColor } from '@/src/hooks/use-theme-color';
 import type { Account } from '@/src/state';
 import * as Haptics from 'expo-haptics';
 import IconSymbol from '@/src/components/ui/icon-symbol';
+import { webPanelBackground } from '@/src/constants/theme';
 
 interface IAccountCardProps {
   account: Account;
@@ -12,10 +13,16 @@ interface IAccountCardProps {
 }
 
 const AccountCard: React.FC<IAccountCardProps> = ({ account, onPress }) => {
-  const borderColor = useThemeColor({ light: '#e0e0e0', dark: '#333' }, 'tabIconDefault');
+  const borderColor = useThemeColor(
+    { light: 'rgba(23, 38, 31, 0.10)', dark: 'rgba(255, 255, 255, 0.10)' },
+    'cardBorder',
+  );
+  const backgroundColor = useThemeColor(webPanelBackground, 'cardBackground');
+  const positiveColor = useThemeColor({ light: '#25633F', dark: '#7FCF9D' }, 'tint');
+  const negativeColor = useThemeColor({ light: '#A33A3A', dark: '#F09292' }, 'tint');
 
   const formatBalance = (amount: number) => {
-    return `€ ${amount.toFixed(2).replace('.', ',')}`;
+    return amount.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' });
   };
 
   const handlePress = () => {
@@ -32,7 +39,7 @@ const AccountCard: React.FC<IAccountCardProps> = ({ account, onPress }) => {
   };
 
   return (
-    <Pressable onPress={handlePress} style={[styles.container, { borderColor }]}>
+    <Pressable onPress={handlePress} style={[styles.container, { borderColor, backgroundColor }]}>
       {/* Account Header */}
       <View style={styles.header}>
         <View
@@ -67,7 +74,7 @@ const AccountCard: React.FC<IAccountCardProps> = ({ account, onPress }) => {
           style={[
             styles.balanceAmount,
             {
-              color: account.balance >= 0 ? '#22c55e' : '#ef4444',
+              color: account.balance >= 0 ? positiveColor : negativeColor,
             },
           ]}
         >
@@ -76,7 +83,7 @@ const AccountCard: React.FC<IAccountCardProps> = ({ account, onPress }) => {
       </View>
 
       {/* Account Color Preview */}
-      <View style={styles.colorPreview}>
+      <View style={[styles.colorPreview, { borderTopColor: borderColor }]}>
         <View
           style={[
             styles.colorSample,
@@ -102,18 +109,18 @@ const AccountCard: React.FC<IAccountCardProps> = ({ account, onPress }) => {
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 16,
-    padding: 20,
+    borderRadius: 30,
+    padding: 18,
     marginBottom: 16,
     borderWidth: 1,
-    shadowColor: '#000',
+    shadowColor: '#173126',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 5,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOpacity: 0.06,
+    shadowRadius: 14,
+    elevation: 2,
   },
   header: {
     flexDirection: 'row',
@@ -130,12 +137,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   accountName: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
     marginBottom: 2,
   },
   transactionCount: {
-    fontSize: 14,
+    fontSize: 12,
     opacity: 0.7,
   },
   balanceSection: {
@@ -147,7 +154,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   balanceAmount: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: '800',
   },
   colorPreview: {
@@ -155,7 +162,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 12,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: '#e0e0e0',
   },
   colorSample: {
     width: 40,

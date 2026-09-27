@@ -220,7 +220,7 @@ const HomeView: React.FC<HomeViewProps> = ({
         <Pager
           selectedPage={selectedAccountIndex}
           onPageSelected={handleAccountSwitch}
-          style={{ height: 110, marginBottom: 5 }}
+          style={{ height: 100, marginBottom: 16 }}
         >
           {accounts.map((account) => (
             <BalanceCard
@@ -272,7 +272,7 @@ const HomeView: React.FC<HomeViewProps> = ({
         <View onLayout={(e) => setStickyOffset(e.nativeEvent.layout.height)}>
           <PeriodPicker setDateRange={handleDateRangeChange} isLoading={isLoading} />
           <Pager
-            style={{ height: 230, marginHorizontal: -16, marginBottom: 16 }}
+            style={{ height: 230, marginHorizontal: -16, marginBottom: 8 }}
             selectedPage={summaryPagerIndex}
             onPageSelected={setSummaryPagerIndex}
             scrollEnabled={isCurrentPeriod && currentForecast.hasEnoughData}

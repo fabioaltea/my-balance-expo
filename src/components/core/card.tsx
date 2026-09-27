@@ -1,12 +1,12 @@
 import { useThemeColor } from '@/src/hooks/use-theme-color';
-import { StyleSheet, View, Text, Platform } from 'react-native';
+import { StyleSheet, View, Text } from 'react-native';
 import React from 'react';
+import { webPanelBackground } from '@/src/constants/theme';
 
 interface ICardProps {
   backgroundColor?: string;
   color?: string;
   label?: string;
-  /** Rendered by the web card header; accepted here for platform-resolved typing. */
   headerAction?: React.ReactNode;
   children: React.ReactNode;
   style?: import('react-native').ViewStyle;
@@ -15,71 +15,77 @@ interface ICardProps {
 
 const Card: React.FC<ICardProps> = ({
   backgroundColor,
-  color,
   label,
+  headerAction,
   children,
   style,
   compact = false,
 }) => {
-  const themeBackground = useThemeColor({}, 'cardBackground');
-  const themeColor = useThemeColor({}, 'cardColor');
-  const styles = StyleSheet.create({
-    //Card
-    card: {
-      backgroundColor: backgroundColor ?? themeBackground,
-      color: color ?? themeColor,
-      borderRadius: 30,
-      overflow: 'hidden',
-
-      paddingRight: 10,
-      paddingVertical: 15,
-      justifyContent: 'center',
-      flexShrink: 1,
-      ...(Platform.OS === 'web'
-        ? {
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.06)',
-            paddingLeft: 12,
-          }
-        : {
-            paddingLeft: 24,
-            minHeight: 100,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.08,
-            shadowRadius: 8,
-            elevation: 4,
-          }),
-    },
-
-    cardLabel: {
-      fontSize: 18,
-      fontWeight: '600',
-      color: '#848484ff',
-      marginBottom: 10,
-      marginLeft: 10,
-    },
-  });
-
-  const hasFlex = style && 'flex' in style;
+  const themeBackground = useThemeColor(webPanelBackground, 'cardBackground');
+  const borderColor = useThemeColor(
+    { light: 'rgba(23, 38, 31, 0.10)', dark: 'rgba(255, 255, 255, 0.10)' },
+    'cardBorder',
+  );
+  const mutedColor = useThemeColor({ light: '#617068', dark: '#AEB8B2' }, 'tabIconDefault');
+  const hasFlex = Boolean(style && 'flex' in style);
 
   return (
-    <View style={style}>
-      {label && (
-        <View>
-          <Text style={styles.cardLabel}>{label}</Text>
-        </View>
-      )}
+    <View style={[styles.wrapper, style]}>
       <View
         style={[
           styles.card,
-          hasFlex && { flex: 1 },
-          compact && { paddingLeft: 8, paddingRight: 12 },
+          { backgroundColor: backgroundColor ?? themeBackground, borderColor },
+          hasFlex && styles.fill,
+          Boolean(label || headerAction) && styles.contentTop,
+          compact && styles.compact,
         ]}
       >
+        {label || headerAction ? (
+          <View style={styles.header}>
+            {label ? (
+              <Text style={[styles.label, { color: mutedColor }]} numberOfLines={1}>
+                {label}
+              </Text>
+            ) : (
+              <View />
+            )}
+            {headerAction}
+          </View>
+        ) : null}
         {children}
       </View>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  wrapper: { width: '100%', minHeight: 0 },
+  card: {
+    borderWidth: 1,
+    borderRadius: 30,
+    paddingHorizontal: 18,
+    paddingVertical: 16,
+    justifyContent: 'center',
+    minHeight: 0,
+    shadowColor: '#173126',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.06,
+    shadowRadius: 14,
+    elevation: 2,
+  },
+  fill: { flex: 1 },
+  compact: { paddingHorizontal: 14, paddingVertical: 12 },
+  contentTop: { justifyContent: 'flex-start' },
+  header: {
+    minHeight: 28,
+    marginBottom: 8,
+    paddingHorizontal: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  label: { fontSize: 13, lineHeight: 18, fontWeight: '700', letterSpacing: -0.1 },
+});
 
 export default Card;

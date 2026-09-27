@@ -19,7 +19,6 @@ const ForecastCard: React.FC<IMonthlyForecastCardProps> = ({
 
   const textColor = useThemeColor({}, 'text');
   const subtleTextColor = useThemeColor({}, 'tabIconDefault');
-  const cardBackground = useThemeColor({}, 'cardBackground');
 
   const formatAmount = (amount: number) => {
     return `€${Math.abs(amount).toLocaleString('it-IT', {
@@ -130,8 +129,8 @@ const ForecastCard: React.FC<IMonthlyForecastCardProps> = ({
   const forecastPillOffset = isPositiveDelta ? pillOffset : -pillOffset;
 
   // Colors
-  const solidColor = '#4CAF50'; // Current balance (green)
-  const deltaColor = isPositiveDelta ? '#81C784' : '#E57373'; // Forecast delta
+  const solidColor = '#298965';
+  const deltaColor = isPositiveDelta ? '#8EC7A8' : '#D99A8B';
 
   const showSkeleton = (isLoading && currentBalance === 0) || isTransitioning;
 
@@ -141,26 +140,30 @@ const ForecastCard: React.FC<IMonthlyForecastCardProps> = ({
 
   if (showSkeleton) {
     return (
-      <Card backgroundColor={cardBackground} color={textColor}>
-        <ChartSkeleton variant="forecast" height={200} />
+      <Card>
+        <ChartSkeleton variant="forecast" height={194} />
       </Card>
     );
   }
 
   return (
-    <Card backgroundColor={cardBackground} color={textColor}>
-      <View style={{ height: 200 }}>
+    <Card>
+      <View style={{ height: 194 }}>
         {/* Header with Forecast label and change value */}
         <View style={styles.headerRow}>
-          <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+          <View style={styles.headerLeft}>
             <Text style={[styles.forecastLabel, { color: textColor }]}>Forecast</Text>
-            <Text style={{ color: 'lightgray', fontSize: 10, marginLeft: 6 }}>
+            <Text style={[styles.expectedDate, { color: subtleTextColor }]} numberOfLines={1}>
               {expectedEndDate}
             </Text>
           </View>
 
           <View style={styles.headerRight}>
-            <Text style={[styles.changeAmount, { color: isPositiveDelta ? '#4CAF50' : '#F44336' }]}>
+            <Text
+              style={[styles.changeAmount, { color: isPositiveDelta ? '#25633F' : '#A33A3A' }]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+            >
               {isPositiveDelta ? '+' : ''}
               {formatAmount(displayedDelta)}
             </Text>
@@ -242,7 +245,7 @@ const ForecastCard: React.FC<IMonthlyForecastCardProps> = ({
                 styles.forecastMarker,
                 {
                   left: `${forecastPos}%`,
-                  borderColor: isPositiveDelta ? '#4CAF50' : '#F44336',
+                  borderColor: isPositiveDelta ? '#298965' : '#B75E57',
                 },
               ]}
             />
@@ -280,7 +283,7 @@ const ForecastCard: React.FC<IMonthlyForecastCardProps> = ({
                 style={[
                   styles.valueLabelBubble,
                   {
-                    backgroundColor: isPositiveDelta ? '#4CAF50' : '#F44336',
+                    backgroundColor: isPositiveDelta ? '#298965' : '#B75E57',
                   },
                 ]}
               >
@@ -295,7 +298,7 @@ const ForecastCard: React.FC<IMonthlyForecastCardProps> = ({
         <View style={styles.detailsSection}>
           <View style={styles.detailRow}>
             <View style={styles.detailLabel}>
-              <View style={[styles.colorIndicator, { backgroundColor: '#4CAF50' }]} />
+              <View style={[styles.colorIndicator, { backgroundColor: '#298965' }]} />
               <Text style={[styles.detailText, { color: textColor }]}>Expected Incomes</Text>
             </View>
             <View style={styles.detailValue}>
@@ -307,7 +310,7 @@ const ForecastCard: React.FC<IMonthlyForecastCardProps> = ({
 
           <View style={styles.detailRow}>
             <View style={styles.detailLabel}>
-              <View style={[styles.colorIndicator, { backgroundColor: '#F44336' }]} />
+              <View style={[styles.colorIndicator, { backgroundColor: '#B75E57' }]} />
               <Text style={[styles.detailText, { color: textColor }]}>Expected Outcomes</Text>
             </View>
             <View style={styles.detailValue}>
@@ -330,20 +333,31 @@ const styles = StyleSheet.create({
     height: 28,
     marginBottom: 10,
   },
+  headerLeft: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
   forecastLabel: {
-    fontSize: 22,
-    fontWeight: '500',
+    fontSize: 13,
+    fontWeight: '700',
   },
   headerRight: {
+    flex: 1,
+    minWidth: 0,
     alignItems: 'flex-end',
   },
   changeAmount: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    width: '100%',
+    textAlign: 'right',
+    fontSize: 23,
+    fontWeight: '800',
+    letterSpacing: -0.5,
   },
   expectedDate: {
-    fontSize: 12,
-    marginTop: 2,
+    fontSize: 10,
+    marginLeft: 6,
   },
   barSection: {
     marginBottom: 0,
@@ -368,7 +382,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: '#E8E8E8',
+    backgroundColor: '#E4EAE5',
     borderRadius: 12,
   },
   barSegmentSolid: {
@@ -396,7 +410,7 @@ const styles = StyleSheet.create({
     marginLeft: -1.5,
   },
   currentMarker: {
-    backgroundColor: '#2E7D32',
+    backgroundColor: '#216D50',
   },
   forecastMarker: {
     backgroundColor: '#fff',
@@ -429,8 +443,8 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   detailsSection: {
-    gap: 12,
-    paddingHorizontal: 4,
+    gap: 8,
+    paddingHorizontal: 0,
     paddingVertical: 0,
   },
   detailRow: {
@@ -439,7 +453,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 8,
     paddingVertical: 0,
-    height: 30,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(109, 132, 117, 0.07)',
   },
   detailLabel: {
     flexDirection: 'row',
@@ -447,20 +463,20 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   colorIndicator: {
-    width: 15,
-    height: 15,
-    borderRadius: 6,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   detailText: {
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: 13,
+    fontWeight: '600',
   },
   detailValue: {
     alignItems: 'flex-end',
   },
   detailAmount: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 14,
+    fontWeight: '700',
   },
 });
 

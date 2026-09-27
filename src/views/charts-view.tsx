@@ -3,9 +3,7 @@ import { View, StyleSheet, ScrollView, Animated, TouchableOpacity, Text } from '
 import { useDataContext } from '@/src/state/DataProvider';
 import { ChartDataHelper } from '@/src/helpers/ChartDataHelper';
 import { useIncomeExpenses } from '@/src/hooks/useIncomeExpenses';
-import type { MonthlyData } from '@/src/types/charts';
-import type { IncomeExpenseData } from '@/src/types/charts';
-import type { PeriodBreakdownData } from '@/src/types/charts';
+import type { MonthlyData, IncomeExpenseData, PeriodBreakdownData } from '@/src/types/charts';
 import {
   StackedBarChart,
   IncomeExpenseChart,
@@ -17,6 +15,7 @@ import { useThemeColor } from '@/src/hooks/use-theme-color';
 import { LinearGradient } from 'expo-linear-gradient';
 import ModalPanel from '@/src/components/ui/modal-panel';
 import { ThemedText } from '@/src/components/core/themed-text';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 const MONTHS_TO_SHOW = 12;
 const YEARS_TO_SHOW = 6;
@@ -45,6 +44,14 @@ const ChartsView: React.FC = () => {
   const textColor = useThemeColor({}, 'text');
   const subtleTextColor = useThemeColor({}, 'tabIconDefault');
   const menuBackground = useThemeColor({}, 'menuBackground');
+  const controlBackground = useThemeColor({ light: '#EEF2EF', dark: '#2A302D' }, 'menuBackground');
+  const controlColor = useThemeColor({ light: '#34443C', dark: '#E7ECE9' }, 'text');
+  const activeControlBackground = useThemeColor({ light: '#244437', dark: '#D6E8DE' }, 'tint');
+  const activeControlColor = useThemeColor({ light: '#F7FAF8', dark: '#183027' }, 'background');
+  const controlBorder = useThemeColor(
+    { light: 'rgba(36, 68, 55, 0.12)', dark: 'rgba(255, 255, 255, 0.10)' },
+    'cardBorder',
+  );
   const scrollY = useRef(new Animated.Value(0)).current;
   const fadeOpacity = scrollY.interpolate({
     inputRange: [0, 30],
@@ -428,27 +435,52 @@ const ChartsView: React.FC = () => {
         <View style={styles.navigationContainer}>
           {/* View mode toggle */}
           <TouchableOpacity
-            style={[styles.viewModeChip, viewMode === 'years' && styles.viewModeChipActive]}
+            style={[
+              styles.viewModeChip,
+              {
+                backgroundColor: viewMode === 'years' ? activeControlBackground : controlBackground,
+                borderColor: viewMode === 'years' ? activeControlBackground : controlBorder,
+              },
+            ]}
             onPress={toggleViewMode}
+            accessibilityRole="button"
+            accessibilityLabel="Switch chart period"
           >
-            <Text style={[styles.viewModeText, viewMode === 'years' && styles.viewModeTextActive]}>
+            <Text
+              style={[
+                styles.viewModeText,
+                { color: viewMode === 'years' ? activeControlColor : controlColor },
+              ]}
+            >
               {viewMode === 'months' ? 'Months' : 'Years'}
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.arrowButton, !canGoPrevious && styles.arrowButtonDisabled]}
+            style={[
+              styles.arrowButton,
+              { backgroundColor: controlBackground, borderColor: controlBorder },
+              !canGoPrevious && styles.arrowButtonDisabled,
+            ]}
             onPress={goToPrevious}
             disabled={!canGoPrevious}
+            accessibilityRole="button"
+            accessibilityLabel="Previous chart period"
           >
-            <Text style={[styles.arrowText, !canGoPrevious && styles.arrowTextDisabled]}>←</Text>
+            <MaterialIcons name="chevron-left" size={20} color={controlColor} />
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.arrowButton, !canGoNext && styles.arrowButtonDisabled]}
+            style={[
+              styles.arrowButton,
+              { backgroundColor: controlBackground, borderColor: controlBorder },
+              !canGoNext && styles.arrowButtonDisabled,
+            ]}
             onPress={goToNext}
             disabled={!canGoNext}
+            accessibilityRole="button"
+            accessibilityLabel="Next chart period"
           >
-            <Text style={[styles.arrowText, !canGoNext && styles.arrowTextDisabled]}>→</Text>
+            <MaterialIcons name="chevron-right" size={20} color={controlColor} />
           </TouchableOpacity>
         </View>
       </View>
@@ -499,12 +531,15 @@ const ChartsView: React.FC = () => {
         <View style={styles.chartHeaderRow}>
           <Text style={[styles.chartLabel, { color: textColor }]}>Expenses Breakdown</Text>
           <TouchableOpacity
-            style={styles.groupByChip}
+            style={[
+              styles.groupByChip,
+              { backgroundColor: controlBackground, borderColor: controlBorder },
+            ]}
             onPress={() =>
               setExpenseGroupBy((prev) => (prev === 'category' ? 'account' : 'category'))
             }
           >
-            <Text style={styles.groupByText}>
+            <Text style={[styles.groupByText, { color: controlColor }]}>
               {expenseGroupBy === 'category' ? 'Category' : 'Account'}
             </Text>
           </TouchableOpacity>
@@ -525,12 +560,15 @@ const ChartsView: React.FC = () => {
         <View style={styles.chartHeaderRow}>
           <Text style={[styles.chartLabel, { color: textColor }]}>Income Breakdown</Text>
           <TouchableOpacity
-            style={styles.groupByChip}
+            style={[
+              styles.groupByChip,
+              { backgroundColor: controlBackground, borderColor: controlBorder },
+            ]}
             onPress={() =>
               setIncomeGroupBy((prev) => (prev === 'category' ? 'account' : 'category'))
             }
           >
-            <Text style={styles.groupByText}>
+            <Text style={[styles.groupByText, { color: controlColor }]}>
               {incomeGroupBy === 'category' ? 'Category' : 'Account'}
             </Text>
           </TouchableOpacity>
@@ -807,37 +845,27 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   arrowButton: {
-    padding: 8,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    backgroundColor: '#f0f0f0',
+    width: 38,
+    height: 38,
+    borderRadius: 18,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   arrowButtonDisabled: {
     opacity: 0.3,
   },
-  arrowText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  arrowTextDisabled: {
-    color: '#999',
-  },
   viewModeChip: {
-    paddingVertical: 8,
-    paddingHorizontal: 14,
+    height: 38,
+    paddingHorizontal: 13,
     borderRadius: 20,
-    backgroundColor: '#f0f0f0',
-  },
-  viewModeChipActive: {
-    backgroundColor: '#2F4F3F',
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   viewModeText: {
     fontSize: 13,
-    fontWeight: '600',
-    color: '#333',
-  },
-  viewModeTextActive: {
-    color: '#fff',
+    fontWeight: '700',
   },
   chartLabel: {
     fontSize: 18,
@@ -855,15 +883,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   groupByChip: {
-    paddingVertical: 6,
+    minHeight: 34,
+    paddingVertical: 7,
     paddingHorizontal: 12,
-    borderRadius: 16,
-    backgroundColor: '#f0f0f0',
+    borderRadius: 20,
+    borderWidth: 1,
   },
   groupByText: {
     fontSize: 12,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: '700',
   },
   // Modal styles
   modalContent: {

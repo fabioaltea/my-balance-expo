@@ -363,7 +363,7 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
         style={isLandscape ? { flex: 1 } : undefined}
       >
         <View style={styles.emptyState}>
-          <IconSymbol name="repeat" size={isWeb ? 32 : 48} color="#999" />
+          <IconSymbol name="repeat" size={isWeb ? 32 : 40} color="#999" />
           <ThemedText style={[styles.emptyTitle, { color: '#999' }]}>
             No recurring movements
           </ThemedText>
@@ -703,19 +703,19 @@ const styles = StyleSheet.create({
   recurringItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: isWeb ? 8 : 10,
+    paddingVertical: isWeb ? 8 : 9,
     borderBottomWidth: 1,
   },
   lastItem: {
     borderBottomWidth: 0,
   },
   iconContainer: {
-    width: isWeb ? 36 : 50,
-    height: isWeb ? 36 : 50,
-    borderRadius: isWeb ? 12 : 30,
+    width: isWeb ? 36 : 42,
+    height: isWeb ? 36 : 42,
+    borderRadius: isWeb ? 12 : 14,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: isWeb ? 11 : 16,
+    marginRight: isWeb ? 11 : 12,
   },
   itemInfo: {
     flex: 1,
@@ -723,8 +723,8 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   itemDescription: {
-    fontSize: isWeb ? 14 : 16,
-    fontWeight: isWeb ? '600' : '500',
+    fontSize: isWeb ? 14 : 15,
+    fontWeight: '600',
     textTransform: 'capitalize',
   },
   itemSubtitle: {
@@ -734,7 +734,7 @@ const styles = StyleSheet.create({
   statusBadge: {
     paddingHorizontal: isWeb ? 6 : 8,
     paddingVertical: 2,
-    borderRadius: isWeb ? 8 : 12,
+    borderRadius: isWeb ? 8 : 10,
   },
   statusBadgeText: {
     fontSize: 10,
@@ -750,7 +750,7 @@ const styles = StyleSheet.create({
     minWidth: isWeb ? 24 : 28,
     paddingHorizontal: isWeb ? 7 : 8,
     paddingVertical: 2,
-    borderRadius: isWeb ? 8 : 12,
+    borderRadius: isWeb ? 8 : 10,
     alignItems: 'center',
   },
   countBadgeText: {
@@ -763,17 +763,17 @@ const styles = StyleSheet.create({
     gap: isWeb ? 6 : 8,
   },
   emptyTitle: {
-    fontSize: isWeb ? 15 : 18,
+    fontSize: isWeb ? 15 : 16,
     fontWeight: '600',
     marginTop: 8,
   },
   emptyText: {
-    fontSize: isWeb ? 12 : 14,
+    fontSize: isWeb ? 12 : 13,
     textAlign: 'center',
   },
   menuButton: {
     padding: 6,
-    borderRadius: isWeb ? 12 : 20,
+    borderRadius: isWeb ? 12 : 14,
     marginLeft: 4,
   },
   sheetHeader: {

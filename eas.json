@@ -12,7 +12,8 @@
         "APP_VARIANT": "development"
       },
       "ios": {
-        "simulator": false
+        "simulator": false,
+        "buildConfiguration": "Debug"
       },
       "android": {
         "buildType": "apk"

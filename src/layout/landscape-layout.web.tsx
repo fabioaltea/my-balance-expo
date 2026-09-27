@@ -49,6 +49,7 @@ import SettingsView from '@/src/views/settings-view';
 import CommandBar from './command-bar';
 import PeriodPicker from '@/src/components/ui/period-chips-picker';
 import SummaryCard from '@/src/components/cards/summary-card.web';
+import { buildCashFlowSeries } from '@/src/components/cards/cash-flow-series';
 import ManageView from '@/src/views/manage-view.web';
 import MapView from '@/src/views/map-view.web';
 
@@ -73,16 +74,8 @@ export function LandscapeLayout() {
   const backgroundColor = useThemeColor({ light: '#F2F5F3', dark: '#171A18' }, 'background');
 
   // Get data from centralized context
-  const {
-    accounts,
-    movements,
-    transactions,
-    getTotalIncome,
-    getTotalExpense,
-    calculateForecast,
-    isLoading,
-    reloadData,
-  } = useDataContext();
+  const { accounts, movements, transactions, calculateForecast, isLoading, reloadData } =
+    useDataContext();
 
   const { user, logout } = useAuthContext();
   const [showManage, setShowManage] = useState(false);
@@ -522,6 +515,11 @@ export function LandscapeLayout() {
     return filtered;
   }, [movements, selectedAccount, dateRange]);
 
+  const cashFlow = useMemo(
+    () => buildCashFlowSeries(filteredMovements, dateRange, selectedAccount),
+    [filteredMovements, dateRange, selectedAccount],
+  );
+
   const visibleRecentMovements = useMemo(() => {
     if (!movementFilter) return filteredMovements;
 
@@ -706,16 +704,16 @@ export function LandscapeLayout() {
       {/* Main dashboard grid */}
       <LayoutContainer padding={16} gap={16}>
         {/* Compact charts share the selected period; each can be opened for inspection. */}
-        <LayoutRow gap={16} height="45%">
+        <LayoutRow gap={16} height="42%" minHeight={274}>
           {/* Balance and Financial Summary */}
           <LayoutColumn flex={0.86} gap={16}>
             <BalanceCard account={currentAccount} />
             <SummaryCard
-              income={getTotalIncome(filteredMovements, selectedAccount)}
-              expense={getTotalExpense(filteredMovements, selectedAccount)}
+              income={cashFlow.income}
+              expense={cashFlow.expense}
+              points={cashFlow.points}
               movementFilter={movementFilter}
               onMovementFilterChange={setMovementFilter}
-              flexible
             />
           </LayoutColumn>
 

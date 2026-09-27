@@ -5,12 +5,14 @@ import Card from '@/src/components/core/card';
 import Skeleton from '@/src/components/ui/skeleton';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
 import { useDataContext } from '@/src/state/DataProvider';
+import CashFlowMiniChart from './cash-flow-mini-chart';
+import type { CashFlowPoint } from './cash-flow-series';
 
 interface SummaryCardProps {
   income: number;
   expense: number;
+  points: CashFlowPoint[];
   isTransitioning?: boolean;
-  flexible?: boolean;
   movementFilter?: 'income' | 'expense' | null;
   onMovementFilterChange?: (filter: 'income' | 'expense' | null) => void;
 }
@@ -26,8 +28,8 @@ const formatAmount = (amount: number) =>
 const SummaryCard: React.FC<SummaryCardProps> = ({
   income,
   expense,
+  points,
   isTransitioning = false,
-  flexible = false,
   movementFilter = null,
   onMovementFilterChange,
 }) => {
@@ -52,12 +54,13 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
 
   if (showSkeleton) {
     return (
-      <Card label="Cash flow" style={flexible ? { flex: 1 } : undefined} compact>
-        <View style={styles.skeleton}>
-          <Skeleton width="72%" height={38} borderRadius={6} />
+      <Card label="Cash flow" style={styles.card} compact>
+        <View style={styles.content}>
+          <Skeleton width="72%" height={34} borderRadius={6} />
+          <Skeleton width="100%" height={26} borderRadius={8} style={styles.loadingChart} />
           <View style={styles.metrics}>
-            <Skeleton width="46%" height={48} borderRadius={10} />
-            <Skeleton width="46%" height={48} borderRadius={10} />
+            <Skeleton width="46%" height={40} borderRadius={10} />
+            <Skeleton width="46%" height={40} borderRadius={10} />
           </View>
         </View>
       </Card>
@@ -65,7 +68,7 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
   }
 
   return (
-    <Card label="Cash flow" style={flexible ? { flex: 1 } : undefined} compact>
+    <Card label="Cash flow" style={styles.card} compact>
       <View style={styles.content}>
         <Text
           style={[styles.balance, { color: balance >= 0 ? positiveColor : negativeColor }]}
@@ -76,6 +79,14 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
           {balance >= 0 ? '+' : '-'}
           {formatAmount(balance)}
         </Text>
+
+        <CashFlowMiniChart
+          points={points}
+          incomeColor={positiveColor}
+          expenseColor={negativeColor}
+          height={42}
+          style={styles.chart}
+        />
 
         <View style={styles.metrics}>
           <Pressable
@@ -153,35 +164,32 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
 };
 
 const styles = StyleSheet.create({
-  content: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  skeleton: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
+  card: { flex: 1 },
+  content: { flex: 1, justifyContent: 'flex-end' },
   balance: {
-    fontSize: 32,
-    lineHeight: 38,
+    fontSize: 29,
+    lineHeight: 34,
     fontWeight: '800',
     letterSpacing: -0.8,
+    zIndex: 1,
   },
+  chart: { marginTop: -24 },
+  loadingChart: { marginTop: 0 },
   metrics: {
     flexDirection: 'row',
     alignItems: 'stretch',
     gap: 8,
-    marginTop: 12,
+    marginTop: 4,
   },
   metric: {
     flex: 1,
     minWidth: 0,
-    minHeight: 48,
+    minHeight: 40,
     justifyContent: 'center',
     borderRadius: 10,
     borderWidth: 1,
     paddingHorizontal: 9,
-    paddingVertical: 6,
+    paddingVertical: 4,
   },
   metricPressed: {
     opacity: 0.72,

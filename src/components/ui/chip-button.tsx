@@ -1,10 +1,9 @@
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { useEffect, useState } from 'react';
-import ContextMenu from './context-menu';
+
 import { useThemeColor } from '@/src/hooks/use-theme-color';
-import React from 'react';
-import { usePlatformContext } from '@/src/state';
+import ContextMenu from './context-menu';
 
 export interface IChipButtonProps {
   text: string;
@@ -19,57 +18,37 @@ export interface IChipButtonProps {
 
 const ChipButton: React.FC<IChipButtonProps> = ({
   text,
-  active,
+  active = false,
   onPress,
   options,
   defaultOption,
   onOptionSelect,
   badge,
+  minWidth,
 }) => {
-  const { orientation } = usePlatformContext();
-
-  const isLandscape = orientation === 'landscape';
-  const [selectedOption, setSelectedOption] = useState('');
+  const [selectedOption, setSelectedOption] = useState(defaultOption || options?.[0] || '');
   const [size, setSize] = useState({ width: 0, height: 0 });
-
-  // Colori del tema
-  const inactiveBackground = useThemeColor(
-    { light: '#a8a8a8ff', dark: '#4a4a4a' },
-    'tabIconDefault',
+  const surfaceColor = useThemeColor({ light: '#EEF2EF', dark: '#2A302D' }, 'menuBackground');
+  const activeColor = useThemeColor({ light: '#244437', dark: '#D6E8DE' }, 'tint');
+  const textColor = useThemeColor({ light: '#34443C', dark: '#E7ECE9' }, 'text');
+  const activeTextColor = useThemeColor({ light: '#F7FAF8', dark: '#183027' }, 'background');
+  const borderColor = useThemeColor(
+    { light: 'rgba(36, 68, 55, 0.12)', dark: 'rgba(255, 255, 255, 0.10)' },
+    'cardBorder',
   );
-  const activeBackground = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
-  const textColor = useThemeColor({ light: '#fff', dark: active ? '#000' : '#fff' }, 'background');
-
-  const dynamicStyles = StyleSheet.create({
-    chipButton: {
-      ...styles.chipButton,
-      backgroundColor: active ? activeBackground : inactiveBackground,
-    },
-    chipText: {
-      ...styles.chipText,
-      color: textColor,
-      fontSize: isLandscape ? 13 : 18,
-    },
-  });
 
   useEffect(() => {
-    if (defaultOption) {
-      setSelectedOption(defaultOption);
-    } else if (options && options.length > 0) {
-      setSelectedOption(options[0]);
-    }
-  }, [options, defaultOption]);
+    setSelectedOption(defaultOption || options?.[0] || '');
+  }, [defaultOption, options]);
 
   const handlePress = async () => {
-    if (onPress) {
-      try {
-        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      } catch (error) {
-        console.error('Haptic feedback error:', error);
-      }
-
-      onPress();
+    if (!onPress) return;
+    try {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    } catch (error) {
+      console.error('Haptic feedback error:', error);
     }
+    onPress();
   };
 
   const handleSelectOption = (option: string) => {
@@ -77,28 +56,48 @@ const ChipButton: React.FC<IChipButtonProps> = ({
     onOptionSelect?.(option);
   };
 
-  const chipVisual = (
-    <View style={dynamicStyles.chipButton}>
-      <Text style={dynamicStyles.chipText}>{selectedOption || text}</Text>
+  const visual = (
+    <View
+      style={[
+        styles.button,
+        minWidth ? { minWidth } : undefined,
+        {
+          backgroundColor: active ? activeColor : surfaceColor,
+          borderColor: active ? activeColor : borderColor,
+        },
+      ]}
+    >
+      <Text
+        style={[styles.text, { color: active ? activeTextColor : textColor }]}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+      >
+        {selectedOption || text}
+      </Text>
     </View>
   );
 
-  if (options && options.length > 0) {
+  const badgeView =
+    badge !== undefined && badge > 0 ? (
+      <View style={styles.badge}>
+        <Text style={styles.badgeText}>{badge}</Text>
+      </View>
+    ) : null;
+
+  if (options?.length) {
     return (
       <View
-        style={styles.chipWrapper}
-        onLayout={(e) => {
-          const { width, height } = e.nativeEvent.layout;
-          if (width !== size.width || height !== size.height) {
-            setSize({ width, height });
+        style={styles.wrapper}
+        onLayout={(event) => {
+          const nextSize = event.nativeEvent.layout;
+          if (nextSize.width !== size.width || nextSize.height !== size.height) {
+            setSize({ width: nextSize.width, height: nextSize.height });
           }
         }}
       >
-        {/* Hidden measurer for layout */}
-        <View style={{ opacity: 0 }}>{chipVisual}</View>
-        {/* ContextMenu with measured size, Pressable inside for tap */}
+        <View style={styles.measurer}>{visual}</View>
         <View style={StyleSheet.absoluteFill}>
-          {size.width > 0 && (
+          {size.width > 0 ? (
             <ContextMenu
               options={options}
               selectedOption={selectedOption}
@@ -106,68 +105,69 @@ const ChipButton: React.FC<IChipButtonProps> = ({
               hostStyle={{ width: size.width, height: size.height }}
               activationMethod="longPress"
             >
-              <Pressable onPress={handlePress} style={{ width: size.width, height: size.height }}>
-                {chipVisual}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={selectedOption || text}
+                accessibilityState={{ selected: active }}
+                onPress={handlePress}
+                style={({ pressed }) => [
+                  styles.pressable,
+                  { width: size.width, height: size.height },
+                  pressed && styles.pressed,
+                ]}
+              >
+                {visual}
               </Pressable>
             </ContextMenu>
-          )}
+          ) : null}
         </View>
-        {badge !== undefined && badge > 0 && (
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{badge}</Text>
-          </View>
-        )}
+        {badgeView}
       </View>
     );
   }
 
   return (
-    <Pressable onPress={handlePress} style={styles.chipWrapper}>
-      {chipVisual}
-      {badge !== undefined && badge > 0 && (
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>{badge}</Text>
-        </View>
-      )}
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={text}
+      accessibilityState={{ selected: active }}
+      onPress={handlePress}
+      style={({ pressed }) => [styles.wrapper, pressed && styles.pressed]}
+    >
+      {visual}
+      {badgeView}
     </Pressable>
   );
 };
 
 const styles = StyleSheet.create({
-  chipWrapper: {
-    position: 'relative',
-    flexGrow: 2,
-  },
-  chipButton: {
-    padding: 8,
-    paddingHorizontal: 20,
+  wrapper: { position: 'relative', flex: 1, minWidth: 0 },
+  pressable: { borderRadius: 20 },
+  pressed: { opacity: 0.82 },
+  measurer: { opacity: 0 },
+  button: {
+    minHeight: 38,
+    paddingHorizontal: 9,
+    paddingVertical: 8,
     borderRadius: 20,
-    display: 'flex',
-    flexGrow: 1,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  chipText: {
-    fontSize: 18,
-    fontWeight: '500',
-    textAlign: 'center',
-    wordWrap: 'normal',
-  },
+  text: { fontSize: 12, lineHeight: 18, fontWeight: '700', textAlign: 'center' },
   badge: {
     position: 'absolute',
     top: -6,
-    right: -2,
-    backgroundColor: '#FF3B30',
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
-    justifyContent: 'center',
+    right: -4,
+    minWidth: 18,
+    height: 18,
+    paddingHorizontal: 5,
+    borderRadius: 9,
     alignItems: 'center',
-    paddingHorizontal: 6,
+    justifyContent: 'center',
+    backgroundColor: '#B43838',
   },
-  badgeText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '700',
-  },
+  badgeText: { color: '#FDFDFC', fontSize: 11, fontWeight: '700' },
 });
 
 export default ChipButton;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, ViewStyle } from 'react-native';
+import { View, ViewStyle } from 'react-native';
 
 interface LayoutRowProps {
   children: React.ReactNode;
@@ -7,17 +7,25 @@ interface LayoutRowProps {
   gap?: number;
   padding?: number;
   height?: number | string;
+  minHeight?: number;
 }
 
 /**
  * Componente per una riga del layout dashboard.
  * Utilizza flexbox per disporre i figli orizzontalmente.
  */
-export function LayoutRow({ children, flex, gap = 10, padding, height }: LayoutRowProps) {
+export function LayoutRow({
+  children,
+  flex,
+  gap = 10,
+  padding,
+  height,
+  minHeight = 0,
+}: LayoutRowProps) {
   const style: ViewStyle = {
     flexDirection: 'row',
     gap,
-    minHeight: 0,
+    minHeight,
   };
 
   if (height !== undefined) {
@@ -36,7 +44,5 @@ export function LayoutRow({ children, flex, gap = 10, padding, height }: LayoutR
 
   return <View style={style}>{children}</View>;
 }
-
-const styles = StyleSheet.create({});
 
 export default LayoutRow;

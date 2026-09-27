@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { TouchableOpacity, StyleSheet, View, Text, Animated } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { TouchableOpacity, StyleSheet, View, Text } from 'react-native';
 import Card from '@/src/components/core/card';
 import type { Account } from '@/src/state';
 import { useDataContext } from '../../state/DataProvider';
@@ -13,64 +13,55 @@ interface IBalanceCardProps {
 const BalanceCard: React.FC<IBalanceCardProps> = ({ account }) => {
   const { isLoading } = useDataContext();
   const [isBalanceVisible, setIsBalanceVisible] = useState(true);
-
-  const [animateToNumber, setAnimateToNumber] = React.useState(1000);
-
-  const increase = () => {
-    setAnimateToNumber(animateToNumber + 1999);
-  };
+  const [animateToNumber, setAnimateToNumber] = useState(1000);
+  const textColor = account?.textColor || '#FFFFFF';
 
   useEffect(() => {
     if (!isLoading) return;
-    const id = setInterval(() => {
-      increase();
-    }, 100);
+    const id = setInterval(() => setAnimateToNumber((value) => value + 1999), 100);
     return () => clearInterval(id);
   }, [isLoading]);
 
-  const renderBalanceContent = () => {
-    if (isLoading) {
-      return (
-        <View style={styles.odometerRow}>
-          <Text
-            style={{ fontSize: 36, fontWeight: 'bold', color: account?.textColor || '#FFFFFF' }}
-          >
-            {'€'}
-          </Text>
-          <AnimatedNumbers
-            includeComma
-            animateToNumber={animateToNumber}
-            animationDuration={100}
-            fontStyle={{ fontSize: 36, fontWeight: 'bold', color: account?.textColor || '#FFFFFF' }}
-          />
-        </View>
-      );
-    }
-
-    return (
-      <Text style={[styles.balanceAmount, { color: account?.textColor || '#FFFFFF' }]}>
-        {isBalanceVisible
-          ? `€ ${account?.balance.toFixed(2).replace('.', ',') ?? ''}`
-          : '€ *****,**'}
-      </Text>
-    );
-  };
+  const formattedBalance = (account?.balance ?? 0).toLocaleString('it-IT', {
+    style: 'currency',
+    currency: 'EUR',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 
   return (
-    <Card backgroundColor={account?.color || '#2F4F3F'} color={account?.textColor || '#FFFFFF'}>
+    <Card backgroundColor={account?.color || '#2F4F3F'} color={textColor} style={styles.card}>
       <View style={styles.balanceContent}>
-        {renderBalanceContent()}
+        {isLoading ? (
+          <View style={styles.odometerRow}>
+            <Text style={[styles.odometerCurrency, { color: textColor }]}>€</Text>
+            <AnimatedNumbers
+              includeComma
+              animateToNumber={animateToNumber}
+              animationDuration={100}
+              fontStyle={{ fontSize: 32, fontWeight: '700', color: textColor }}
+            />
+          </View>
+        ) : (
+          <Text
+            style={[styles.balanceAmount, { color: textColor }]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+          >
+            {isBalanceVisible ? formattedBalance : '€ ••••••'}
+          </Text>
+        )}
         <TouchableOpacity
-          onPress={() => {
-            setIsBalanceVisible(!isBalanceVisible);
-            increase();
-          }}
+          onPress={() => setIsBalanceVisible((visible) => !visible)}
           disabled={isLoading}
+          accessibilityRole="button"
+          accessibilityLabel={isBalanceVisible ? 'Hide balance' : 'Show balance'}
+          style={styles.visibilityButton}
         >
           <IconSymbol
             name={isBalanceVisible ? 'remove-red-eye' : 'visibility-off'}
-            size={24}
-            color={account?.textColor || '#FFFFFF'}
+            size={18}
+            color={textColor}
           />
         </TouchableOpacity>
       </View>
@@ -79,29 +70,34 @@ const BalanceCard: React.FC<IBalanceCardProps> = ({ account }) => {
 };
 
 const styles = StyleSheet.create({
+  card: { flex: 1 },
   balanceContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    flex: 1,
-    minHeight: 36,
-  },
-  odometerRow: {
+    width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
-    marginRight: 16,
-    overflow: 'hidden',
+    minHeight: 40,
+    gap: 10,
   },
+  odometerRow: { flex: 1, flexDirection: 'row', alignItems: 'center', overflow: 'hidden' },
+  odometerCurrency: { fontSize: 32, lineHeight: 40, fontWeight: '700', marginRight: 4 },
   balanceAmount: {
-    color: '#FFFFFF',
-    fontSize: 36,
-    fontWeight: 'bold',
     flex: 1,
-    flexShrink: 1,
-    flexGrow: 1,
     minWidth: 0,
-    marginRight: 16,
+    fontSize: 32,
+    lineHeight: 40,
+    fontWeight: '700',
+    letterSpacing: -0.8,
+  },
+  visibilityButton: {
+    flexShrink: 0,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.14)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.18)',
   },
 });
 

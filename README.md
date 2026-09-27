@@ -70,6 +70,11 @@ pnpm run build:preview          # Internal QA
 pnpm run build:production       # Store submission
 ```
 
+The `ios/` project is tracked in Git, so EAS builds it without syncing values from
+`app.config.js`. Keep the Xcode `Debug` bundle identifier and display name aligned
+with the development variant, and `Release` aligned with production. The
+`development` EAS profile explicitly selects `Debug`.
+
 ## Architecture
 
 ```

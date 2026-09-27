@@ -1,4 +1,4 @@
-import { View, StyleSheet, Animated } from 'react-native';
+import { View, Text, StyleSheet, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import ChipButton from './chip-button';
 import React from 'react';
@@ -22,6 +22,7 @@ const ViewModePicker: React.FC<ViewModePickerProps> = ({
   fadeOpacity,
 }) => {
   const backgroundColor = useThemeColor({}, 'menuBackground');
+  const titleColor = useThemeColor({ light: '#20392D', dark: '#E7ECE9' }, 'text');
   const modes: { label: string; value: ViewMode; badge?: number }[] = [
     { label: 'Recent', value: 'recent' },
     {
@@ -38,15 +39,18 @@ const ViewModePicker: React.FC<ViewModePickerProps> = ({
 
   return (
     <View style={[styles.container, { backgroundColor }]}>
-      {modes.map((mode) => (
-        <ChipButton
-          key={mode.value}
-          text={mode.label}
-          active={selectedMode === mode.value}
-          onPress={() => onModeChange(mode.value)}
-          badge={mode.badge}
-        />
-      ))}
+      <Text style={[styles.title, { color: titleColor }]}>Movements</Text>
+      <View style={styles.options}>
+        {modes.map((mode) => (
+          <ChipButton
+            key={mode.value}
+            text={mode.label}
+            active={selectedMode === mode.value}
+            onPress={() => onModeChange(mode.value)}
+            badge={mode.badge}
+          />
+        ))}
+      </View>
       <Animated.View
         style={[styles.bottomFade, fadeOpacity != null ? { opacity: fadeOpacity } : undefined]}
         pointerEvents="none"
@@ -59,13 +63,22 @@ const ViewModePicker: React.FC<ViewModePickerProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    gap: 8,
-    paddingBottom: 16,
-    paddingTop: 8,
+    paddingBottom: 14,
+    paddingTop: 10,
     paddingHorizontal: 16,
     marginHorizontal: -16,
     overflow: 'visible' as const,
+  },
+  title: {
+    fontSize: 17,
+    lineHeight: 22,
+    fontWeight: '700',
+    letterSpacing: -0.3,
+    marginBottom: 10,
+  },
+  options: {
+    flexDirection: 'row',
+    gap: 8,
   },
   bottomFade: {
     position: 'absolute' as const,

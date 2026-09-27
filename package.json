@@ -90,5 +90,10 @@
     "add-format"
   ],
   "private": true,
+  "pnpm": {
+    "patchedDependencies": {
+      "expo-router@55.0.18": "patches/expo-router@55.0.18.patch"
+    }
+  },
   "packageManager": "pnpm@9.4.0"
 }

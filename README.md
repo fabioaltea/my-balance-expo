@@ -78,6 +78,11 @@ with the development variant, and `Release` aligned with production. The
 `expo-router` 55.0.18 has a pnpm patch in `patches/` that guards
 `UIAction.subtitle` on iOS 15. Review the patch when upgrading Expo Router.
 
+Xcode Cloud and EAS Build maintain separate build-number counters. For a TestFlight
+upload of an existing app version, set Xcode Cloud's **Next Build Number** in App
+Store Connect above the latest uploaded build for that bundle identifier and app
+version. The iOS `Info.plist` reads `CURRENT_PROJECT_VERSION` for `CFBundleVersion`.
+
 ## Architecture
 
 ```

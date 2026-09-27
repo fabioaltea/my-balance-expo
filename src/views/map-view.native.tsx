@@ -51,7 +51,6 @@ export default function MapViewNative() {
   const borderColor = useThemeColor({ light: '#F0F0F0', dark: '#333333' }, 'tabIconDefault');
   const positiveAmountColor = useThemeColor({ light: '#107c2bff', dark: '#34C759' }, 'tint');
   const primaryColor = '#2F4F3F';
-  const markerBorderColor = colorScheme === 'dark' ? 'rgba(255, 255, 255, 0.9)' : '#2F4F3F';
   const mapStyleURL = colorScheme === 'dark' ? Mapbox.StyleURL.Dark : Mapbox.StyleURL.Light;
 
   if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -157,8 +156,7 @@ export default function MapViewNative() {
               style={[
                 styles.marker,
                 {
-                  backgroundColor: primaryColor,
-                  borderColor: markerBorderColor,
+                  borderColor: primaryColor,
                 },
                 selectedGroup?.key === group.key && styles.markerSelected,
               ]}
@@ -312,7 +310,7 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 11,
     borderWidth: 3,
-    borderColor: '#FFFFFF',
+    backgroundColor: '#FFFFFF',
   },
   markerSelected: {
     transform: [{ scale: 1.15 }],

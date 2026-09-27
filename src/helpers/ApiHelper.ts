@@ -20,7 +20,10 @@ export class ApiHelper {
         product: process.env.EXPO_PUBLIC_PRODUCT_NAME || 'MyBalance',
       };
 
-      const response = await fetch(`${HttpHelper.authUri}/auth/google/callback`, {
+      const authEndpoint = `${HttpHelper.authUri}/auth/google/callback`;
+      console.log('🔐 Google auth endpoint:', authEndpoint);
+
+      const response = await fetch(authEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

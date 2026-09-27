@@ -75,6 +75,9 @@ The `ios/` project is tracked in Git, so EAS builds it without syncing values fr
 with the development variant, and `Release` aligned with production. The
 `development` EAS profile explicitly selects `Debug`.
 
+`expo-router` 55.0.18 has a pnpm patch in `patches/` that guards
+`UIAction.subtitle` on iOS 15. Review the patch when upgrading Expo Router.
+
 ## Architecture
 
 ```

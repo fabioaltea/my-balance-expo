@@ -17,6 +17,7 @@ import { useDataContext } from '@/src/state';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
 import { EXCLUDED_CATEGORIES } from '@/src/constants/categories';
+import { buildCashFlowSeries } from '@/src/components/cards/cash-flow-series';
 
 interface HomeViewProps {
   accounts: Account[];
@@ -39,8 +40,6 @@ const HomeView: React.FC<HomeViewProps> = ({
   pendingRecurrences,
   unconfirmedCount,
   isLoading,
-  getTotalIncome,
-  getTotalExpense,
   calculateForecast,
 }) => {
   const { reloadData } = useDataContext();
@@ -138,6 +137,11 @@ const HomeView: React.FC<HomeViewProps> = ({
       return dateMatches && accountMatches;
     });
   }, [movements, selectedAccount, dateRange]);
+
+  const cashFlow = useMemo(
+    () => buildCashFlowSeries(dateFilteredMovements, dateRange, selectedAccount),
+    [dateFilteredMovements, dateRange, selectedAccount],
+  );
 
   // Filter movements based on viewMode
   const filteredMovements = useMemo(() => {
@@ -272,14 +276,15 @@ const HomeView: React.FC<HomeViewProps> = ({
         <View onLayout={(e) => setStickyOffset(e.nativeEvent.layout.height)}>
           <PeriodPicker setDateRange={handleDateRangeChange} isLoading={isLoading} />
           <Pager
-            style={{ height: 230, marginHorizontal: -16, marginBottom: 8 }}
+            style={{ height: 234, marginHorizontal: -16, marginBottom: 8 }}
             selectedPage={summaryPagerIndex}
             onPageSelected={setSummaryPagerIndex}
             scrollEnabled={isCurrentPeriod && currentForecast.hasEnoughData}
           >
             <SummaryCard
-              income={getTotalIncome(dateFilteredMovements, selectedAccount)}
-              expense={getTotalExpense(dateFilteredMovements, selectedAccount)}
+              income={cashFlow.income}
+              expense={cashFlow.expense}
+              points={cashFlow.points}
               isTransitioning={isPeriodTransitioning}
               movementFilter={movementFilter}
               onMovementFilterChange={handleMovementFilterChange}

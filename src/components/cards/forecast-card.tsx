@@ -140,14 +140,14 @@ const ForecastCard: React.FC<IMonthlyForecastCardProps> = ({
 
   if (showSkeleton) {
     return (
-      <Card>
+      <Card style={{ flex: 1 }}>
         <ChartSkeleton variant="forecast" height={194} />
       </Card>
     );
   }
 
   return (
-    <Card>
+    <Card style={{ flex: 1 }}>
       <View style={{ height: 194 }}>
         {/* Header with Forecast label and change value */}
         <View style={styles.headerRow}>

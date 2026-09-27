@@ -1,13 +1,16 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Card from '@/src/components/core/card';
-import ChartSkeleton from '@/src/components/charts/chart-skeleton';
+import Skeleton from '@/src/components/ui/skeleton';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
 import { useDataContext } from '@/src/state/DataProvider';
+import CashFlowMiniChart from './cash-flow-mini-chart';
+import type { CashFlowPoint } from './cash-flow-series';
 
 type Props = {
   income: number;
   expense: number;
+  points: CashFlowPoint[];
   isTransitioning?: boolean;
   flexible?: boolean;
   /** Used by the web card to filter recent movements. */
@@ -23,12 +26,7 @@ const formatAmount = (amount: number) =>
     maximumFractionDigits: 2,
   });
 
-const SummaryCard: React.FC<Props> = ({
-  income,
-  expense,
-  isTransitioning = false,
-  flexible = false,
-}) => {
+const SummaryCard: React.FC<Props> = ({ income, expense, points, isTransitioning = false }) => {
   const { isLoading } = useDataContext();
   const balance = income - expense;
   const isProfit = balance >= 0;
@@ -42,29 +40,20 @@ const SummaryCard: React.FC<Props> = ({
   );
   const positiveColor = useThemeColor({ light: '#25633F', dark: '#7FCF9D' }, 'tint');
   const negativeColor = useThemeColor({ light: '#A33A3A', dark: '#F09292' }, 'tint');
-  const balanceColor = useThemeColor({ light: '#688DB2', dark: '#8BB2D5' }, 'tint');
-  const lossColor = useThemeColor({ light: '#C7A353', dark: '#D9BC75' }, 'tint');
-
-  // Keep the existing three-segment visualization and its proportions.
-  let incomeFlex: number;
-  let expenseFlex: number;
-  let balanceFlex: number;
-  if (isProfit) {
-    incomeFlex = 0.5;
-    expenseFlex = income > 0 ? (expense / income) * 0.5 : 0;
-    balanceFlex = income > 0 ? (balance / income) * 0.5 : 0;
-  } else {
-    expenseFlex = 0.5;
-    incomeFlex = expense > 0 ? (income / expense) * 0.5 : 0;
-    balanceFlex = expense > 0 ? (Math.abs(balance) / expense) * 0.5 : 0;
-  }
 
   const showSkeleton = (isLoading && income === 0 && expense === 0) || isTransitioning;
   return (
-    <Card label="Cash flow" style={flexible ? { flex: 1 } : undefined} compact>
-      <View style={flexible ? styles.flexibleContent : styles.content}>
+    <Card label="Cash flow" style={styles.card} compact>
+      <View style={styles.content}>
         {showSkeleton ? (
-          <ChartSkeleton variant="summary" height={164} />
+          <View style={styles.loading}>
+            <Skeleton width="70%" height={38} borderRadius={6} />
+            <Skeleton width="100%" height={46} borderRadius={8} style={styles.loadingChart} />
+            <View style={styles.metrics}>
+              <Skeleton width="48%" height={70} borderRadius={16} />
+              <Skeleton width="48%" height={70} borderRadius={16} />
+            </View>
+          </View>
         ) : (
           <>
             <Text
@@ -75,20 +64,13 @@ const SummaryCard: React.FC<Props> = ({
               {isProfit ? '+' : '-'}
               {formatAmount(balance)}
             </Text>
-            <View style={styles.progressBar}>
-              <View
-                style={[styles.segment, { flex: incomeFlex, backgroundColor: positiveColor }]}
-              />
-              <View
-                style={[
-                  styles.segment,
-                  { flex: balanceFlex, backgroundColor: isProfit ? balanceColor : lossColor },
-                ]}
-              />
-              <View
-                style={[styles.segment, { flex: expenseFlex, backgroundColor: negativeColor }]}
-              />
-            </View>
+            <CashFlowMiniChart
+              points={points}
+              incomeColor={positiveColor}
+              expenseColor={negativeColor}
+              height={66}
+              style={styles.chart}
+            />
             <View style={styles.metrics}>
               <View style={[styles.metric, { borderColor: metricBorder }]}>
                 <Text style={[styles.metricLabel, { color: mutedColor }]}>Income</Text>
@@ -125,24 +107,19 @@ const SummaryCard: React.FC<Props> = ({
 };
 
 const styles = StyleSheet.create({
-  content: { height: 164, justifyContent: 'flex-end' },
-  flexibleContent: { flex: 1, justifyContent: 'flex-end' },
+  card: { flex: 1 },
+  content: { flex: 1, justifyContent: 'flex-end' },
+  loading: { flex: 1, justifyContent: 'flex-end' },
   balanceAmount: {
     fontSize: 32,
     lineHeight: 38,
     fontWeight: '800',
     letterSpacing: -0.8,
+    zIndex: 1,
   },
-  progressBar: {
-    height: 9,
-    borderRadius: 5,
-    flexDirection: 'row',
-    overflow: 'hidden',
-    marginTop: 14,
-    backgroundColor: '#E4EAE5',
-  },
-  segment: { height: '100%' },
-  metrics: { flexDirection: 'row', gap: 8, marginTop: 14 },
+  chart: { marginTop: -18 },
+  loadingChart: { marginTop: 2 },
+  metrics: { flexDirection: 'row', gap: 8, marginTop: 10 },
   metric: {
     flex: 1,
     minWidth: 0,

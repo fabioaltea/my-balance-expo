@@ -13,6 +13,8 @@ export interface IContextMenuOption {
 }
 
 export interface IContextMenuProps {
+  activationMethod?: 'longPress' | 'singlePress';
+  hostStyle?: { width: number; height: number };
   options: (string | IContextMenuOption)[];
   selectedOption?: string;
   onSelectOption: (option: string) => void;

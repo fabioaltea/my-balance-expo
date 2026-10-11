@@ -15,7 +15,8 @@ import {
   Alert,
   BackHandler,
 } from 'react-native';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { NotificationsProvider } from '@/src/state/NotificationsProvider';
 import { AuthProvider, useAuthContext } from '@/src/state/AuthProvider';
 import { DataProvider } from '@/src/state/DataProvider';
 import { PlatformProvider } from '@/src/state/PlatformProvider';
@@ -201,7 +202,9 @@ export default function RootLayout() {
       )}
       <QueryProvider>
         <AuthProvider>
-          <AppRouter />
+          <NotificationsProvider>
+            <AppRouter />
+          </NotificationsProvider>
         </AuthProvider>
       </QueryProvider>
     </PlatformProvider>

@@ -1,3 +1,4 @@
+import { NotificationSessionHelper } from '../helpers/NotificationSessionHelper';
 import { useState, useEffect, useCallback } from 'react';
 import { Platform } from 'react-native';
 import { AuthStorageHelper, User } from '../helpers/AuthStorageHelper';
@@ -42,6 +43,7 @@ export const useAuth = () => {
 
   // Helper to handle session expired
   const handleSessionExpired = useCallback(async () => {
+    NotificationSessionHelper.suspend();
     console.log('🚪 Session expired, clearing auth...');
     await AuthStorageHelper.clearAll();
     queryClient.clear();
@@ -283,10 +285,11 @@ export const useAuth = () => {
         error: error.message || 'Login failed',
       }));
     }
-  }, []);
+  }, [loadUserProfile]);
 
   // Logout
   const logout = useCallback(async () => {
+    NotificationSessionHelper.suspend();
     try {
       setAuthState((prev) => ({ ...prev, isLoading: true }));
 
@@ -298,6 +301,7 @@ export const useAuth = () => {
       }
 
       await AuthStorageHelper.clearAll();
+      queryClient.clear();
 
       setAuthState({
         isAuthenticated: false,
@@ -312,6 +316,7 @@ export const useAuth = () => {
       console.error('Logout error:', error);
       // Even if API call fails, clear local state
       await AuthStorageHelper.clearAll();
+      queryClient.clear();
       setAuthState({
         isAuthenticated: false,
         user: null,

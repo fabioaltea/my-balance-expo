@@ -7,6 +7,7 @@ import {
   Switch,
   Image,
   Platform,
+  ScrollView,
 } from 'react-native';
 import { ThemedText } from '@/src/components/core/themed-text';
 import React, { useState, useEffect } from 'react';
@@ -18,9 +19,8 @@ import * as Linking from 'expo-linking';
 import InputGroup from '@/src/components/ui/input-group';
 import IconSymbol from '@/src/components/ui/icon-symbol';
 import { ShortcutApiHelper } from '@/src/helpers/ShortcutApiHelper';
-import { NotificationsHelpers } from '@/src/helpers/NotificationsHelpers';
+import { useNotifications } from '@/src/state/NotificationsProvider';
 import * as WebBrowser from 'expo-web-browser';
-import { ScrollView } from 'react-native';
 
 const ICLOUD_SHORTCUT_URL = process.env.EXPO_PUBLIC_ICLOUD_SHORTCUT_URL || '';
 const LANDING_BASE_URL = process.env.EXPO_PUBLIC_LANDING_URL || 'https://mybalance.tech';
@@ -106,10 +106,9 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
 const SettingsView: React.FC<SettingsViewProps> = ({ user, logout }) => {
   const [shortcutKey, setShortcutKey] = useState<string | null>(null);
   const [isLoadingShortcut, setIsLoadingShortcut] = useState(false);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(
-    user?.pushNotificationsEnabled ?? false,
-  );
-  const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
+  const notifications = useNotifications();
+  const notificationsEnabled = notifications.effectiveEnabled;
+  const isLoadingNotifications = notifications.syncStatus === 'syncing';
 
   const textColor = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
   const secondaryTextColor = useThemeColor({ light: '#8e8e93', dark: '#8e8e93' }, 'tabIconDefault');
@@ -180,29 +179,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ user, logout }) => {
   };
 
   const handleToggleNotifications = async (enabled: boolean) => {
-    setIsLoadingNotifications(true);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
-    try {
-      if (enabled) {
-        const token = await NotificationsHelpers.registerForPushNotificationsAsync();
-        if (token) {
-          setNotificationsEnabled(true);
-          console.log('Push notifications enabled with token:', token);
-        }
-      } else {
-        const removed = await NotificationsHelpers.unregisterPushNotificationsAsync();
-        if (removed) {
-          setNotificationsEnabled(false);
-          console.log('Push notifications disabled');
-        }
-      }
-    } catch (error: any) {
-      console.error('Failed to toggle notifications:', error);
-      Alert.alert('Error', error.message || 'Failed to update notification settings');
-    } finally {
-      setIsLoadingNotifications(false);
-    }
+    await notifications.toggle(enabled);
   };
 
   const handleLogout = () => {
@@ -311,7 +288,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ user, logout }) => {
                 <IconSymbol name="notifications" size={20} color="#2F4F3F" />
               </View>
               <ThemedText style={[styles.settingsItemText, { color: textColor }]}>
-                Push Notifications
+                Notifiche su questo dispositivo
               </ThemedText>
             </View>
             {isLoadingNotifications ? (
@@ -323,12 +300,37 @@ const SettingsView: React.FC<SettingsViewProps> = ({ user, logout }) => {
                 thumbColor={notificationsEnabled ? '#ffffff' : '#f4f3f4'}
                 ios_backgroundColor="#3e3e3e"
                 onValueChange={handleToggleNotifications}
+                disabled={!notifications.supported}
                 value={notificationsEnabled}
               />
             )}
           </View>
         </InputGroup>
       </SettingsSection>
+
+      {!notifications.supported && (
+        <ThemedText style={{ color: secondaryTextColor }}>
+          Disponibili nella build nativa su dispositivo fisico.
+        </ThemedText>
+      )}
+      {notifications.syncStatus === 'error' && (
+        <View style={{ paddingHorizontal: 16, paddingBottom: 16 }}>
+          <ThemedText style={{ color: destructiveColor }}>
+            {notifications.error || 'Sincronizzazione notifiche in attesa'}
+          </ThemedText>
+          <ThemedText style={{ color: secondaryTextColor }}>
+            Le modifiche non confermate saranno ritentate alla riconnessione.
+          </ThemedText>
+          <TouchableOpacity onPress={() => notifications.retry()}>
+            <ThemedText>Riprova</ThemedText>
+          </TouchableOpacity>
+          {notifications.permission === 'denied' && (
+            <TouchableOpacity onPress={() => Linking.openSettings()}>
+              <ThemedText>Apri impostazioni dispositivo</ThemedText>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
 
       {/* Shortcuts */}
       <SettingsSection title="SHORTCUTS" secondaryTextColor={secondaryTextColor}>

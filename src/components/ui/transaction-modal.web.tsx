@@ -182,8 +182,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     paddingVertical: 4,
     paddingHorizontal: 8,
-    // @ts-ignore — web-specific
-    outlineStyle: 'none',
+    outlineWidth: 0,
   },
   currency: {
     fontSize: 24,

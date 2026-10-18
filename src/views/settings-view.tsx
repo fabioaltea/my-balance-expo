@@ -21,6 +21,7 @@ import IconSymbol from '@/src/components/ui/icon-symbol';
 import { ShortcutApiHelper } from '@/src/helpers/ShortcutApiHelper';
 import { useNotifications } from '@/src/state/NotificationsProvider';
 import * as WebBrowser from 'expo-web-browser';
+import ChatGptIntegrationSettings from '@/src/components/settings/chatgpt-integration-settings';
 
 const ICLOUD_SHORTCUT_URL = process.env.EXPO_PUBLIC_ICLOUD_SHORTCUT_URL || '';
 const LANDING_BASE_URL = process.env.EXPO_PUBLIC_LANDING_URL || 'https://mybalance.tech';
@@ -270,6 +271,12 @@ const SettingsView: React.FC<SettingsViewProps> = ({ user, logout }) => {
           />
         </InputGroup>
       </SettingsSection>
+
+      {Platform.OS === 'web' && (
+        <SettingsSection title="INTEGRAZIONI AI" secondaryTextColor={secondaryTextColor}>
+          <ChatGptIntegrationSettings key={user?.email || 'anonymous'} />
+        </SettingsSection>
+      )}
 
       {/* Notifications */}
       <SettingsSection title="NOTIFICATIONS" secondaryTextColor={secondaryTextColor}>

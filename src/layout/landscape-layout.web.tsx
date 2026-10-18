@@ -79,6 +79,10 @@ export function LandscapeLayout() {
 
   const { user, logout } = useAuthContext();
   const [showManage, setShowManage] = useState(false);
+  useEffect(() => {
+    // A full-page OAuth redirect must return to the actual desktop settings surface.
+    if (new URLSearchParams(window.location.search).has('chatgpt_result')) setShowManage(true);
+  }, []);
   const [showMap, setShowMap] = useState(false);
   const addMovement = useSpreadsheetMutation<CreateMovementData, OptimisticSnapshot>({
     mutationFn: (spreadsheetId, data) =>

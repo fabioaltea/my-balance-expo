@@ -7,9 +7,10 @@ import AccountPanel from '@/src/components/ui/account-panel';
 import CategoryPanel from '@/src/components/ui/category-panel';
 import SideDrawer from '@/src/components/ui/side-drawer';
 import Toast from '@/src/components/ui/toast';
+import ChatGptIntegrationSettings from '@/src/components/settings/chatgpt-integration-settings';
 import { COLOR_PALETTE, DEFAULT_TEXT_COLOR } from '@/src/constants/colors';
 import { DEFAULT_ICON } from '@/src/constants/icons';
-import { useDataContext } from '@/src/state';
+import { useAuthContext, useDataContext } from '@/src/state';
 import { useSpreadsheetMutation } from '@/src/hooks/useSpreadsheetMutation';
 import { AccountsApiHelper } from '@/src/helpers/AccountsApiHelper';
 import { CategoriesApiHelper } from '@/src/helpers/CategoriesApiHelper';
@@ -43,6 +44,7 @@ const ManageView: React.FC<ManageViewProps> = ({ onBack }) => {
   const borderColor = useThemeColor({ light: '#e0e0e0', dark: '#333' }, 'tabIconDefault');
 
   const { accounts, categories } = useDataContext();
+  const { user } = useAuthContext();
 
   // Toast
   const [toastVisible, setToastVisible] = useState(false);
@@ -271,12 +273,22 @@ const ManageView: React.FC<ManageViewProps> = ({ onBack }) => {
 
       {/* Two-column content */}
       <View style={styles.columns}>
-        {/* Left: Accounts */}
+        {/* Left: AI integrations and accounts */}
         <ScrollView
           style={styles.column}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.columnContent}
         >
+          <View style={styles.integrationSection}>
+            <ThemedText
+              accessibilityRole="header"
+              type="defaultSemiBold"
+              style={styles.integrationTitle}
+            >
+              Integrazioni AI
+            </ThemedText>
+            <ChatGptIntegrationSettings key={user?.email || 'anonymous'} />
+          </View>
           <View style={[styles.section, { borderColor }]}>
             <View style={styles.sectionHeader}>
               <View style={styles.badge}>
@@ -540,6 +552,14 @@ const styles = StyleSheet.create({
   },
 
   // Section
+  integrationSection: {
+    marginBottom: 12,
+  },
+  integrationTitle: {
+    fontSize: 18,
+    lineHeight: 24,
+    marginBottom: 12,
+  },
   section: {
     borderWidth: StyleSheet.hairlineWidth,
     borderRadius: 30,

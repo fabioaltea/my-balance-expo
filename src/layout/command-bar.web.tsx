@@ -1,8 +1,9 @@
 import React, { ReactNode } from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
 import { useAuthContext } from '@/src/state';
-import ContextMenu from '@/src/components/ui/context-menu';
+import ContextMenu from '@/src/components/ui/context-menu.web';
 import { webPanelBackground } from '@/src/constants/theme';
 
 const LANDING_BASE_URL = process.env.EXPO_PUBLIC_LANDING_URL || 'https://mybalance.tech';
@@ -51,6 +52,8 @@ export function CommandBar({
     <View style={styles.container}>
       <View style={[styles.content, { backgroundColor, borderColor }]}>
         <ContextMenu
+          accessibilityLabel="MyBalance menu"
+          align="start"
           options={[
             {
               label: 'Manage',
@@ -63,10 +66,13 @@ export function CommandBar({
             {
               label: 'Privacy Policy',
               icon: 'shield-checkmark-outline',
+              separatorBefore: true,
+              external: true,
             },
             {
               label: 'Terms of Service',
               icon: 'document-text-outline',
+              external: true,
             },
             {
               label: 'Logout',
@@ -87,6 +93,7 @@ export function CommandBar({
             <View>
               <Text style={[styles.brandText, { color: brandColor }]}>MyBalance</Text>
             </View>
+            <Ionicons name="chevron-down" size={14} color={mutedTextColor} />
           </View>
         </ContextMenu>
 
@@ -135,7 +142,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 9,
-    paddingRight: 2,
+    paddingHorizontal: 6,
+    paddingVertical: 4,
   },
   logo: {
     width: 30,

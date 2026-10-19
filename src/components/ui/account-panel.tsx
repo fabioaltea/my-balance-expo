@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, StyleSheet, ScrollView, Pressable, Platform } from 'react-native';
 import TextBox from '@/src/components/ui/text-box';
 import InlineCurrencyInput from '@/src/components/ui/inline-currency-input';
 import { COLOR_PALETTE, DEFAULT_COLOR } from '@/src/constants/colors';
@@ -28,7 +28,7 @@ const AccountPanel: React.FC<AccountPanelProps> = ({
     <ScrollView showsVerticalScrollIndicator={false}>
       {/* Name input */}
       {!readonly && onNameChange && (
-        <View style={styles.fieldContainer}>
+        <View style={[styles.fieldContainer, Platform.OS === 'web' && styles.webNameField]}>
           <TextBox
             value={name}
             onChange={onNameChange}
@@ -84,6 +84,10 @@ const AccountPanel: React.FC<AccountPanelProps> = ({
 export default AccountPanel;
 
 const styles = StyleSheet.create({
+  webNameField: {
+    flexDirection: 'column',
+    alignItems: 'stretch',
+  },
   fieldContainer: {
     marginBottom: 16,
     flexDirection: 'row',

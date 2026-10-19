@@ -1,8 +1,8 @@
-import React from 'react';
-import { Pressable, ScrollView, View, StyleSheet, Text, Dimensions, Animated } from 'react-native';
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { useThemeColor } from '@/src/hooks/use-theme-color';
+import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useThemeColor } from '@/src/hooks/use-theme-color';
+import { Fonts, webPanelBackground } from '@/src/constants/theme';
 
 export interface IContextMenuOption {
   label: string;
@@ -10,6 +10,8 @@ export interface IContextMenuOption {
   color?: string;
   destructive?: boolean;
   disabled?: boolean;
+  separatorBefore?: boolean;
+  external?: boolean;
 }
 
 export interface IContextMenuProps {
@@ -19,282 +21,270 @@ export interface IContextMenuProps {
   selectedOption?: string;
   onSelectOption: (option: string) => void;
   children: React.ReactNode;
+  accessibilityLabel?: string;
+  align?: 'start' | 'center';
 }
 
-const ITEM_HEIGHT = 44;
+const MENU_WIDTH = 240;
+const VIEWPORT_MARGIN = 8;
+const ITEM_HEIGHT = 40;
 const MENU_PADDING = 8;
-const MAX_HEIGHT = 250;
-const MENU_WIDTH = 200;
+const SEPARATOR_HEIGHT = 13;
 
-function normalizeOption(option: string | IContextMenuOption): IContextMenuOption {
-  if (typeof option === 'string') {
-    return { label: option };
+const menuCss = `
+  .mybalance-menu-trigger { cursor: pointer; border-radius: 10px; transition: background-color 160ms ease; }
+  .mybalance-menu-trigger:hover, .mybalance-menu-trigger[aria-expanded="true"] { background: var(--menu-hover); }
+  .mybalance-menu-trigger:focus-visible { outline: 2px solid var(--menu-accent); outline-offset: 3px; }
+  .mybalance-menu { box-sizing: border-box; animation: mybalance-menu-enter 160ms ease-out; scrollbar-width: thin; }
+  .mybalance-menu-item { box-sizing: border-box; transition: background-color 140ms ease, transform 140ms ease; }
+  .mybalance-menu-item:not(:disabled):hover, .mybalance-menu-item:focus-visible { background: var(--menu-hover) !important; }
+  .mybalance-menu-item:focus-visible { outline: 2px solid var(--menu-accent); outline-offset: -2px; }
+  .mybalance-menu-item[data-destructive="true"]:hover, .mybalance-menu-item[data-destructive="true"]:focus-visible { background: var(--menu-danger-hover) !important; }
+  .mybalance-menu-item:not(:disabled):active { transform: translateY(1px); }
+  @keyframes mybalance-menu-enter { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+  @media (prefers-reduced-motion: reduce) {
+    .mybalance-menu { animation: none; }
+    .mybalance-menu-trigger, .mybalance-menu-item { transition: none; }
   }
-  return option;
-}
+`;
 
 const ContextMenu: React.FC<IContextMenuProps> = ({
   options,
   selectedOption = '',
   onSelectOption,
   children,
+  accessibilityLabel,
+  align = 'center',
 }) => {
-  const [menuVisible, setMenuVisible] = useState(false);
-  const [buttonPosition, setButtonPosition] = useState<{
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  } | null>(null);
-  const triggerRef = useRef<View>(null);
+  const [position, setPosition] = useState<React.CSSProperties | null>(null);
+  const triggerRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const initialFocus = useRef<'first' | 'last'>('first');
+  const menuId = useId();
+  const menuVisible = position !== null;
+  const items = options.map((option) => (typeof option === 'string' ? { label: option } : option));
 
-  const scaleAnim = useRef(new Animated.Value(0.3)).current;
-  const opacityAnim = useRef(new Animated.Value(0)).current;
-  const translateYAnim = useRef(new Animated.Value(-10)).current;
-
-  const menuBackground = useThemeColor({ light: '#f2f2f7', dark: '#1c1c1e' }, 'cardBackground');
-  const borderColor = useThemeColor(
-    { light: 'rgba(0,0,0,0.1)', dark: 'rgba(255,255,255,0.1)' },
+  const background = useThemeColor(webPanelBackground, 'cardBackground');
+  const border = useThemeColor(
+    { light: 'rgba(23, 38, 31, 0.10)', dark: 'rgba(255, 255, 255, 0.10)' },
     'cardBorder',
   );
-  const textColor = useThemeColor({}, 'text');
-  const separatorColor = useThemeColor(
-    { light: 'rgba(0,0,0,0.1)', dark: 'rgba(255,255,255,0.1)' },
-    'tabIconDefault',
-  );
-  const pressedBackground = useThemeColor(
-    { light: 'rgba(0,0,0,0.08)', dark: 'rgba(255,255,255,0.08)' },
-    'tabIconDefault',
-  );
+  const text = useThemeColor({ light: '#34443C', dark: '#E7ECE9' }, 'text');
+  const muted = useThemeColor({ light: '#66736C', dark: '#AEB8B2' }, 'icon');
+  const accent = useThemeColor({ light: '#244437', dark: '#D6E8DE' }, 'tint');
+  const hover = useThemeColor({ light: '#EEF2EF', dark: '#2A302D' }, 'menuBackground');
+  const danger = useThemeColor({ light: '#B43838', dark: '#F29B9B' }, 'text');
+  const dangerHover = useThemeColor({ light: '#F9ECEB', dark: '#402C2C' }, 'menuBackground');
+  const variables = {
+    '--menu-hover': hover,
+    '--menu-accent': accent,
+    '--menu-danger-hover': dangerHover,
+  } as React.CSSProperties;
 
-  const openMenu = useCallback(() => {
-    triggerRef.current?.measureInWindow((x, y, width, height) => {
-      setButtonPosition({ x, y, width, height });
-      setMenuVisible(true);
+  const hasSeparator = (item: IContextMenuOption, index: number) =>
+    index > 0 && (item.separatorBefore || (item.destructive && !items[index - 1].destructive));
+
+  const closeMenu = useCallback(() => {
+    setPosition(null);
+    triggerRef.current?.focus({ preventScroll: true });
+  }, []);
+
+  const openMenu = (focus: 'first' | 'last' = 'first') => {
+    const rect = triggerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const width = Math.min(MENU_WIDTH, window.innerWidth - VIEWPORT_MARGIN * 2);
+    const height =
+      items.length * ITEM_HEIGHT +
+      MENU_PADDING * 2 +
+      2 +
+      items.filter(hasSeparator).length * SEPARATOR_HEIGHT;
+    const below = window.innerHeight - rect.bottom - VIEWPORT_MARGIN * 2;
+    const above = rect.top - VIEWPORT_MARGIN * 2;
+    const opensAbove = height > below && above > below;
+    const maxHeight = Math.max(0, opensAbove ? above : below);
+    const left = align === 'start' ? rect.left : rect.left + (rect.width - width) / 2;
+    initialFocus.current = focus;
+    setPosition({
+      width,
+      maxHeight,
+      left: Math.max(VIEWPORT_MARGIN, Math.min(left, window.innerWidth - width - VIEWPORT_MARGIN)),
+      top: opensAbove
+        ? Math.max(VIEWPORT_MARGIN, rect.top - Math.min(height, maxHeight) - VIEWPORT_MARGIN)
+        : rect.bottom + VIEWPORT_MARGIN,
     });
+  };
+
+  const focusInitialItem = useCallback(() => {
+    const buttons = menuRef.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)');
+    if (!buttons?.length) {
+      menuRef.current?.focus();
+      return;
+    }
+    const selected = Array.from(buttons).find((button) => button.dataset.selected === 'true');
+    const target =
+      initialFocus.current === 'last' ? buttons[buttons.length - 1] : selected || buttons[0];
+    target.focus({ preventScroll: true });
+    target.scrollIntoView({ block: 'nearest' });
   }, []);
 
   useEffect(() => {
-    if (menuVisible) {
-      scaleAnim.setValue(0.3);
-      opacityAnim.setValue(0);
-      translateYAnim.setValue(-10);
-      Animated.parallel([
-        Animated.spring(scaleAnim, {
-          toValue: 1,
-          useNativeDriver: true,
-          tension: 300,
-          friction: 20,
-        }),
-        Animated.timing(opacityAnim, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.spring(translateYAnim, {
-          toValue: 0,
-          useNativeDriver: true,
-          tension: 300,
-          friction: 20,
-        }),
-      ]).start();
+    if (!menuVisible) return;
+    window.addEventListener('resize', closeMenu);
+    const onScroll = (event: Event) => {
+      if (event.target instanceof Node && menuRef.current?.contains(event.target)) return;
+      closeMenu();
+    };
+    window.addEventListener('scroll', onScroll, true);
+    return () => {
+      window.removeEventListener('resize', closeMenu);
+      window.removeEventListener('scroll', onScroll, true);
+    };
+  }, [menuVisible, closeMenu]);
+
+  const handleMenuKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Escape' || event.key === 'Tab') {
+      event.preventDefault();
+      event.stopPropagation();
+      closeMenu();
+      return;
     }
-  }, [menuVisible]);
-
-  const closeMenu = useCallback(() => {
-    Animated.parallel([
-      Animated.spring(scaleAnim, {
-        toValue: 0.3,
-        useNativeDriver: true,
-        tension: 400,
-        friction: 10,
-      }),
-      Animated.timing(opacityAnim, {
-        toValue: 0,
-        duration: 20,
-        useNativeDriver: true,
-      }),
-      Animated.spring(translateYAnim, {
-        toValue: -10,
-        useNativeDriver: true,
-        tension: 400,
-        friction: 10,
-      }),
-    ]).start(() => {
-      setMenuVisible(false);
-    });
-  }, []);
-
-  const handleSelect = useCallback(
-    (optionLabel: string) => {
-      onSelectOption(optionLabel);
-      Animated.parallel([
-        Animated.spring(scaleAnim, {
-          toValue: 0.95,
-          useNativeDriver: true,
-          tension: 500,
-          friction: 8,
-        }),
-      ]).start(() => {
-        setMenuVisible(false);
-      });
-    },
-    [onSelectOption],
-  );
-
-  const calculatedHeight = Math.min(options.length * ITEM_HEIGHT + MENU_PADDING * 2, MAX_HEIGHT);
-
-  const menuStyle = buttonPosition
-    ? {
-        backgroundColor: menuBackground,
-        borderColor: borderColor,
-        height: calculatedHeight,
-        width: MENU_WIDTH,
-        left: (() => {
-          const screenWidth = Dimensions.get('window').width;
-          const buttonCenter = buttonPosition.x + buttonPosition.width / 2;
-          let proposedLeft = buttonCenter - MENU_WIDTH / 2;
-          if (proposedLeft + MENU_WIDTH > screenWidth - 8) {
-            proposedLeft = screenWidth - MENU_WIDTH - 8;
-          }
-          if (proposedLeft < 8) {
-            proposedLeft = 8;
-          }
-          return proposedLeft;
-        })(),
-        top: buttonPosition.y + buttonPosition.height + 8,
-      }
-    : {};
+    const buttons = Array.from(
+      menuRef.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') ?? [],
+    );
+    if (!buttons.length) return;
+    const index = buttons.indexOf(document.activeElement as HTMLButtonElement);
+    let next: number;
+    switch (event.key) {
+      case 'ArrowDown':
+        next = (index + 1) % buttons.length;
+        break;
+      case 'ArrowUp':
+        next = (index - 1 + buttons.length) % buttons.length;
+        break;
+      case 'Home':
+        next = 0;
+        break;
+      case 'End':
+        next = buttons.length - 1;
+        break;
+      default:
+        return;
+    }
+    event.preventDefault();
+    buttons[next].focus();
+  };
 
   return (
     <>
-      <Pressable ref={triggerRef} onPress={openMenu}>
+      <style>{menuCss}</style>
+      <div
+        ref={triggerRef}
+        className="mybalance-menu-trigger"
+        role="button"
+        tabIndex={0}
+        aria-label={accessibilityLabel}
+        aria-haspopup="menu"
+        aria-expanded={menuVisible}
+        aria-controls={menuVisible ? menuId : undefined}
+        style={variables}
+        onClick={() => (menuVisible ? closeMenu() : openMenu())}
+        onKeyDown={(event) => {
+          if (['Enter', ' ', 'ArrowDown', 'ArrowUp'].includes(event.key)) {
+            event.preventDefault();
+            openMenu(event.key === 'ArrowUp' ? 'last' : 'first');
+          }
+        }}
+      >
         {children}
-      </Pressable>
-
-      {menuVisible && buttonPosition && (
-        <>
-          <Animated.View style={[styles.overlay, { opacity: opacityAnim }]}>
-            <Pressable style={StyleSheet.absoluteFill} onPress={closeMenu} />
-          </Animated.View>
-          <Animated.View
-            style={[
-              styles.menu,
-              menuStyle,
-              {
-                transform: [{ scale: scaleAnim }, { translateY: translateYAnim }],
-                opacity: opacityAnim,
-              },
-            ]}
+      </div>
+      <Modal transparent visible={menuVisible} onRequestClose={closeMenu} onShow={focusInitialItem}>
+        <div style={{ position: 'fixed', inset: 0, ...variables }} onClick={closeMenu}>
+          <div
+            ref={menuRef}
+            id={menuId}
+            className="mybalance-menu"
+            role="menu"
+            aria-label={accessibilityLabel}
+            tabIndex={-1}
+            onKeyDown={handleMenuKeyDown}
+            onClick={(event) => event.stopPropagation()}
+            style={{
+              ...position,
+              position: 'fixed',
+              overflowY: 'auto',
+              padding: MENU_PADDING,
+              borderRadius: 16,
+              border: `1px solid ${border}`,
+              background,
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              boxShadow: '0 2px 4px rgba(17, 31, 24, 0.04), 0 16px 40px rgba(17, 31, 24, 0.14)',
+              fontFamily: Fonts.sans,
+            }}
           >
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.scrollContent}
-            >
-              {options.map((option, index) => {
-                const normalized = normalizeOption(option);
-                const isDestructive = normalized.destructive;
-                const isDisabled = normalized.disabled;
-                const itemColor = isDisabled
-                  ? 'rgba(128,128,128,0.4)'
-                  : isDestructive
-                    ? '#ff3b30'
-                    : normalized.color || textColor;
-                const isSelected = selectedOption === normalized.label;
-                const isLast = index === options.length - 1;
-
-                return (
-                  <React.Fragment key={index}>
-                    <Pressable
-                      style={({ pressed }) => [
-                        styles.menuItemContainer,
-                        pressed &&
-                          !isDisabled && {
-                            backgroundColor: pressedBackground,
-                          },
-                      ]}
-                      onPress={() => !isDisabled && handleSelect(normalized.label)}
-                      disabled={isDisabled}
-                    >
-                      <Text
-                        style={[
-                          styles.menuItemText,
-                          { color: itemColor },
-                          isSelected && styles.menuItemTextSelected,
-                        ]}
-                      >
-                        {normalized.label}
-                      </Text>
-                      {normalized.icon && (
-                        <Ionicons
-                          name={normalized.icon}
-                          size={20}
-                          color={itemColor}
-                          style={styles.menuItemIcon}
-                        />
-                      )}
-                    </Pressable>
-                    {!isLast && (
-                      <View style={[styles.separator, { backgroundColor: separatorColor }]} />
+            {items.map((item, index) => {
+              const selected = selectedOption === item.label;
+              const color = item.destructive ? danger : item.color || text;
+              return (
+                <React.Fragment key={`${item.label}-${index}`}>
+                  {hasSeparator(item, index) && (
+                    <div
+                      role="separator"
+                      style={{ height: 1, margin: '6px 8px', background: border }}
+                    />
+                  )}
+                  <button
+                    type="button"
+                    role={selectedOption ? 'menuitemradio' : 'menuitem'}
+                    aria-checked={selectedOption ? selected : undefined}
+                    disabled={item.disabled}
+                    tabIndex={-1}
+                    className="mybalance-menu-item"
+                    data-selected={selected}
+                    data-destructive={!!item.destructive}
+                    onClick={() => {
+                      closeMenu();
+                      onSelectOption(item.label);
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      width: '100%',
+                      height: ITEM_HEIGHT,
+                      padding: '0 10px',
+                      border: 0,
+                      borderRadius: 9,
+                      background: selected ? hover : 'transparent',
+                      color,
+                      fontFamily: 'inherit',
+                      fontSize: 13,
+                      fontWeight: selected ? 600 : 500,
+                      lineHeight: '18px',
+                      textAlign: 'left',
+                      cursor: item.disabled ? 'default' : 'pointer',
+                      opacity: item.disabled ? 0.4 : 1,
+                    }}
+                  >
+                    {item.icon && (
+                      <Ionicons
+                        name={item.icon}
+                        size={17}
+                        color={item.destructive ? danger : muted}
+                      />
                     )}
-                  </React.Fragment>
-                );
-              })}
-            </ScrollView>
-          </Animated.View>
-        </>
-      )}
+                    <span style={{ flex: 1 }}>{item.label}</span>
+                    {selected && <Ionicons name="checkmark" size={16} color={accent} />}
+                    {item.external && <Ionicons name="arrow-up-right" size={14} color={muted} />}
+                  </button>
+                </React.Fragment>
+              );
+            })}
+          </div>
+        </div>
+      </Modal>
     </>
   );
 };
-
-const styles = StyleSheet.create({
-  overlay: {
-    position: 'fixed' as any,
-    top: 0,
-    left: 0,
-    width: '100%' as any,
-    height: '100%' as any,
-    zIndex: 399,
-    backgroundColor: 'transparent',
-  },
-  menu: {
-    position: 'fixed' as any,
-    zIndex: 400,
-    borderWidth: 0.5,
-    borderRadius: 20,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.25,
-    shadowRadius: 24,
-    elevation: 16,
-    overflow: 'hidden',
-  },
-  scrollContent: {
-    paddingVertical: MENU_PADDING,
-  },
-  menuItemContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    height: ITEM_HEIGHT,
-  },
-  menuItemText: {
-    fontSize: 17,
-    fontWeight: '400',
-    flex: 1,
-  },
-  menuItemTextSelected: {
-    fontWeight: '600',
-  },
-  menuItemIcon: {
-    marginLeft: 12,
-  },
-  separator: {
-    height: 0.5,
-    marginLeft: 16,
-  },
-});
 
 export default ContextMenu;

@@ -198,6 +198,11 @@ export default function RootLayout() {
         <Head>
           <title>My Balance</title>
           <link rel="icon" type="image/png" href="/favicon.png" />
+          <style>{`
+            :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="file"]):not([type="image"]), textarea, [contenteditable="true"]):focus {
+              outline: none !important;
+            }
+          `}</style>
         </Head>
       )}
       <QueryProvider>

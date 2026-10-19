@@ -1,5 +1,5 @@
 import { ThemedText } from '../core/themed-text.native';
-import { View, StyleSheet, TextInput, Text } from 'react-native';
+import { View, StyleSheet, TextInput } from 'react-native';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
 import React from 'react';
 interface ITextBoxProps {
@@ -19,8 +19,8 @@ const TextBox: React.FC<ITextBoxProps> = ({
   onFocus,
   onBlur,
 }) => {
-  const textColor = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
-  const placeholderColor = useThemeColor({ light: '#aaa', dark: '#666' }, 'tabIconDefault');
+  const textColor = useThemeColor({ light: '#18221D', dark: '#F0F4F2' }, 'text');
+  const placeholderColor = useThemeColor({ light: '#77847D', dark: '#929C97' }, 'tabIconDefault');
 
   return (
     <View style={styles.container}>
@@ -30,6 +30,7 @@ const TextBox: React.FC<ITextBoxProps> = ({
         </ThemedText>
       )}
       <TextInput
+        accessibilityLabel={label || placeholder}
         style={[styles.textInput, { color: textColor }]}
         value={value}
         onChangeText={onChange}
@@ -44,24 +45,29 @@ const TextBox: React.FC<ITextBoxProps> = ({
 
 const styles = StyleSheet.create({
   container: {
+    minHeight: 48,
     flexDirection: 'row',
     paddingHorizontal: 0,
-    paddingVertical: 5,
+    paddingVertical: 4,
     alignItems: 'center',
   },
   label: {
-    flex: 0,
     flexShrink: 0,
     marginRight: 12,
-    minWidth: 120,
-    maxWidth: 200,
+    width: 96,
+    fontSize: 16,
+    lineHeight: 22,
+    fontWeight: '500',
   },
   textInput: {
     display: 'flex',
     flex: 1,
     textAlign: 'right',
-    fontSize: 18,
-    paddingHorizontal: 10,
+    fontSize: 16,
+    lineHeight: 22,
+    minHeight: 40,
+    paddingVertical: 8,
+    paddingHorizontal: 0,
     minWidth: 0, // Prevents text from overflowing
     outlineColor: 'transparent',
   },

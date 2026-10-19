@@ -6,6 +6,7 @@ import { useState } from 'react';
 import * as Haptics from 'expo-haptics';
 import ModalPanel from './modal-panel';
 import React from 'react';
+import IconSymbol from './icon-symbol';
 
 export interface IListPickerItem {
   label: string;
@@ -35,8 +36,8 @@ const ListPicker: React.FC<IListPickerProps> = ({
   const [tempValue, setTempValue] = useState(value);
 
   // Theme colors
-  const textColor = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
-  const placeholderColor = useThemeColor({ light: '#666', dark: '#99999984' }, 'tabIconDefault');
+  const textColor = useThemeColor({ light: '#18221D', dark: '#F0F4F2' }, 'text');
+  const placeholderColor = useThemeColor({ light: '#77847D', dark: '#929C97' }, 'tabIconDefault');
 
   const getDisplayValue = () => {
     const selectedItem = items.find((item) => item.value === value);
@@ -60,7 +61,13 @@ const ListPicker: React.FC<IListPickerProps> = ({
   const isPlaceholder = !items.find((item) => item.value === value);
 
   return (
-    <Pressable onPress={showModal} style={styles.container}>
+    <Pressable
+      onPress={showModal}
+      accessibilityRole="button"
+      accessibilityLabel={label || title}
+      accessibilityValue={{ text: getDisplayValue() }}
+      style={({ pressed }) => [styles.container, pressed && styles.pressed]}
+    >
       {label && (
         <ThemedText type="default" style={styles.label}>
           {label}
@@ -68,6 +75,7 @@ const ListPicker: React.FC<IListPickerProps> = ({
       )}
       <View style={styles.inputContainer}>
         <ThemedText
+          numberOfLines={1}
           style={[
             styles.valueText,
             {
@@ -77,6 +85,7 @@ const ListPicker: React.FC<IListPickerProps> = ({
         >
           {getDisplayValue()}
         </ThemedText>
+        <IconSymbol name="chevron-right" size={16} color={placeholderColor} />
       </View>
 
       <ModalPanel
@@ -92,7 +101,7 @@ const ListPicker: React.FC<IListPickerProps> = ({
             selectedValue={tempValue}
             onValueChange={(itemValue) => setTempValue(itemValue)}
             style={styles.picker}
-            itemStyle={styles.pickerItem}
+            itemStyle={[styles.pickerItem, { color: textColor }]}
           >
             <Picker.Item key={''} label={''} value={''} />
             {items.map((item) => (
@@ -107,33 +116,38 @@ const ListPicker: React.FC<IListPickerProps> = ({
 
 const styles = StyleSheet.create({
   container: {
+    minHeight: 48,
     flexDirection: 'row',
     paddingHorizontal: 0,
-    paddingVertical: 5,
+    paddingVertical: 4,
     alignItems: 'center',
   },
   label: {
-    flex: 0,
     flexShrink: 0,
     marginRight: 12,
-    minWidth: 80,
-    maxWidth: 120,
+    width: 96,
+    fontSize: 16,
+    lineHeight: 22,
+    fontWeight: '500',
   },
   inputContainer: {
     flex: 1,
+    minWidth: 0,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
-    paddingHorizontal: 10,
+    gap: 8,
   },
   valueText: {
-    fontSize: 18,
+    fontSize: 16,
+    lineHeight: 22,
     textAlign: 'right',
     flex: 1,
   },
   icon: {
     marginLeft: 8,
   },
+  pressed: { opacity: 0.65 },
   pickerContainer: {
     alignItems: 'center',
     minHeight: 200,

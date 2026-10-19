@@ -176,8 +176,8 @@ const styles = StyleSheet.create({
     letterSpacing: -0.8,
     zIndex: 1,
   },
-  chart: { marginTop: -24 },
-  loadingChart: { marginTop: 0 },
+  chart: { marginTop: 4 },
+  loadingChart: { marginTop: 4 },
   metrics: {
     flexDirection: 'row',
     alignItems: 'stretch',

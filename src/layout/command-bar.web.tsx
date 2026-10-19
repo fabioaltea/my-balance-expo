@@ -67,12 +67,10 @@ export function CommandBar({
               label: 'Privacy Policy',
               icon: 'shield-checkmark-outline',
               separatorBefore: true,
-              external: true,
             },
             {
               label: 'Terms of Service',
               icon: 'document-text-outline',
-              external: true,
             },
             {
               label: 'Logout',

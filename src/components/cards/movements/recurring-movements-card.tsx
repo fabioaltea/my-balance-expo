@@ -501,7 +501,8 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
       <ScrollView
         showsVerticalScrollIndicator={isLandscape}
         nestedScrollEnabled={true}
-        style={isWeb ? styles.scrollViewWeb : undefined}
+        style={isWeb ? { marginRight: -10 } : undefined}
+        contentContainerStyle={isWeb ? { paddingRight: 10 } : undefined}
       >
         {sortedMovements.map((entry, index) => {
           const { movement, pending, badgeStatus, occurrencesInPeriod, periodTotal } = entry;
@@ -698,9 +699,6 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
 };
 
 const styles = StyleSheet.create({
-  scrollViewWeb: {
-    paddingRight: 12,
-  },
   recurringItem: {
     flexDirection: 'row',
     alignItems: 'center',

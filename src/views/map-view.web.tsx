@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { View, StyleSheet, Text, ScrollView, Image } from 'react-native';
+import { View, StyleSheet, Text, ScrollView, Image, useWindowDimensions } from 'react-native';
 import { Pressable } from '@/src/components/core/interactive';
 import { GoogleMap, MarkerF, useLoadScript } from '@react-google-maps/api';
 import { useQueryClient } from '@tanstack/react-query';
 import { useColorScheme } from '@/src/hooks/use-color-scheme';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
+import { webPanelBackground } from '@/src/constants/theme';
 import { useAuthContext, useDataContext } from '@/src/state';
 import type { Movement } from '@/src/types/models';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -102,17 +103,18 @@ export default function MapView({ onBack }: MapViewProps) {
   const { movements, categories } = useDataContext();
   const colorScheme = useColorScheme() ?? 'light';
   const backgroundColor = useThemeColor({}, 'background');
-  const cardBackground = useThemeColor({}, 'cardBackground');
-  const textColor = useThemeColor({}, 'text');
-  const subtextColor = useThemeColor({ light: '#888', dark: '#999' }, 'tabIconDefault');
-  const borderColor = useThemeColor({ light: '#F0F0F0', dark: '#333333' }, 'tabIconDefault');
-  const positiveAmountColor = useThemeColor({ light: '#107c2bff', dark: '#34C759' }, 'tint');
-  const primaryColor = '#2F4F3F';
-  const miniBarBg = useThemeColor(
-    { light: 'rgba(255, 255, 255, 0.75)', dark: 'rgba(40, 40, 40, 0.8)' },
-    'cardBackground',
+  const cardBackground = useThemeColor(webPanelBackground, 'cardBackground');
+  const textColor = useThemeColor({ light: '#18221D', dark: '#F0F4F2' }, 'text');
+  const subtextColor = useThemeColor({ light: '#66736C', dark: '#AEB8B2' }, 'tabIconDefault');
+  const borderColor = useThemeColor(
+    { light: 'rgba(23, 38, 31, 0.10)', dark: 'rgba(255, 255, 255, 0.10)' },
+    'cardBorder',
   );
-  const miniBarTextColor = useThemeColor({ light: '#2F4F3F', dark: '#FFFFFF' }, 'text');
+  const positiveAmountColor = useThemeColor({ light: '#25633F', dark: '#7FCF9D' }, 'tint');
+  const brandColor = useThemeColor({ light: '#244437', dark: '#D6E8DE' }, 'tint');
+  const { width } = useWindowDimensions();
+  const compact = width < 700;
+  const primaryColor = '#2F4F3F';
 
   const { isLoaded } = useLoadScript({
     googleMapsApiKey: API_KEY,
@@ -449,22 +451,26 @@ export default function MapView({ onBack }: MapViewProps) {
 
   return (
     <View style={[styles.container, { backgroundColor }]}>
-      {/* Back button - top left */}
-      <Pressable style={styles.backButton} onPress={onBack}>
-        <View style={styles.backButtonInner}>
-          <MaterialIcons name="arrow-back" size={20} color="#fff" />
-        </View>
-      </Pressable>
-
-      {/* Mini command bar - static centered title */}
-      <View style={styles.miniBarContainer}>
-        <View style={[styles.miniBar, { backgroundColor: miniBarBg }]}>
-          <Image
-            source={require('@/assets/images/icon.png')}
-            style={styles.miniBarLogo}
-            resizeMode="contain"
-          />
-          <Text style={[styles.miniBarText, { color: miniBarTextColor }]}>MyBalance</Text>
+      <View style={styles.commandBarContainer} pointerEvents="box-none">
+        <View style={[styles.commandBar, { backgroundColor: cardBackground, borderColor }]}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Back to dashboard"
+            title="Back to dashboard"
+            onPress={onBack}
+            style={styles.iconButton}
+          >
+            <MaterialIcons name="arrow-back" size={20} color={subtextColor} />
+          </Pressable>
+          <View style={styles.commandBarSpacer} />
+          <View style={styles.brandSection}>
+            <Image
+              source={require('@/assets/images/icon.png')}
+              style={styles.miniBarLogo}
+              resizeMode="contain"
+            />
+            <Text style={[styles.miniBarText, { color: brandColor }]}>Map</Text>
+          </View>
         </View>
       </View>
 
@@ -493,10 +499,16 @@ export default function MapView({ onBack }: MapViewProps) {
 
       {/* Bottom-left panel — movements card style */}
       {selectedGroup && (
-        <View style={[styles.panel, { backgroundColor: cardBackground }]}>
+        <View
+          style={[
+            styles.panel,
+            { backgroundColor: cardBackground, borderColor, width: Math.min(400, width - 32) },
+            compact && styles.panelCompact,
+          ]}
+        >
           {/* Location header */}
           <View style={styles.panelHeader}>
-            <View style={{ flex: 1 }}>
+            <View style={styles.panelHeaderText}>
               <Text style={[styles.panelTitle, { color: textColor }]} numberOfLines={2}>
                 {selectedGroup.location}
               </Text>
@@ -505,7 +517,13 @@ export default function MapView({ onBack }: MapViewProps) {
                 {selectedGroup.movements.length === 1 ? 'o' : 'i'}
               </Text>
             </View>
-            <Pressable onPress={() => setSelectedGroup(null)} style={styles.closeButton}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Close location details"
+              title="Close location details"
+              onPress={() => setSelectedGroup(null)}
+              style={styles.iconButton}
+            >
               <MaterialIcons name="close" size={18} color={subtextColor} />
             </Pressable>
           </View>
@@ -513,8 +531,12 @@ export default function MapView({ onBack }: MapViewProps) {
           <View style={[styles.panelDivider, { backgroundColor: borderColor }]} />
 
           {/* Movements list — same style as RecentMovementsCard */}
-          <ScrollView style={styles.panelList} showsVerticalScrollIndicator={true}>
-            {sortedMovements.map((movement, index) => {
+          <ScrollView
+            style={styles.panelList}
+            contentContainerStyle={styles.panelListContent}
+            showsVerticalScrollIndicator={true}
+          >
+            {sortedMovements.map((movement) => {
               const icon = MovementHelper.getMovementIcon(movement.category, categories);
               const color = MovementHelper.getMovementColor(
                 movement.type,
@@ -524,14 +546,7 @@ export default function MapView({ onBack }: MapViewProps) {
               const amount = movement.totalAmount;
 
               return (
-                <View
-                  key={movement.id}
-                  style={[
-                    styles.movementItem,
-                    { borderBottomColor: borderColor },
-                    index === sortedMovements.length - 1 && styles.lastMovementItem,
-                  ]}
-                >
+                <View key={movement.id} style={styles.movementItem}>
                   <View style={[styles.movementIcon, { backgroundColor: color }]}>
                     <IconSymbol name={icon} size={18} color="#FFFFFF" />
                   </View>
@@ -564,8 +579,14 @@ export default function MapView({ onBack }: MapViewProps) {
 
       {/* Info badge — bottom right */}
       {locationGroups.length > 0 && (
-        <View style={[styles.infoBadge, { backgroundColor: cardBackground }]}>
-          <MaterialIcons name="place" size={16} color="#2F4F3F" />
+        <View
+          style={[
+            styles.infoBadge,
+            { backgroundColor: cardBackground, borderColor },
+            compact && styles.infoBadgeCompact,
+          ]}
+        >
+          <MaterialIcons name="place" size={16} color={brandColor} />
           <Text style={[styles.infoBadgeText, { color: textColor }]}>
             {locationGroups.length} posizion
             {locationGroups.length === 1 ? 'e' : 'i'}
@@ -581,41 +602,34 @@ const styles = StyleSheet.create({
     flex: 1,
     position: 'relative',
   },
-  // Back button
-  backButton: {
+  commandBarContainer: {
     position: 'absolute',
-    top: 16,
+    top: 14,
     left: 16,
+    right: 16,
     zIndex: 10,
   },
-  backButtonInner: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+  iconButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    flexShrink: 0,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  // Mini command bar — static centered title
-  miniBarContainer: {
-    position: 'absolute',
-    top: 16,
-    left: 0,
-    right: 0,
-    zIndex: 10,
-    alignItems: 'center',
-    pointerEvents: 'none',
-  },
-  miniBar: {
+  commandBar: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 22,
-    boxShadow: '0 4px 24px rgba(0, 0, 0, 0.12)',
+    minHeight: 58,
+    padding: 8,
+    borderWidth: 1,
+    borderRadius: 20,
+    boxShadow: '0 1px 2px rgba(17, 31, 24, 0.03), 0 8px 24px rgba(17, 31, 24, 0.05)',
     backdropFilter: 'blur(20px)',
   },
+  commandBarSpacer: { flex: 1 },
+  brandSection: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 6 },
   miniBarLogo: {
     width: 24,
     height: 24,
@@ -624,97 +638,108 @@ const styles = StyleSheet.create({
   miniBarText: {
     fontSize: 15,
     fontWeight: '600',
-    letterSpacing: -0.3,
+    letterSpacing: 0,
   },
   // Panel — bottom left
   panel: {
     position: 'absolute',
     bottom: 24,
-    left: 24,
-    width: 380,
-    maxHeight: '70%',
-    borderRadius: 30,
-    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.06)',
+    left: 16,
+    maxHeight: '65%',
+    borderWidth: 1,
+    borderRadius: 20,
+    boxShadow: '0 1px 2px rgba(17, 31, 24, 0.03), 0 10px 28px rgba(17, 31, 24, 0.05)',
     overflow: 'hidden',
-    paddingVertical: 15,
-    paddingHorizontal: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 14,
   },
+  panelCompact: { maxHeight: '50%' },
+  panelHeaderText: { flex: 1, minWidth: 0 },
   panelHeader: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    paddingHorizontal: 10,
+    paddingHorizontal: 2,
     paddingBottom: 12,
     gap: 12,
   },
   panelTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    letterSpacing: -0.3,
+    fontSize: 16,
+    lineHeight: 22,
+    fontWeight: '600',
+    letterSpacing: 0,
+    overflowWrap: 'anywhere',
     textTransform: 'capitalize',
   },
   panelSubtitle: {
-    fontSize: 13,
+    fontSize: 12,
+    lineHeight: 18,
     marginTop: 2,
-  },
-  closeButton: {
-    padding: 4,
   },
   panelDivider: {
     height: 1,
-    marginHorizontal: 10,
-    marginBottom: 4,
+    marginHorizontal: 2,
+    marginBottom: 8,
   },
   panelList: {
-    paddingHorizontal: 0,
-    paddingRight: 10,
+    minHeight: 0,
+    flexShrink: 1,
+    marginRight: -10,
   },
+  panelListContent: { gap: 6, paddingRight: 10 },
   // Movement rows — matching RecentMovementsCard style
   movementItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-  },
-  lastMovementItem: {
-    borderBottomWidth: 0,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderRadius: 12,
   },
   movementIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    flexShrink: 0,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 11,
   },
   movementInfo: {
     flex: 1,
+    minWidth: 0,
+    marginRight: 10,
   },
   movementDate: {
-    fontSize: 12,
+    fontSize: 11,
+    lineHeight: 16,
     marginBottom: 0,
   },
   movementDescription: {
-    fontSize: 15,
-    fontWeight: '500',
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '600',
     textTransform: 'capitalize',
   },
   movementAmount: {
-    fontSize: 15,
+    fontSize: 14,
+    lineHeight: 20,
     fontWeight: '700',
+    fontVariant: ['tabular-nums'],
   },
   // Info badge — bottom right
   infoBadge: {
     position: 'absolute',
     bottom: 24,
-    right: 24,
+    right: 16,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 20,
-    boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
+    borderWidth: 1,
+    borderRadius: 14,
+    boxShadow: '0 1px 2px rgba(17, 31, 24, 0.03), 0 8px 24px rgba(17, 31, 24, 0.05)',
   },
+  infoBadgeCompact: { top: 88, bottom: 'auto' },
   infoBadgeText: {
     fontSize: 13,
     fontWeight: '600',

@@ -234,7 +234,12 @@ const UnconfirmedMovementsCard: React.FC<UnconfirmedMovementsCardProps> = ({ onM
       style={isLandscape ? { flex: 1 } : undefined}
       compact={isWeb}
     >
-      <ScrollView showsVerticalScrollIndicator={isLandscape} nestedScrollEnabled={true}>
+      <ScrollView
+        showsVerticalScrollIndicator={isLandscape}
+        nestedScrollEnabled={true}
+        style={isWeb ? { marginRight: -10 } : undefined}
+        contentContainerStyle={isWeb ? { paddingRight: 10 } : undefined}
+      >
         {sortedMovements.map((movement, index) => {
           const icon = MovementHelper.getMovementIcon(movement.category, categories);
           const color = MovementHelper.getMovementColor(

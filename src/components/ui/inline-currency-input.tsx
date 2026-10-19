@@ -20,11 +20,14 @@ const InlineCurrencyInput: React.FC<IInlineCurrencyInputProps> = ({
     'tabIconDefault',
   );
   const placeholderColor = phColor || defaultPlaceholderColor;
+  const hoverColor = useThemeColor({ light: '#EEF2EF', dark: '#2A302D' }, 'menuBackground');
+  const cursorColor = useThemeColor({ light: '#2F4F3F', dark: '#D6E8DE' }, 'tint');
 
   const [integerPart, setIntegerPart] = useState('0');
   const [decimalPart, setDecimalPart] = useState('00');
   const [typingDecimal, setTypingDecimal] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const internalUpdate = useRef(false);
 
@@ -36,6 +39,7 @@ const InlineCurrencyInput: React.FC<IInlineCurrencyInputProps> = ({
       blinkAnim.setValue(0);
       return;
     }
+    blinkAnim.setValue(1);
     const blink = Animated.loop(
       Animated.sequence([
         Animated.timing(blinkAnim, {
@@ -52,7 +56,7 @@ const InlineCurrencyInput: React.FC<IInlineCurrencyInputProps> = ({
     );
     blink.start();
     return () => blink.stop();
-  }, [blinkAnim, isFocused, typingDecimal]);
+  }, [blinkAnim, isFocused]);
 
   // Sync from parent value
   useEffect(() => {
@@ -141,18 +145,18 @@ const InlineCurrencyInput: React.FC<IInlineCurrencyInputProps> = ({
   return (
     <View style={styles.container}>
       {/* Hidden input to capture keyboard events */}
-      {/* @ts-ignore — HTML input for web */}
       <input
         ref={inputRef}
         type="text"
         inputMode="decimal"
+        aria-label="Amount in euros"
         value=""
-        onKeyDown={handleKeyDown as any}
+        onKeyDown={handleKeyDown}
         onChange={() => {}}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
         style={{
-          position: 'absolute' as any,
+          position: 'absolute',
           opacity: 0,
           width: 1,
           height: 1,
@@ -163,43 +167,69 @@ const InlineCurrencyInput: React.FC<IInlineCurrencyInputProps> = ({
         }}
       />
       {/* Visible display */}
-      <View
-        style={styles.display}
-        // @ts-ignore — web onClick
-        onClick={() => inputRef.current?.focus()}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          cursor: 'text',
+          minHeight: 36,
+          boxSizing: 'border-box',
+          padding: '8px 10px',
+          borderRadius: 10,
+          backgroundColor: isHovered || isFocused ? hoverColor : 'transparent',
+        }}
+        onPointerEnter={() => setIsHovered(true)}
+        onPointerLeave={() => setIsHovered(false)}
+        onPointerDown={(event) => {
+          event.preventDefault();
+          inputRef.current?.focus({ preventScroll: true });
+        }}
+        aria-hidden
       >
+        <View style={styles.segment} onPointerDown={() => setTypingDecimal(false)}>
+          <ThemedText
+            style={[styles.text, { color: isEmpty && !isFocused ? placeholderColor : textColor }]}
+          >
+            {integerPart}
+          </ThemedText>
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              styles.blinker,
+              {
+                backgroundColor: cursorColor,
+                opacity: isFocused && !typingDecimal ? blinkAnim : 0,
+              },
+            ]}
+          />
+        </View>
+        <View onPointerDown={() => setTypingDecimal(true)}>
+          <ThemedText
+            style={[styles.text, { color: isEmpty && !isFocused ? placeholderColor : textColor }]}
+          >
+            ,
+          </ThemedText>
+        </View>
+        <View style={styles.segment} onPointerDown={() => setTypingDecimal(true)}>
+          <ThemedText
+            style={[styles.text, { color: isEmpty && !isFocused ? placeholderColor : textColor }]}
+          >
+            {decimalPart}
+          </ThemedText>
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              styles.blinker,
+              { backgroundColor: cursorColor, opacity: isFocused && typingDecimal ? blinkAnim : 0 },
+            ]}
+          />
+        </View>
         <ThemedText
-          style={[
-            styles.text,
-            { color: isEmpty && !isFocused ? placeholderColor : textColor },
-            !typingDecimal && isFocused && styles.activeText,
-          ]}
+          style={[styles.currencySymbol, { color: isEmpty ? placeholderColor : textColor }]}
         >
-          {integerPart}
+          €
         </ThemedText>
-        {/* Blinker after integer part */}
-        {isFocused && !typingDecimal && (
-          <Animated.View style={[styles.blinker, { opacity: blinkAnim }]} />
-        )}
-        <ThemedText
-          style={[styles.comma, { color: isEmpty && !isFocused ? placeholderColor : textColor }]}
-        >
-          ,
-        </ThemedText>
-        <ThemedText
-          style={[
-            styles.text,
-            { color: isEmpty && !isFocused ? placeholderColor : textColor },
-            typingDecimal && isFocused && styles.activeText,
-          ]}
-        >
-          {decimalPart}
-        </ThemedText>
-        {/* Blinker after decimal part */}
-        {isFocused && typingDecimal && (
-          <Animated.View style={[styles.blinker, { opacity: blinkAnim }]} />
-        )}
-      </View>
+      </div>
     </View>
   );
 };
@@ -210,27 +240,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     position: 'relative',
   },
-  display: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    cursor: 'text',
-    paddingVertical: 4,
-    paddingHorizontal: 4,
-  } as any,
+  segment: {
+    position: 'relative',
+    paddingRight: 3,
+  },
   text: {
     fontSize: 15,
     fontWeight: '600',
+    lineHeight: 20,
+    fontVariant: ['tabular-nums'],
+    userSelect: 'none',
   },
-  activeText: {},
-  comma: {
-    fontSize: 15,
-    fontWeight: '600',
+  currencySymbol: {
+    width: 18,
+    marginLeft: 8,
+    fontSize: 12,
+    lineHeight: 20,
+    textAlign: 'center',
+    userSelect: 'none',
   },
   blinker: {
+    position: 'absolute',
+    right: 0,
+    top: 2,
     width: 1.5,
     height: 16,
-    backgroundColor: '#2F4F3F',
-    marginLeft: 1,
   },
 });
 

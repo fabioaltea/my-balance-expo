@@ -6,6 +6,7 @@ import { Fonts, webPanelBackground } from '@/src/constants/theme';
 
 export interface IContextMenuOption {
   label: string;
+  value?: string;
   icon?: keyof typeof Ionicons.glyphMap;
   color?: string;
   destructive?: boolean;
@@ -23,6 +24,7 @@ export interface IContextMenuProps {
   children: React.ReactNode;
   accessibilityLabel?: string;
   align?: 'start' | 'center';
+  itemSpacing?: number;
 }
 
 const MENU_WIDTH = 240;
@@ -55,6 +57,7 @@ const ContextMenu: React.FC<IContextMenuProps> = ({
   children,
   accessibilityLabel,
   align = 'center',
+  itemSpacing = 0,
 }) => {
   const [position, setPosition] = useState<React.CSSProperties | null>(null);
   const triggerRef = useRef<HTMLDivElement>(null);
@@ -95,6 +98,7 @@ const ContextMenu: React.FC<IContextMenuProps> = ({
     const width = Math.min(MENU_WIDTH, window.innerWidth - VIEWPORT_MARGIN * 2);
     const height =
       items.length * ITEM_HEIGHT +
+      Math.max(0, items.length - 1) * itemSpacing +
       MENU_PADDING * 2 +
       2 +
       items.filter(hasSeparator).length * SEPARATOR_HEIGHT;
@@ -223,7 +227,8 @@ const ContextMenu: React.FC<IContextMenuProps> = ({
             }}
           >
             {items.map((item, index) => {
-              const selected = selectedOption === item.label;
+              const value = item.value ?? item.label;
+              const selected = selectedOption === value;
               const color = item.destructive ? danger : item.color || text;
               return (
                 <React.Fragment key={`${item.label}-${index}`}>
@@ -244,7 +249,7 @@ const ContextMenu: React.FC<IContextMenuProps> = ({
                     data-destructive={!!item.destructive}
                     onClick={() => {
                       closeMenu();
-                      onSelectOption(item.label);
+                      onSelectOption(value);
                     }}
                     style={{
                       display: 'flex',
@@ -252,6 +257,7 @@ const ContextMenu: React.FC<IContextMenuProps> = ({
                       gap: 10,
                       width: '100%',
                       height: ITEM_HEIGHT,
+                      marginTop: index > 0 ? itemSpacing : 0,
                       padding: '0 10px',
                       border: 0,
                       borderRadius: 9,

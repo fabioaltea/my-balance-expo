@@ -1,5 +1,6 @@
 import { ThemedText } from '@/src/components/core/themed-text';
 import { View, StyleSheet, Animated, TextInput } from 'react-native';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { GoogleMap, MarkerF, useLoadScript } from '@react-google-maps/api';
@@ -36,6 +37,7 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
   googleMapsApiKey,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isInputHovered, setIsInputHovered] = useState(false);
   const [mapCenter, setMapCenter] = useState(DEFAULT_CENTER);
   const [markerPos, setMarkerPos] = useState<{
     lat: number;
@@ -49,6 +51,7 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
 
   const textColor = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
   const placeholderColor = useThemeColor({ light: '#77847D', dark: '#929C97' }, 'tabIconDefault');
+  const hoverColor = useThemeColor({ light: '#EEF2EF', dark: '#2A302D' }, 'menuBackground');
 
   const { isLoaded } = useLoadScript({
     googleMapsApiKey: googleMapsApiKey || '',
@@ -219,6 +222,9 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
             placeholderTextColor={placeholderColor}
             editable={false}
           />
+          <View style={styles.inputIcon} pointerEvents="none" aria-hidden>
+            <MaterialIcons name="place" size={12} color={placeholderColor} />
+          </View>
         </View>
       </View>
     );
@@ -231,12 +237,20 @@ const LocationPicker: React.FC<ILocationPickerProps> = ({
           {label}
         </ThemedText>
         <TextInput
-          style={[styles.textInput, { color: textColor }]}
+          style={[
+            styles.textInput,
+            { color: textColor, backgroundColor: isInputHovered ? hoverColor : 'transparent' },
+          ]}
+          onPointerEnter={() => setIsInputHovered(true)}
+          onPointerLeave={() => setIsInputHovered(false)}
           value={value}
           onChangeText={handleTextChange}
           placeholder={placeholder}
           placeholderTextColor={placeholderColor}
         />
+        <View style={styles.inputIcon} pointerEvents="none" aria-hidden>
+          <MaterialIcons name="place" size={12} color={placeholderColor} />
+        </View>
       </View>
 
       {isExpanded && markerPos && (
@@ -277,13 +291,24 @@ const styles = StyleSheet.create({
   textInput: {
     flex: 1,
     minWidth: 0,
-    paddingHorizontal: 0,
+    paddingHorizontal: 10,
+    paddingRight: 36,
     paddingVertical: 8,
     borderWidth: 0,
+    borderRadius: 10,
     textAlign: 'right',
     fontSize: 15,
     lineHeight: 20,
     outlineColor: 'transparent',
+  },
+  inputIcon: {
+    position: 'absolute',
+    right: 10,
+    top: 0,
+    bottom: 0,
+    width: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   mapContainer: {
     flex: 1,

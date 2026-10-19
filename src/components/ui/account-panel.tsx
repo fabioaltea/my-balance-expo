@@ -52,7 +52,6 @@ const AccountPanel: React.FC<AccountPanelProps> = ({
             }}
           >
             <InlineCurrencyInput value={balance} onChange={onBalanceChange} />
-            <ThemedText>€</ThemedText>
           </View>
         </View>
       )}

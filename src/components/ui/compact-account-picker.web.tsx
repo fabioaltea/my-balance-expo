@@ -3,6 +3,8 @@ import React from 'react';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
 import type { Account } from '@/src/state';
+import { Fonts } from '@/src/constants/theme';
+import ContextMenu from './context-menu.web';
 
 export interface CompactAccountPickerProps {
   accounts: Account[];
@@ -12,7 +14,7 @@ export interface CompactAccountPickerProps {
 
 /**
  * Compact account picker for landscape command bar
- * Web version with native HTML select
+ * Web version with the app's themed menu
  */
 const CompactAccountPicker: React.FC<CompactAccountPickerProps> = ({
   accounts,
@@ -25,46 +27,38 @@ const CompactAccountPicker: React.FC<CompactAccountPickerProps> = ({
     { light: 'rgba(36, 68, 55, 0.10)', dark: 'rgba(255, 255, 255, 0.10)' },
     'cardBorder',
   );
-  const optionBackground = useThemeColor({ light: '#F9FBFA', dark: '#232725' }, 'cardBackground');
-
-  const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedAccount(event.target.value);
-  };
+  const selectedLabel = selectedAccount === 'All' ? 'All accounts' : selectedAccount;
 
   return (
-    <View style={[styles.container, { backgroundColor, borderColor }]}>
-      <select
-        aria-label="Account"
-        value={selectedAccount}
-        onChange={handleSelectChange}
-        style={{
-          fontSize: 13,
-          fontWeight: '500',
-          color: textColor,
-          backgroundColor: 'transparent',
-          border: 'none',
-          cursor: 'pointer',
-          minWidth: 112,
-          paddingRight: 24,
-          appearance: 'none',
-          WebkitAppearance: 'none',
-          MozAppearance: 'none',
-        }}
-      >
-        {accounts.map((account) => (
-          <option
-            key={account.name}
-            value={account.name}
-            style={{ backgroundColor: optionBackground, color: textColor }}
-          >
-            {account.name === 'All' ? 'All accounts' : account.name}
-          </option>
-        ))}
-      </select>
-      <View style={styles.chevron} pointerEvents="none">
-        <MaterialIcons name="expand-more" size={18} color={textColor} />
+    <ContextMenu
+      accessibilityLabel={`Account: ${selectedLabel}`}
+      align="start"
+      itemSpacing={4}
+      options={accounts.map((account) => ({
+        label: account.name === 'All' ? 'All accounts' : account.name,
+        value: account.name,
+      }))}
+      selectedOption={selectedAccount}
+      onSelectOption={setSelectedAccount}
+    >
+      <View style={[styles.container, { backgroundColor, borderColor }]}>
+        <span
+          style={{
+            fontFamily: Fonts.sans,
+            fontSize: 13,
+            fontWeight: 500,
+            color: textColor,
+            minWidth: 112,
+            paddingRight: 24,
+          }}
+        >
+          {selectedLabel}
+        </span>
+        <View style={styles.chevron} pointerEvents="none">
+          <MaterialIcons name="expand-more" size={18} color={textColor} />
+        </View>
       </View>
-    </View>
+    </ContextMenu>
   );
 };
 
@@ -83,7 +77,7 @@ const styles = StyleSheet.create({
   chevron: {
     opacity: 0.6,
     position: 'absolute',
-    right: 8,
+    right: 12,
   },
 });
 

@@ -2,8 +2,8 @@ import { View, StyleSheet, Pressable } from 'react-native';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
 import React, { useRef, useEffect, useState } from 'react';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { ThemedText } from '@/src/components/core/themed-text';
 import InlineCurrencyInput from './inline-currency-input';
+import FormSelect from './form-select.web';
 
 export interface ITransaction {
   id: number;
@@ -33,7 +33,6 @@ const TransactionsWeb: React.FC<ITransactionsWebProps> = ({
   onAmountChange,
   onDelete,
 }) => {
-  const textColor = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
   const placeholderColor = useThemeColor({ light: '#aaa', dark: '#666' }, 'tabIconDefault');
   const borderColor = useThemeColor({ light: '#e0e0e0', dark: '#333' }, 'tabIconDefault');
   const rowBackground = useThemeColor({ light: '#FFFFFF', dark: '#232725' }, 'menuBackground');
@@ -96,32 +95,14 @@ const TransactionsWeb: React.FC<ITransactionsWebProps> = ({
             </Pressable>
 
             {/* Account dropdown */}
-            {/* @ts-ignore: HTML select element for web */}
-            <select
-              aria-label="Account"
+            <FormSelect
+              accessibilityLabel="Account"
               value={t.accountName}
-              onChange={(e: any) => onAccountChange(t.id, e.target.value)}
-              style={{
-                flex: 1,
-                fontSize: 15,
-                color: t.accountName ? textColor : placeholderColor,
-                backgroundColor: 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                fontFamily:
-                  "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-                marginLeft: 8,
-              }}
-            >
-              <option value="" disabled>
-                Account
-              </option>
-              {accounts.map((acc) => (
-                <option key={acc.value} value={acc.value}>
-                  {acc.label}
-                </option>
-              ))}
-            </select>
+              onChange={(value) => onAccountChange(t.id, value)}
+              options={accounts}
+              placeholder="Account"
+              style={{ marginLeft: 8 }}
+            />
 
             {/* Amount input */}
             <InlineCurrencyInput
@@ -129,10 +110,6 @@ const TransactionsWeb: React.FC<ITransactionsWebProps> = ({
               onChange={(amount) => onAmountChange(t.id, amount)}
               placeholderColor={placeholderColor}
             />
-
-            <ThemedText style={[styles.currencySymbol, t.amount > 0 && { opacity: 1 }]}>
-              €
-            </ThemedText>
 
             {/* Delete button */}
             <Pressable
@@ -166,11 +143,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  currencySymbol: {
-    fontSize: 14,
-    opacity: 0.5,
-    marginRight: 8,
   },
   deleteButton: {
     width: 32,

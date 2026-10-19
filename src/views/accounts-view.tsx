@@ -1,4 +1,5 @@
-import { StyleSheet, View, Animated, Pressable, Alert } from 'react-native';
+import { StyleSheet, View, Animated, Alert } from 'react-native';
+import { Pressable } from '@/src/components/core/interactive';
 import React, { useState, useRef } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useThemeColor } from '@/src/hooks/use-theme-color';

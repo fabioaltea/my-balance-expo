@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { Pressable } from '@/src/components/core/interactive';
 
 import { useThemeColor } from '@/src/hooks/use-theme-color';
 import ContextMenu from './context-menu';
@@ -128,6 +129,7 @@ const styles = StyleSheet.create({
   wrapper: {
     position: 'relative',
     flexShrink: 0,
+    borderRadius: 12,
   },
   pressable: {
     borderRadius: 12,

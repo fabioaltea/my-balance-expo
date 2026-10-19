@@ -1,4 +1,4 @@
-import { View, StyleSheet, Pressable, Switch, TextInput } from 'react-native';
+import { View, StyleSheet, Switch, TextInput } from 'react-native';
 import { ThemedText } from '../core/themed-text.native';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
 import { useEffect, useState } from 'react';

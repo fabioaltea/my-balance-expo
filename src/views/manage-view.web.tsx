@@ -1,12 +1,5 @@
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  Pressable,
-  Text,
-  Image,
-  useWindowDimensions,
-} from 'react-native';
+import { View, StyleSheet, ScrollView, Text, Image, useWindowDimensions } from 'react-native';
+import { Pressable } from '@/src/components/core/interactive';
 import React, { useState, useCallback } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
@@ -300,6 +293,7 @@ const ManageView: React.FC<ManageViewProps> = ({ onBack }) => {
               <View accessibilityRole="tablist" style={styles.sectionTabs}>
                 {SECTIONS.map((section) => (
                   <Pressable
+                    hoverFeedback={false}
                     key={section.key}
                     accessibilityRole="tab"
                     accessibilityState={{ selected: activeSection === section.key }}

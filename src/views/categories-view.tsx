@@ -1,4 +1,5 @@
-import { StyleSheet, View, ScrollView, Animated, Pressable, Dimensions, Alert } from 'react-native';
+import { StyleSheet, View, ScrollView, Animated, Dimensions, Alert } from 'react-native';
+import { Pressable } from '@/src/components/core/interactive';
 import { ThemedText } from '@/src/components/core/themed-text';
 import React, { useState, useRef } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';

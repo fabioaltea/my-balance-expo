@@ -23,6 +23,7 @@ import { PlatformProvider } from '@/src/state/PlatformProvider';
 import { QueryProvider } from '@/src/providers/QueryProvider';
 import LoginScreen from '@/src/views/login-view';
 import Onboarding from './onboarding';
+import { webInteractionStyles } from '@/src/constants/web-interaction-styles';
 
 export const unstable_settings = {
   anchor: 'dashboard',
@@ -198,6 +199,7 @@ export default function RootLayout() {
         <Head>
           <title>My Balance</title>
           <link rel="icon" type="image/png" href="/favicon.png" />
+          <style>{webInteractionStyles}</style>
           <style>{`
             :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="file"]):not([type="image"]), textarea, [contenteditable="true"]):focus {
               outline: none !important;

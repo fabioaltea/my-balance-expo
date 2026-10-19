@@ -1,4 +1,5 @@
-import { View, StyleSheet, Pressable, Animated } from 'react-native';
+import { View, StyleSheet, Animated } from 'react-native';
+import { Pressable } from '@/src/components/core/interactive';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
 import { useRef, useEffect, ReactNode } from 'react';
 import { ThemedText } from '../core/themed-text.native';
@@ -70,6 +71,7 @@ const ModalPanel: React.FC<IModalPanelProps> = ({
   return (
     <View style={styles.overlay}>
       <Pressable
+        hoverFeedback={false}
         style={[styles.backdrop, { backgroundColor: overlayColor }]}
         onPress={handleClose}
       />

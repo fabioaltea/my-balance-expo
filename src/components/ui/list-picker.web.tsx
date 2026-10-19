@@ -1,5 +1,6 @@
 import { ThemedText } from '../core/themed-text';
-import { View, StyleSheet, Pressable, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
+import { Pressable } from '@/src/components/core/interactive';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
 import { useState, useRef } from 'react';
 import React from 'react';
@@ -92,6 +93,7 @@ const ListPicker: React.FC<IListPickerProps> = ({
               const isSelected = item.value === value;
               return (
                 <Pressable
+                  hoverFeedback={isSelected}
                   key={item.value}
                   onPress={() => handleSelect(item.value)}
                   style={({ hovered }: any) => [

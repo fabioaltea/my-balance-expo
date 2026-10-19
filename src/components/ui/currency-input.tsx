@@ -1,4 +1,5 @@
-import { View, StyleSheet, Pressable, Text, Animated } from 'react-native';
+import { View, StyleSheet, Text, Animated } from 'react-native';
+import { Pressable } from '@/src/components/core/interactive';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
 import * as Haptics from 'expo-haptics';
 import React, { useState, useEffect, useRef } from 'react';

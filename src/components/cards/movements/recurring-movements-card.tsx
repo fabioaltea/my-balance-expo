@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ThemedText } from '../../core/themed-text';
-import { TouchableOpacity, StyleSheet, View, ScrollView, Platform } from 'react-native';
+import { StyleSheet, View, ScrollView, Platform } from 'react-native';
+import { TouchableOpacity } from '@/src/components/core/interactive';
 import Card from '@/src/components/core/card';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
 import {

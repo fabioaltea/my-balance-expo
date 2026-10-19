@@ -1,4 +1,5 @@
-import { Platform, Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native';
+import { Platform, StyleSheet, Text, View, ViewStyle } from 'react-native';
+import { Pressable } from '@/src/components/core/interactive';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';

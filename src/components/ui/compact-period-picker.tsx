@@ -1,4 +1,5 @@
-import { View, StyleSheet, Pressable, Text } from 'react-native';
+import { View, StyleSheet, Text } from 'react-native';
+import { Pressable } from '@/src/components/core/interactive';
 import { useState, useMemo, useEffect } from 'react';
 import React from 'react';
 import { formatDateToDDMMYYYY } from '@/src/utils/dateUtils';

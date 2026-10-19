@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ThemedText } from '@/src/components/core/themed-text';
-import { TouchableOpacity, StyleSheet, View, Alert, ScrollView, Platform } from 'react-native';
+import { StyleSheet, View, Alert, ScrollView, Platform } from 'react-native';
+import { TouchableOpacity } from '@/src/components/core/interactive';
 import IconSymbol from '@/src/components/ui/icon-symbol';
 import Card from '@/src/components/core/card';
 import { usePlatformContext } from '@/src/state/PlatformProvider';
@@ -192,7 +193,9 @@ const UnconfirmedMovementsCard: React.FC<UnconfirmedMovementsCardProps> = ({ onM
         <View style={styles.emptyState}>
           <IconSymbol name="check-circle" size={isWeb ? 32 : 40} color="#999" />
           <View style={styles.emptyState}>
-            <ThemedText style={[styles.emptyTitle, { color: '#999' }]}>You're all set!</ThemedText>
+            <ThemedText style={[styles.emptyTitle, { color: '#999' }]}>
+              You&apos;re all set!
+            </ThemedText>
             <ThemedText style={[styles.emptyText, { color: subtextColor }]}>
               No unconfirmed movements to review
             </ThemedText>

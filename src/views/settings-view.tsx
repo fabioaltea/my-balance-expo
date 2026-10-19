@@ -2,13 +2,13 @@ import {
   Alert,
   StyleSheet,
   View,
-  TouchableOpacity,
   ActivityIndicator,
   Switch,
   Image,
   Platform,
   ScrollView,
 } from 'react-native';
+import { TouchableOpacity } from '@/src/components/core/interactive';
 import { ThemedText } from '@/src/components/core/themed-text';
 import React, { useState, useEffect } from 'react';
 import { useThemeColor } from '@/src/hooks/use-theme-color';

@@ -1,13 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import {
-  View,
-  StyleSheet,
-  Text,
-  Pressable,
-  ScrollView,
-  Image,
-  TouchableOpacity,
-} from 'react-native';
+import { View, StyleSheet, Text, ScrollView, Image } from 'react-native';
+import { Pressable } from '@/src/components/core/interactive';
 import { GoogleMap, MarkerF, useLoadScript } from '@react-google-maps/api';
 import { useQueryClient } from '@tanstack/react-query';
 import { useColorScheme } from '@/src/hooks/use-color-scheme';
@@ -132,6 +125,7 @@ export default function MapView({ onBack }: MapViewProps) {
   const mapRef = useRef<google.maps.Map | null>(null);
   const [locationGroups, setLocationGroups] = useState<LocationGroup[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<LocationGroup | null>(null);
+  const [hoveredLocation, setHoveredLocation] = useState<string | null>(null);
   const [initialCenter] = useState(DEFAULT_CENTER);
   const [initialZoom] = useState(6);
   const geocodeCache = useRef<Map<string, { lat: number; lng: number }>>(new Map());
@@ -488,6 +482,9 @@ export default function MapView({ onBack }: MapViewProps) {
             key={`${group.location}-${idx}`}
             position={{ lat: group.lat, lng: group.lng }}
             icon={markerIcon}
+            opacity={hoveredLocation === group.location ? 0.78 : 1}
+            onMouseOver={() => setHoveredLocation(group.location)}
+            onMouseOut={() => setHoveredLocation(null)}
             title={`${group.location} (${group.movements.length})`}
             onClick={() => handleMarkerClick(group)}
           />

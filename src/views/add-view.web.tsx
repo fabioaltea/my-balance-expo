@@ -1,4 +1,5 @@
-import { View, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert } from 'react-native';
+import { Pressable } from '@/src/components/core/interactive';
 import React, { useState, useEffect, useRef } from 'react';
 import * as Crypto from 'expo-crypto';
 import { ThemedText } from '@/src/components/core/themed-text';
@@ -27,6 +28,7 @@ import ScreenView from '@/src/components/core/screen-view.web';
 import { MovementHelper } from '@/src/helpers/MovementHelper';
 import FormSelect from '@/src/components/ui/form-select.web';
 import DatePicker from '@/src/components/ui/date-picker.web';
+import ContextMenu from '@/src/components/ui/context-menu.web';
 
 export type ToastStatus = 'loading' | 'success' | 'error';
 
@@ -448,29 +450,24 @@ const AddView: React.FC<AddViewProps> = ({ editingMovementId, recurrenceId, onCl
             }}
           >
             {isEditing && (
-              <View style={styles.iconButton}>
-                <MaterialIcons name="more-vert" size={20} color={textColor} />
-                {/* @ts-ignore: HTML select element for web */}
-                <select
-                  value=""
-                  disabled={isSaving}
-                  onChange={(e: any) => {
-                    handleMenuAction(e.target.value);
-                    e.target.value = '';
-                  }}
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: '100%',
-                    opacity: 0,
-                    cursor: 'pointer',
-                  }}
+              <View pointerEvents={isSaving ? 'none' : 'auto'}>
+                <ContextMenu
+                  accessibilityLabel="More movement actions"
+                  options={[
+                    {
+                      label: 'Delete movement',
+                      value: 'delete',
+                      icon: 'trash-outline',
+                      destructive: true,
+                      disabled: isSaving,
+                    },
+                  ]}
+                  onSelectOption={handleMenuAction}
                 >
-                  <option value="" disabled />
-                  <option value="delete">Delete movement</option>
-                </select>
+                  <View style={styles.iconButton}>
+                    <MaterialIcons name="more-vert" size={20} color={textColor} />
+                  </View>
+                </ContextMenu>
               </View>
             )}
             <Pressable onPress={closeView} disabled={isSaving} style={styles.iconButton}>

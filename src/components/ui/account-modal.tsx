@@ -1,4 +1,5 @@
-import { View, StyleSheet, ScrollView, Pressable, Dimensions } from 'react-native';
+import { View, StyleSheet, ScrollView, Dimensions } from 'react-native';
+import { Pressable } from '@/src/components/core/interactive';
 import React, { useState, useEffect } from 'react';
 import ModalPanel from './modal-panel.native';
 import TextBox from './text-box.native';

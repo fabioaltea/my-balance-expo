@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, StyleSheet, ScrollView, Pressable, Platform } from 'react-native';
+import { View, StyleSheet, ScrollView, Platform } from 'react-native';
+import { Pressable } from '@/src/components/core/interactive';
 import TextBox from '@/src/components/ui/text-box';
 import InlineCurrencyInput from '@/src/components/ui/inline-currency-input';
 import { COLOR_PALETTE, DEFAULT_COLOR } from '@/src/constants/colors';

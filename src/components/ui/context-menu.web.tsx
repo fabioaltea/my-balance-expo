@@ -34,8 +34,8 @@ const MENU_PADDING = 8;
 const SEPARATOR_HEIGHT = 13;
 
 const menuCss = `
-  .mybalance-menu-trigger { cursor: pointer; border-radius: 10px; transition: background-color 160ms ease; }
-  .mybalance-menu-trigger:hover, .mybalance-menu-trigger[aria-expanded="true"] { background: var(--menu-hover); }
+  .mybalance-menu-trigger { position: relative; cursor: pointer; border-radius: 10px; transition: background-color 160ms ease; }
+  .mybalance-menu-trigger[aria-expanded="true"] { background: var(--menu-hover); }
   .mybalance-menu-trigger:focus-visible { outline: 2px solid var(--menu-accent); outline-offset: 3px; }
   .mybalance-menu { box-sizing: border-box; animation: mybalance-menu-enter 160ms ease-out; scrollbar-width: thin; }
   .mybalance-menu-item { box-sizing: border-box; transition: background-color 140ms ease, transform 140ms ease; }
@@ -184,6 +184,7 @@ const ContextMenu: React.FC<IContextMenuProps> = ({
       <div
         ref={triggerRef}
         className="mybalance-menu-trigger"
+        data-web-hover="true"
         role="button"
         tabIndex={0}
         aria-label={accessibilityLabel}

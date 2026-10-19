@@ -1,4 +1,5 @@
-import { View, StyleSheet, Pressable } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import { Pressable } from '@/src/components/core/interactive';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
 import React, { useRef, useEffect, useState } from 'react';
 import { ThemedText } from '@/src/components/core/themed-text';

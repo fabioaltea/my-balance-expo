@@ -1,5 +1,6 @@
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable } from '@/src/components/core/interactive';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
 import type { IncomeExpenseData, MonthlyData, PeriodBreakdownData } from '@/src/types/charts';
@@ -86,6 +87,7 @@ export default function ChartFocusPanel({
   return (
     <View style={styles.overlay}>
       <Pressable
+        hoverFeedback={false}
         style={styles.backdrop}
         onPress={onClose}
         accessibilityLabel="Close expanded chart"

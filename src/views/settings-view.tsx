@@ -109,6 +109,9 @@ const SettingsView: React.FC<SettingsViewProps> = ({ user, logout }) => {
   const notifications = useNotifications();
   const notificationsEnabled = notifications.effectiveEnabled;
   const isLoadingNotifications = notifications.syncStatus === 'syncing';
+  const notificationsUnavailable =
+    notifications.syncStatus === 'error' &&
+    notifications.error === 'Il servizio notifiche non è disponibile. Riprova più tardi.';
 
   const textColor = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
   const secondaryTextColor = useThemeColor({ light: '#8e8e93', dark: '#8e8e93' }, 'tabIconDefault');
@@ -300,7 +303,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ user, logout }) => {
                 thumbColor={notificationsEnabled ? '#ffffff' : '#f4f3f4'}
                 ios_backgroundColor="#3e3e3e"
                 onValueChange={handleToggleNotifications}
-                disabled={!notifications.supported}
+                disabled={!notifications.supported || notificationsUnavailable}
                 value={notificationsEnabled}
               />
             )}
@@ -313,7 +316,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ user, logout }) => {
           Disponibili nella build nativa su dispositivo fisico.
         </ThemedText>
       )}
-      {notifications.syncStatus === 'error' && (
+      {notifications.syncStatus === 'error' && !notificationsUnavailable && (
         <View style={{ paddingHorizontal: 16, paddingBottom: 16 }}>
           <ThemedText style={{ color: destructiveColor }}>
             {notifications.error || 'Sincronizzazione notifiche in attesa'}

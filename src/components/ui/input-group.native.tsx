@@ -13,8 +13,8 @@ interface ICardProps {
 
 const InputGroup: React.FC<ICardProps> = ({ backgroundColor, color, label, children }) => {
   const themeBackground = useThemeColor({}, 'cardBackground');
-  const themeColor = useThemeColor({}, 'cardColor');
-  const borderBottomColor = useThemeColor({ light: '#e0e0e0', dark: '#333' }, 'tabIconDefault');
+  const labelColor = useThemeColor({ light: '#66736C', dark: '#AEB8B2' }, 'tabIconDefault');
+  const borderBottomColor = useThemeColor({ light: '#DFE6E1', dark: '#343C37' }, 'cardBorder');
 
   const validChildren = Array.isArray(children)
     ? children.filter(Boolean)
@@ -26,7 +26,7 @@ const InputGroup: React.FC<ICardProps> = ({ backgroundColor, color, label, child
     <View>
       {label && (
         <View>
-          <Text style={styles.cardLabel}>{label}</Text>
+          <Text style={[styles.cardLabel, { color: color ?? labelColor }]}>{label}</Text>
         </View>
       )}
       <View
@@ -34,6 +34,7 @@ const InputGroup: React.FC<ICardProps> = ({ backgroundColor, color, label, child
           styles.card,
           {
             backgroundColor: backgroundColor ?? themeBackground,
+            borderColor: borderBottomColor,
           },
         ]}
       >
@@ -56,23 +57,25 @@ const InputGroup: React.FC<ICardProps> = ({ backgroundColor, color, label, child
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 30,
-    marginBottom: 20,
-    paddingHorizontal: 5,
-    paddingVertical: 5,
+    borderRadius: 20,
+    borderWidth: 1,
+    marginBottom: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 4,
     overflow: 'visible' as const,
   },
   cardLabel: {
-    fontSize: 18,
+    fontSize: 13,
+    lineHeight: 18,
     fontWeight: '600',
-    color: '#848484ff',
-    marginBottom: 10,
-    marginLeft: 10,
+    marginBottom: 8,
+    marginLeft: 2,
   },
   item: {
-    borderBottomWidth: 1,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    paddingVertical: 2,
+    minHeight: 52,
+    justifyContent: 'center',
     overflow: 'visible' as const,
   },
   lastItem: {

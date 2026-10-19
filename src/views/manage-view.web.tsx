@@ -1,5 +1,7 @@
-import { View, StyleSheet, ScrollView, Pressable, Text, Image } from 'react-native';
+import { View, StyleSheet, ScrollView, Text, Image, useWindowDimensions } from 'react-native';
+import { Pressable } from '@/src/components/core/interactive';
 import React, { useState, useCallback } from 'react';
+import { Ionicons } from '@expo/vector-icons';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
 import { ThemedText } from '@/src/components/core/themed-text';
 import IconSymbol from '@/src/components/ui/icon-symbol';
@@ -9,7 +11,8 @@ import SideDrawer from '@/src/components/ui/side-drawer';
 import Toast from '@/src/components/ui/toast';
 import { COLOR_PALETTE, DEFAULT_TEXT_COLOR } from '@/src/constants/colors';
 import { DEFAULT_ICON } from '@/src/constants/icons';
-import { useDataContext } from '@/src/state';
+import { useDataContext, useAuthContext } from '@/src/state';
+import { webPanelBackground } from '@/src/constants/theme';
 import { useSpreadsheetMutation } from '@/src/hooks/useSpreadsheetMutation';
 import { AccountsApiHelper } from '@/src/helpers/AccountsApiHelper';
 import { CategoriesApiHelper } from '@/src/helpers/CategoriesApiHelper';
@@ -33,16 +36,31 @@ const formatCurrency = (amount: number): string =>
 
 type ToastStatus = 'loading' | 'success' | 'error';
 type DrawerMode = 'add' | 'edit';
+type ManageSection = 'overview' | 'accounts' | 'categories';
+
+const SECTIONS = [
+  { key: 'overview', label: 'Overview', icon: 'grid-outline' },
+  { key: 'accounts', label: 'Accounts', icon: 'wallet-outline' },
+  { key: 'categories', label: 'Categories', icon: 'pricetags-outline' },
+] as const;
 
 interface ManageViewProps {
   onBack: () => void;
 }
 
 const ManageView: React.FC<ManageViewProps> = ({ onBack }) => {
-  const backgroundColor = useThemeColor({}, 'background');
-  const borderColor = useThemeColor({ light: '#e0e0e0', dark: '#333' }, 'tabIconDefault');
+  const backgroundColor = useThemeColor({ light: '#F2F5F3', dark: '#171A18' }, 'background');
+  const borderColor = useThemeColor({ light: '#DFE6E1', dark: '#343C37' }, 'cardBorder');
+  const panelColor = useThemeColor(webPanelBackground, 'cardBackground');
+  const textColor = useThemeColor({ light: '#18221D', dark: '#F0F4F2' }, 'text');
+  const mutedColor = useThemeColor({ light: '#66736C', dark: '#AEB8B2' }, 'tabIconDefault');
+  const selectedBackground = useThemeColor({ light: '#E7EEE9', dark: '#2C3E33' }, 'background');
+  const { width } = useWindowDimensions();
+  const compact = width < 700;
+  const [activeSection, setActiveSection] = useState<ManageSection>('overview');
 
   const { accounts, categories } = useDataContext();
+  const { user, selectedSpreadsheetId } = useAuthContext();
 
   // Toast
   const [toastVisible, setToastVisible] = useState(false);
@@ -248,152 +266,288 @@ const ManageView: React.FC<ManageViewProps> = ({ onBack }) => {
 
   return (
     <View style={[styles.container, { backgroundColor }]}>
-      {/* Top bar */}
-      <View style={styles.topBar}>
-        <Pressable onPress={onBack} style={styles.backButton}>
-          <IconSymbol name="chevron-left" size={22} color="#888" />
-          <Text style={styles.backLabel}>Back</Text>
-        </Pressable>
-
-        <View style={styles.topBarRight}>
-          <Image
-            source={require('@/assets/images/icon.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-          <Text style={styles.brandText}>MyBalance</Text>
-          <Text style={styles.brandSeparator}>|</Text>
-          <ThemedText type="defaultSemiBold" style={styles.pageTitle}>
-            Manage
-          </ThemedText>
-        </View>
-      </View>
-
-      {/* Two-column content */}
-      <View style={styles.columns}>
-        {/* Left: Accounts */}
-        <ScrollView
-          style={styles.column}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.columnContent}
+      <View style={styles.commandBarOuter}>
+        <View
+          style={[
+            styles.commandBar,
+            compact && styles.commandBarCompact,
+            { backgroundColor: panelColor, borderColor },
+          ]}
         >
-          <View style={[styles.section, { borderColor }]}>
-            <View style={styles.sectionHeader}>
-              <View style={styles.badge}>
-                <IconSymbol name="account-balance-wallet" size={18} color="#fff" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
-                  Accounts
-                </ThemedText>
-                <ThemedText style={styles.sectionSubtitle}>
-                  {accounts.length} account{accounts.length !== 1 ? 's' : ''}
-                </ThemedText>
-              </View>
-              <Pressable onPress={openAddAccount} style={styles.addButton}>
-                <IconSymbol name="add" size={20} color="#fff" />
-              </Pressable>
-            </View>
-
-            {accounts.length === 0 ? (
-              <View style={styles.empty}>
-                <IconSymbol name="account-balance-wallet" size={36} color={borderColor} />
-                <ThemedText style={styles.emptyText}>No accounts yet</ThemedText>
-              </View>
-            ) : (
-              accounts.map((account) => (
-                <Pressable
-                  key={account.accountId}
-                  onPress={() => openEditAccount(account)}
-                  style={[
-                    styles.accountChip,
-                    {
-                      borderColor: account.color || ACCENT,
-                      backgroundColor: (account.color || ACCENT) + '12',
-                    },
-                  ]}
-                >
-                  <View style={[styles.dot, { backgroundColor: account.color || ACCENT }]} />
-                  <ThemedText style={styles.chipLabel}>{account.name}</ThemedText>
-                  <ThemedText style={styles.chipValue}>
-                    {formatCurrency(account.balance)}
-                  </ThemedText>
-                </Pressable>
-              ))
-            )}
-          </View>
-        </ScrollView>
-
-        {/* Right: Categories */}
-        <ScrollView
-          style={styles.column}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.columnContent}
-        >
-          <View style={[styles.section, { borderColor }]}>
-            <View style={styles.sectionHeader}>
-              <View style={styles.badge}>
-                <IconSymbol name="label" size={18} color="#fff" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
-                  Categories
-                </ThemedText>
-                <ThemedText style={styles.sectionSubtitle}>
-                  {categories.length} categor{categories.length !== 1 ? 'ies' : 'y'}
-                </ThemedText>
-              </View>
-              <Pressable onPress={openAddCategory} style={styles.addButton}>
-                <IconSymbol name="add" size={20} color="#fff" />
-              </Pressable>
-            </View>
-
-            {categories.length === 0 ? (
-              <View style={styles.empty}>
-                <IconSymbol name="label" size={36} color={borderColor} />
-                <ThemedText style={styles.emptyText}>No categories yet</ThemedText>
-              </View>
-            ) : (
-              <View style={styles.categoryGrid}>
-                {categories.map((cat) => (
+          <View style={styles.navigationSection}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Back to dashboard"
+              title="Back to dashboard"
+              onPress={onBack}
+              style={styles.backButton}
+            >
+              <Ionicons name="arrow-back" size={19} color={mutedColor} />
+            </Pressable>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.tabsScroll}
+              contentContainerStyle={styles.sectionTabs}
+            >
+              <View accessibilityRole="tablist" style={styles.sectionTabs}>
+                {SECTIONS.map((section) => (
                   <Pressable
-                    key={cat.id || cat.name}
-                    onPress={() => openEditCategory(cat)}
-                    style={[
-                      styles.categoryChip,
+                    hoverFeedback={false}
+                    key={section.key}
+                    accessibilityRole="tab"
+                    accessibilityState={{ selected: activeSection === section.key }}
+                    onPress={() => setActiveSection(section.key)}
+                    style={({ hovered, pressed }) => [
+                      styles.sectionTab,
                       {
-                        borderColor: cat.color || '#808080',
-                        backgroundColor: (cat.color || '#808080') + '12',
+                        backgroundColor:
+                          activeSection === section.key || hovered || pressed
+                            ? selectedBackground
+                            : 'transparent',
                       },
                     ]}
                   >
-                    <View style={[styles.catIcon, { backgroundColor: cat.color || '#808080' }]}>
-                      <IconSymbol name={cat.icon || DEFAULT_ICON} size={15} color="#fff" />
-                    </View>
-                    <Text style={[styles.catLabel, { color: cat.color || '#808080' }]}>
-                      {cat.name}
+                    <Ionicons
+                      name={section.icon}
+                      size={17}
+                      color={activeSection === section.key ? textColor : mutedColor}
+                    />
+                    <Text
+                      style={[
+                        styles.tabLabel,
+                        { color: activeSection === section.key ? textColor : mutedColor },
+                      ]}
+                    >
+                      {section.label}
                     </Text>
                   </Pressable>
                 ))}
               </View>
+            </ScrollView>
+          </View>
+          <View style={styles.brandSection}>
+            <Image
+              source={require('@/assets/images/icon.png')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+            <Text style={[styles.brandText, { color: textColor }]}>Manage</Text>
+          </View>
+        </View>
+      </View>
+
+      {activeSection === 'overview' && (
+        <ScrollView contentContainerStyle={styles.overviewContent}>
+          <ThemedText style={styles.overviewTitle}>Overview</ThemedText>
+          <View style={[styles.overviewSection, { borderColor, backgroundColor: panelColor }]}>
+            <ThemedText style={styles.sectionTitle}>Personal information</ThemedText>
+            <View style={styles.profileRow}>
+              {user?.picture ? (
+                <Image
+                  source={{ uri: user.picture }}
+                  style={styles.avatar}
+                  accessibilityLabel="Profile picture"
+                />
+              ) : (
+                <View style={[styles.avatar, { backgroundColor: selectedBackground }]}>
+                  <Text style={{ color: textColor, fontSize: 22, fontWeight: '600' }}>
+                    {(user?.name || user?.email || 'U').charAt(0).toUpperCase()}
+                  </Text>
+                </View>
+              )}
+              <View style={{ flex: 1, minWidth: 0, gap: 4 }}>
+                <ThemedText type="defaultSemiBold">{user?.name || 'MyBalance user'}</ThemedText>
+                <Text style={[styles.detailText, { color: mutedColor }]}>
+                  {user?.email || 'No email available'}
+                </Text>
+              </View>
+            </View>
+          </View>
+          <View style={[styles.overviewSection, { borderColor, backgroundColor: panelColor }]}>
+            <View style={styles.sectionHeader}>
+              <Ionicons name="document-text-outline" size={21} color={mutedColor} />
+              <ThemedText style={[styles.sectionTitle, { flex: 1 }]}>
+                Connected spreadsheet
+              </ThemedText>
+              <Text style={{ color: mutedColor, fontSize: 12 }}>
+                {selectedSpreadsheetId ? 'Connected' : 'Not connected'}
+              </Text>
+            </View>
+            <Text selectable style={[styles.detailText, { color: mutedColor }]}>
+              {selectedSpreadsheetId || 'No spreadsheet connected'}
+            </Text>
+            {selectedSpreadsheetId && (
+              <Pressable
+                accessibilityRole="link"
+                onPress={() =>
+                  window.open(
+                    `https://docs.google.com/spreadsheets/d/${encodeURIComponent(selectedSpreadsheetId)}/edit`,
+                    '_blank',
+                    'noopener,noreferrer',
+                  )
+                }
+                style={styles.sheetLink}
+              >
+                <ThemedText style={{ fontSize: 14, fontWeight: '600' }}>
+                  Open in Google Sheets
+                </ThemedText>
+                <Ionicons name="open-outline" size={16} color={mutedColor} />
+              </Pressable>
             )}
           </View>
         </ScrollView>
-      </View>
+      )}
+
+      {/* Two-column content */}
+      {activeSection !== 'overview' && (
+        <View style={styles.columns}>
+          {/* Left: Accounts */}
+          {activeSection === 'accounts' && (
+            <ScrollView
+              style={styles.column}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.columnContent}
+            >
+              <View style={[styles.section, { borderColor, backgroundColor: panelColor }]}>
+                <View style={styles.sectionHeader}>
+                  <View style={styles.badge}>
+                    <IconSymbol name="account-balance-wallet" size={18} color="#fff" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
+                      Accounts
+                    </ThemedText>
+                    <ThemedText style={styles.sectionSubtitle}>
+                      {accounts.length} account{accounts.length !== 1 ? 's' : ''}
+                    </ThemedText>
+                  </View>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Add account"
+                    title="Add account"
+                    onPress={openAddAccount}
+                    style={styles.addButton}
+                  >
+                    <IconSymbol name="add" size={20} color="#fff" />
+                  </Pressable>
+                </View>
+
+                {accounts.length === 0 ? (
+                  <View style={styles.empty}>
+                    <IconSymbol name="account-balance-wallet" size={36} color={borderColor} />
+                    <ThemedText style={styles.emptyText}>No accounts yet</ThemedText>
+                  </View>
+                ) : (
+                  accounts.map((account) => (
+                    <Pressable
+                      key={account.accountId}
+                      onPress={() => openEditAccount(account)}
+                      style={[
+                        styles.accountChip,
+                        {
+                          borderColor: account.color || ACCENT,
+                          backgroundColor: (account.color || ACCENT) + '12',
+                        },
+                      ]}
+                    >
+                      <View style={[styles.dot, { backgroundColor: account.color || ACCENT }]} />
+                      <ThemedText style={styles.chipLabel}>{account.name}</ThemedText>
+                      <ThemedText style={styles.chipValue}>
+                        {formatCurrency(account.balance)}
+                      </ThemedText>
+                    </Pressable>
+                  ))
+                )}
+              </View>
+            </ScrollView>
+          )}
+
+          {/* Right: Categories */}
+          {activeSection === 'categories' && (
+            <ScrollView
+              style={styles.column}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.columnContent}
+            >
+              <View style={[styles.section, { borderColor, backgroundColor: panelColor }]}>
+                <View style={styles.sectionHeader}>
+                  <View style={styles.badge}>
+                    <IconSymbol name="label" size={18} color="#fff" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
+                      Categories
+                    </ThemedText>
+                    <ThemedText style={styles.sectionSubtitle}>
+                      {categories.length} categor{categories.length !== 1 ? 'ies' : 'y'}
+                    </ThemedText>
+                  </View>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Add category"
+                    title="Add category"
+                    onPress={openAddCategory}
+                    style={styles.addButton}
+                  >
+                    <IconSymbol name="add" size={20} color="#fff" />
+                  </Pressable>
+                </View>
+
+                {categories.length === 0 ? (
+                  <View style={styles.empty}>
+                    <IconSymbol name="label" size={36} color={borderColor} />
+                    <ThemedText style={styles.emptyText}>No categories yet</ThemedText>
+                  </View>
+                ) : (
+                  <View style={styles.categoryGrid}>
+                    {categories.map((cat) => (
+                      <Pressable
+                        key={cat.id || cat.name}
+                        onPress={() => openEditCategory(cat)}
+                        style={[
+                          styles.categoryChip,
+                          {
+                            borderColor: cat.color || '#808080',
+                            backgroundColor: (cat.color || '#808080') + '12',
+                          },
+                        ]}
+                      >
+                        <View style={[styles.catIcon, { backgroundColor: cat.color || '#808080' }]}>
+                          <IconSymbol name={cat.icon || DEFAULT_ICON} size={15} color="#fff" />
+                        </View>
+                        <Text style={[styles.catLabel, { color: cat.color || '#808080' }]}>
+                          {cat.name}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                )}
+              </View>
+            </ScrollView>
+          )}
+        </View>
+      )}
 
       {/* Account drawer — opens from RIGHT (account panel is on the left) */}
       <SideDrawer
         isOpen={accountDrawerOpen}
         onClose={() => setAccountDrawerOpen(false)}
-        width="35%"
+        width={Math.min(width, 460)}
       >
         <View style={styles.drawerInner}>
-          <View style={styles.drawerHeader}>
-            <ThemedText type="title" style={{ fontSize: 22 }}>
+          <View style={[styles.drawerHeader, { borderColor }]}>
+            <ThemedText style={styles.drawerTitle}>
               {accountDrawerMode === 'add' ? 'New Account' : 'Edit Account'}
             </ThemedText>
-            <Pressable onPress={() => setAccountDrawerOpen(false)} style={styles.closeBtn}>
-              <IconSymbol name="close" size={20} color="#888" />
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Close account form"
+              title="Close"
+              onPress={() => setAccountDrawerOpen(false)}
+              style={[styles.closeBtn, { backgroundColor: selectedBackground }]}
+            >
+              <IconSymbol name="close" size={20} color={mutedColor} />
             </Pressable>
           </View>
           <AccountPanel
@@ -404,7 +558,7 @@ const ManageView: React.FC<ManageViewProps> = ({ onBack }) => {
             onBalanceChange={accountDrawerMode === 'add' ? setDrawerAccountBalance : undefined}
             onColorChange={setDrawerAccountColor}
           />
-          <View style={styles.drawerActions}>
+          <View style={[styles.drawerActions, { borderColor }]}>
             <Pressable
               style={[styles.primaryBtn, !drawerAccountName.trim() && styles.btnDisabled]}
               onPress={handleSaveAccount}
@@ -422,16 +576,21 @@ const ManageView: React.FC<ManageViewProps> = ({ onBack }) => {
       <SideDrawer
         isOpen={categoryDrawerOpen}
         onClose={() => setCategoryDrawerOpen(false)}
-        width="38%"
-        side="left"
+        width={Math.min(width, 460)}
       >
         <View style={styles.drawerInner}>
-          <View style={styles.drawerHeader}>
-            <ThemedText type="title" style={{ fontSize: 22 }}>
+          <View style={[styles.drawerHeader, { borderColor }]}>
+            <ThemedText style={styles.drawerTitle}>
               {categoryDrawerMode === 'add' ? 'New Category' : 'Edit Category'}
             </ThemedText>
-            <Pressable onPress={() => setCategoryDrawerOpen(false)} style={styles.closeBtn}>
-              <IconSymbol name="close" size={20} color="#888" />
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Close category form"
+              title="Close"
+              onPress={() => setCategoryDrawerOpen(false)}
+              style={[styles.closeBtn, { backgroundColor: selectedBackground }]}
+            >
+              <IconSymbol name="close" size={20} color={mutedColor} />
             </Pressable>
           </View>
           <CategoryPanel
@@ -443,7 +602,7 @@ const ManageView: React.FC<ManageViewProps> = ({ onBack }) => {
             onColorChange={setDrawerCategoryColor}
             readonly={false}
           />
-          <View style={styles.drawerActions}>
+          <View style={[styles.drawerActions, { borderColor }]}>
             <Pressable
               style={[styles.primaryBtn, !drawerCategoryName.trim() && styles.btnDisabled]}
               onPress={handleSaveCategory}
@@ -475,6 +634,58 @@ export default ManageView;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  commandBarOuter: { paddingHorizontal: 16, paddingTop: 14, paddingBottom: 4 },
+  commandBar: {
+    minHeight: 58,
+    padding: 8,
+    borderWidth: 1,
+    borderRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 24,
+    boxShadow: '0 1px 2px rgba(17,31,24,0.03), 0 8px 24px rgba(17,31,24,0.05)',
+  },
+  commandBarCompact: { gap: 8 },
+  navigationSection: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  tabsScroll: { flexShrink: 1, minWidth: 0, flexGrow: 0 },
+  brandSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 6,
+    flexShrink: 0,
+  },
+  sectionTabs: { flexDirection: 'row', gap: 4 },
+  sectionTabsCompact: { justifyContent: 'space-between' },
+  sectionTab: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 38,
+    paddingHorizontal: 12,
+    gap: 7,
+    borderRadius: 20,
+  },
+  tabLabel: { fontSize: 13, fontWeight: '600' },
+  overviewContent: { width: '100%', maxWidth: 932, alignSelf: 'flex-start', padding: 16, gap: 16 },
+  overviewTitle: { fontSize: 24, lineHeight: 32, fontWeight: '600' },
+  overviewSection: { padding: 20, borderWidth: 1, borderRadius: 20, gap: 18 },
+  profileRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  avatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  detailText: { fontSize: 14, lineHeight: 22, overflowWrap: 'anywhere' },
+  sheetLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    alignSelf: 'flex-start',
+    paddingVertical: 8,
   },
 
   // Top bar
@@ -514,7 +725,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: ACCENT,
-    letterSpacing: -0.3,
+    letterSpacing: 0,
   },
   brandSeparator: {
     fontSize: 15,
@@ -535,15 +746,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   columnContent: {
-    padding: 20,
-    paddingTop: 10,
+    width: '100%',
+    maxWidth: 932,
+    alignSelf: 'flex-start',
+    padding: 16,
   },
 
   // Section
   section: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 30,
-    padding: 28,
+    borderWidth: 1,
+    borderRadius: 20,
+    padding: 20,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -563,7 +776,7 @@ const styles = StyleSheet.create({
   badge: {
     width: 36,
     height: 36,
-    borderRadius: 30,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: ACCENT,
@@ -572,7 +785,7 @@ const styles = StyleSheet.create({
     backgroundColor: ACCENT,
     width: 32,
     height: 32,
-    borderRadius: 16,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -597,8 +810,8 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    borderRadius: 20,
-    borderWidth: 1.5,
+    borderRadius: 14,
+    borderWidth: 1,
     marginBottom: 8,
     cursor: 'pointer',
   } as any,
@@ -610,10 +823,13 @@ const styles = StyleSheet.create({
   chipLabel: {
     fontSize: 15,
     flex: 1,
+    minWidth: 0,
+    overflowWrap: 'anywhere',
   },
   chipValue: {
     fontSize: 15,
     fontWeight: '600',
+    fontVariant: ['tabular-nums'],
   },
 
   // Category chips
@@ -628,44 +844,59 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1.5,
+    borderRadius: 14,
+    borderWidth: 1,
+    maxWidth: '100%',
     cursor: 'pointer',
   } as any,
   catIcon: {
     width: 24,
     height: 24,
-    borderRadius: 12,
+    borderRadius: 6,
+    flexShrink: 0,
     justifyContent: 'center',
     alignItems: 'center',
   },
   catLabel: {
     fontSize: 13,
     fontWeight: '500',
+    flexShrink: 1,
+    overflowWrap: 'anywhere',
   },
 
   // Drawer
   drawerInner: {
     flex: 1,
-    padding: 28,
+    padding: 20,
+    borderRadius: 20,
+    minHeight: 0,
   },
   drawerHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 20,
+    paddingBottom: 20,
+    borderBottomWidth: 1,
+    gap: 12,
   },
+  drawerTitle: { fontSize: 20, lineHeight: 28, fontWeight: '600', flex: 1 },
   closeBtn: {
-    padding: 4,
+    width: 32,
+    height: 32,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   drawerActions: {
     flexDirection: 'row',
     gap: 12,
     paddingTop: 20,
+    borderTopWidth: 1,
   },
   primaryBtn: {
     backgroundColor: ACCENT,
-    borderRadius: 20,
+    borderRadius: 14,
     height: 46,
     justifyContent: 'center',
     alignItems: 'center',

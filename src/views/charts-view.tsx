@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { View, StyleSheet, ScrollView, Animated, TouchableOpacity, Text } from 'react-native';
+import { View, StyleSheet, ScrollView, Animated, Text } from 'react-native';
+import { TouchableOpacity } from '@/src/components/core/interactive';
 import { useDataContext } from '@/src/state/DataProvider';
 import { ChartDataHelper } from '@/src/helpers/ChartDataHelper';
 import { useIncomeExpenses } from '@/src/hooks/useIncomeExpenses';

@@ -103,7 +103,7 @@ export function getLocationCoordinatesKey(
     longitude?: number;
   } | null,
 ): string | null {
-  if (!isLocationResolved(location)) {
+  if (!location || !isLocationResolved(location)) {
     return null;
   }
 

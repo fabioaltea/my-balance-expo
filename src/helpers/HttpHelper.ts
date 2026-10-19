@@ -1,3 +1,4 @@
+import Constants from 'expo-constants';
 import { User, AuthStorageHelper } from './AuthStorageHelper';
 
 // Get API URL from environment or use default
@@ -61,105 +62,89 @@ export class HttpHelper {
   /**
    * Private method to refresh tokens via API
    */
-  private static async refreshTokensViaApi(
-    refreshToken: string,
-    deviceId: string,
-  ): Promise<{ accessToken: string; refreshToken: string } | null> {
-    try {
-      console.log('🔄 Calling refresh token API...');
-      console.log('🔄 Endpoint:', `${this.authUri}/auth/refresh`);
-      console.log('🔄 Device ID:', deviceId);
+  private static refreshInFlight = new Map<
+    string,
+    Promise<{ accessToken: string; refreshToken: string }>
+  >();
 
+  private static async refreshTokensViaApi(refreshToken: string, deviceId: string) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    try {
       const response = await fetch(`${this.authUri}/auth/refresh`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ refreshToken, deviceId }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          refreshToken,
+          deviceId,
+          appVariant: Constants.expoConfig?.extra?.appVariant || 'production',
+        }),
+        signal: controller.signal,
       });
-
-      console.log('🔄 Response status:', response.status, response.statusText);
-
       const result = await response.json();
-      console.log('🔄 Response body:', JSON.stringify(result, null, 2));
-
-      if (!response.ok || !result.success) {
-        console.error('❌ Token refresh API failed:');
-        console.error('   Status:', response.status);
-        console.error('   Error:', result.error);
-        console.error('   Code:', result.code);
-
-        if (response.status === 401) {
-          await this.handleUnauthorized(result.error || 'Token refresh failed');
-        }
-
-        return null;
-      }
-
-      if (result.accessToken && result.refreshToken) {
-        console.log('✅ Tokens refreshed successfully via API');
-        return {
-          accessToken: result.accessToken,
-          refreshToken: result.refreshToken,
-        };
-      }
-
-      console.error('❌ Response missing tokens');
-      return null;
-    } catch (error) {
-      console.error('❌ Token refresh API error:', error);
-      return null;
+      if (response.status === 401 || response.status === 403)
+        throw new AuthenticationError(result.error || 'Session revoked');
+      if (!response.ok || !result.success || !result.accessToken || !result.refreshToken)
+        throw new Error('Token refresh unavailable');
+      return {
+        accessToken: result.accessToken as string,
+        refreshToken: result.refreshToken as string,
+      };
+    } finally {
+      clearTimeout(timeout);
     }
   }
 
-  /**
-   * Get a valid access token, automatically refreshing if needed
-   */
-  static async getValidAccessToken(): Promise<string | null> {
+  static async getValidAccessToken(
+    forceRefresh = false,
+    requireSessionId = false,
+  ): Promise<string | null> {
+    const tokens = await AuthStorageHelper.getTokens();
     try {
-      let tokens = await AuthStorageHelper.getTokens();
-
-      if (!tokens) {
-        console.log('❌ No tokens available');
-        throw new AuthenticationError('No authentication tokens available');
-      }
-
-      // Check if access token is expired
-      if (AuthStorageHelper.isTokenExpired(tokens.accessToken)) {
-        console.log('⚠️ Access token expired, attempting refresh...');
-
-        // Check if refresh token is valid
-        if (AuthStorageHelper.isTokenExpired(tokens.refreshToken)) {
-          console.log('❌ Refresh token also expired');
+      if (!tokens) throw new AuthenticationError('No authentication tokens available');
+      let hasSession = false;
+      try {
+        hasSession = !!JSON.parse(
+          atob(tokens.accessToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')),
+        ).sessionId;
+      } catch {}
+      if (
+        forceRefresh ||
+        AuthStorageHelper.isTokenExpired(tokens.accessToken) ||
+        (requireSessionId && !hasSession)
+      ) {
+        if (AuthStorageHelper.isTokenExpired(tokens.refreshToken))
           throw new AuthenticationError('Refresh token expired');
+        if (!this.refreshInFlight.has(tokens.refreshToken)) {
+          const pending = (async () => {
+            const deviceId = await AuthStorageHelper.getOrCreateDeviceId();
+            const refreshed = await this.refreshTokensViaApi(tokens.refreshToken, deviceId);
+            const current = await AuthStorageHelper.getTokens();
+            if (current?.refreshToken !== tokens.refreshToken)
+              throw new Error('Session changed during refresh');
+            await AuthStorageHelper.storeTokens(refreshed);
+            return refreshed;
+          })();
+          this.refreshInFlight.set(tokens.refreshToken, pending);
+          void pending
+            .finally(() => {
+              if (this.refreshInFlight.get(tokens.refreshToken) === pending)
+                this.refreshInFlight.delete(tokens.refreshToken);
+            })
+            .catch(() => undefined);
         }
-
-        // Get device ID
-        const deviceId = await AuthStorageHelper.getOrCreateDeviceId();
-
-        // Refresh the token
-        const newTokens = await this.refreshTokensViaApi(tokens.refreshToken, deviceId);
-
-        if (!newTokens) {
-          console.log('❌ Token refresh failed');
-          throw new AuthenticationError('Token refresh failed');
-        }
-
-        // Store new tokens
-        await AuthStorageHelper.storeTokens(newTokens);
-
-        return newTokens.accessToken;
+        const refreshed = await this.refreshInFlight.get(tokens.refreshToken)!;
+        const current = await AuthStorageHelper.getTokens();
+        if (current?.refreshToken !== refreshed.refreshToken)
+          throw new Error('Session changed during refresh');
+        return refreshed.accessToken;
       }
-
       return tokens.accessToken;
     } catch (error) {
-      console.error('❌ Error getting valid access token:', error);
-
-      if (error instanceof AuthenticationError) {
+      const current = await AuthStorageHelper.getTokens();
+      if (error instanceof AuthenticationError && current?.refreshToken === tokens?.refreshToken)
         await this.handleUnauthorized(error.message);
-      }
-
-      return null;
+      throw error;
     }
   }
 
@@ -244,7 +229,7 @@ export class HttpHelper {
       try {
         const result = JSON.parse(responseText);
         return { success: true, ...result };
-      } catch (jsonError) {
+      } catch {
         console.error('POST JSON parse error:', responseText);
         throw new Error(`Invalid JSON response: ${responseText.substring(0, 100)}`);
       }

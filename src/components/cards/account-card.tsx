@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, StyleSheet, Pressable } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import { Pressable } from '@/src/components/core/interactive';
 import { ThemedText } from '../core/themed-text.native';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
 import type { Account } from '@/src/state';

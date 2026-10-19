@@ -1,9 +1,10 @@
-import { View, StyleSheet, ScrollView, Pressable, Platform } from 'react-native';
+import { View, StyleSheet, ScrollView, Pressable, useWindowDimensions } from 'react-native';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
 import { useState, useEffect } from 'react';
 import { ThemedText } from '../core/themed-text.native';
 import * as Haptics from 'expo-haptics';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DatePicker from './date-picker.native';
+import InputGroup from './input-group.native';
 import ModalPanel from './modal-panel.native';
 import React from 'react';
 
@@ -72,6 +73,7 @@ const RecurrencyPicker: React.FC<IRecurrencyPickerProps> = ({
   const [selectedType, setSelectedType] = useState<RecurrencyType | null>(null);
   const [frequency, setFrequency] = useState<number>(1);
   const [pickerStartDate, setPickerStartDate] = useState<Date>(startDate);
+  const { height } = useWindowDimensions();
 
   // Initialize state from initialPattern when modal becomes visible
   useEffect(() => {
@@ -96,16 +98,16 @@ const RecurrencyPicker: React.FC<IRecurrencyPickerProps> = ({
 
   // Theme colors
   const chipActiveBackground = useThemeColor(
-    { light: '#2F4F3F', dark: '#4a7c59' },
-    'tabIconDefault',
+    { light: '#E7EEE9', dark: '#2C3E33' },
+    'cardBackground',
   );
-  const chipInactiveBackground = useThemeColor(
-    { light: '#e0e0e0', dark: '#333' },
-    'tabIconDefault',
-  );
-  const chipActiveText = useThemeColor({ light: '#fff', dark: '#fff' }, 'background');
-  const chipInactiveText = useThemeColor({ light: '#666', dark: '#999' }, 'tabIconDefault');
-  const subtextColor = useThemeColor({ light: '#666', dark: '#999' }, 'tabIconDefault');
+  const chipInactiveBackground = useThemeColor({}, 'cardBackground');
+  const chipActiveText = useThemeColor({ light: '#244437', dark: '#D6E8DE' }, 'tint');
+  const chipInactiveText = useThemeColor({ light: '#66736C', dark: '#AEB8B2' }, 'tabIconDefault');
+  const borderColor = useThemeColor({ light: '#DFE6E1', dark: '#343C37' }, 'cardBorder');
+  const frequencyOptions = FREQUENCY_OPTIONS.includes(frequency)
+    ? FREQUENCY_OPTIONS
+    : [...FREQUENCY_OPTIONS, frequency].sort((first, second) => first - second);
   const handleTypeSelect = (type: RecurrencyType | null) => {
     Haptics.selectionAsync();
     setSelectedType(type);
@@ -162,45 +164,36 @@ const RecurrencyPicker: React.FC<IRecurrencyPickerProps> = ({
       isVisible={isVisible}
       onClose={onClose}
       onConfirm={handleSave}
-      title="Recurring Movement"
+      title="Recurrence"
       showCancelButton={true}
       showConfirmButton={true}
       confirmText="Save"
       cancelText="Cancel"
-      maxHeight={520}
+      maxHeight={Math.min(640, height * 0.85)}
     >
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         {/* Start Date - Editable */}
-        <View style={styles.section}>
-          <ThemedText style={styles.sectionLabel}>Start Date</ThemedText>
-          <View style={styles.datePickerContainer}>
-            <DateTimePicker
-              value={pickerStartDate}
-              mode="date"
-              display={Platform.OS === 'ios' ? 'compact' : 'default'}
-              onChange={(_event, selectedDate) => {
-                if (selectedDate) {
-                  setPickerStartDate(selectedDate);
-                }
-              }}
-              style={styles.datePicker}
-            />
-          </View>
-        </View>
+        <InputGroup>
+          <DatePicker value={pickerStartDate} onChange={setPickerStartDate} label="Start date" />
+        </InputGroup>
 
         {/* Recurrence Type */}
         <View style={styles.section}>
-          <ThemedText style={styles.sectionLabel}>Repeat</ThemedText>
-          <View style={styles.chipsContainer}>
+          <ThemedText style={[styles.sectionLabel, { color: chipInactiveText }]}>Repeat</ThemedText>
+          <View accessibilityRole="radiogroup" style={styles.chipsContainer}>
             {/* None option */}
             <Pressable
               onPress={() => handleTypeSelect(null)}
-              style={[
+              accessibilityRole="radio"
+              accessibilityState={{ checked: selectedType === null }}
+              style={({ pressed }) => [
                 styles.chip,
                 {
+                  borderColor: selectedType === null ? chipActiveText : borderColor,
                   backgroundColor:
                     selectedType === null ? chipActiveBackground : chipInactiveBackground,
                 },
+                pressed && styles.pressed,
               ]}
             >
               <ThemedText
@@ -220,11 +213,15 @@ const RecurrencyPicker: React.FC<IRecurrencyPickerProps> = ({
                 <Pressable
                   key={option.type}
                   onPress={() => handleTypeSelect(option.type)}
-                  style={[
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: isActive }}
+                  style={({ pressed }) => [
                     styles.chip,
                     {
+                      borderColor: isActive ? chipActiveText : borderColor,
                       backgroundColor: isActive ? chipActiveBackground : chipInactiveBackground,
                     },
+                    pressed && styles.pressed,
                   ]}
                 >
                   <ThemedText
@@ -244,23 +241,26 @@ const RecurrencyPicker: React.FC<IRecurrencyPickerProps> = ({
         {/* Frequency - only show when a type is selected */}
         {selectedType !== null && (
           <View style={styles.section}>
-            <ThemedText style={styles.sectionLabel}>Every</ThemedText>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.frequencyContainer}
-            >
-              {FREQUENCY_OPTIONS.map((freq) => {
+            <ThemedText style={[styles.sectionLabel, { color: chipInactiveText }]}>
+              Every
+            </ThemedText>
+            <View accessibilityRole="radiogroup" style={styles.frequencyContainer}>
+              {frequencyOptions.map((freq) => {
                 const isActive = frequency === freq;
                 return (
                   <Pressable
                     key={freq}
                     onPress={() => handleFrequencySelect(freq)}
-                    style={[
+                    accessibilityRole="radio"
+                    accessibilityLabel={`Every ${freq}`}
+                    accessibilityState={{ checked: isActive }}
+                    style={({ pressed }) => [
                       styles.frequencyChip,
                       {
+                        borderColor: isActive ? chipActiveText : borderColor,
                         backgroundColor: isActive ? chipActiveBackground : chipInactiveBackground,
                       },
+                      pressed && styles.pressed,
                     ]}
                   >
                     <ThemedText
@@ -274,13 +274,18 @@ const RecurrencyPicker: React.FC<IRecurrencyPickerProps> = ({
                   </Pressable>
                 );
               })}
-            </ScrollView>
+            </View>
           </View>
         )}
 
         {/* Summary */}
-        <View style={styles.summaryContainer}>
-          <ThemedText style={[styles.summaryText, { color: subtextColor }]}>
+        <View
+          style={[styles.summaryContainer, { borderColor, backgroundColor: chipActiveBackground }]}
+        >
+          <ThemedText
+            accessibilityLiveRegion="polite"
+            style={[styles.summaryText, { color: chipActiveText }]}
+          >
             {getRecurrenceDescription()}
           </ThemedText>
         </View>
@@ -290,42 +295,47 @@ const RecurrencyPicker: React.FC<IRecurrencyPickerProps> = ({
 };
 
 const styles = StyleSheet.create({
+  content: { paddingBottom: 8 },
   section: {
-    marginBottom: 24,
+    marginBottom: 20,
   },
   sectionLabel: {
-    fontSize: 14,
-    marginBottom: 12,
-    letterSpacing: 0.5,
-  },
-  datePickerContainer: {
-    alignItems: 'flex-start',
-  },
-  datePicker: {
-    marginLeft: -10,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '600',
+    marginBottom: 8,
+    letterSpacing: 0,
   },
   chipsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 8,
   },
   chip: {
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 20,
+    minWidth: 80,
+    minHeight: 48,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 14,
+    borderWidth: 1,
   },
   chipText: {
     fontSize: 15,
-    fontWeight: '500',
+    lineHeight: 22,
+    fontWeight: '600',
   },
   frequencyContainer: {
-    gap: 10,
-    paddingRight: 20,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
   },
   frequencyChip: {
     width: 48,
     height: 48,
-    borderRadius: 24,
+    borderRadius: 14,
+    borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -334,15 +344,16 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   summaryContainer: {
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.1)',
+    padding: 14,
+    borderWidth: 1,
+    borderRadius: 14,
   },
   summaryText: {
-    fontSize: 16,
-    textAlign: 'center',
-    fontStyle: 'italic',
+    fontSize: 15,
+    lineHeight: 22,
+    fontWeight: '500',
   },
+  pressed: { opacity: 0.65 },
 });
 
 export default RecurrencyPicker;

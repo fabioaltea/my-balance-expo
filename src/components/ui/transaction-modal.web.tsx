@@ -1,4 +1,4 @@
-import { View, StyleSheet, Pressable, Switch, TextInput } from 'react-native';
+import { View, StyleSheet, Switch, TextInput } from 'react-native';
 import { ThemedText } from '../core/themed-text.native';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
 import { useEffect, useState } from 'react';
@@ -182,8 +182,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     paddingVertical: 4,
     paddingHorizontal: 8,
-    // @ts-ignore — web-specific
-    outlineStyle: 'none',
+    outlineWidth: 0,
   },
   currency: {
     fontSize: 24,

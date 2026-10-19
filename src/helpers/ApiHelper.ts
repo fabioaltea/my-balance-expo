@@ -1,5 +1,7 @@
+import { LogoutQueueHelper } from './LogoutQueueHelper';
+import { NotificationsHelpers } from './NotificationsHelpers';
 import { HttpHelper, HttpResponse } from './HttpHelper';
-import { AuthStorageHelper, User } from './AuthStorageHelper';
+import { User } from './AuthStorageHelper';
 
 export class ApiHelper {
   // Authentication methods
@@ -18,6 +20,7 @@ export class ApiHelper {
         deviceType: data.deviceType,
         redirectUri: data.redirectUri,
         product: process.env.EXPO_PUBLIC_PRODUCT_NAME || 'MyBalance',
+        appVariant: NotificationsHelpers.appVariant,
       };
 
       const authEndpoint = `${HttpHelper.authUri}/auth/google/callback`;
@@ -46,7 +49,7 @@ export class ApiHelper {
       try {
         const result = JSON.parse(responseText);
         return result;
-      } catch (jsonError) {
+      } catch {
         console.error('❌ Auth JSON parse error. Response was:', responseText);
         throw new Error(`Invalid JSON response: ${responseText.substring(0, 100)}`);
       }
@@ -57,19 +60,7 @@ export class ApiHelper {
   }
 
   static async logout(deviceId: string, refreshToken: string): Promise<void> {
-    try {
-      await fetch(`${HttpHelper.authUri}/auth/logout`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${refreshToken}`,
-        },
-        body: JSON.stringify({ deviceId }),
-      });
-    } catch (error) {
-      console.error('Logout API call failed:', error);
-      // Don't throw - logout should always clear local state
-    }
+    await LogoutQueueHelper.logout(deviceId, refreshToken);
   }
 
   static async getUserProfile(): Promise<HttpResponse<User> | null> {
@@ -109,66 +100,6 @@ export class ApiHelper {
     } catch (error) {
       console.error('Get profile error:', error);
       return null;
-    }
-  }
-
-  // Push notifications methods
-  static async savePushToken(pushToken: string): Promise<boolean> {
-    try {
-      const tokens = await AuthStorageHelper.getTokens();
-      if (!tokens?.accessToken) {
-        console.error('No access token available for push token request');
-        return false;
-      }
-
-      const response = await fetch(`${HttpHelper.authUri}/auth/push-token`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${tokens.accessToken}`,
-        },
-        body: JSON.stringify({ pushToken }),
-      });
-
-      if (response.status === 401) {
-        await HttpHelper.handleUnauthorized('Authentication failed');
-        return false;
-      }
-
-      const result = await response.json();
-      return result.success;
-    } catch (error) {
-      console.error('Save push token error:', error);
-      return false;
-    }
-  }
-
-  static async removePushToken(): Promise<boolean> {
-    try {
-      const tokens = await AuthStorageHelper.getTokens();
-      if (!tokens?.accessToken) {
-        console.error('No access token available for push token removal');
-        return false;
-      }
-
-      const response = await fetch(`${HttpHelper.authUri}/auth/push-token`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${tokens.accessToken}`,
-        },
-      });
-
-      if (response.status === 401) {
-        await HttpHelper.handleUnauthorized('Authentication failed');
-        return false;
-      }
-
-      const result = await response.json();
-      return result.success;
-    } catch (error) {
-      console.error('Remove push token error:', error);
-      return false;
     }
   }
 }

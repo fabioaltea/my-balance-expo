@@ -1,4 +1,5 @@
-import { Platform, Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native';
+import { Platform, StyleSheet, Text, View, ViewStyle } from 'react-native';
+import { Pressable } from '@/src/components/core/interactive';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
@@ -8,7 +9,7 @@ import { useColorScheme } from '@/src/hooks/use-color-scheme';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
 import React from 'react';
 import ContextMenu, { type IContextMenuOption } from './context-menu';
-import type { ActivationMethod } from '@expo/ui/swift-ui';
+type ActivationMethod = 'longPress' | 'singlePress';
 
 type GlassButtonType = 'add' | 'search' | 'confirm' | 'dismiss' | 'menu';
 

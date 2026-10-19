@@ -1,13 +1,5 @@
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  Pressable,
-  ActivityIndicator,
-  Alert,
-  Image,
-  Text,
-} from 'react-native';
+import { View, StyleSheet, ScrollView, ActivityIndicator, Alert, Image, Text } from 'react-native';
+import { Pressable } from '@/src/components/core/interactive';
 import React, { useState, useRef } from 'react';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
 import Card from '@/src/components/core/card';
@@ -575,6 +567,7 @@ const OnboardingView: React.FC = () => {
               <Pressable
                 key={index}
                 onPress={() => sheetCreated && handleEditCategory(index)}
+                disabled={!sheetCreated}
                 style={[
                   styles.categoryChip,
                   { borderColor: category.color, backgroundColor: category.color + '12' },

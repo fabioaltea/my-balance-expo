@@ -1,4 +1,5 @@
-import { View, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert } from 'react-native';
+import { Pressable } from '@/src/components/core/interactive';
 import React, { useState, useEffect, useRef } from 'react';
 import * as Crypto from 'expo-crypto';
 import { ThemedText } from '@/src/components/core/themed-text';
@@ -25,6 +26,9 @@ import { parseLocationValue, serializeLocationValue } from '@/src/utils/location
 import RecurrencePickerWeb from '@/src/components/ui/recurrence-picker.web';
 import ScreenView from '@/src/components/core/screen-view.web';
 import { MovementHelper } from '@/src/helpers/MovementHelper';
+import FormSelect from '@/src/components/ui/form-select.web';
+import DatePicker from '@/src/components/ui/date-picker.web';
+import ContextMenu from '@/src/components/ui/context-menu.web';
 
 export type ToastStatus = 'loading' | 'success' | 'error';
 
@@ -198,28 +202,11 @@ const AddView: React.FC<AddViewProps> = ({ editingMovementId, recurrenceId, onCl
 
   // Theme colors
   const textColor = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
-  const placeholderColor = useThemeColor({ light: '#77847D', dark: '#929C97' }, 'tabIconDefault');
   const drawerBackgroundColor = useThemeColor(
     { light: '#FFFFFF', dark: '#1D211F' },
     'menuBackground',
   );
   const accentTextColor = '#2F4F3F';
-
-  const nativeFieldStyle: React.CSSProperties = {
-    flex: 1,
-    minWidth: 0,
-    padding: '8px 0',
-    fontSize: 15,
-    fontWeight: 500,
-    textAlign: 'right',
-    color: textColor,
-    backgroundColor: 'transparent',
-    border: 'none',
-    outline: 'none',
-    cursor: 'pointer',
-    fontFamily:
-      "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-  };
 
   const compactSelectStyle: React.CSSProperties = {
     flex: 1,
@@ -283,23 +270,6 @@ const AddView: React.FC<AddViewProps> = ({ editingMovementId, recurrenceId, onCl
     return transactions.reduce((sum, t) => {
       return sum + (t.type === 'income' ? t.amount : -t.amount);
     }, 0);
-  };
-
-  // --- Date helpers ---
-  const formatDateForInput = (date: Date): string => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  };
-
-  const handleDateChange = (text: string) => {
-    if (!text) return;
-    const [year, month, day] = text.split('-').map(Number);
-    const newDate = new Date(year, month - 1, day);
-    if (!isNaN(newDate.getTime())) {
-      setSelectedDate(newDate);
-    }
   };
 
   // --- Menu action handler ---
@@ -480,29 +450,24 @@ const AddView: React.FC<AddViewProps> = ({ editingMovementId, recurrenceId, onCl
             }}
           >
             {isEditing && (
-              <View style={styles.iconButton}>
-                <MaterialIcons name="more-vert" size={20} color={textColor} />
-                {/* @ts-ignore: HTML select element for web */}
-                <select
-                  value=""
-                  disabled={isSaving}
-                  onChange={(e: any) => {
-                    handleMenuAction(e.target.value);
-                    e.target.value = '';
-                  }}
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: '100%',
-                    opacity: 0,
-                    cursor: 'pointer',
-                  }}
+              <View pointerEvents={isSaving ? 'none' : 'auto'}>
+                <ContextMenu
+                  accessibilityLabel="More movement actions"
+                  options={[
+                    {
+                      label: 'Delete movement',
+                      value: 'delete',
+                      icon: 'trash-outline',
+                      destructive: true,
+                      disabled: isSaving,
+                    },
+                  ]}
+                  onSelectOption={handleMenuAction}
                 >
-                  <option value="" disabled />
-                  <option value="delete">Delete movement</option>
-                </select>
+                  <View style={styles.iconButton}>
+                    <MaterialIcons name="more-vert" size={20} color={textColor} />
+                  </View>
+                </ContextMenu>
               </View>
             )}
             <Pressable onPress={closeView} disabled={isSaving} style={styles.iconButton}>
@@ -525,44 +490,30 @@ const AddView: React.FC<AddViewProps> = ({ editingMovementId, recurrenceId, onCl
               placeholder="Insert Description"
             />
 
-            {/* Category, native HTML select */}
+            {/* Category */}
             <View style={styles.fieldRow}>
               <ThemedText type="default" style={styles.fieldLabel}>
                 Category
               </ThemedText>
-              {/* @ts-ignore: native HTML select element for web */}
-              <select
-                aria-label="Category"
+              <FormSelect
+                accessibilityLabel="Category"
                 value={selectedCategory}
-                onChange={(e: any) => handleCategoryChange(e.target.value)}
-                style={{
-                  ...nativeFieldStyle,
-                  color: selectedCategory ? textColor : placeholderColor,
-                }}
-              >
-                <option value="" disabled>
-                  Select category
-                </option>
-                {allCategories.map((cat) => (
-                  <option key={cat.value} value={cat.value}>
-                    {cat.label}
-                  </option>
-                ))}
-              </select>
+                onChange={handleCategoryChange}
+                options={allCategories}
+                placeholder="Select category"
+                textAlign="right"
+              />
             </View>
 
-            {/* Date, native HTML date input */}
+            {/* Date */}
             <View style={styles.fieldRow}>
               <ThemedText type="default" style={styles.fieldLabel}>
                 {isEditingRecurring ? 'Start' : 'Date'}
               </ThemedText>
-              {/* @ts-ignore: native HTML date input for web */}
-              <input
-                aria-label={isEditingRecurring ? 'Start date' : 'Date'}
-                type="date"
-                value={formatDateForInput(selectedDate)}
-                onChange={(e: any) => handleDateChange(e.target.value)}
-                style={nativeFieldStyle}
+              <DatePicker
+                label={isEditingRecurring ? 'Start date' : 'Date'}
+                value={selectedDate}
+                onChange={setSelectedDate}
               />
             </View>
           </InputGroup>

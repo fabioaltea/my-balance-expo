@@ -15,13 +15,15 @@ import {
   Alert,
   BackHandler,
 } from 'react-native';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { NotificationsProvider } from '@/src/state/NotificationsProvider';
 import { AuthProvider, useAuthContext } from '@/src/state/AuthProvider';
 import { DataProvider } from '@/src/state/DataProvider';
 import { PlatformProvider } from '@/src/state/PlatformProvider';
 import { QueryProvider } from '@/src/providers/QueryProvider';
 import LoginScreen from '@/src/views/login-view';
 import Onboarding from './onboarding';
+import { webInteractionStyles } from '@/src/constants/web-interaction-styles';
 
 export const unstable_settings = {
   anchor: 'dashboard',
@@ -197,11 +199,19 @@ export default function RootLayout() {
         <Head>
           <title>My Balance</title>
           <link rel="icon" type="image/png" href="/favicon.png" />
+          <style>{webInteractionStyles}</style>
+          <style>{`
+            :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="file"]):not([type="image"]), textarea, [contenteditable="true"]):focus {
+              outline: none !important;
+            }
+          `}</style>
         </Head>
       )}
       <QueryProvider>
         <AuthProvider>
-          <AppRouter />
+          <NotificationsProvider>
+            <AppRouter />
+          </NotificationsProvider>
         </AuthProvider>
       </QueryProvider>
     </PlatformProvider>

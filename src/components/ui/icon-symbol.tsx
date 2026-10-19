@@ -2,7 +2,6 @@ import React from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ComponentProps } from 'react';
 import { OpaqueColorValue, type StyleProp, type TextStyle } from 'react-native';
-import { Icon } from 'expo-router/unstable-native-tabs';
 
 export type IconName = ComponentProps<typeof MaterialIcons>['name'];
 

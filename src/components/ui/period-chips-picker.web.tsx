@@ -1,6 +1,7 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Pressable } from '@/src/components/core/interactive';
 
 import { formatDateToDDMMYYYY } from '@/src/utils/dateUtils';
 import { useThemeColor } from '@/src/hooks/use-theme-color';

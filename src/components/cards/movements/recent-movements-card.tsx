@@ -1,14 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ThemedText } from '@/src/components/core/themed-text';
-import {
-  TouchableOpacity,
-  Pressable,
-  StyleSheet,
-  View,
-  ScrollView,
-  Alert,
-  Platform,
-} from 'react-native';
+import { StyleSheet, View, ScrollView, Alert, Platform } from 'react-native';
+import { TouchableOpacity, Pressable } from '@/src/components/core/interactive';
 import IconSymbol from '@/src/components/ui/icon-symbol';
 import Card from '@/src/components/core/card';
 import ChartSkeleton from '@/src/components/charts/chart-skeleton';
@@ -433,7 +426,8 @@ const MovementsCard: React.FC<MovementsCardProps> = ({
       <ScrollView
         showsVerticalScrollIndicator={isLandscape}
         nestedScrollEnabled={true}
-        style={isWeb ? { paddingRight: 10 } : undefined}
+        style={isWeb ? { marginRight: -10 } : undefined}
+        contentContainerStyle={isWeb ? { paddingRight: 10 } : undefined}
       >
         {recentMovements?.map((movement, index) => {
           const icon = MovementHelper.getMovementIcon(movement.category, categories);

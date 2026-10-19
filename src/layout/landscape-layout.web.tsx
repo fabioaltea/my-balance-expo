@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useCallback, useEffect } from 'react';
-import { Alert, View, StyleSheet, Pressable, Text as RNText } from 'react-native';
+import { Alert, View, StyleSheet, Text as RNText } from 'react-native';
+import { Pressable } from '@/src/components/core/interactive';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
 import { useDataContext, useAuthContext } from '@/src/state';
@@ -613,11 +614,23 @@ export function LandscapeLayout() {
             [data-movement-row] {
               transition: background-color 180ms ease, box-shadow 180ms ease, transform 150ms ease;
               border-radius: 12px;
+              border-bottom-width: 0 !important;
+              margin-bottom: 6px;
               padding-left: 10px !important;
               padding-right: 10px !important;
             }
             [data-movement-row][data-movement-selected="true"] {
               border-radius: 0;
+            }
+            [data-movement-row][data-movement-selected="true"]:not([data-movement-selected-end="true"])::before {
+              content: '';
+              position: absolute;
+              left: 0;
+              right: 0;
+              bottom: -6px;
+              height: 6px;
+              background-color: inherit;
+              pointer-events: none;
             }
             [data-movement-row][data-movement-selected-start="true"] {
               border-top-left-radius: 12px;
@@ -627,11 +640,8 @@ export function LandscapeLayout() {
               border-bottom-left-radius: 12px;
               border-bottom-right-radius: 12px;
             }
-            [data-movement-row]:not([data-movement-selected="true"]):hover {
-              background-color: rgba(47, 79, 63, 0.07);
-            }
-            [data-movement-row][data-movement-selected="true"]:hover {
-              background-color: rgba(47, 79, 63, 0.055);
+            [data-movement-row]:last-child {
+              margin-bottom: 0;
             }
             [data-movement-row]:active {
               transform: translateY(1px);
@@ -671,6 +681,7 @@ export function LandscapeLayout() {
         rightContent={
           <>
             <Pressable
+              hoverFeedback={false}
               accessibilityRole="button"
               accessibilityLabel="Refresh dashboard"
               onPress={handleReloadPress}
@@ -684,6 +695,7 @@ export function LandscapeLayout() {
               <MaterialIcons name="refresh" size={19} color={mutedTextColor} />
             </Pressable>
             <Pressable
+              hoverFeedback={false}
               accessibilityRole="button"
               accessibilityLabel="Add movement"
               onPress={handleAddPress}

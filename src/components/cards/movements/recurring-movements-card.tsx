@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ThemedText } from '../../core/themed-text';
-import { TouchableOpacity, StyleSheet, View, ScrollView, Platform } from 'react-native';
+import { StyleSheet, View, ScrollView, Platform } from 'react-native';
+import { TouchableOpacity } from '@/src/components/core/interactive';
 import Card from '@/src/components/core/card';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
 import {
@@ -500,7 +501,8 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
       <ScrollView
         showsVerticalScrollIndicator={isLandscape}
         nestedScrollEnabled={true}
-        style={isWeb ? styles.scrollViewWeb : undefined}
+        style={isWeb ? { marginRight: -10 } : undefined}
+        contentContainerStyle={isWeb ? { paddingRight: 10 } : undefined}
       >
         {sortedMovements.map((entry, index) => {
           const { movement, pending, badgeStatus, occurrencesInPeriod, periodTotal } = entry;
@@ -697,9 +699,6 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
 };
 
 const styles = StyleSheet.create({
-  scrollViewWeb: {
-    paddingRight: 12,
-  },
   recurringItem: {
     flexDirection: 'row',
     alignItems: 'center',

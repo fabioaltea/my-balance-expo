@@ -35,17 +35,12 @@ interface TransactionRowProps {
   transaction: ITransaction;
   onPress: () => void;
   onDelete: () => void;
-  borderColor: string;
-  textColor: string;
 }
 
-const TransactionRow: React.FC<TransactionRowProps> = ({
-  transaction,
-  onPress,
-  onDelete,
-  borderColor,
-  textColor,
-}) => {
+const TransactionRow: React.FC<TransactionRowProps> = ({ transaction, onPress, onDelete }) => {
+  const incomeColor = useThemeColor({ light: '#25633F', dark: '#7FCF9D' }, 'tint');
+  const expenseColor = useThemeColor({ light: '#A33A3A', dark: '#F09292' }, 'tint');
+  const amountColor = transaction.type === 'income' ? incomeColor : expenseColor;
   const swipeableRef = useRef<Swipeable>(null);
   const translateX = useRef(new Animated.Value(0)).current;
 
@@ -103,7 +98,12 @@ const TransactionRow: React.FC<TransactionRowProps> = ({
 
     return (
       <Animated.View style={[styles.deleteAction, { opacity: containerOpacity }]}>
-        <Pressable onPress={handleDelete} style={styles.deleteContent}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Delete ${transaction.accountName} transaction`}
+          onPress={handleDelete}
+          style={styles.deleteContent}
+        >
           <Animated.View style={[styles.deleteContent, { transform: [{ scale }], opacity }]}>
             <IconSymbol name="delete" size={22} color="#fff" />
           </Animated.View>
@@ -127,27 +127,32 @@ const TransactionRow: React.FC<TransactionRowProps> = ({
       <Animated.View style={[styles.animatedContainer, { transform: [{ translateX }] }]}>
         <Pressable
           onPress={onPress}
-          style={[styles.transactionRow, { borderBottomColor: borderColor }]}
+          accessibilityRole="button"
+          accessibilityLabel={`Edit ${transaction.accountName} transaction`}
+          style={({ pressed }) => [styles.transactionRow, pressed && styles.pressed]}
         >
+          <View style={[styles.transactionIcon, { backgroundColor: amountColor + '14' }]}>
+            <IconSymbol
+              name={transaction.type === 'income' ? 'add' : 'remove'}
+              size={18}
+              color={amountColor}
+            />
+          </View>
           <View style={styles.transactionContent}>
-            <ThemedText style={styles.accountName}>{transaction.accountName}</ThemedText>
+            <ThemedText style={styles.accountName} numberOfLines={1}>
+              {transaction.accountName}
+            </ThemedText>
             <ThemedText
               style={[
                 styles.amount,
                 {
-                  color: transaction.type === 'income' ? '#22c55e' : '#ef4444',
+                  color: amountColor,
                 },
               ]}
             >
               {formatAmount(transaction.amount, transaction.type)}
             </ThemedText>
           </View>
-          {/* <IconSymbol
-            name="chevron.right"
-            size={16}
-            color={textColor}
-            style={styles.chevron}
-          /> */}
         </Pressable>
       </Animated.View>
     </Swipeable>
@@ -161,8 +166,8 @@ const Transactions: React.FC<ITransactionsProps> = ({
   onDeletePress,
 }) => {
   // Theme colors
-  const textColor = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
-  const borderColor = useThemeColor({ light: '#e0e0e0', dark: '#333' }, 'tabIconDefault');
+  const accentColor = useThemeColor({ light: '#244437', dark: '#D6E8DE' }, 'tint');
+  const borderColor = useThemeColor({ light: '#DFE6E1', dark: '#343C37' }, 'cardBorder');
 
   const handleTransactionPress = (transaction: ITransaction) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -187,14 +192,18 @@ const Transactions: React.FC<ITransactionsProps> = ({
           transaction={transaction}
           onPress={() => handleTransactionPress(transaction)}
           onDelete={() => handleDelete(transaction)}
-          borderColor={borderColor}
-          textColor={textColor}
         />
       ))}
 
       {/* Add Button */}
-      <Pressable onPress={handleAddPress} style={styles.addButton}>
-        <IconSymbol name="add" size={24} color="#fff" />
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Add transaction"
+        onPress={handleAddPress}
+        style={({ pressed }) => [styles.addButton, { borderColor }, pressed && styles.pressed]}
+      >
+        <IconSymbol name="add" size={20} color={accentColor} />
+        <ThemedText style={[styles.addLabel, { color: accentColor }]}>Add transaction</ThemedText>
       </Pressable>
     </GestureHandlerRootView>
   );
@@ -203,7 +212,7 @@ const Transactions: React.FC<ITransactionsProps> = ({
 const styles = StyleSheet.create({
   container: {
     marginVertical: 0,
-    paddingVertical: 5,
+    paddingVertical: 4,
   },
   title: {
     fontSize: 18,
@@ -212,42 +221,60 @@ const styles = StyleSheet.create({
   transactionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 0,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    minHeight: 52,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    borderRadius: 12,
+    gap: 10,
     backgroundColor: 'transparent',
-    marginBottom: 8,
+    marginBottom: 6,
+  },
+  transactionIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   transactionContent: {
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 10,
+    minWidth: 0,
   },
   accountName: {
     fontSize: 16,
     flex: 1,
+    minWidth: 0,
+    fontWeight: '500',
   },
   amount: {
     fontSize: 16,
     fontWeight: '600',
-    marginRight: 8,
+    fontVariant: ['tabular-nums'],
   },
   chevron: {
     opacity: 0.6,
   },
   addButton: {
-    backgroundColor: '#2F4F3F',
-    borderRadius: 20,
-    height: 50,
+    borderWidth: 1,
+    borderRadius: 14,
+    minHeight: 48,
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    gap: 8,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  addLabel: { fontSize: 15, fontWeight: '600' },
+  pressed: { opacity: 0.65 },
   deleteAction: {
-    backgroundColor: '#ef4444ff',
+    backgroundColor: '#A33A3A',
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 20,
+    borderRadius: 12,
     marginVertical: 2,
     width: 70,
     height: 40,

@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
+import { Pressable } from '@/src/components/core/interactive';
 import IconSymbol, { IconName } from '@/src/components/ui/icon-symbol';
 import TextBox from '@/src/components/ui/text-box';
 import { COLOR_PALETTE, DEFAULT_COLOR } from '@/src/constants/colors';

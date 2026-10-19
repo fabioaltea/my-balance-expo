@@ -1,5 +1,6 @@
 import React, { Suspense } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { Pressable } from '@/src/components/core/interactive';
 import { useRouter, usePathname, Slot } from 'expo-router';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 

@@ -9,6 +9,7 @@ import {
   Platform,
 } from 'react-native';
 import React, { useState, useEffect, useRef } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Crypto from 'expo-crypto';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
@@ -60,6 +61,7 @@ const AddView: React.FC<AddViewProps> = ({
   onToast,
 }) => {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const closeView = () => {
     onClose ? onClose() : router.back();
@@ -146,6 +148,10 @@ const AddView: React.FC<AddViewProps> = ({
   const recurrencePattern = hasRecurrencePattern
     ? `P${recurrenceFrequency}${recurrenceUnit}`
     : null;
+  const recurrenceUnits: Record<string, string> = { D: 'day', W: 'week', M: 'month', Y: 'year' };
+  const recurrenceDescription = recurrencePattern
+    ? `Every ${recurrenceFrequency} ${recurrenceUnits[recurrenceUnit]}${recurrenceFrequency === 1 ? '' : 's'}`
+    : 'Not set';
 
   // Auto-predict category when description changes (only for new movements)
   const handleDescriptionChange = (text: string) => {
@@ -271,6 +277,8 @@ const AddView: React.FC<AddViewProps> = ({
   );
   const placeholderColor = useThemeColor({ light: '#666', dark: '#999' }, 'tabIconDefault');
   const menuBackground = useThemeColor({}, 'menuBackground');
+  const surfaceColor = useThemeColor({ light: '#FFFFFF', dark: '#1D211F' }, 'cardBackground');
+  const borderColor = useThemeColor({ light: '#DFE6E1', dark: '#343C37' }, 'cardBorder');
 
   // Scroll fade animation
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -550,19 +558,31 @@ const AddView: React.FC<AddViewProps> = ({
       <View style={[styles.container, { backgroundColor }]}>
         <View style={styles.headerContainer}>
           <ThemedText type="title" style={styles.title}>
-            {isEditingRecurring ? 'Edit Recurrent' : isEditing ? 'Edit Movement' : 'New Movement'}
+            {isEditingRecurring
+              ? 'Edit recurring movement'
+              : isEditing
+                ? 'Edit movement'
+                : 'New movement'}
           </ThemedText>
-          {isEditing && (
+          <View style={styles.headerActions}>
+            {isEditing && (
+              <GlassButton
+                type="menu"
+                size={20}
+                onPress={() => {}}
+                accessibilityLabel="Menu opzioni"
+                contextMenuActivationMethod="singlePress"
+                contextMenuOptions={getMenuOptions()}
+                onContextMenuSelect={handleMenuAction}
+              />
+            )}
             <GlassButton
-              type="menu"
+              type="dismiss"
               size={20}
-              onPress={() => {}}
-              accessibilityLabel="Menu opzioni"
-              contextMenuActivationMethod="longPress"
-              contextMenuOptions={getMenuOptions()}
-              onContextMenuSelect={handleMenuAction}
+              onPress={closeView}
+              accessibilityLabel="Close movement form"
             />
-          )}
+          </View>
         </View>
 
         <Animated.View
@@ -579,6 +599,12 @@ const AddView: React.FC<AddViewProps> = ({
 
         <Animated.ScrollView
           ref={scrollViewRef}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+          contentContainerStyle={[
+            styles.formContent,
+            { paddingBottom: 172 + insets.bottom + keyboardHeight },
+          ]}
           showsVerticalScrollIndicator={false}
           onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
             useNativeDriver: true,
@@ -590,7 +616,7 @@ const AddView: React.FC<AddViewProps> = ({
               value={description}
               onChange={handleDescriptionChange}
               label="Description"
-              placeholder="Insert Description"
+              placeholder="Insert description"
             />
 
             <ListPicker
@@ -604,22 +630,23 @@ const AddView: React.FC<AddViewProps> = ({
             <DatePicker
               value={selectedDate}
               onChange={setSelectedDate}
-              label={isEditingRecurring ? 'Start' : 'Date'}
+              label={isEditingRecurring ? 'Start date' : 'Date'}
             />
           </InputGroup>
 
           {/* Recurrence Pattern — only when editing recurring */}
           {isEditingRecurring && (
-            <InputGroup>
+            <InputGroup label="Recurrence">
               <Pressable
                 onPress={() => setShowRecurrencyPicker(true)}
-                style={styles.recurrenceField}
+                accessibilityRole="button"
+                accessibilityLabel="Edit recurrence pattern"
+                accessibilityValue={{ text: recurrenceDescription }}
+                style={({ pressed }) => [styles.recurrenceField, pressed && styles.pressed]}
               >
-                <ThemedText style={styles.recurrenceLabel}>Recurrence</ThemedText>
+                <ThemedText style={styles.recurrenceLabel}>Pattern</ThemedText>
                 <View style={styles.recurrenceValueContainer}>
-                  <ThemedText style={styles.recurrenceValue}>
-                    {recurrencePattern ?? 'Not set'}
-                  </ThemedText>
+                  <ThemedText style={styles.recurrenceValue}>{recurrenceDescription}</ThemedText>
                   <IconSymbol name="chevron-right" size={16} color={placeholderColor} />
                 </View>
               </Pressable>
@@ -640,38 +667,41 @@ const AddView: React.FC<AddViewProps> = ({
           {!isEditingRecurring && !recurrenceId && (
             <InputGroup label="Recurrence">
               <View style={styles.recurrenceToggleRow}>
-                <ThemedText style={styles.recurrenceLabel}>Make recurring</ThemedText>
+                <ThemedText style={[styles.recurrenceLabel, styles.recurrenceToggleLabel]}>
+                  Make recurring
+                </ThemedText>
                 <Switch
+                  accessibilityLabel="Make recurring"
                   trackColor={{ true: '#2F4F3F' }}
                   ios_backgroundColor="#ccc"
-                  onValueChange={() => setIsRecurrent(!isRecurrent)}
+                  onValueChange={setIsRecurrent}
                   value={isRecurrent}
                 />
               </View>
               {isRecurrent && (
-                <>
-                  <ListPicker
-                    value={recurrenceSelection}
-                    onChange={setRecurrenceSelection}
-                    items={recurrenceOptions}
-                    label="Link to"
-                    placeholder="Select recurrence"
-                  />
-                  {recurrenceSelection === 'new' && (
-                    <Pressable
-                      onPress={() => setShowRecurrencyPicker(true)}
-                      style={styles.recurrenceField}
-                    >
-                      <ThemedText style={styles.recurrenceLabel}>Pattern</ThemedText>
-                      <View style={styles.recurrenceValueContainer}>
-                        <ThemedText style={styles.recurrenceValue}>
-                          {recurrencePattern ?? 'Not set'}
-                        </ThemedText>
-                        <IconSymbol name="chevron-right" size={16} color={placeholderColor} />
-                      </View>
-                    </Pressable>
-                  )}
-                </>
+                <ListPicker
+                  value={recurrenceSelection}
+                  onChange={setRecurrenceSelection}
+                  items={recurrenceOptions}
+                  label="Link to"
+                  placeholder="Select recurrence"
+                  title="Select recurrence"
+                />
+              )}
+              {isRecurrent && recurrenceSelection === 'new' && (
+                <Pressable
+                  onPress={() => setShowRecurrencyPicker(true)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Edit recurrence pattern"
+                  accessibilityValue={{ text: recurrenceDescription }}
+                  style={({ pressed }) => [styles.recurrenceField, pressed && styles.pressed]}
+                >
+                  <ThemedText style={styles.recurrenceLabel}>Pattern</ThemedText>
+                  <View style={styles.recurrenceValueContainer}>
+                    <ThemedText style={styles.recurrenceValue}>{recurrenceDescription}</ThemedText>
+                    <IconSymbol name="chevron-right" size={16} color={placeholderColor} />
+                  </View>
+                </Pressable>
               )}
             </InputGroup>
           )}
@@ -694,7 +724,6 @@ const AddView: React.FC<AddViewProps> = ({
           </InputGroup>
 
           {/* Spacer to scroll content above the bottom section */}
-          <View style={{ height: 160 + keyboardHeight }} />
         </Animated.ScrollView>
 
         {/* Transaction Modal */}
@@ -721,9 +750,14 @@ const AddView: React.FC<AddViewProps> = ({
       </View>
 
       {/* Bottom Total and Submit */}
-      <View style={styles.bottomSection}>
+      <View
+        style={[
+          styles.bottomSection,
+          { backgroundColor: surfaceColor, borderColor, paddingBottom: insets.bottom + 32 },
+        ]}
+      >
         <View style={styles.totalRow}>
-          <ThemedText style={styles.totalLabel}>Total:</ThemedText>
+          <ThemedText style={[styles.totalLabel, { color: placeholderColor }]}>Total</ThemedText>
           <ThemedText style={styles.totalAmount}>
             {getTotalAmount().toFixed(2).replace('.', ',')}€
           </ThemedText>
@@ -731,15 +765,21 @@ const AddView: React.FC<AddViewProps> = ({
         <Pressable
           onPress={handleSubmit}
           disabled={isSubmitting || !isFormValid()}
-          style={[
+          accessibilityRole="button"
+          accessibilityLabel={
+            isSubmitting ? 'Saving movement' : isEditing ? 'Save movement' : 'Add movement'
+          }
+          accessibilityState={{ disabled: isSubmitting || !isFormValid(), busy: isSubmitting }}
+          style={({ pressed }) => [
             styles.submitButton,
             (isSubmitting || !isFormValid()) && styles.submitButtonDisabled,
+            pressed && styles.pressed,
           ]}
         >
           <ThemedText
             style={[styles.submitText, (isSubmitting || !isFormValid()) && { opacity: 0.6 }]}
           >
-            {isSubmitting ? 'Saving' : isEditing ? 'Update' : 'Insert'}
+            {isSubmitting ? 'Saving...' : isEditing ? 'Save changes' : 'Add movement'}
           </ThemedText>
         </Pressable>
       </View>
@@ -758,24 +798,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 30,
-    marginTop: 10,
+    marginBottom: 20,
+    marginTop: 12,
+    gap: 12,
   },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  pressed: { opacity: 0.72 },
+  formContent: { paddingTop: 4 },
   title: {
     flex: 1,
     textAlign: 'left',
+    fontSize: 24,
+    lineHeight: 30,
+    fontWeight: '600',
+    letterSpacing: 0,
   },
   bottomSection: {
     position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
+    bottom: -20,
+    left: 8,
+    right: 8,
     alignItems: 'center',
-    backgroundColor: '#2F4F3F',
-    paddingTop: 20,
-    paddingBottom: 40,
-    paddingHorizontal: 20,
-    borderRadius: 30,
+    padding: 12,
+    borderWidth: 1,
+    borderRadius: 20,
   },
   totalRow: {
     alignItems: 'center',
@@ -784,60 +830,74 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   totalLabel: {
-    fontSize: 18,
-    color: '#fff',
-    fontWeight: '600',
+    fontSize: 14,
+    fontWeight: '500',
   },
   totalAmount: {
     fontSize: 22,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginVertical: 8,
+    lineHeight: 30,
+    fontWeight: '700',
+    fontVariant: ['tabular-nums'],
   },
   submitButton: {
-    backgroundColor: '#fff',
-    borderRadius: 25,
-    paddingVertical: 16,
-    paddingHorizontal: 60,
-    marginTop: 16,
+    backgroundColor: '#2F4F3F',
+    borderRadius: 14,
+    minHeight: 48,
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    marginTop: 12,
     width: '100%',
     alignItems: 'center',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    shadowColor: '#000',
   },
   submitText: {
-    color: '#2F4F3F',
-    fontSize: 18,
+    color: '#FFFFFF',
+    fontSize: 16,
     fontWeight: '600',
   },
   submitButtonDisabled: {
-    opacity: 0.6,
+    opacity: 0.4,
   },
   recurrenceField: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
+    minHeight: 48,
+    paddingVertical: 8,
+    gap: 12,
   },
   recurrenceToggleRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 8,
+    minHeight: 48,
+    gap: 12,
   },
   recurrenceLabel: {
     fontSize: 16,
+    lineHeight: 22,
     fontWeight: '500',
+    width: 96,
+    flexShrink: 0,
+  },
+  recurrenceToggleLabel: {
+    width: 'auto',
+    flex: 1,
+    flexShrink: 1,
   },
   recurrenceValueContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    flex: 1,
+    minWidth: 0,
+    justifyContent: 'flex-end',
   },
   recurrenceValue: {
     fontSize: 16,
-    opacity: 0.7,
+    lineHeight: 22,
+    flexShrink: 1,
+    textAlign: 'right',
   },
 });

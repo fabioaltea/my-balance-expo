@@ -56,6 +56,7 @@ export default ({ config }) => ({
       monochromeImage: "./assets/images/android-icon-monochrome.png",
     },
     package: getBundleIdentifier(),
+    ...(process.env.GOOGLE_SERVICES_FILE ? { googleServicesFile: process.env.GOOGLE_SERVICES_FILE } : {}),
   },
   web: {
     output: "static",
@@ -63,6 +64,8 @@ export default ({ config }) => ({
     title: "My Balance",
   },
   plugins: [
+    ["expo-notifications", { defaultChannel: "default" }],
+    "expo-secure-store",
     [
       "expo-router",
       {
@@ -95,6 +98,7 @@ export default ({ config }) => ({
     reactCompiler: true,
   },
   extra: {
+    appVariant: IS_DEV ? "development" : "production",
     router: {},
     eas: {
       projectId: "2d2413da-2b7d-4cab-8be2-dc832515bde8",

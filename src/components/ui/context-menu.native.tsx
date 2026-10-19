@@ -1,5 +1,5 @@
 import React from 'react';
-import { ContextMenu as ExpoContextMenu, Host, Button, ActivationMethod } from '@expo/ui/swift-ui';
+import { ContextMenu as ExpoContextMenu, Host, Button, Menu } from '@expo/ui/swift-ui';
 import { disabled as disabledModifier } from '@expo/ui/swift-ui/modifiers';
 import type { Ionicons } from '@expo/vector-icons';
 import { Pressable } from 'react-native';
@@ -17,7 +17,7 @@ export interface IContextMenuProps {
   onSelectOption: (option: string) => void;
   children: React.ReactNode;
   hostStyle?: { width: number; height: number };
-  activationMethod: ActivationMethod;
+  activationMethod?: 'longPress' | 'singlePress';
 }
 
 // Map commonly used Ionicons names to SF Symbols
@@ -45,30 +45,32 @@ const ContextMenu: React.FC<IContextMenuProps> = ({
   hostStyle,
   activationMethod = 'longPress',
 }) => {
+  const items = options.map((option, index) => {
+    const normalized = normalizeOption(option);
+    const sfSymbol = normalized.icon ? SF_SYMBOL_MAP[normalized.icon] : undefined;
+    return (
+      <Button
+        key={index}
+        role={normalized.destructive ? 'destructive' : 'default'}
+        {...(sfSymbol ? { systemImage: sfSymbol as any } : {})}
+        onPress={() => onSelectOption(normalized.label)}
+        label={normalized.label}
+        modifiers={normalized.disabled ? [disabledModifier()] : undefined}
+      />
+    );
+  });
   return (
     <Host {...(hostStyle ? { style: hostStyle } : { matchContents: true })}>
-      <ExpoContextMenu activationMethod={activationMethod}>
-        <ExpoContextMenu.Trigger>
-          <Pressable>{children}</Pressable>
-        </ExpoContextMenu.Trigger>
-        <ExpoContextMenu.Items>
-          {options.map((option, index) => {
-            const normalized = normalizeOption(option);
-            const sfSymbol = normalized.icon ? SF_SYMBOL_MAP[normalized.icon] : undefined;
-
-            return (
-              <Button
-                key={index}
-                role={normalized.destructive ? 'destructive' : 'default'}
-                {...(sfSymbol ? { systemImage: sfSymbol as any } : {})}
-                onPress={() => onSelectOption(normalized.label)}
-                label={normalized.label}
-                modifiers={normalized.disabled ? [disabledModifier()] : undefined}
-              />
-            );
-          })}
-        </ExpoContextMenu.Items>
-      </ExpoContextMenu>
+      {activationMethod === 'singlePress' ? (
+        <Menu label={<Pressable>{children}</Pressable>}>{items}</Menu>
+      ) : (
+        <ExpoContextMenu>
+          <ExpoContextMenu.Trigger>
+            <Pressable>{children}</Pressable>
+          </ExpoContextMenu.Trigger>
+          <ExpoContextMenu.Items>{items}</ExpoContextMenu.Items>
+        </ExpoContextMenu>
+      )}
     </Host>
   );
 };

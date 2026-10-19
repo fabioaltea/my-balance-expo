@@ -1,12 +1,6 @@
 import React, { useId, useMemo, useState } from 'react';
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-  type LayoutChangeEvent,
-} from 'react-native';
+import { ScrollView, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
+import { Pressable } from '@/src/components/core/interactive';
 import Svg, {
   Circle,
   ClipPath,

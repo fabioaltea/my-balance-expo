@@ -1,13 +1,6 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ActivityIndicator,
-  Alert,
-  Image,
-} from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Alert, Image } from 'react-native';
+import { TouchableOpacity } from '@/src/components/core/interactive';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthContext } from '../state/AuthProvider';

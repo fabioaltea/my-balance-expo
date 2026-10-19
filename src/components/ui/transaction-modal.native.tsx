@@ -1,4 +1,4 @@
-import { View, StyleSheet, Text, Pressable, Switch, Dimensions } from 'react-native';
+import { View, StyleSheet, Pressable, useWindowDimensions } from 'react-native';
 import { ThemedText } from '../core/themed-text.native';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
 import { useEffect, useState } from 'react';
@@ -7,8 +7,8 @@ import CurrencyInput from './currency-input';
 import * as Haptics from 'expo-haptics';
 import ModalPanel from './modal-panel.native';
 import React from 'react';
-
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+import InputGroup from './input-group.native';
+import IconSymbol from './icon-symbol';
 
 export interface ITransactionData {
   accountName: string;
@@ -39,6 +39,7 @@ const TransactionModal: React.FC<ITransactionModalProps> = ({
   const [selectedAccount, setSelectedAccount] = useState(initialData?.accountName || '');
   const [amount, setAmount] = useState(initialData?.amount || 0);
   const [showKeyboard, setShowKeyboard] = useState(false);
+  const { height } = useWindowDimensions();
 
   // Reset form when modal opens
   useEffect(() => {
@@ -59,7 +60,11 @@ const TransactionModal: React.FC<ITransactionModalProps> = ({
   }, [isVisible, initialData]);
 
   // Theme colors
-  const backgroundColor = useThemeColor({ light: '#fff', dark: '#1a1a1a' }, 'background');
+  const mutedColor = useThemeColor({ light: '#66736C', dark: '#AEB8B2' }, 'tabIconDefault');
+  const borderColor = useThemeColor({ light: '#DFE6E1', dark: '#343C37' }, 'cardBorder');
+  const incomeColor = useThemeColor({ light: '#25633F', dark: '#7FCF9D' }, 'tint');
+  const expenseColor = useThemeColor({ light: '#A33A3A', dark: '#F09292' }, 'tint');
+  const selectedBackground = useThemeColor({ light: '#E7EEE9', dark: '#2C3E33' }, 'cardBackground');
 
   const handleToggle = (type: 'income' | 'expense') => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -84,45 +89,70 @@ const TransactionModal: React.FC<ITransactionModalProps> = ({
       onClose={onClose}
       onConfirm={isValid ? handleConfirm : undefined}
       title={title}
-      showConfirmButton={true}
+      showConfirmButton={Boolean(isValid)}
       showCancelButton={true}
       confirmText="Save"
       cancelText="Cancel"
-      maxHeight={SCREEN_HEIGHT * 0.85}
+      maxHeight={height * 0.85}
     >
-      <View style={[styles.container, { backgroundColor }]}>
+      <View style={styles.container}>
         {/* Toggle Section */}
-        <View style={styles.inputRow}>
-          <ThemedText style={styles.label}>Type</ThemedText>
-          <Switch
-            trackColor={{ true: '#59a25bff' }}
-            ios_backgroundColor={'#9c1414ff'}
-            onValueChange={(value) => setTransactionType(value ? 'income' : 'expense')}
-            value={transactionType === 'income'}
-          />
+        <View accessibilityRole="tablist" style={[styles.toggleContainer, { borderColor }]}>
+          {(['expense', 'income'] as const).map((type) => {
+            const selected = transactionType === type;
+            const color = type === 'income' ? incomeColor : expenseColor;
+            return (
+              <Pressable
+                key={type}
+                accessibilityRole="tab"
+                accessibilityState={{ selected }}
+                onPress={() => handleToggle(type)}
+                style={({ pressed }) => [
+                  styles.toggleButton,
+                  selected && { backgroundColor: selectedBackground },
+                  pressed && styles.pressed,
+                ]}
+              >
+                <IconSymbol
+                  name={type === 'income' ? 'add' : 'remove'}
+                  size={18}
+                  color={selected ? color : mutedColor}
+                />
+                <ThemedText style={[styles.toggleText, { color: selected ? color : mutedColor }]}>
+                  {type === 'income' ? 'Income' : 'Expense'}
+                </ThemedText>
+              </Pressable>
+            );
+          })}
         </View>
 
         {/* Amount Section */}
-        <View style={styles.inputRow}>
-          <ThemedText style={styles.label}>Amount</ThemedText>
-          <Pressable onPress={() => setShowKeyboard(!showKeyboard)} style={styles.valueContainer}>
-            <ThemedText style={styles.amountText}>
-              {amount.toFixed(2).replace('.', ',')} €
-            </ThemedText>
+        <InputGroup>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Edit amount"
+            onPress={() => setShowKeyboard(true)}
+            style={({ pressed }) => [styles.inputRow, pressed && styles.pressed]}
+          >
+            <ThemedText style={styles.label}>Amount</ThemedText>
+            <View style={styles.valueContainer}>
+              <ThemedText style={styles.amountText}>
+                {amount.toFixed(2).replace('.', ',')} €
+              </ThemedText>
+              <IconSymbol name="chevron-right" size={16} color={mutedColor} />
+            </View>
           </Pressable>
-        </View>
 
-        {/* Account Section */}
-        <View style={styles.inputRow}>
+          {/* Account Section */}
           <ListPicker
             value={selectedAccount}
             onChange={setSelectedAccount}
             items={accounts}
             placeholder="Select account"
-            title="Select Account"
+            title="Select account"
             label="Account"
           />
-        </View>
+        </InputGroup>
 
         {/* Currency Input - Show only when requested */}
         {showKeyboard && (
@@ -130,7 +160,7 @@ const TransactionModal: React.FC<ITransactionModalProps> = ({
             isVisible={showKeyboard}
             onClose={() => setShowKeyboard(false)}
             onConfirm={() => setShowKeyboard(false)}
-            title="Edit Amount"
+            title="Edit amount"
             showConfirmButton={true}
             showCancelButton={true}
             confirmText="Conferma"
@@ -146,16 +176,16 @@ const TransactionModal: React.FC<ITransactionModalProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    // Remove flex: 1 as it can cause issues in modal
-    minHeight: 600,
-    paddingHorizontal: 10,
-    paddingVertical: 10,
+    paddingHorizontal: 0,
+    paddingBottom: 8,
   },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 40,
+    minHeight: 52,
+    paddingVertical: 8,
+    gap: 12,
   },
   amountRow: {
     flexDirection: 'row',
@@ -167,20 +197,27 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '500',
-    flex: 0,
-    minWidth: 80,
+    width: 96,
+    flexShrink: 0,
   },
   valueContainer: {
     flex: 1,
-    alignItems: 'flex-end',
+    minWidth: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 8,
   },
   centerSection: {
     alignItems: 'center',
     paddingVertical: 30,
   },
   amountText: {
-    fontWeight: 'bold',
+    fontWeight: '700',
     fontSize: 24,
+    lineHeight: 32,
+    flexShrink: 1,
+    fontVariant: ['tabular-nums'],
   },
   confirmSection: {
     marginTop: 40,
@@ -202,16 +239,21 @@ const styles = StyleSheet.create({
   },
   toggleContainer: {
     flexDirection: 'row',
-    borderRadius: 20,
+    borderRadius: 14,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#e0e0e0',
-    minWidth: 200,
+    padding: 4,
+    gap: 4,
+    marginBottom: 16,
   },
   toggleButton: {
     flex: 1,
     paddingVertical: 8,
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
+    minHeight: 44,
+    borderRadius: 10,
+    flexDirection: 'row',
+    gap: 6,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -230,14 +272,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#16a34a',
   },
   toggleText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#666',
+    fontSize: 15,
+    lineHeight: 22,
+    fontWeight: '600',
   },
   toggleActiveText: {
     color: '#fff',
     fontWeight: '600',
   },
+  pressed: { opacity: 0.65 },
 });
 
 export default TransactionModal;

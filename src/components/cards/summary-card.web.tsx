@@ -1,5 +1,6 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { Pressable } from '@/src/components/core/interactive';
 
 import Card from '@/src/components/core/card';
 import Skeleton from '@/src/components/ui/skeleton';
@@ -90,6 +91,7 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
 
         <View style={styles.metrics}>
           <Pressable
+            hoverFeedback={false}
             accessibilityRole="button"
             accessibilityLabel={
               movementFilter === 'income'
@@ -123,6 +125,7 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
             </Text>
           </Pressable>
           <Pressable
+            hoverFeedback={false}
             accessibilityRole="button"
             accessibilityLabel={
               movementFilter === 'expense'
@@ -173,8 +176,8 @@ const styles = StyleSheet.create({
     letterSpacing: -0.8,
     zIndex: 1,
   },
-  chart: { marginTop: -24 },
-  loadingChart: { marginTop: 0 },
+  chart: { marginTop: 4 },
+  loadingChart: { marginTop: 4 },
   metrics: {
     flexDirection: 'row',
     alignItems: 'stretch',

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { Animated, Dimensions, Pressable, StyleSheet, View } from 'react-native';
+import { Animated, Dimensions, StyleSheet, View } from 'react-native';
+import { Pressable } from '@/src/components/core/interactive';
 
 import { useThemeColor } from '@/src/hooks/use-theme-color';
 
@@ -56,6 +57,7 @@ const SideDrawer: React.FC<SideDrawerProps> = ({
     <View style={styles.overlay} pointerEvents={isOpen ? 'auto' : 'none'}>
       <Animated.View style={[styles.backdrop, { opacity: overlayOpacity }]}>
         <Pressable
+          hoverFeedback={false}
           accessibilityRole="button"
           accessibilityLabel="Close panel"
           style={styles.backdropPressable}

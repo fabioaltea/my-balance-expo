@@ -25,9 +25,6 @@ platform :ios, ios_deployment_target
 
 prepare_react_native_project!
 
-# @generated begin @rnmapbox/maps-rnmapboxmapsimpl - expo prebuild (DO NOT MODIFY) sync-989485861fb4f1b7c7103aa6000aa6bfa5515698
-$RNMapboxMapsVersion = '11.20.1'
-# @generated end @rnmapbox/maps-rnmapboxmapsimpl
 target 'MyBalance' do
   use_expo_modules!
 

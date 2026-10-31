@@ -89,12 +89,7 @@ export default ({ config }) => ({
     ],
     "@react-native-community/datetimepicker",
     "expo-web-browser",
-    [
-      "@rnmapbox/maps",
-      {
-        RNMapboxMapsVersion: "11.20.1"
-      },
-    ],
+    "@rnmapbox/maps",
   ],
   experiments: {
     typedRoutes: true,

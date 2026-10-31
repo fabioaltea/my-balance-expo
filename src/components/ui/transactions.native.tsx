@@ -10,7 +10,14 @@ import {
 import { useThemeColor } from '@/src/hooks/use-theme-color';
 import * as Haptics from 'expo-haptics';
 import React, { useRef } from 'react';
-import { Swipeable, GestureHandlerRootView } from 'react-native-gesture-handler';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import Swipeable, { type SwipeableMethods } from 'react-native-gesture-handler/ReanimatedSwipeable';
+import Reanimated, {
+  Extrapolation,
+  interpolate,
+  useAnimatedStyle,
+  type SharedValue,
+} from 'react-native-reanimated';
 import IconSymbol from './icon-symbol';
 import { ThemedText } from '../core/themed-text.native';
 
@@ -37,11 +44,50 @@ interface TransactionRowProps {
   onDelete: () => void;
 }
 
+function DeleteAction({
+  translation,
+  accountName,
+  onDelete,
+}: {
+  translation: SharedValue<number>;
+  accountName: string;
+  onDelete: () => void;
+}) {
+  const containerStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      translation.value,
+      [-120, -60, -59.999, 0],
+      [1, 1, 0, 0],
+      Extrapolation.CLAMP,
+    ),
+  }));
+  const iconStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(translation.value, [-120, -80, -60, 0], [1, 1, 0, 0], Extrapolation.CLAMP),
+    transform: [
+      { scale: interpolate(translation.value, [-120, -60, 0], [1, 1, 0.5], Extrapolation.CLAMP) },
+    ],
+  }));
+  return (
+    <Reanimated.View style={[styles.deleteAction, containerStyle]}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`Delete ${accountName} transaction`}
+        onPress={onDelete}
+        style={styles.deleteContent}
+      >
+        <Reanimated.View style={[styles.deleteContent, iconStyle]}>
+          <IconSymbol name="delete" size={22} color="#fff" />
+        </Reanimated.View>
+      </Pressable>
+    </Reanimated.View>
+  );
+}
+
 const TransactionRow: React.FC<TransactionRowProps> = ({ transaction, onPress, onDelete }) => {
   const incomeColor = useThemeColor({ light: '#25633F', dark: '#7FCF9D' }, 'tint');
   const expenseColor = useThemeColor({ light: '#A33A3A', dark: '#F09292' }, 'tint');
   const amountColor = transaction.type === 'income' ? incomeColor : expenseColor;
-  const swipeableRef = useRef<Swipeable>(null);
+  const swipeableRef = useRef<SwipeableMethods>(null);
   const translateX = useRef(new Animated.Value(0)).current;
 
   // Enable native LayoutAnimation on Android
@@ -69,53 +115,16 @@ const TransactionRow: React.FC<TransactionRowProps> = ({ transaction, onPress, o
     });
   };
 
-  const renderRightActions = (
-    progress: Animated.AnimatedInterpolation<number>,
-    dragX: Animated.AnimatedInterpolation<number>,
-  ) => {
-    // Show the trash only after a sufficient left swipe
-    const showThreshold = -60; // reveal after amount/content has slid left
-
-    // Container (red button) visibility: hidden until threshold is crossed
-    const containerOpacity = dragX.interpolate({
-      inputRange: [-120, showThreshold, showThreshold + 0.001, 0],
-      outputRange: [1, 1, 0, 0],
-      extrapolate: 'clamp',
-    });
-
-    const scale = dragX.interpolate({
-      inputRange: [-120, showThreshold, 0],
-      outputRange: [1, 1, 0.5],
-      extrapolate: 'clamp',
-    });
-
-    const opacity = dragX.interpolate({
-      // Keep hidden until the threshold is crossed
-      inputRange: [-120, -80, showThreshold, 0],
-      outputRange: [1, 1, 0, 0],
-      extrapolate: 'clamp',
-    });
-
-    return (
-      <Animated.View style={[styles.deleteAction, { opacity: containerOpacity }]}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={`Delete ${transaction.accountName} transaction`}
-          onPress={handleDelete}
-          style={styles.deleteContent}
-        >
-          <Animated.View style={[styles.deleteContent, { transform: [{ scale }], opacity }]}>
-            <IconSymbol name="delete" size={22} color="#fff" />
-          </Animated.View>
-        </Pressable>
-      </Animated.View>
-    );
-  };
-
   return (
     <Swipeable
       ref={swipeableRef}
-      renderRightActions={renderRightActions}
+      renderRightActions={(_progress, translation) => (
+        <DeleteAction
+          translation={translation}
+          accountName={transaction.accountName}
+          onDelete={handleDelete}
+        />
+      )}
       rightThreshold={40}
       overshootRight={false}
       onSwipeableOpen={(direction) => {

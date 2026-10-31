@@ -130,7 +130,7 @@ export default function MapViewNative() {
   return (
     <View style={[styles.container, { backgroundColor }]}>
       <Mapbox.MapView
-        style={StyleSheet.absoluteFillObject}
+        style={StyleSheet.absoluteFill}
         styleURL={mapStyleURL}
         compassEnabled
         scaleBarEnabled={false}

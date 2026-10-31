@@ -17,11 +17,27 @@ cd "$PROJECT_ROOT"
 
 echo "==> Install Node.js"
 
-if ! command -v node >/dev/null 2>&1; then
-  brew install node@20
-fi
-
-export PATH="$(brew --prefix node@20)/bin:$PATH"
+NODE_VERSION="$(tr -d '[:space:]' < "$PROJECT_ROOT/.nvmrc")"
+NODE_ARCH="$(uname -m)"
+case "$NODE_ARCH" in
+  arm64) ;;
+  x86_64) NODE_ARCH="x64" ;;
+  *) echo "Unsupported architecture: $NODE_ARCH"; exit 1 ;;
+esac
+NODE_ARCHIVE="node-v${NODE_VERSION}-darwin-${NODE_ARCH}.tar.gz"
+NODE_HOME="$HOME/.mybalance-node"
+DOWNLOAD_DIR="$(mktemp -d)"
+trap 'rm -rf "$DOWNLOAD_DIR"' EXIT
+NODE_URL="https://nodejs.org/dist/v${NODE_VERSION}"
+curl --fail --location --retry 3 "$NODE_URL/$NODE_ARCHIVE" -o "$DOWNLOAD_DIR/$NODE_ARCHIVE"
+curl --fail --location --retry 3 "$NODE_URL/SHASUMS256.txt" -o "$DOWNLOAD_DIR/SHASUMS256.txt"
+pushd "$DOWNLOAD_DIR" >/dev/null
+awk -v archive="$NODE_ARCHIVE" '$2 == archive { print; found = 1 } END { if (!found) exit 1 }' SHASUMS256.txt | shasum -a 256 --check
+popd >/dev/null
+mkdir -p "$NODE_HOME"
+tar -xzf "$DOWNLOAD_DIR/$NODE_ARCHIVE" --strip-components=1 -C "$NODE_HOME"
+export PATH="$NODE_HOME/bin:$PATH"
+export NODE_BINARY="$NODE_HOME/bin/node"
 
 echo "Node:"
 node --version
@@ -29,11 +45,9 @@ node --version
 echo "npm:"
 npm --version
 
-echo "==> Enable Corepack"
-corepack enable
-
-echo "==> Activate pnpm 9.4.0"
-corepack prepare pnpm@9.4.0 --activate
+echo "==> Install pinned package manager"
+PACKAGE_MANAGER="$(node -p "require('./package.json').packageManager")"
+npm install --global "$PACKAGE_MANAGER"
 
 echo "pnpm:"
 pnpm --version

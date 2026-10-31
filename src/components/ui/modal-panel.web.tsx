@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
     zIndex: 1000,
   },
   backdrop: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   panel: {
     borderRadius: 30,

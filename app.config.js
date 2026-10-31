@@ -64,6 +64,9 @@ export default ({ config }) => ({
     title: "My Balance",
   },
   plugins: [
+    "expo-font",
+    "expo-image",
+    "expo-status-bar",
     ["expo-notifications", { defaultChannel: "default" }],
     "expo-secure-store",
     [

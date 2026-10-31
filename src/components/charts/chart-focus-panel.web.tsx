@@ -230,13 +230,13 @@ function DetailRow({
 
 const styles = StyleSheet.create({
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     zIndex: 30,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
   },
-  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(12, 22, 16, 0.58)' },
+  backdrop: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(12, 22, 16, 0.58)' },
   panel: {
     width: '100%',
     maxWidth: 1100,

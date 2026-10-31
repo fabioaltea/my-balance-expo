@@ -19,7 +19,7 @@ const AccountPicker: React.FC<IAccountPickerProps> = ({
   selectedAccount,
   setSelectedAccount,
 }) => {
-  const triggerRef = useRef<View>(null);
+  const triggerRef = useRef<React.ComponentRef<typeof View>>(null);
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const [isOpen, setIsOpen] = useState(false);
   const [anchor, setAnchor] = useState<Anchor | null>(null);

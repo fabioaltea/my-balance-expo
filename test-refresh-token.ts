@@ -1,3 +1,5 @@
+/// <reference types="node" />
+
 /**
  * Script di test per l'API di refresh del token
  *
@@ -10,6 +12,8 @@
  * Oppure imposta le variabili d'ambiente:
  * REFRESH_TOKEN=your_token DEVICE_ID=your_device_id npx tsx test-refresh-token.ts
  */
+
+import { Buffer } from 'node:buffer';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8080";
 

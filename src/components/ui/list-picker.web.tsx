@@ -28,7 +28,7 @@ const ListPicker: React.FC<IListPickerProps> = ({
   placeholder = 'Select...',
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const containerRef = useRef<View>(null);
+  const containerRef = useRef<React.ComponentRef<typeof View>>(null);
 
   const textColor = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
   const placeholderColor = useThemeColor({ light: '#666', dark: '#99999984' }, 'tabIconDefault');

@@ -19,7 +19,7 @@ const Pager: React.FC<IPagerProps> = ({
   style,
   scrollEnabled = true,
 }) => {
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<React.ComponentRef<typeof ScrollView>>(null);
   const [pageWidth, setPageWidth] = useState(Dimensions.get('window').width);
   const [currentPage, setCurrentPage] = useState(selectedPage);
 

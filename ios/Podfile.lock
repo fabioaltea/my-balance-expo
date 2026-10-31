@@ -258,13 +258,13 @@ PODS:
   - hermes-engine (260318099.0.5):
     - hermes-engine/Pre-built (= 260318099.0.5)
   - hermes-engine/Pre-built (260318099.0.5)
-  - MapboxCommon (24.20.1):
+  - MapboxCommon (24.33.1):
     - Turf (= 4.0.0)
-  - MapboxCoreMaps (11.20.1):
-    - MapboxCommon (= 24.20.1)
-  - MapboxMaps (11.20.1):
-    - MapboxCommon (= 24.20.1)
-    - MapboxCoreMaps (= 11.20.1)
+  - MapboxCoreMaps (11.33.1):
+    - MapboxCommon (= 24.33.1)
+  - MapboxMaps (11.33.1):
+    - MapboxCommon (= 24.33.1)
+    - MapboxCoreMaps (= 11.33.1)
     - Turf (= 4.0.0)
   - MLImage (1.0.0-beta5)
   - MLKitCommon (11.0.0):
@@ -2247,14 +2247,14 @@ PODS:
     - RNWorklets (>= 0.8.0)
     - Yoga
   - rnmapbox-maps (10.3.16):
-    - MapboxMaps (= 11.20.1)
+    - MapboxMaps (~> 11.33.0)
     - React
     - React-Core
     - rnmapbox-maps/DynamicLibrary (= 10.3.16)
     - Turf
   - rnmapbox-maps/DynamicLibrary (10.3.16):
     - hermes-engine
-    - MapboxMaps (= 11.20.1)
+    - MapboxMaps (~> 11.33.0)
     - RCTRequired
     - RCTTypeSafety
     - React
@@ -3075,9 +3075,9 @@ SPEC CHECKSUMS:
   GoogleUtilitiesComponents: 679b2c881db3b615a2777504623df6122dd20afe
   GTMSessionFetcher: 5aea5ba6bd522a239e236100971f10cb71b96ab6
   hermes-engine: 79484fc4e58f328d01b9339ef899ca633d3702ee
-  MapboxCommon: 6bbffc1426928f78c011777b1b7c78fb6f075678
-  MapboxCoreMaps: a8e06acb3d860fe5b7426f62d494134788562b90
-  MapboxMaps: eea09e4bab1a02606717ccf9f4e434a7d4422ed8
+  MapboxCommon: b74a90adf98eb35eeb627123808a9e849c86af48
+  MapboxCoreMaps: fc964f2200ecdee75168e248ff64c2eb6b840564
+  MapboxMaps: 486dd7fd3a997243eebd11eb49321bec7ba2ef37
   MLImage: 1824212150da33ef225fbd3dc49f184cf611046c
   MLKitCommon: afec63980417d29ffbb4790529a1b0a2291699e1
   MLKitTextRecognition: c83c18ad25496f2077f6ec93c5940487ff2eb343
@@ -3172,7 +3172,7 @@ SPEC CHECKSUMS:
   RNCPicker: d3db4b004e95a5bd224e1c926f84978b45bc0040
   RNDateTimePicker: 5ddeb7b9142ea2b53386cf9e1737fd0ddc5a186f
   RNGestureHandler: e19fcf39b0212e0eb8bc7ca1e645500eb492f6be
-  rnmapbox-maps: d7c9a76efc48f4eb6cab36e37af863b0590c9fb1
+  rnmapbox-maps: f336eb346b1c840ae33b71584a9b30505168abb5
   RNMLKitCore: 7bcc4b863398221d494dfb6d5620b06e861488ee
   RNMLKitTextRecognition: 329e1efb3d68bc5404b49b1d71ef4b63d61a7dbf
   RNReanimated: 3018727dbf272754d0f31ef73f619e49ade7baf0
@@ -3184,6 +3184,6 @@ SPEC CHECKSUMS:
   Turf: c9eb11a65d96af58cac523460fd40fec5061b081
   Yoga: d1c536142c5ff8ec8cd856ab2a7c227a1d875c8e
 
-PODFILE CHECKSUM: d946005070fd54a8fef2f51d7370a2baa09a93d9
+PODFILE CHECKSUM: 6958ca6abeec07040b00257ed4ec3099f608ba0f
 
 COCOAPODS: 1.16.2

@@ -79,9 +79,9 @@
     "tesseract.js": "^7.0.0"
   },
   "devDependencies": {
-    "@types/node": "^26.0.0",
     "@types/d3-scale": "^4.0.9",
     "@types/d3-shape": "^3.2.0",
+    "@types/node": "^26.0.0",
     "@types/react": "~19.3.0",
     "babel-preset-expo": "~58.0.23",
     "eslint": "^9.25.0",
@@ -95,5 +95,10 @@
     "add-format"
   ],
   "private": true,
-  "packageManager": "pnpm@9.4.0"
+  "packageManager": "pnpm@9.4.0",
+  "pnpm": {
+    "patchedDependencies": {
+      "@infinitered/react-native-mlkit-text-recognition@5.0.1": "patches/@infinitered__react-native-mlkit-text-recognition@5.0.1.patch"
+    }
+  }
 }

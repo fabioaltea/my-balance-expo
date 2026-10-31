@@ -1,0 +1,21 @@
+diff --git a/ios/RNMLKitTextRecord.swift b/ios/RNMLKitTextRecord.swift
+index 7672854c2280694a5ad258a515d8f8cc76955ad9..f83fb8e569229153e6058f277f54b063d76061ed 100644
+--- a/ios/RNMLKitTextRecord.swift
++++ b/ios/RNMLKitTextRecord.swift
+@@ -1,6 +1,7 @@
+ import ExpoModulesCore
+ import MLKitCommon
+ import MLKitTextRecognition
++import MLKitTextRecognitionCommon
+ 
+ struct RectRecord: Record {
+     @Field var left: Double = 0.0
+@@ -70,7 +71,7 @@ func mapTextBlockToRecord(_ textBlock: TextBlock) -> BlockRecord {
+     )
+ }
+ 
+-func mapTextToRecord(_ text: Text) -> TextRecord {
++func mapTextToRecord(_ text: MLKitTextRecognitionCommon.Text) -> TextRecord {
+     return TextRecord(
+         text: text.text,
+         blocks: text.blocks.map(mapTextBlockToRecord)

@@ -4,6 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  '@infinitered/react-native-mlkit-text-recognition@5.0.1':
+    hash: auvqbibk56mnyccoq53ba2uata
+    path: patches/@infinitered__react-native-mlkit-text-recognition@5.0.1.patch
+
 importers:
 
   .:
@@ -22,7 +27,7 @@ importers:
         version: 15.1.1(expo-font@58.0.11(expo@58.0.22(@babel/core@7.29.7)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.16)(expo-router@58.0.29)(react-dom@19.3.0(react@19.3.0))(react-native-web@0.21.4(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.1(@babel/core@7.29.7))(react-native@0.88.1(@babel/core@7.29.7)(@react-native/metro-config@0.88.1(@babel/core@7.29.7))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.1(@babel/core@7.29.7)(@react-native/metro-config@0.88.1(@babel/core@7.29.7))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)(typescript@6.0.3))(react-native@0.88.1(@babel/core@7.29.7)(@react-native/metro-config@0.88.1(@babel/core@7.29.7))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.1(@babel/core@7.29.7)(@react-native/metro-config@0.88.1(@babel/core@7.29.7))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
       '@infinitered/react-native-mlkit-text-recognition':
         specifier: ^5.0.1
-        version: 5.0.1(kraw2h33e4hhhs5d6vsui3qw5y)
+        version: 5.0.1(patch_hash=auvqbibk56mnyccoq53ba2uata)(kraw2h33e4hhhs5d6vsui3qw5y)
       '@react-google-maps/api':
         specifier: ^2.20.8
         version: 2.20.8(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -5413,7 +5418,7 @@ snapshots:
       - react-dom
       - react-test-renderer
 
-  '@infinitered/react-native-mlkit-text-recognition@5.0.1(kraw2h33e4hhhs5d6vsui3qw5y)':
+  '@infinitered/react-native-mlkit-text-recognition@5.0.1(patch_hash=auvqbibk56mnyccoq53ba2uata)(kraw2h33e4hhhs5d6vsui3qw5y)':
     dependencies:
       '@infinitered/react-native-mlkit-core': 3.1.0(kraw2h33e4hhhs5d6vsui3qw5y)
       expo: 58.0.22(@babel/core@7.29.7)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.16)(expo-router@58.0.29)(react-dom@19.3.0(react@19.3.0))(react-native-web@0.21.4(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.1(@babel/core@7.29.7))(react-native@0.88.1(@babel/core@7.29.7)(@react-native/metro-config@0.88.1(@babel/core@7.29.7))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.1(@babel/core@7.29.7)(@react-native/metro-config@0.88.1(@babel/core@7.29.7))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)(typescript@6.0.3)

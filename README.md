@@ -109,6 +109,12 @@ in 10.3.5 after React Native added `fontSizeMultiplier`. Version 10.3.16 copies
 the layout metrics instead, preserving the new field. The package and pod locks
 include this upstream fix; the complete archive still needs Cloud validation.
 
+The OCR package `@infinitered/react-native-mlkit-text-recognition` 5.0.1 uses a
+pnpm patch to qualify `MLKitTextRecognitionCommon.Text`, avoiding ambiguous Swift
+type lookup with the Expo 58 imports. Commit the patch in `patches/` together
+with `package.json` and `pnpm-lock.yaml`; Cloud applies it during installation.
+Review and remove the patch when upgrading to an upstream release with the fix.
+
 Before release, validate cold start, OAuth callback, token refresh, notification
 deep links, Mapbox, receipt OCR, and swipe deletion on a development build, then
 on TestFlight. Use a test account and spreadsheet for financial writes. A passing

@@ -131,10 +131,10 @@ export const convertISOToLocalFormat = (isoString: string): string => {
     const formatted = formatDateToDDMMYYYY(date);
 
     // Log first few conversions for debugging
-    const debugCount = (global as any).__dateConversionCount || 0;
+    const debugCount = (globalThis as any).__dateConversionCount || 0;
     if (debugCount < 3) {
       console.log('🔄 Date conversion:', { from: isoString, to: formatted });
-      (global as any).__dateConversionCount = debugCount + 1;
+      (globalThis as any).__dateConversionCount = debugCount + 1;
     }
 
     return formatted;

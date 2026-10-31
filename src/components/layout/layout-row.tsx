@@ -26,21 +26,10 @@ export function LayoutRow({
     flexDirection: 'row',
     gap,
     minHeight,
+    height: height as ViewStyle['height'],
+    padding,
+    ...(flex !== undefined ? { flex, flexGrow: 1, flexShrink: 1 } : {}),
   };
-
-  if (height !== undefined) {
-    style.height = height as any;
-  }
-
-  if (flex !== undefined) {
-    style.flex = flex;
-    style.flexGrow = 1;
-    style.flexShrink = 1;
-  }
-
-  if (padding !== undefined) {
-    style.padding = padding;
-  }
 
   return <View style={style}>{children}</View>;
 }

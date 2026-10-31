@@ -26,23 +26,11 @@ export function LayoutColumn({
     flexDirection: 'column',
     gap,
     minHeight: 0,
+    flex,
+    flexGrow,
+    padding,
+    minWidth,
   };
-
-  if (flex !== undefined) {
-    style.flex = flex;
-  }
-
-  if (flexGrow !== undefined) {
-    style.flexGrow = flexGrow;
-  }
-
-  if (padding !== undefined) {
-    style.padding = padding;
-  }
-
-  if (minWidth !== undefined) {
-    style.minWidth = minWidth;
-  }
 
   return <View style={style}>{children}</View>;
 }

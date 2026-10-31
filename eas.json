@@ -5,6 +5,7 @@
   },
   "build": {
     "development": {
+      "node": "26.13.0",
       "credentialsSource": "remote",
       "developmentClient": true,
       "distribution": "internal",
@@ -20,9 +21,11 @@
       }
     },
     "preview": {
+      "node": "26.13.0",
       "distribution": "internal"
     },
     "production": {
+      "node": "26.13.0",
       "autoIncrement": true,
       "distribution":"store"
     }

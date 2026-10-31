@@ -78,9 +78,9 @@ const OnboardingView: React.FC = () => {
   const borderColor = useThemeColor({ light: '#e0e0e0', dark: '#333' }, 'tabIconDefault');
 
   // Scroll ref for auto-scroll
-  const scrollViewRef = useRef<ScrollView>(null);
-  const section2Ref = useRef<View>(null);
-  const section3Ref = useRef<View>(null);
+  const scrollViewRef = useRef<React.ComponentRef<typeof ScrollView>>(null);
+  const section2Ref = useRef<React.ComponentRef<typeof View>>(null);
+  const section3Ref = useRef<React.ComponentRef<typeof View>>(null);
 
   // Panel 1 state — if user already has a spreadsheetId (interrupted onboarding), skip step 1
   const existingSpreadsheetId = user?.spreadsheetId ?? null;

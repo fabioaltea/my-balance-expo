@@ -64,6 +64,9 @@ export default ({ config }) => ({
     title: "My Balance",
   },
   plugins: [
+    "expo-font",
+    "expo-image",
+    "expo-status-bar",
     ["expo-notifications", { defaultChannel: "default" }],
     "expo-secure-store",
     [
@@ -86,12 +89,7 @@ export default ({ config }) => ({
     ],
     "@react-native-community/datetimepicker",
     "expo-web-browser",
-    [
-      "@rnmapbox/maps",
-      {
-        RNMapboxMapsVersion: "11.20.1"
-      },
-    ],
+    "@rnmapbox/maps",
   ],
   experiments: {
     typedRoutes: true,

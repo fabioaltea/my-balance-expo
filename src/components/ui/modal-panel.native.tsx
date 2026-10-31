@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   modalContent: {
     borderTopLeftRadius: 30,

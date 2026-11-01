@@ -72,6 +72,10 @@ const AuthenticatedApp: React.FC = () => {
             }}
           />
           <Stack.Screen
+            name="import-statement"
+            options={{ presentation: 'card', title: 'Importa estratto conto' }}
+          />
+          <Stack.Screen
             name="accounts"
             options={{
               presentation: 'card',

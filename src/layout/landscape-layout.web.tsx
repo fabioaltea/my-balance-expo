@@ -1,20 +1,11 @@
 import React, { useMemo, useState, useCallback, useEffect } from 'react';
-import { Alert, View, StyleSheet, Text as RNText } from 'react-native';
+import { View, StyleSheet, Text as RNText } from 'react-native';
+import { router } from 'expo-router';
 import { Pressable } from '@/src/components/core/interactive';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
 import { useDataContext, useAuthContext } from '@/src/state';
 import type { Account } from '@/src/state';
-import * as DocumentPicker from 'expo-document-picker';
-import * as Crypto from 'expo-crypto';
-import { OCRHelper } from '@/src/helpers/OCRHelper.web';
-import { useSpreadsheetMutation } from '@/src/hooks/useSpreadsheetMutation';
-import { TransactionsApiHelper } from '@/src/helpers/TransactionsApiHelper';
-import {
-  TransactionsMutationHelpers,
-  type CreateMovementData,
-  type OptimisticSnapshot,
-} from '@/src/helpers/TransactionsMutationHelpers';
 
 // Layout components
 import { LayoutContainer } from '@/src/components/layout/layout-container';
@@ -81,13 +72,6 @@ export function LandscapeLayout() {
   const { user, logout } = useAuthContext();
   const [showManage, setShowManage] = useState(false);
   const [showMap, setShowMap] = useState(false);
-  const addMovement = useSpreadsheetMutation<CreateMovementData, OptimisticSnapshot>({
-    mutationFn: (spreadsheetId, data) =>
-      TransactionsApiHelper.createTransaction(spreadsheetId, data),
-    onMutate: (qc, data) => TransactionsMutationHelpers.optimisticAddMovement(qc, data),
-    onError: (qc, ctx) => TransactionsMutationHelpers.rollback(qc, ctx),
-    onSuccess: (qc) => TransactionsMutationHelpers.invalidateMovementCaches(qc),
-  });
 
   const availableAccounts = useMemo(() => {
     const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
@@ -411,70 +395,9 @@ export function LandscapeLayout() {
     }
   };
 
-  const handleImportPress = useCallback(async () => {
-    console.log('Import statement pressed');
-    const result = await DocumentPicker.getDocumentAsync({
-      type: ['image/*', 'application/pdf'],
-      copyToCacheDirectory: true,
-    });
-    if (result.canceled || result.assets.length === 0) return;
-    console.log('Selected document:', result.assets[0]);
-    const asset = result.assets[0];
-    const isPdf = asset.mimeType === 'application/pdf' || asset.uri.toLowerCase().endsWith('.pdf');
-
-    handleToast('loading', 'Analisi documento...');
-
-    try {
-      const statementData = isPdf
-        ? await OCRHelper.extractStatementDataFromPDF(asset.uri)
-        : await OCRHelper.extractStatementData(asset.uri);
-
-      if (statementData.transactions.length === 0) {
-        setToastVisible(false);
-        Alert.alert('Nessuna transazione', 'Non sono state trovate transazioni nel documento.');
-        return;
-      }
-
-      // Resolve account name
-      let accountName = '';
-      if (statementData.accountName) {
-        const match = accounts.find((a) =>
-          statementData.accountName!.toLowerCase().includes(a.name.toLowerCase()),
-        );
-        if (match) accountName = match.name;
-      }
-
-      // Save each transaction as unconfirmed
-      let saved = 0;
-      for (const tx of statementData.transactions) {
-        try {
-          const movementId = Crypto.randomUUID();
-          await addMovement.mutateAsync({
-            movementId,
-            description: tx.description,
-            category: '',
-            date: tx.date,
-            status: 'unconfirmed',
-            transactions: [
-              {
-                amount: (tx.type === 'income' ? '' : '-') + String(tx.amount).replace('.', ','),
-                account: accountName,
-                type: tx.type === 'income' ? 'in' : 'out',
-              },
-            ],
-          });
-          saved++;
-        } catch (error) {
-          console.error('Error saving statement transaction:', error);
-        }
-      }
-
-      handleToast('success', `${saved} transazioni importate`);
-    } catch (error) {
-      console.error('Statement import error:', error);
-      handleToast('error', 'Impossibile analizzare il documento');
-    }
-  }, [accounts, addMovement, handleToast]);
+  const handleImportPress = useCallback(() => {
+    router.push('/import-statement');
+  }, []);
 
   // Helper to check if a date is within the range
   const isDateInRange = (dateStr: string, start: string, end: string): boolean => {

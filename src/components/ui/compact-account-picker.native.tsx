@@ -9,6 +9,8 @@ export interface CompactAccountPickerProps {
   accounts: Account[];
   selectedAccount: string;
   setSelectedAccount: (account: string) => void;
+  disabled?: boolean;
+  placeholder?: string;
 }
 
 /**
@@ -19,6 +21,8 @@ const CompactAccountPicker: React.FC<CompactAccountPickerProps> = ({
   accounts,
   selectedAccount,
   setSelectedAccount,
+  disabled = false,
+  placeholder = 'Seleziona conto',
 }) => {
   const [pickerVisible, setPickerVisible] = React.useState(false);
 
@@ -37,16 +41,20 @@ const CompactAccountPicker: React.FC<CompactAccountPickerProps> = ({
   );
 
   const handleSelectOption = (value: string) => {
-    setSelectedAccount(value);
+    if (!disabled) setSelectedAccount(value);
   };
 
   // Display label
-  const displayLabel = selectedAccount === 'All' ? 'All accounts' : selectedAccount;
+  const displayLabel = selectedAccount === 'All' ? 'All accounts' : selectedAccount || placeholder;
 
   return (
     <>
       <Pressable
-        style={[styles.pressable, { backgroundColor }]}
+        accessibilityRole="button"
+        accessibilityLabel={`Account: ${displayLabel}`}
+        accessibilityState={{ disabled }}
+        disabled={disabled}
+        style={[styles.pressable, { backgroundColor }, disabled && styles.disabled]}
         onPress={() => setPickerVisible(true)}
       >
         <ThemedText style={styles.label}>{displayLabel}</ThemedText>
@@ -73,11 +81,13 @@ const CompactAccountPicker: React.FC<CompactAccountPickerProps> = ({
             </View>
 
             <Picker
+              enabled={!disabled}
               selectedValue={selectedAccount}
               onValueChange={handleSelectOption}
               style={styles.picker}
               itemStyle={styles.pickerItem}
             >
+              {!selectedAccount && <Picker.Item label={placeholder} value="" enabled={false} />}
               {accounts.map((account) => (
                 <Picker.Item
                   key={account.name}
@@ -94,6 +104,7 @@ const CompactAccountPicker: React.FC<CompactAccountPickerProps> = ({
 };
 
 const styles = StyleSheet.create({
+  disabled: { opacity: 0.45 },
   pressable: {
     flexDirection: 'row',
     alignItems: 'center',

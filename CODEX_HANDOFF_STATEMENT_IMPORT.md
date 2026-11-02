@@ -177,3 +177,78 @@ Questi sono punti di revisione, non risultati di test gia eseguiti.
   sensibili, invalidazione cache dopo import.
 
 Il checkpoint salva il lavoro per consentire la ripresa, non per distribuirlo.
+
+## Ripresa del 2026-11-02
+
+- Corretti gli errori dell'adapter file e il lint mirato; aggiunta riga manuale,
+  blocco navigazione durante POST e gestione esplicita del fallimento di refresh.
+- La riconciliazione richiede revisione quando un candidato e gia reclamato;
+  importi API numerici e stringa vengono validati, la risposta POST deve confermare
+  il movementId, e il log dei percorsi sensibili viene limitato. Le pagine sono
+  separate nel parsing e valute non EUR riconosciute interrompono l'estrazione.
+- Nove test sintetici (`node --test tests/statement-*.test.cjs`) e lint mirato
+  passano. `pnpm install --frozen-lockfile` e postinstall riusciti; export web
+  riuscito con Node 26. L'autolinking trova il modulo su iOS e Android.
+- TypeScript globale presenta ancora gli errori preesistenti in context-menu,
+  manage e map e i tipi route generati localmente non aggiornati per la nuova
+  route. Non e stata effettuata una prova browser o su dispositivo, ne una prova
+  con backend reale. I casi misti digitali/scansionati sulla stessa pagina,
+  l'isolamento del diario per utente e il recupero guidato degli esiti incerti
+  restano aperti. Il blocco WIP rimane valido.
+
+- `pod install` riuscito e `ios/Podfile.lock` aggiornato per StatementPdf.
+- Compilazione Android tentata sul progetto generato locale: fallisce prima del
+  modulo per Gradle 8.14.3, mentre il plugin Android richiede almeno 9.4.1.
+  La directory `android/` e ignorata: rigenerare/verificare la configurazione
+  compatibile prima di ripetere la build e la prova su dispositivo.
+- Compilazione mirata iOS avviata dopo l'installazione dei pod, poi interrotta
+  durante la compilazione delle dipendenze React Native: esito non verificato.
+- Corretto il caricamento OCR web: il modello italiano non cerca piu il file
+  opzionale `ita.special-words`; PDF.js riceve `iccUrl` e i profili CMYK sono
+  copiati con la relativa licenza. Undici test passano, inclusa inizializzazione
+  Tesseract reale; export web riuscito e profilo ICC presente nell'export.
+
+### Riconoscimento conto e direzione (2026-11-02)
+
+- `StatementLayout.ts` conserva le coordinate delle parole, riconosce le colonne
+  Addebiti/Accrediti, Dare/Avere e Uscite/Entrate anche invertite e assegna la
+  direzione dalla colonna. Esclude totali e saldo, conserva descrizioni a cavallo
+  pagina e richiede verifica per righe ambigue. Rimane il parser generico quando
+  il layout non e riconosciuto: nessuna direzione inventata.
+- `StatementAccount.ts` identifica banca e IBAN con checksum nell'intestazione;
+  suggerisce solo un conto univoco. `StatementAccountMemory.ts` ricorda la scelta
+  esplicitamente confermata con hash SHA-256 per utente/foglio/IBAN e accountId.
+  IBAN, testo OCR e documento non vengono salvati nelle preferenze o nei test.
+- La revisione mostra la banca e solo le ultime quattro cifre dell'IBAN. Il web
+  usa la modale nella dashboard con selettore file diretto e stile condiviso.
+- Verifica locale su campione Intesa fornito dall'utente: il lettore web completo
+  legge 151 righe, 136 uscite e 15 entrate. Le somme di entrambe le direzioni
+  coincidono con i rispettivi totali del PDF. Nessuna chiamata al backend; nessun
+  campione reale aggiunto al repository, copie di estrazione temporanee rimosse.
+- 23 test sintetici passano, lint mirato ed export web riusciti. TypeScript
+  globale resta limitato dai tre errori preesistenti in context-menu/manage/map.
+- Immagini native: coordinate ML Kit; PDF iOS: nuove parole PDFKit o Vision;
+  Android: nuove parole ML Kit dal renderer PDF. Questi metodi del modulo locale
+  richiedono una nuova build. Sintassi Swift verificata, compilazione completa
+  Swift/Kotlin e prova su dispositivo ancora da eseguire. WIP rimane valido.
+
+### Compatibilita delle transazioni esistenti (2026-11-02)
+
+- La conferma conto verifica le righe del conto selezionato ed esclude prima i
+  template ricorrenti, le occorrenze ignorate e le righe eliminate. Riconosce
+  importi italiani/inglesi, segni finali o parentesi, date ISO e stato ACTIVE;
+  valori incoerenti del conto scelto fermano ancora il salvataggio con un errore
+  che identifica il campo, senza riprodurre dati sensibili.
+- Gli identificativi ripetuti nei fogli esistenti non bloccano piu tutta la
+  riconciliazione. Ogni riga duplicata conserva l'ID originale e riceve una chiave
+  locale SHA-256 dei dati normalizzati piu occorrenza. Nessuna riga viene fusa o
+  scartata. UI, confronto e diario usano la chiave locale; il journal legacy
+  non ripristina automaticamente un collegamento se sono presenti piu candidati.
+- 31 test sintetici e lint mirato passano. TypeScript non segnala nuovi errori
+  nelle modifiche, restano quelli preesistenti in context-menu/manage/map.
+- Le incoerenze fra segno e tipologia legacy non bloccano il caricamento:
+  il segno esplicito prevale nella rappresentazione locale, mentre il candidato
+  rimane disponibile per entrambe le direzioni e non e collegato automaticamente.
+  La UI richiede verifica manuale e il diario ricorda questa conferma. Un conflitto
+  comparso dopo la revisione invalida la conferma di salvataggio precedente.
+  35 test sintetici passano; i dati originali non vengono modificati.

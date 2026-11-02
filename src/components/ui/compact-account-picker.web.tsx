@@ -10,6 +10,8 @@ export interface CompactAccountPickerProps {
   accounts: Account[];
   selectedAccount: string;
   setSelectedAccount: (account: string) => void;
+  disabled?: boolean;
+  placeholder?: string;
 }
 
 /**
@@ -20,6 +22,8 @@ const CompactAccountPicker: React.FC<CompactAccountPickerProps> = ({
   accounts,
   selectedAccount,
   setSelectedAccount,
+  disabled = false,
+  placeholder = 'Seleziona conto',
 }) => {
   const backgroundColor = useThemeColor({ light: '#EEF2EF', dark: '#2A302D' }, 'background');
   const textColor = useThemeColor({}, 'text');
@@ -27,7 +31,30 @@ const CompactAccountPicker: React.FC<CompactAccountPickerProps> = ({
     { light: 'rgba(36, 68, 55, 0.10)', dark: 'rgba(255, 255, 255, 0.10)' },
     'cardBorder',
   );
-  const selectedLabel = selectedAccount === 'All' ? 'All accounts' : selectedAccount;
+  const selectedLabel = selectedAccount === 'All' ? 'All accounts' : selectedAccount || placeholder;
+  const trigger = (
+    <View
+      accessibilityState={{ disabled }}
+      style={[styles.container, { backgroundColor, borderColor }, disabled && styles.disabled]}
+    >
+      <span
+        style={{
+          fontFamily: Fonts.sans,
+          fontSize: 13,
+          fontWeight: 500,
+          color: textColor,
+          minWidth: 112,
+          paddingRight: 24,
+        }}
+      >
+        {selectedLabel}
+      </span>
+      <View style={styles.chevron} pointerEvents="none">
+        <MaterialIcons name="expand-more" size={18} color={textColor} />
+      </View>
+    </View>
+  );
+  if (disabled) return trigger;
 
   return (
     <ContextMenu
@@ -41,28 +68,13 @@ const CompactAccountPicker: React.FC<CompactAccountPickerProps> = ({
       selectedOption={selectedAccount}
       onSelectOption={setSelectedAccount}
     >
-      <View style={[styles.container, { backgroundColor, borderColor }]}>
-        <span
-          style={{
-            fontFamily: Fonts.sans,
-            fontSize: 13,
-            fontWeight: 500,
-            color: textColor,
-            minWidth: 112,
-            paddingRight: 24,
-          }}
-        >
-          {selectedLabel}
-        </span>
-        <View style={styles.chevron} pointerEvents="none">
-          <MaterialIcons name="expand-more" size={18} color={textColor} />
-        </View>
-      </View>
+      {trigger}
     </ContextMenu>
   );
 };
 
 const styles = StyleSheet.create({
+  disabled: { opacity: 0.45 },
   container: {
     flexDirection: 'row',
     alignItems: 'center',

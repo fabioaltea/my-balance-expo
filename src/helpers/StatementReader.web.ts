@@ -1,6 +1,11 @@
 import { createWorker, type Worker } from 'tesseract.js';
 import type * as PdfJs from 'pdfjs-dist';
 import { parseStatement, type StatementData } from './StatementParser';
+import {
+  mergeStatementPages,
+  parsePositionedStatement,
+  statementPageText,
+} from './StatementLayout';
 
 export const MAX_STATEMENT_BYTES = 25 * 1024 * 1024;
 export const MAX_STATEMENT_PAGES = 150;
@@ -36,13 +41,20 @@ async function loadPdf(): Promise<typeof PdfJs> {
 }
 
 export async function createLocalOcrWorker(): Promise<Worker> {
-  return createWorker('ita+eng', 1, {
-    workerPath: '/ocr/worker.min.js',
-    corePath: '/ocr/core',
-    langPath: '/ocr',
-    workerBlobURL: false,
-    cacheMethod: 'none',
-  });
+  // The Italian model references an optional external ita.special-words file.
+  // Clear only that suffix before initialization; retain the bundled dictionaries.
+  return createWorker(
+    'ita+eng',
+    1,
+    {
+      workerPath: '/ocr/worker.min.js',
+      corePath: '/ocr/core',
+      langPath: '/ocr',
+      workerBlobURL: false,
+      cacheMethod: 'none',
+    },
+    'user_words_suffix ',
+  );
 }
 
 export async function recognizeLocalImage(uri: string): Promise<string> {
@@ -52,6 +64,27 @@ export async function recognizeLocalImage(uri: string): Promise<string> {
   } finally {
     await worker.terminate();
   }
+}
+
+async function recognizeStatementPage(
+  source: string | HTMLCanvasElement,
+  worker: Worker,
+): Promise<StatementData> {
+  const { data } = await worker.recognize(source, {}, { text: true, blocks: true });
+  const words = data.blocks?.flatMap((block) =>
+    block.paragraphs.flatMap((paragraph) => paragraph.lines.flatMap((line) => line.words)),
+  );
+  return words?.length
+    ? parsePositionedStatement(
+        words.map((word) => ({
+          text: word.text,
+          x: word.bbox.x0,
+          y: (word.bbox.y0 + word.bbox.y1) / 2,
+          width: word.bbox.x1 - word.bbox.x0,
+          height: word.bbox.y1 - word.bbox.y0,
+        })),
+      )
+    : parseStatement(data.text);
 }
 
 export async function readStatement(
@@ -64,46 +97,72 @@ export async function readStatement(
   signal?.throwIfAborted();
   if (!pdf) {
     progress('Riconoscimento immagine sul dispositivo...');
-    const text = await recognizeLocalImage(uri);
-    signal?.throwIfAborted();
-    return parseStatement(text);
+    const worker = await createLocalOcrWorker();
+    try {
+      const data = await recognizeStatementPage(uri, worker);
+      signal?.throwIfAborted();
+      return data;
+    } finally {
+      await worker.terminate();
+    }
   }
   const lib = await loadPdf();
   const response = await fetch(uri, { signal });
   const data = new Uint8Array(await response.arrayBuffer());
   if (data.length > MAX_STATEMENT_BYTES) throw new Error('Documento troppo grande: massimo 25 MB.');
   const loading = lib.getDocument({
-    data, isEvalSupported: false, useSystemFonts: false,
-    cMapUrl: '/ocr/cmaps/', cMapPacked: true,
-    standardFontDataUrl: '/ocr/standard_fonts/', wasmUrl: '/ocr/wasm/',
+    data,
+    isEvalSupported: false,
+    useSystemFonts: false,
+    cMapUrl: '/ocr/cmaps/',
+    cMapPacked: true,
+    standardFontDataUrl: '/ocr/standard_fonts/',
+    wasmUrl: '/ocr/wasm/',
+    iccUrl: '/ocr/iccs/',
   });
-  loading.onPassword = () => { void loading.destroy(); };
+  loading.onPassword = () => {
+    void loading.destroy();
+  };
   let worker: Worker | undefined;
   try {
     const doc = await loading.promise;
     if (doc.numPages > MAX_STATEMENT_PAGES) throw new Error('Massimo 150 pagine per documento.');
-    const texts: string[] = [];
+    const pages: StatementData[] = [];
     for (let n = 1; n <= doc.numPages; n++) {
       signal?.throwIfAborted();
       progress(`Lettura locale pagina ${n}/${doc.numPages}...`);
       const page = await doc.getPage(n);
       try {
         const content = await page.getTextContent();
-        const rows: { y: number; items: { x: number; str: string }[] }[] = [];
-        for (const item of content.items) {
-          if (!('str' in item)) continue;
-          let row = rows.find(r => Math.abs(r.y - item.transform[5]) <= 2);
-          if (!row) { row = { y: item.transform[5], items: [] }; rows.push(row); }
-          row.items.push({ x: item.transform[4], str: item.str });
-        }
-        let text = rows.sort((a, b) => b.y - a.y)
-          .map(r => r.items.sort((a, b) => a.x - b.x).map(i => i.str).join(' ')).join('\n');
-        // A scanned page may still contain a digital header or footer.
-        if (!parseStatement(text).transactions.length) {
+        const boxes = content.items.flatMap((item) =>
+          'str' in item
+            ? [
+                {
+                  text: item.str,
+                  x: item.transform[4],
+                  y: -item.transform[5],
+                  width: item.width,
+                  height: item.height || 10,
+                },
+              ]
+            : [],
+        );
+        const text = statementPageText(boxes);
+        let data: StatementData = parsePositionedStatement(boxes);
+        // A digital cover/summary page needs no OCR. A table with unreadable rows does.
+        const tableDetected = 'tableDetected' in data && data.tableDetected;
+        if (
+          !data.transactions.length &&
+          (tableDetected ||
+            text.trim().length < 80 ||
+            /^\s*\d{1,2}[/.\-]\d{1,2}[/.\-]\d{2,4}\s/m.test(text))
+        ) {
           progress(`OCR locale pagina ${n}/${doc.numPages}...`);
           worker ??= await createLocalOcrWorker();
           const size = page.getViewport({ scale: 1 });
-          const viewport = page.getViewport({ scale: Math.min(3, 2400 / Math.max(size.width, size.height)) });
+          const viewport = page.getViewport({
+            scale: Math.min(3, 2400 / Math.max(size.width, size.height)),
+          });
           const canvas = document.createElement('canvas');
           canvas.width = Math.ceil(viewport.width);
           canvas.height = Math.ceil(viewport.height);
@@ -111,19 +170,25 @@ export async function readStatement(
           if (!context) throw new Error('Rendering PDF non disponibile.');
           try {
             await page.render({ canvasContext: context, canvas, viewport }).promise;
-            text = (await worker.recognize(canvas)).data.text;
+            const scanned = await recognizeStatementPage(canvas, worker);
+            if (scanned.transactions.length || !text.trim())
+              data = { ...scanned, accountName: data.accountName || scanned.accountName };
           } finally {
             canvas.width = canvas.height = 0;
           }
         }
-        texts.push(text);
+        pages.push(data);
       } finally {
         page.cleanup();
       }
     }
     signal?.throwIfAborted();
-    return parseStatement(texts.join('\n\n'));
+    return mergeStatementPages(pages);
   } finally {
-    try { await worker?.terminate(); } finally { await loading.destroy(); }
+    try {
+      await worker?.terminate();
+    } finally {
+      await loading.destroy();
+    }
   }
 }

@@ -150,7 +150,6 @@ const AppRouter: React.FC = () => {
       </ThemeProvider>
     );
   }
-
   if (!isAuthenticated) {
     console.log('📱 Showing LoginScreen');
     return <LoginScreen />;

@@ -1,6 +1,5 @@
 import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import { View, StyleSheet, Text as RNText } from 'react-native';
-import { router } from 'expo-router';
 import { Pressable } from '@/src/components/core/interactive';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useThemeColor } from '@/src/hooks/use-theme-color';
@@ -44,6 +43,8 @@ import SummaryCard from '@/src/components/cards/summary-card.web';
 import { buildCashFlowSeries } from '@/src/components/cards/cash-flow-series';
 import ManageView from '@/src/views/manage-view.web';
 import MapView from '@/src/views/map-view.web';
+import { useStatementImport } from '@/src/hooks/use-statement-import';
+import ContextMenu, { type IContextMenuOption } from '@/src/components/ui/context-menu';
 
 type ToastStatus = 'loading' | 'success' | 'error';
 
@@ -381,8 +382,12 @@ export function LandscapeLayout() {
   );
   const accentColor = useThemeColor({ light: '#244437', dark: '#D6E8DE' }, 'tint');
 
-  const handleAddPress = () => {
-    openDrawer('add');
+  const addMenuOptions: IContextMenuOption[] = [
+    { label: 'Importa estratto conto', icon: 'document-attach-outline' },
+  ];
+
+  const handleAddMenuSelect = (option: string) => {
+    if (option === 'Importa estratto conto') void handleImportPress();
   };
 
   const handleReloadPress = async () => {
@@ -395,9 +400,7 @@ export function LandscapeLayout() {
     }
   };
 
-  const handleImportPress = useCallback(() => {
-    router.push('/import-statement');
-  }, []);
+  const { openStatementImport: handleImportPress, statementImportModal } = useStatementImport();
 
   // Helper to check if a date is within the range
   const isDateInRange = (dateStr: string, start: string, end: string): boolean => {
@@ -534,6 +537,13 @@ export function LandscapeLayout() {
               border-color: rgba(47, 79, 63, 0.38) !important;
               box-shadow: 0 0 0 3px rgba(47, 79, 63, 0.10), 0 12px 30px rgba(17, 31, 24, 0.07) !important;
             }
+            [data-split-add] .mybalance-menu-trigger {
+              border-radius: 0;
+            }
+            [data-split-add] .mybalance-menu-trigger[aria-expanded="true"] {
+              background: transparent;
+              opacity: 0.78;
+            }
             [data-movement-row] {
               transition: background-color 180ms ease, box-shadow 180ms ease, transform 150ms ease;
               border-radius: 12px;
@@ -617,24 +627,39 @@ export function LandscapeLayout() {
             >
               <MaterialIcons name="refresh" size={19} color={mutedTextColor} />
             </Pressable>
-            <Pressable
-              hoverFeedback={false}
-              accessibilityRole="button"
-              accessibilityLabel="Add movement"
-              onPress={handleAddPress}
-              style={({ pressed, hovered }) => [
-                styles.iconButton,
-                styles.primaryIconButton,
+            <View
+              // @ts-ignore: web-only prop
+              dataSet={{ splitAdd: '' }}
+              style={[
+                styles.splitButton,
                 { backgroundColor: accentColor, borderColor: accentColor },
-                hovered && styles.iconButtonHovered,
-                pressed && styles.iconButtonPressed,
               ]}
             >
-              <MaterialIcons name="add" size={20} color={backgroundColor} />
-            </Pressable>
+              <Pressable
+                hoverFeedback={false}
+                accessibilityRole="button"
+                accessibilityLabel="Add movement"
+                onPress={() => openDrawer('add')}
+                style={({ pressed, hovered }) => [
+                  styles.splitMain,
+                  hovered && styles.iconButtonHovered,
+                  pressed && styles.iconButtonPressed,
+                ]}
+              >
+                <MaterialIcons name="add" size={20} color={backgroundColor} />
+              </Pressable>
+              <View style={[styles.splitDivider, { backgroundColor }]} />
+              <ContextMenu options={addMenuOptions} onSelectOption={handleAddMenuSelect}>
+                <View accessibilityLabel="More add options" style={styles.splitMenu}>
+                  <MaterialIcons name="keyboard-arrow-down" size={18} color={backgroundColor} />
+                </View>
+              </ContextMenu>
+            </View>
           </>
         }
       />
+
+      {statementImportModal}
 
       {/* Main dashboard grid */}
       <LayoutContainer padding={16} gap={16}>
@@ -840,6 +865,9 @@ export function LandscapeLayout() {
           breakdownData={breakdownData}
           breakdownType={breakdownType}
           breakdownGroupBy={breakdownGroupBy}
+          onBreakdownTypeChange={setBreakdownType}
+          onBreakdownGroupByChange={setBreakdownGroupBy}
+          breakdownGroupByDisabled={selectedAccount !== 'All'}
           accountName={selectedAccount}
         />
       )}
@@ -869,8 +897,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  primaryIconButton: {
+  splitButton: {
+    height: 36,
+    borderRadius: 12,
+    borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    overflow: 'hidden',
     boxShadow: '0 4px 12px rgba(36, 68, 55, 0.18)',
+  },
+  splitMain: {
+    width: 36,
+    height: 34,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  splitDivider: { width: 1, height: 16, opacity: 0.3 },
+  splitMenu: {
+    width: 28,
+    height: 34,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   iconButtonHovered: {
     opacity: 0.88,

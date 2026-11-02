@@ -1,4 +1,4 @@
-import { Alert, StyleSheet, View } from 'react-native';
+import { Alert, Platform, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import HomeView from '@/src/views/home-view';
 import React, { useCallback, useMemo, useState } from 'react';
@@ -11,6 +11,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { OCRHelper } from '@/src/helpers/OCRHelper';
 import { formatDateToDDMMYYYY } from '@/src/utils/dateUtils';
 import { ScreenView } from '@/src/components/core';
+import { useStatementImport } from '@/src/hooks/use-statement-import';
 
 const contextMenuOptions: IContextMenuOption[] = [
   { label: 'Fotocamera/Galleria', icon: 'camera' },
@@ -18,6 +19,7 @@ const contextMenuOptions: IContextMenuOption[] = [
 ];
 
 export default function Home() {
+  const { openStatementImport, statementImportModal } = useStatementImport();
   // Get data from centralized context
   const {
     accounts,
@@ -79,10 +81,11 @@ export default function Home() {
           await navigateWithOCR(result.assets[0].uri);
         }
       } else if (option === 'Importa estratto conto') {
-        router.push('/import-statement');
+        if (Platform.OS === 'web') void openStatementImport();
+        else router.push('/import-statement');
       }
     },
-    [navigateWithOCR],
+    [navigateWithOCR, openStatementImport],
   );
 
   const availableAccounts = useMemo(() => {
@@ -107,6 +110,7 @@ export default function Home() {
 
   return (
     <ScreenView>
+      {Platform.OS === 'web' && statementImportModal}
       <View style={styles.header}>
         <View style={{ flex: 1 }}>
           <AccountPicker

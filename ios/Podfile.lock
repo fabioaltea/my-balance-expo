@@ -2560,6 +2560,8 @@ PODS:
     - Yoga
   - SocketRocket (0.7.1):
     - ReactNativeDependencies
+  - StatementPdf (1.0.0):
+    - ExpoModulesCore
   - SwiftUIIntrospect (1.3.0)
   - Turf (4.0.0)
   - Yoga (0.0.0):
@@ -2708,6 +2710,7 @@ DEPENDENCIES:
   - RNSVG (from `../node_modules/react-native-svg`)
   - RNWorklets (from `../node_modules/react-native-worklets`)
   - SocketRocket (from `build/rndeps-facades/SocketRocket`)
+  - StatementPdf (from `../modules/statement-pdf/ios`)
   - Yoga (from `build/rncore-facades/Yoga`)
 
 SPEC REPOS:
@@ -3017,6 +3020,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-worklets"
   SocketRocket:
     :path: build/rndeps-facades/SocketRocket
+  StatementPdf:
+    :path: "../modules/statement-pdf/ios"
   Yoga:
     :path: build/rncore-facades/Yoga
 
@@ -3180,6 +3185,7 @@ SPEC CHECKSUMS:
   RNSVG: c35beed3dcf6fd14b50ca1fc0d4214a17ec5334d
   RNWorklets: 488806637a21eb17812a48dadca7cb8c698c8cfd
   SocketRocket: 37aec555668fb852ec12e3c0de59a86ca58f0871
+  StatementPdf: 752314bd9cdc15b07e57a173a856f38d611fa95f
   SwiftUIIntrospect: fee9aa07293ee280373a591e1824e8ddc869ba5d
   Turf: c9eb11a65d96af58cac523460fd40fec5061b081
   Yoga: d1c536142c5ff8ec8cd856ab2a7c227a1d875c8e

@@ -28,6 +28,7 @@ import {
 } from '@/src/helpers/TransactionsMutationHelpers';
 import ModalPanel from '@/src/components/ui/modal-panel';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import MovementEmptyState from './movement-empty-state';
 import { MovementSelectionIcon, MovementSelectionToolbar } from './movement-selection-controls';
 
 type BadgeStatus = 'upcoming' | 'soon' | 'today' | 'overdue' | null;
@@ -363,15 +364,11 @@ const RecurringMovementsCard: React.FC<RecurringMovementsCardProps> = ({
         label={isWeb || isLandscape ? 'Recurring movements' : ''}
         style={isLandscape ? { flex: 1 } : undefined}
       >
-        <View style={styles.emptyState}>
-          <IconSymbol name="repeat" size={isWeb ? 32 : 40} color="#999" />
-          <ThemedText style={[styles.emptyTitle, { color: '#999' }]}>
-            No recurring movements
-          </ThemedText>
-          <ThemedText style={[styles.emptyText, { color: subtextColor }]}>
-            Add a recurring movement to track it here
-          </ThemedText>
-        </View>
+        <MovementEmptyState
+          icon="repeat"
+          title="No recurring movements"
+          description="Add a recurring movement to track it here"
+        />
       </Card>
     );
   }
@@ -755,20 +752,6 @@ const styles = StyleSheet.create({
   countBadgeText: {
     fontSize: 10,
     fontWeight: '700',
-  },
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: isWeb ? 6 : 8,
-  },
-  emptyTitle: {
-    fontSize: isWeb ? 15 : 16,
-    fontWeight: '600',
-    marginTop: 8,
-  },
-  emptyText: {
-    fontSize: isWeb ? 12 : 13,
-    textAlign: 'center',
   },
   menuButton: {
     padding: 6,

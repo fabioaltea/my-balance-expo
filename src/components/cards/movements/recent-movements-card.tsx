@@ -24,6 +24,7 @@ import {
 import ModalPanel from '@/src/components/ui/modal-panel';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import MovementEmptyState from './movement-empty-state';
 import { MovementSelectionIcon, MovementSelectionToolbar } from './movement-selection-controls';
 
 const isWeb = Platform.OS === 'web';
@@ -86,22 +87,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   scrollView: {},
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: isWeb ? 6 : 8,
-  },
-  emptyTitle: {
-    fontSize: isWeb ? 15 : 16,
-    fontWeight: '600',
-    marginTop: 8,
-  },
-  emptyText: {
-    fontSize: isWeb ? 12 : 13,
-    textAlign: 'center',
-    color: 'inherit',
-    opacity: 0.6,
-  },
   sheetHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -343,17 +328,15 @@ const MovementsCard: React.FC<MovementsCardProps> = ({
         label={isWeb || isLandscape ? listLabel : ''}
         style={isLandscape ? { flex: 1 } : undefined}
       >
-        <View style={styles.emptyState}>
-          <IconSymbol name="search-off" size={isWeb ? 32 : 40} color="#999" />
-          <View style={styles.emptyState}>
-            <ThemedText style={[styles.emptyTitle, { color: '#999' }]}>{emptyTitle}</ThemedText>
-            <ThemedText style={styles.emptyText}>
-              {filter
-                ? `No ${filter === 'income' ? 'income' : 'expense'} movements found for the selected period`
-                : 'No movements found for the selected period'}
-            </ThemedText>
-          </View>
-        </View>
+        <MovementEmptyState
+          icon="search-off"
+          title={emptyTitle}
+          description={
+            filter
+              ? `No ${filter === 'income' ? 'income' : 'expense'} movements found for the selected period`
+              : 'No movements found for the selected period'
+          }
+        />
       </Card>
     );
   }

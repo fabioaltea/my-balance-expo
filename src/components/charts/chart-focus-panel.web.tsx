@@ -23,6 +23,9 @@ interface ChartFocusPanelProps {
   breakdownData: PeriodBreakdownData[];
   breakdownType: 'income' | 'expense';
   breakdownGroupBy: 'category' | 'account';
+  onBreakdownTypeChange?: (type: 'income' | 'expense') => void;
+  onBreakdownGroupByChange?: (groupBy: 'category' | 'account') => void;
+  breakdownGroupByDisabled?: boolean;
   accountName: string;
 }
 
@@ -44,12 +47,16 @@ export default function ChartFocusPanel({
   breakdownData,
   breakdownType,
   breakdownGroupBy,
+  onBreakdownTypeChange,
+  onBreakdownGroupByChange,
+  breakdownGroupByDisabled = false,
   accountName,
 }: ChartFocusPanelProps) {
   const background = useThemeColor({}, 'cardBackground');
   const text = useThemeColor({}, 'text');
   const muted = useThemeColor({ light: '#667A6D', dark: '#ABB9AF' }, 'tabIconDefault');
   const border = useThemeColor({ light: '#E0E9E2', dark: '#34423A' }, 'cardBorder');
+  const controlBackground = useThemeColor({ light: '#EEF2EF', dark: '#2A302D' }, 'menuBackground');
   const data =
     kind === 'balance' ? balanceData : kind === 'cashflow' ? incomeExpenseData : breakdownData;
   const selected = data.find((entry) => periodKey(entry, viewMode) === selectedKey) ?? data.at(-1);
@@ -101,14 +108,55 @@ export default function ChartFocusPanel({
             </Text>
             <Text style={[styles.title, { color: text }]}>{title}</Text>
           </View>
-          <Pressable
-            onPress={onClose}
-            accessibilityRole="button"
-            accessibilityLabel="Close"
-            style={[styles.close, { borderColor: border }]}
-          >
-            <MaterialIcons name="close" size={19} color={text} />
-          </Pressable>
+          <View style={styles.headerActions}>
+            {kind === 'breakdown' && (
+              <>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Change breakdown type"
+                  onPress={() =>
+                    onBreakdownTypeChange?.(breakdownType === 'expense' ? 'income' : 'expense')
+                  }
+                  style={[styles.pill, { backgroundColor: controlBackground, borderColor: border }]}
+                >
+                  <Text style={[styles.pillText, { color: text }]}>
+                    {breakdownType === 'expense' ? 'Expenses' : 'Income'}
+                  </Text>
+                </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={
+                    breakdownGroupByDisabled
+                      ? 'Grouped by category when an account is selected'
+                      : 'Change grouping'
+                  }
+                  disabled={breakdownGroupByDisabled}
+                  onPress={() =>
+                    onBreakdownGroupByChange?.(
+                      breakdownGroupBy === 'category' ? 'account' : 'category',
+                    )
+                  }
+                  style={[
+                    styles.pill,
+                    { backgroundColor: controlBackground, borderColor: border },
+                    breakdownGroupByDisabled && styles.pillDisabled,
+                  ]}
+                >
+                  <Text style={[styles.pillText, { color: text }]}>
+                    {breakdownGroupBy === 'category' ? 'Categories' : 'Accounts'}
+                  </Text>
+                </Pressable>
+              </>
+            )}
+            <Pressable
+              onPress={onClose}
+              accessibilityRole="button"
+              accessibilityLabel="Close"
+              style={[styles.close, { borderColor: border }]}
+            >
+              <MaterialIcons name="close" size={19} color={text} />
+            </Pressable>
+          </View>
         </View>
         <View style={styles.content}>
           <View style={styles.chart}>
@@ -255,6 +303,16 @@ const styles = StyleSheet.create({
   },
   eyebrow: { fontSize: 10, fontWeight: '700', letterSpacing: 1.3, marginBottom: 6 },
   title: { fontSize: 25, fontWeight: '700', letterSpacing: -0.6 },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  pill: {
+    minHeight: 34,
+    paddingHorizontal: 14,
+    borderRadius: 11,
+    borderWidth: 1,
+    justifyContent: 'center',
+  },
+  pillText: { fontSize: 12, fontWeight: '600' },
+  pillDisabled: { opacity: 0.5 },
   close: {
     width: 34,
     height: 34,

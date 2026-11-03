@@ -173,15 +173,22 @@ export class HttpHelper {
       if (!response.ok) {
         // If 401 Unauthorized, throw AuthenticationError to trigger logout
         if (response.status === 401) {
-          await this.handleUnauthorized(result.error || 'Authentication failed');
-          throw new AuthenticationError(result.error || 'Authentication failed');
+          const message = options.sensitive
+            ? 'Authentication failed'
+            : result.error || 'Authentication failed';
+          await this.handleUnauthorized(message);
+          throw new AuthenticationError(message);
         }
-        throw new Error(result.error || `GET request failed: ${response.statusText}`);
+        throw new Error(
+          options.sensitive
+            ? 'Impossibile caricare le transazioni.'
+            : result.error || `GET request failed: ${response.statusText}`,
+        );
       }
 
       return { success: true, ...result };
     } catch (error) {
-      console.error('GET request error:', error);
+      if (!options.sensitive) console.error('GET request error:', error);
       throw error;
     }
   }
@@ -196,7 +203,7 @@ export class HttpHelper {
       }
 
       const url = `${this.endpointUri}${endpoint}`;
-      console.log('POST request to:', url, 'with data:', data);
+      if (!options.sensitive) console.log('POST request to:', url);
 
       const response = await fetch(url, {
         method: 'POST',
@@ -213,15 +220,18 @@ export class HttpHelper {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('POST error response:', errorText);
+        if (!options.sensitive) console.error('POST error response:', errorText);
         if (response.status === 401) {
-          await this.handleUnauthorized(errorText || 'Authentication failed');
-          throw new AuthenticationError(errorText || 'Authentication failed');
+          const message = options.sensitive
+            ? 'Authentication failed'
+            : errorText || 'Authentication failed';
+          await this.handleUnauthorized(message);
+          throw new AuthenticationError(message);
         }
         throw new Error(
           `POST request failed: ${response.status} ${
             response.statusText
-          } - ${errorText.substring(0, 200)}`,
+          }${options.sensitive ? '' : ` - ${errorText.substring(0, 200)}`}`,
         );
       }
 
@@ -230,11 +240,15 @@ export class HttpHelper {
         const result = JSON.parse(responseText);
         return { success: true, ...result };
       } catch {
-        console.error('POST JSON parse error:', responseText);
-        throw new Error(`Invalid JSON response: ${responseText.substring(0, 100)}`);
+        if (!options.sensitive) console.error('POST JSON parse error:', responseText);
+        throw new Error(
+          options.sensitive
+            ? 'Invalid JSON response'
+            : `Invalid JSON response: ${responseText.substring(0, 100)}`,
+        );
       }
     } catch (error) {
-      console.error('POST request error:', error);
+      if (!options.sensitive) console.error('POST request error:', error);
       throw error;
     }
   }
@@ -264,8 +278,11 @@ export class HttpHelper {
 
       if (!response.ok) {
         if (response.status === 401) {
-          await this.handleUnauthorized(result.error || 'Authentication failed');
-          throw new AuthenticationError(result.error || 'Authentication failed');
+          const message = options.sensitive
+            ? 'Authentication failed'
+            : result.error || 'Authentication failed';
+          await this.handleUnauthorized(message);
+          throw new AuthenticationError(message);
         }
 
         throw new Error(result.error || `PUT request failed: ${response.statusText}`);
@@ -302,8 +319,11 @@ export class HttpHelper {
 
       if (!response.ok) {
         if (response.status === 401) {
-          await this.handleUnauthorized(result.error || 'Authentication failed');
-          throw new AuthenticationError(result.error || 'Authentication failed');
+          const message = options.sensitive
+            ? 'Authentication failed'
+            : result.error || 'Authentication failed';
+          await this.handleUnauthorized(message);
+          throw new AuthenticationError(message);
         }
 
         throw new Error(result.error || `DELETE request failed: ${response.statusText}`);

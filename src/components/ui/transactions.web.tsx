@@ -5,6 +5,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import InlineCurrencyInput from './inline-currency-input';
 import FormSelect from './form-select.web';
+import TransactionTypeToggle from './transaction-type-toggle';
 
 export interface ITransaction {
   id: number;
@@ -77,23 +78,7 @@ const TransactionsWeb: React.FC<ITransactionsWebProps> = ({
             ]}
           >
             {/* Type toggle */}
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={t.type === 'income' ? 'Set as expense' : 'Set as income'}
-              onPress={() => onTypeToggle(t.id)}
-              style={[
-                styles.typeToggle,
-                {
-                  backgroundColor: t.type === 'income' ? '#22c55e20' : '#ef444420',
-                },
-              ]}
-            >
-              <MaterialIcons
-                name={t.type === 'income' ? 'call-made' : 'call-received'}
-                size={16}
-                color={t.type === 'income' ? '#22c55e' : '#ef4444'}
-              />
-            </Pressable>
+            <TransactionTypeToggle type={t.type} onChange={() => onTypeToggle(t.id)} />
 
             {/* Account dropdown */}
             <FormSelect
@@ -137,13 +122,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     height: ROW_HEIGHT,
     paddingHorizontal: 2,
-  },
-  typeToggle: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   deleteButton: {
     width: 32,

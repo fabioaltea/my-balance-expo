@@ -72,6 +72,10 @@ const AuthenticatedApp: React.FC = () => {
             }}
           />
           <Stack.Screen
+            name="import-statement"
+            options={{ presentation: 'card', title: 'Importa estratto conto' }}
+          />
+          <Stack.Screen
             name="accounts"
             options={{
               presentation: 'card',
@@ -146,7 +150,6 @@ const AppRouter: React.FC = () => {
       </ThemeProvider>
     );
   }
-
   if (!isAuthenticated) {
     console.log('📱 Showing LoginScreen');
     return <LoginScreen />;

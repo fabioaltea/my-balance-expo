@@ -172,3 +172,27 @@ src/
 
 - Production: `com.fabioaltea.mybalance`
 - Development: `com.fabioaltea.mybalance.dev`
+
+### Importazione locale estratti conto (in verifica)
+
+La schermata **Importa estratto conto** legge PDF e immagini localmente e richiede
+la conferma del conto e la revisione dei movimenti prima di salvarli. L'intervallo
+mostrato non certifica la completezza del documento. Sono supportati importi EUR; colonne
+ambigue e direzioni non riconosciute richiedono verifica. Il documento originale
+non viene inviato al servizio di interpretazione: le transazioni approvate sono
+inviate alla normale API dell'app.
+
+Gli asset PDF.js e Tesseract vengono preparati da `postinstall`; se l'installazione
+usa `--ignore-scripts`, eseguire `node scripts/prepare-ocr-assets.cjs` prima del
+deploy. Il primo caricamento web richiede gli asset dal server dell'app. Per i
+PDF scansionati su dispositivo serve una nuova build nativa con il modulo locale.
+L'importazione e ancora in verifica e non va considerata pronta al rilascio: vedere
+`CODEX_HANDOFF_STATEMENT_IMPORT.md` per i controlli pendenti.
+
+Le colonne Addebiti/Accrediti (anche Dare/Avere o Uscite/Entrate) vengono lette
+conservando le coordinate del PDF o dell'OCR per distinguere entrate e uscite.
+L'intestazione suggerisce il conto solo quando il nome o la banca corrispondono
+a un conto univoco. La conferma associa localmente l'IBAN al conto per i successivi
+estratti dello stesso conto: vengono conservati solo un hash e l'ID del conto,
+separati per utente e foglio. Le nuove coordinate PDF native richiedono una nuova
+development build del modulo StatementPdf.

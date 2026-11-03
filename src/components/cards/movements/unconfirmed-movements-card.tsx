@@ -22,6 +22,7 @@ import {
 } from '@/src/helpers/TransactionsMutationHelpers';
 import ModalPanel from '@/src/components/ui/modal-panel';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import MovementEmptyState from './movement-empty-state';
 import { MovementSelectionIcon, MovementSelectionToolbar } from './movement-selection-controls';
 
 const isWeb = Platform.OS === 'web';
@@ -190,17 +191,11 @@ const UnconfirmedMovementsCard: React.FC<UnconfirmedMovementsCardProps> = ({ onM
         label={isWeb || isLandscape ? 'Unconfirmed movements' : ''}
         style={isLandscape ? { flex: 1 } : undefined}
       >
-        <View style={styles.emptyState}>
-          <IconSymbol name="check-circle" size={isWeb ? 32 : 40} color="#999" />
-          <View style={styles.emptyState}>
-            <ThemedText style={[styles.emptyTitle, { color: '#999' }]}>
-              You&apos;re all set!
-            </ThemedText>
-            <ThemedText style={[styles.emptyText, { color: subtextColor }]}>
-              No unconfirmed movements to review
-            </ThemedText>
-          </View>
-        </View>
+        <MovementEmptyState
+          icon="check-circle"
+          title="You're all set!"
+          description="No unconfirmed movements to review"
+        />
       </Card>
     );
   }
@@ -420,20 +415,6 @@ const styles = StyleSheet.create({
   movementAmount: {
     fontSize: isWeb ? 14 : 15,
     fontWeight: '700',
-  },
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: isWeb ? 6 : 8,
-  },
-  emptyTitle: {
-    fontSize: isWeb ? 15 : 16,
-    fontWeight: '600',
-    marginTop: 8,
-  },
-  emptyText: {
-    fontSize: isWeb ? 12 : 13,
-    textAlign: 'center',
   },
   sheetHeader: {
     flexDirection: 'row',
